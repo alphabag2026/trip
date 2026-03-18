@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -31,7 +31,12 @@ const menuItems = [
   { icon: LayoutDashboard, label: "대시보드", path: "/admin" },
   { icon: ClipboardList, label: "신청 관리", path: "/admin/registrations" },
   { icon: Plane, label: "밋업 관리", path: "/admin/meetups" },
+  { icon: Plane, label: "항공편 관리", path: "/admin/flights" },
+  { icon: Car, label: "픽업 배치", path: "/admin/pickups" },
+  { icon: Hotel, label: "숙소 배치", path: "/admin/accommodations" },
+  { icon: CalendarDays, label: "스케줄 이벤트", path: "/admin/schedule-events" },
   { icon: Plane, label: "여정표 관리", path: "/admin/itineraries" },
+  { icon: Edit, label: "수정 요청", path: "/admin/mod-requests" },
   { icon: Globe, label: "국가별 여행정보", path: "/admin/travel-info" },
   { icon: Send, label: "텔레그램 설정", path: "/admin/telegram" },
   { icon: Search, label: "검색/연관성", path: "/admin/search" },

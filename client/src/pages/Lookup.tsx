@@ -4,8 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plane, ArrowLeft, Search, Calendar, MapPin, Hotel, Clock } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Plane, ArrowLeft, Search, Calendar, MapPin, Hotel, Clock, AlertTriangle, Edit, Car, Send } from "lucide-react";
 import { Link } from "wouter";
+import { toast } from "sonner";
 
 export default function Lookup() {
   const [name, setName] = useState("");
@@ -13,8 +17,7 @@ export default function Lookup() {
   const [searched, setSearched] = useState(false);
 
   const { data: regs, isLoading, refetch } = trpc.registration.lookup.useQuery(
-    { name, phone },
-    { enabled: false }
+    { name, phone }, { enabled: false }
   );
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -40,8 +43,7 @@ export default function Lookup() {
         <Card className="bg-card border-border mb-6">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Search className="h-5 w-5 text-primary" />
-              본인 확인
+              <Search className="h-5 w-5 text-primary" /> 본인 확인
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -84,7 +86,8 @@ export default function Lookup() {
 
 function RegistrationCard({ reg }: { reg: any }) {
   const { data: itineraryList } = trpc.itinerary.getByRegistration.useQuery({ registrationId: reg.id });
-  const { data: travelInfoData } = trpc.travelInfo.list.useQuery();
+  const { data: flights = [] } = trpc.flight.getByRegistration.useQuery({ registrationId: reg.id });
+  const { data: modRequests = [] } = trpc.modRequest.list.useQuery({ registrationId: reg.id });
 
   return (
     <Card className="bg-card border-border">
@@ -94,13 +97,9 @@ function RegistrationCard({ reg }: { reg: any }) {
             <Plane className="h-4 w-4 text-primary" />
             {reg.name} - {reg.locationType === "overseas" ? "해외" : "내륙"}
           </span>
-          <span className={`text-xs px-2 py-1 rounded-full ${
-            reg.status === "approved" ? "bg-green-500/20 text-green-400" :
-            reg.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
-            "bg-muted text-muted-foreground"
-          }`}>
-            {reg.status === "approved" ? "승인" : reg.status === "pending" ? "대기중" : reg.status === "rejected" ? "거절" : "완료"}
-          </span>
+          <Badge variant={reg.status === "approved" ? "default" : reg.status === "pending" ? "secondary" : "destructive"}>
+            {reg.status === "approved" ? "승인" : reg.status === "pending" ? "대기중" : reg.status === "rejected" ? "반려" : "완료"}
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -108,7 +107,7 @@ function RegistrationCard({ reg }: { reg: any }) {
           <div><span className="text-muted-foreground">전화번호:</span> {reg.phone}</div>
           <div><span className="text-muted-foreground">메신저:</span> {reg.messengerId}</div>
           {reg.scheduleStart && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 col-span-2">
               <Calendar className="h-3 w-3 text-muted-foreground" />
               <span>{new Date(reg.scheduleStart).toLocaleDateString("ko-KR")}</span>
               {reg.scheduleEnd && <span>~ {new Date(reg.scheduleEnd).toLocaleDateString("ko-KR")}</span>}
@@ -117,34 +116,79 @@ function RegistrationCard({ reg }: { reg: any }) {
           {reg.teamName && <div><span className="text-muted-foreground">팀:</span> {reg.teamName}</div>}
         </div>
 
-        {/* Itineraries */}
+        {/* 밋업 링크 */}
+        {reg.meetupId && (
+          <div className="flex gap-2">
+            <Link href={`/schedule/${reg.meetupId}`}>
+              <Button variant="outline" size="sm"><Calendar className="h-3.5 w-3.5 mr-1" /> 일정표 보기</Button>
+            </Link>
+            <Link href={`/pickup/${reg.meetupId}`}>
+              <Button variant="outline" size="sm"><Car className="h-3.5 w-3.5 mr-1" /> 픽업 보드</Button>
+            </Link>
+          </div>
+        )}
+
+        {/* 항공편 정보 */}
+        {flights.length > 0 && (
+          <div className="border-t border-border pt-3">
+            <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+              <Plane className="h-4 w-4 text-primary" /> 항공편 정보
+            </h4>
+            {flights.map((f: any) => (
+              <div key={f.id} className="bg-secondary/50 rounded-lg p-3 mb-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{f.flightNo} ({f.airline || ""})</span>
+                  <Badge variant={f.flightStatus === "delayed" ? "destructive" : f.flightStatus === "landed" ? "default" : "secondary"} className="text-xs">
+                    {f.flightStatus === "scheduled" ? "예정" : f.flightStatus === "delayed" ? "지연" : f.flightStatus === "landed" ? "도착" : f.flightStatus === "departed" ? "출발" : f.flightStatus === "in_air" ? "비행중" : f.flightStatus === "cancelled" ? "취소" : f.flightStatus}
+                  </Badge>
+                </div>
+                <div className="text-muted-foreground mt-1">
+                  {f.departureAirport} → {f.arrivalAirport}
+                </div>
+                {f.scheduledDeparture && (
+                  <div className="text-muted-foreground text-xs mt-1">
+                    예정: {new Date(f.scheduledDeparture).toLocaleString("ko-KR")}
+                  </div>
+                )}
+                {(f.delayMinutes ?? 0) > 0 && (
+                  <div className="flex items-center gap-1 text-yellow-500 text-xs mt-1">
+                    <AlertTriangle className="h-3 w-3" /> {f.delayMinutes}분 지연
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 여정표 */}
         {itineraryList && itineraryList.length > 0 && (
-          <div className="border-t border-border pt-4 space-y-3">
-            <h4 className="font-semibold text-sm flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-primary" />
-              여정표
+          <div className="border-t border-border pt-3">
+            <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-primary" /> 여정표
             </h4>
             {itineraryList.map((it: any) => (
-              <div key={it.id} className="bg-secondary/50 rounded-lg p-4 space-y-2 text-sm">
-                <p className="font-medium">{it.title}</p>
+              <div key={it.id} className="bg-secondary/50 rounded-lg p-3 mb-2 space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium">{it.title}</p>
+                  <ModificationDialog registrationId={reg.id} itineraryId={it.id} />
+                </div>
                 {it.departureFlightNo && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <Plane className="h-3 w-3" />
                     <span>출발: {it.departureFlightNo} ({it.departureAirport})</span>
-                    {it.departureTime && <span className="text-muted-foreground">{new Date(it.departureTime).toLocaleString("ko-KR")}</span>}
+                    {it.departureTime && <span className="text-xs">{new Date(it.departureTime).toLocaleString("ko-KR")}</span>}
                   </div>
                 )}
                 {it.returnFlightNo && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <Plane className="h-3 w-3 rotate-180" />
                     <span>귀국: {it.returnFlightNo} ({it.returnDepartureAirport})</span>
-                    {it.returnDepartureTime && <span className="text-muted-foreground">{new Date(it.returnDepartureTime).toLocaleString("ko-KR")}</span>}
+                    {it.returnDepartureTime && <span className="text-xs">{new Date(it.returnDepartureTime).toLocaleString("ko-KR")}</span>}
                   </div>
                 )}
                 {it.hotelName && (
-                  <div className="flex items-center gap-2">
-                    <Hotel className="h-3 w-3" />
-                    <span>{it.hotelName}</span>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Hotel className="h-3 w-3" /> <span>{it.hotelName}</span>
                   </div>
                 )}
                 {it.scheduleDetails && Array.isArray(it.scheduleDetails) && (
@@ -154,8 +198,7 @@ function RegistrationCard({ reg }: { reg: any }) {
                         <p className="font-medium text-xs text-primary">Day {day.day}</p>
                         {day.items?.map((item: any, j: number) => (
                           <div key={j} className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            <span>{item.time} - {item.activity}</span>
+                            <Clock className="h-3 w-3" /> <span>{item.time} - {item.activity}</span>
                           </div>
                         ))}
                       </div>
@@ -166,7 +209,81 @@ function RegistrationCard({ reg }: { reg: any }) {
             ))}
           </div>
         )}
+
+        {/* 수정 요청 내역 */}
+        {modRequests.length > 0 && (
+          <div className="border-t border-border pt-3">
+            <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+              <Edit className="h-4 w-4 text-primary" /> 수정 요청 내역
+            </h4>
+            {modRequests.map((mr: any) => (
+              <div key={mr.id} className="bg-secondary/50 rounded-lg p-3 mb-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span>{mr.requestType === "flight_change" ? "항공편 변경" : mr.requestType === "hotel_change" ? "숙소 변경" : mr.requestType === "schedule_change" ? "일정 변경" : "기타"}</span>
+                  <Badge variant={mr.status === "approved" ? "default" : mr.status === "rejected" ? "destructive" : "secondary"} className="text-xs">
+                    {mr.status === "pending" ? "처리중" : mr.status === "approved" ? "승인" : mr.status === "rejected" ? "반려" : "완료"}
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground text-xs mt-1">{mr.description}</p>
+                {mr.adminNotes && <p className="text-xs text-primary mt-1">관리자: {mr.adminNotes}</p>}
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
+  );
+}
+
+function ModificationDialog({ registrationId, itineraryId }: { registrationId: number; itineraryId: number }) {
+  const [open, setOpen] = useState(false);
+  const [requestType, setRequestType] = useState<"flight_change" | "hotel_change" | "schedule_change" | "other">("other");
+  const [description, setDescription] = useState("");
+  const [requestedValue, setRequestedValue] = useState("");
+  const utils = trpc.useUtils();
+  const createMutation = trpc.modRequest.create.useMutation({
+    onSuccess: () => {
+      toast.success("수정 요청이 접수되었습니다");
+      setOpen(false); setDescription(""); setRequestedValue("");
+      utils.modRequest.list.invalidate();
+    },
+    onError: () => toast.error("요청 실패"),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="text-xs"><Edit className="h-3 w-3 mr-1" /> 수정 요청</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>여정표 수정 요청</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>변경 유형</Label>
+            <select value={requestType} onChange={e => setRequestType(e.target.value as any)}
+              className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm mt-1">
+              <option value="flight_change">항공편 변경</option>
+              <option value="hotel_change">숙소 변경</option>
+              <option value="schedule_change">일정 변경</option>
+              <option value="other">기타</option>
+            </select>
+          </div>
+          <div>
+            <Label>변경 내용</Label>
+            <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="변경하고 싶은 내용을 자세히 작성해주세요" rows={3} className="mt-1" />
+          </div>
+          <div>
+            <Label>희망 변경값 (선택)</Label>
+            <Input value={requestedValue} onChange={e => setRequestedValue(e.target.value)} placeholder="예: KE651 → KE653" className="mt-1" />
+          </div>
+          <Button className="w-full" disabled={!description || createMutation.isPending}
+            onClick={() => createMutation.mutate({ registrationId, itineraryId, requestType, description, requestedValue })}>
+            <Send className="h-4 w-4 mr-2" /> {createMutation.isPending ? "요청 중..." : "수정 요청 제출"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

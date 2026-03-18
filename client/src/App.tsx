@@ -8,6 +8,8 @@ import Home from "./pages/Home";
 import Register from "./pages/Register";
 import Lookup from "./pages/Lookup";
 import TokenStatus from "./pages/TokenStatus";
+import ScheduleView from "./pages/ScheduleView";
+import PickupBoard from "./pages/PickupBoard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminRegistrations from "./pages/admin/Registrations";
 import AdminMeetups from "./pages/admin/Meetups";
@@ -15,6 +17,11 @@ import AdminItineraries from "./pages/admin/Itineraries";
 import AdminTravelInfo from "./pages/admin/TravelInfo";
 import AdminTelegram from "./pages/admin/Telegram";
 import AdminSearch from "./pages/admin/Search";
+import AdminFlights from "./pages/admin/Flights";
+import AdminPickups from "./pages/admin/Pickups";
+import AdminAccommodations from "./pages/admin/Accommodations";
+import AdminScheduleEvents from "./pages/admin/ScheduleEvents";
+import AdminModRequests from "./pages/admin/ModRequests";
 import DashboardLayout from "./components/DashboardLayout";
 
 function PublicRouter() {
@@ -25,6 +32,8 @@ function PublicRouter() {
       <Route path="/register/:meetupId" component={Register} />
       <Route path="/lookup" component={Lookup} />
       <Route path="/token-status" component={TokenStatus} />
+      <Route path="/schedule/:meetupId" component={ScheduleView} />
+      <Route path="/pickup/:meetupId" component={PickupBoard} />
       <Route path="/404" component={NotFound} />
     </Switch>
   );
@@ -41,6 +50,11 @@ function AdminRouter() {
         <Route path="/admin/travel-info" component={AdminTravelInfo} />
         <Route path="/admin/telegram" component={AdminTelegram} />
         <Route path="/admin/search" component={AdminSearch} />
+        <Route path="/admin/flights" component={AdminFlights} />
+        <Route path="/admin/pickups" component={AdminPickups} />
+        <Route path="/admin/accommodations" component={AdminAccommodations} />
+        <Route path="/admin/schedule-events" component={AdminScheduleEvents} />
+        <Route path="/admin/mod-requests" component={AdminModRequests} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>
