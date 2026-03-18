@@ -60,6 +60,9 @@ export const registrations = mysqlTable("registrations", {
   status: mysqlEnum("status", ["pending", "approved", "rejected", "completed"]).default("pending").notNull(),
   immigrationAssist: mysqlEnum("immigrationAssist", ["self", "agency", "pending"]).default("pending").notNull(),
   telegramNotified: boolean("telegramNotified").default(false),
+  flightConfirmed: boolean("flightConfirmed").default(false),
+  accommodationConfirmed: boolean("accommodationConfirmed").default(false),
+  pickupConfirmed: boolean("pickupConfirmed").default(false),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -257,3 +260,66 @@ export const modificationRequests = mysqlTable("modification_requests", {
 
 export type ModificationRequest = typeof modificationRequests.$inferSelect;
 export type InsertModificationRequest = typeof modificationRequests.$inferInsert;
+
+// ══════════════════════════════════════════════════════════
+// v3.0 NEW TABLES
+// ══════════════════════════════════════════════════════════
+
+// ── Communication Channels (소통 채널) ───────────────────
+export const communicationChannels = mysqlTable("communication_channels", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId"),
+  channelType: mysqlEnum("channelType", ["pickup_driver", "manager", "hotel_checkin", "transfer", "general"]).default("general").notNull(),
+  channelName: varchar("channelName", { length: 255 }).notNull(),
+  description: text("description"),
+  assignedTo: varchar("assignedTo", { length: 255 }), // 담당자 이름
+  assignedPhone: varchar("assignedPhone", { length: 50 }),
+  relatedPickupId: int("relatedPickupId"),
+  relatedAccommodationId: int("relatedAccommodationId"),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CommunicationChannel = typeof communicationChannels.$inferSelect;
+export type InsertCommunicationChannel = typeof communicationChannels.$inferInsert;
+
+// ── Messages (채널 내 메시지) ────────────────────────────
+export const messages = mysqlTable("messages", {
+  id: int("id").autoincrement().primaryKey(),
+  channelId: int("channelId").notNull(),
+  senderName: varchar("senderName", { length: 255 }).notNull(),
+  senderRole: mysqlEnum("senderRole", ["admin", "manager", "driver", "participant", "hotel_staff"]).default("participant").notNull(),
+  senderRegistrationId: int("senderRegistrationId"),
+  content: text("content").notNull(),
+  messageType: mysqlEnum("messageType", ["text", "photo", "location", "status_update", "alert"]).default("text").notNull(),
+  photoUrl: varchar("photoUrl", { length: 1000 }),
+  isRead: boolean("isRead").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
+
+// ── Vouchers (항공권/숙소 바우처) ────────────────────────
+export const vouchers = mysqlTable("vouchers", {
+  id: int("id").autoincrement().primaryKey(),
+  registrationId: int("registrationId").notNull(),
+  meetupId: int("meetupId"),
+  voucherType: mysqlEnum("voucherType", ["flight", "hotel", "transport", "other"]).default("other").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  fileUrl: varchar("fileUrl", { length: 1000 }).notNull(),
+  fileKey: varchar("fileKey", { length: 500 }),
+  fileName: varchar("fileName", { length: 255 }),
+  mimeType: varchar("mimeType", { length: 100 }),
+  sentToParticipant: boolean("sentToParticipant").default(false),
+  sentAt: timestamp("sentAt"),
+  sentMethod: mysqlEnum("sentMethod", ["web", "telegram", "email"]).default("web"),
+  notes: text("notes"),
+  uploadedBy: int("uploadedBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Voucher = typeof vouchers.$inferSelect;
+export type InsertVoucher = typeof vouchers.$inferInsert;

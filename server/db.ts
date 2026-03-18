@@ -416,3 +416,126 @@ export async function updateModificationRequest(id: number, data: Partial<Insert
   const db = await getDb(); if (!db) throw new Error("DB not available");
   await db.update(modificationRequests).set(data).where(eq(modificationRequests.id, id));
 }
+
+// ══════════════════════════════════════════════════════
+// v3.0 NEW FUNCTIONS
+// ══════════════════════════════════════════════════════
+
+import {
+  communicationChannels, InsertCommunicationChannel,
+  messages, InsertMessage,
+  vouchers, InsertVoucher,
+} from "../drizzle/schema";
+
+// ── Communication Channels ───────────────────────────
+export async function createChannel(data: InsertCommunicationChannel) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(communicationChannels).values(data);
+  return result[0].insertId;
+}
+
+export async function getChannels(meetupId?: number) {
+  const db = await getDb(); if (!db) return [];
+  if (meetupId) return db.select().from(communicationChannels).where(eq(communicationChannels.meetupId, meetupId)).orderBy(desc(communicationChannels.createdAt));
+  return db.select().from(communicationChannels).orderBy(desc(communicationChannels.createdAt));
+}
+
+export async function getChannelById(id: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(communicationChannels).where(eq(communicationChannels.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateChannel(id: number, data: Partial<InsertCommunicationChannel>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(communicationChannels).set(data).where(eq(communicationChannels.id, id));
+}
+
+export async function deleteChannel(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(communicationChannels).where(eq(communicationChannels.id, id));
+}
+
+// ── Messages ─────────────────────────────────────────
+export async function createMessage(data: InsertMessage) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(messages).values(data);
+  return result[0].insertId;
+}
+
+export async function getMessages(channelId: number, limit: number = 100) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(messages).where(eq(messages.channelId, channelId)).orderBy(messages.createdAt).limit(limit);
+}
+
+export async function markMessagesRead(channelId: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(messages).set({ isRead: true }).where(eq(messages.channelId, channelId));
+}
+
+export async function getUnreadCount(channelId: number) {
+  const db = await getDb(); if (!db) return 0;
+  const [result] = await db.select({ count: sql<number>`count(*)` }).from(messages).where(and(eq(messages.channelId, channelId), eq(messages.isRead, false)));
+  return result.count;
+}
+
+// ── Vouchers ─────────────────────────────────────────
+export async function createVoucher(data: InsertVoucher) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(vouchers).values(data);
+  return result[0].insertId;
+}
+
+export async function getVouchers(filters?: { registrationId?: number; meetupId?: number; voucherType?: string }) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [];
+  if (filters?.registrationId) conditions.push(eq(vouchers.registrationId, filters.registrationId));
+  if (filters?.meetupId) conditions.push(eq(vouchers.meetupId, filters.meetupId));
+  if (filters?.voucherType) conditions.push(eq(vouchers.voucherType, filters.voucherType as any));
+  return db.select().from(vouchers).where(conditions.length ? and(...conditions) : undefined).orderBy(desc(vouchers.createdAt));
+}
+
+export async function getVoucherById(id: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(vouchers).where(eq(vouchers.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateVoucher(id: number, data: Partial<InsertVoucher>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(vouchers).set(data).where(eq(vouchers.id, id));
+}
+
+export async function deleteVoucher(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(vouchers).where(eq(vouchers.id, id));
+}
+
+export async function getVouchersByRegistrationIds(regIds: number[]) {
+  const db = await getDb(); if (!db) return [];
+  if (regIds.length === 0) return [];
+  return db.select().from(vouchers).where(sql`${vouchers.registrationId} IN (${sql.join(regIds.map(id => sql`${id}`), sql`, `)})`).orderBy(desc(vouchers.createdAt));
+}
+
+// ── Assignment Confirmation ──────────────────────────
+export async function confirmAssignment(registrationId: number, type: 'flight' | 'accommodation' | 'pickup') {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const field = type === 'flight' ? { flightConfirmed: true } : type === 'accommodation' ? { accommodationConfirmed: true } : { pickupConfirmed: true };
+  await db.update(registrations).set(field).where(eq(registrations.id, registrationId));
+}
+
+export async function getAssignmentsForRegistration(registrationId: number) {
+  const db = await getDb(); if (!db) return { flights: [], pickups: [], accommodations: [] };
+  const flights = await db.select().from(flightSchedules).where(eq(flightSchedules.registrationId, registrationId));
+  const allPickups = await db.select().from(pickupAssignments);
+  const pickups = allPickups.filter(p => {
+    const ids = p.assignedRegistrationIds as number[] | null;
+    return ids && ids.includes(registrationId);
+  });
+  const allAccom = await db.select().from(accommodationAssignments);
+  const accommodations = allAccom.filter(a => {
+    const ids = a.assignedRegistrationIds as number[] | null;
+    return ids && ids.includes(registrationId);
+  });
+  return { flights, pickups, accommodations };
+}

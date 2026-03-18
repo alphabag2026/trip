@@ -619,6 +619,159 @@ export const appRouter = router({
     delete: adminProcedure.input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => { await db.deleteItinerary(input.id); return { success: true }; }),
   }),
+
+  // ── Communication Channels (v3.0) ────────────────
+  channel: router({
+    list: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }).optional())
+      .query(({ input }) => db.getChannels(input?.meetupId)),
+    getById: publicProcedure.input(z.object({ id: z.number() })).query(({ input }) => db.getChannelById(input.id)),
+    create: adminProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        channelType: z.enum(["pickup_driver", "manager", "hotel_checkin", "transfer", "general"]).default("general"),
+        channelName: z.string().min(1), description: z.string().optional(),
+        assignedTo: z.string().optional(), assignedPhone: z.string().optional(),
+        relatedPickupId: z.number().optional(), relatedAccommodationId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => { const id = await db.createChannel(input); return { id }; }),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(), channelName: z.string().optional(),
+        channelType: z.enum(["pickup_driver", "manager", "hotel_checkin", "transfer", "general"]).optional(),
+        description: z.string().optional(), assignedTo: z.string().optional(),
+        assignedPhone: z.string().optional(), isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => { const { id, ...data } = input; await db.updateChannel(id, data); return { success: true }; }),
+    delete: adminProcedure.input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => { await db.deleteChannel(input.id); return { success: true }; }),
+  }),
+
+  // ── Messages (v3.0) ─────────────────────────────────
+  message: router({
+    list: publicProcedure
+      .input(z.object({ channelId: z.number(), limit: z.number().default(100) }))
+      .query(({ input }) => db.getMessages(input.channelId, input.limit)),
+    send: publicProcedure
+      .input(z.object({
+        channelId: z.number(), senderName: z.string().min(1),
+        senderRole: z.enum(["admin", "manager", "driver", "participant", "hotel_staff"]).default("participant"),
+        senderRegistrationId: z.number().optional(),
+        content: z.string().min(1),
+        messageType: z.enum(["text", "photo", "location", "status_update", "alert"]).default("text"),
+        photoUrl: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createMessage(input);
+        // Send to telegram for status_update and alert types
+        if (input.messageType === "status_update" || input.messageType === "alert") {
+          const channel = await db.getChannelById(input.channelId);
+          const prefix = input.messageType === "alert" ? "🚨" : "📢";
+          await sendTelegram(`${prefix} [${channel?.channelName || "채널"}] ${input.senderName}: ${input.content}`);
+        }
+        return { id };
+      }),
+    markRead: publicProcedure
+      .input(z.object({ channelId: z.number() }))
+      .mutation(async ({ input }) => { await db.markMessagesRead(input.channelId); return { success: true }; }),
+    unreadCount: publicProcedure
+      .input(z.object({ channelId: z.number() }))
+      .query(({ input }) => db.getUnreadCount(input.channelId)),
+    uploadPhoto: publicProcedure
+      .input(z.object({ channelId: z.number(), senderName: z.string(), senderRole: z.enum(["admin", "manager", "driver", "participant", "hotel_staff"]).default("participant"), imageBase64: z.string(), mimeType: z.string().default("image/jpeg"), caption: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        const buffer = Buffer.from(input.imageBase64, "base64");
+        const ext = input.mimeType.includes("png") ? "png" : "jpg";
+        const key = `channel-photos/${input.channelId}-${nanoid(8)}.${ext}`;
+        const { url } = await storagePut(key, buffer, input.mimeType);
+        const id = await db.createMessage({
+          channelId: input.channelId, senderName: input.senderName, senderRole: input.senderRole,
+          content: input.caption || "사진", messageType: "photo", photoUrl: url,
+        });
+        return { id, photoUrl: url };
+      }),
+  }),
+
+  // ── Vouchers (v3.0) ─────────────────────────────────
+  voucher: router({
+    list: adminProcedure
+      .input(z.object({ registrationId: z.number().optional(), meetupId: z.number().optional(), voucherType: z.string().optional() }).optional())
+      .query(({ input }) => db.getVouchers(input)),
+    getByRegistration: publicProcedure
+      .input(z.object({ registrationId: z.number() }))
+      .query(({ input }) => db.getVouchers({ registrationId: input.registrationId })),
+    upload: adminProcedure
+      .input(z.object({
+        registrationId: z.number(), meetupId: z.number().optional(),
+        voucherType: z.enum(["flight", "hotel", "transport", "other"]).default("other"),
+        title: z.string().min(1), fileBase64: z.string(), fileName: z.string(), mimeType: z.string().default("application/pdf"),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const buffer = Buffer.from(input.fileBase64, "base64");
+        const key = `vouchers/${input.registrationId}-${nanoid(8)}-${input.fileName}`;
+        const { url } = await storagePut(key, buffer, input.mimeType);
+        const id = await db.createVoucher({
+          registrationId: input.registrationId, meetupId: input.meetupId,
+          voucherType: input.voucherType, title: input.title,
+          fileUrl: url, fileKey: key, fileName: input.fileName, mimeType: input.mimeType,
+          notes: input.notes, uploadedBy: ctx.user.id,
+        });
+        return { id, url };
+      }),
+    sendToParticipant: adminProcedure
+      .input(z.object({ voucherId: z.number(), method: z.enum(["web", "telegram", "email"]).default("web") }))
+      .mutation(async ({ input }) => {
+        const voucher = await db.getVoucherById(input.voucherId);
+        if (!voucher) throw new TRPCError({ code: "NOT_FOUND" });
+        const reg = await db.getRegistrationById(voucher.registrationId);
+        if (!reg) throw new TRPCError({ code: "NOT_FOUND" });
+        if (input.method === "telegram") {
+          await sendTelegram(`📎 바우처 전송\n${reg.name}님 - ${voucher.title}\n${voucher.fileUrl}`);
+        }
+        await db.updateVoucher(input.voucherId, { sentToParticipant: true, sentAt: new Date(), sentMethod: input.method });
+        return { success: true };
+      }),
+    bulkUpload: adminProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        voucherType: z.enum(["flight", "hotel", "transport", "other"]).default("other"),
+        files: z.array(z.object({
+          registrationId: z.number(), title: z.string(), fileBase64: z.string(), fileName: z.string(), mimeType: z.string().default("application/pdf"),
+        })),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const results = [];
+        for (const file of input.files) {
+          const buffer = Buffer.from(file.fileBase64, "base64");
+          const key = `vouchers/${file.registrationId}-${nanoid(8)}-${file.fileName}`;
+          const { url } = await storagePut(key, buffer, file.mimeType);
+          const id = await db.createVoucher({
+            registrationId: file.registrationId, meetupId: input.meetupId,
+            voucherType: input.voucherType, title: file.title,
+            fileUrl: url, fileKey: key, fileName: file.fileName, mimeType: file.mimeType,
+            uploadedBy: ctx.user.id,
+          });
+          results.push({ id, registrationId: file.registrationId, url });
+        }
+        return { success: true, count: results.length, results };
+      }),
+    delete: adminProcedure.input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => { await db.deleteVoucher(input.id); return { success: true }; }),
+  }),
+
+  // ── Assignment Confirmation (v3.0) ──────────────────
+  assignment: router({
+    getMyAssignments: publicProcedure
+      .input(z.object({ registrationId: z.number() }))
+      .query(({ input }) => db.getAssignmentsForRegistration(input.registrationId)),
+    confirm: publicProcedure
+      .input(z.object({ registrationId: z.number(), type: z.enum(["flight", "accommodation", "pickup"]) }))
+      .mutation(async ({ input }) => {
+        await db.confirmAssignment(input.registrationId, input.type);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

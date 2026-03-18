@@ -7,9 +7,10 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
 import Lookup from "./pages/Lookup";
-import TokenStatus from "./pages/TokenStatus";
 import ScheduleView from "./pages/ScheduleView";
 import PickupBoard from "./pages/PickupBoard";
+import CommChannel from "./pages/CommChannel";
+import MyAssignments from "./pages/MyAssignments";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminRegistrations from "./pages/admin/Registrations";
 import AdminMeetups from "./pages/admin/Meetups";
@@ -22,6 +23,8 @@ import AdminPickups from "./pages/admin/Pickups";
 import AdminAccommodations from "./pages/admin/Accommodations";
 import AdminScheduleEvents from "./pages/admin/ScheduleEvents";
 import AdminModRequests from "./pages/admin/ModRequests";
+import AdminChannels from "./pages/admin/Channels";
+import AdminVouchers from "./pages/admin/Vouchers";
 import DashboardLayout from "./components/DashboardLayout";
 
 function PublicRouter() {
@@ -31,9 +34,10 @@ function PublicRouter() {
       <Route path="/register" component={Register} />
       <Route path="/register/:meetupId" component={Register} />
       <Route path="/lookup" component={Lookup} />
-      <Route path="/token-status" component={TokenStatus} />
       <Route path="/schedule/:meetupId" component={ScheduleView} />
       <Route path="/pickup/:meetupId" component={PickupBoard} />
+      <Route path="/channel/:channelId" component={CommChannel} />
+      <Route path="/my-assignments/:regId" component={MyAssignments} />
       <Route path="/404" component={NotFound} />
     </Switch>
   );
@@ -55,6 +59,8 @@ function AdminRouter() {
         <Route path="/admin/accommodations" component={AdminAccommodations} />
         <Route path="/admin/schedule-events" component={AdminScheduleEvents} />
         <Route path="/admin/mod-requests" component={AdminModRequests} />
+        <Route path="/admin/channels" component={AdminChannels} />
+        <Route path="/admin/vouchers" component={AdminVouchers} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

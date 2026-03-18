@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `registrations` ADD COLUMN `flightConfirmed` boolean DEFAULT false AFTER `telegramNotified`;\nALTER TABLE `registrations` ADD COLUMN `accommodationConfirmed` boolean DEFAULT false AFTER `flightConfirmed`;\nALTER TABLE `registrations` ADD COLUMN `pickupConfirmed` boolean DEFAULT false AFTER `accommodationConfirmed`;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute ALTER TABLE `registrations` ADD COLUMN `flightConfirmed` boolean DEFAULT false AFTER `telegramNotified`;\nALTER TABLE `registrations` ADD COLUMN `accommodationConfirmed` boolean DEFAULT false AFTER `flightConfirmed`;\nALTER TABLE `registrations` ADD COLUMN `pickupConfirmed` boolean DEFAULT false AFTER `accommodationConfirmed`;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2660
+}
