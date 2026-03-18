@@ -11,6 +11,9 @@ import ScheduleView from "./pages/ScheduleView";
 import PickupBoard from "./pages/PickupBoard";
 import CommChannel from "./pages/CommChannel";
 import MyAssignments from "./pages/MyAssignments";
+import AIChatbot from "./pages/AIChatbot";
+import SurveyResponse from "./pages/SurveyResponse";
+import FlightPickupInfo from "./pages/FlightPickupInfo";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminRegistrations from "./pages/admin/Registrations";
 import AdminMeetups from "./pages/admin/Meetups";
@@ -25,8 +28,9 @@ import AdminScheduleEvents from "./pages/admin/ScheduleEvents";
 import AdminModRequests from "./pages/admin/ModRequests";
 import AdminChannels from "./pages/admin/Channels";
 import AdminVouchers from "./pages/admin/Vouchers";
-import FlightPickupInfo from "./pages/FlightPickupInfo";
 import AdminChatDashboard from "./pages/admin/ChatDashboard";
+import AdminSurveys from "./pages/admin/Surveys";
+import AdminBroadcast from "./pages/admin/Broadcast";
 import DashboardLayout from "./components/DashboardLayout";
 
 function PublicRouter() {
@@ -41,6 +45,8 @@ function PublicRouter() {
       <Route path="/channel/:channelId" component={CommChannel} />
       <Route path="/my-assignments/:regId" component={MyAssignments} />
       <Route path="/flight-pickup" component={FlightPickupInfo} />
+      <Route path="/chatbot" component={AIChatbot} />
+      <Route path="/survey/:surveyId" component={SurveyResponse} />
       <Route path="/404" component={NotFound} />
     </Switch>
   );
@@ -65,6 +71,8 @@ function AdminRouter() {
         <Route path="/admin/channels" component={AdminChannels} />
         <Route path="/admin/vouchers" component={AdminVouchers} />
         <Route path="/admin/chat" component={AdminChatDashboard} />
+        <Route path="/admin/surveys" component={AdminSurveys} />
+        <Route path="/admin/broadcast" component={AdminBroadcast} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

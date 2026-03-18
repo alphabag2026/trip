@@ -323,3 +323,71 @@ export const vouchers = mysqlTable("vouchers", {
 
 export type Voucher = typeof vouchers.$inferSelect;
 export type InsertVoucher = typeof vouchers.$inferInsert;
+
+// ══════════════════════════════════════════════════════════
+// v3.3 NEW TABLES
+// ══════════════════════════════════════════════════════════
+
+// ── Surveys (설문조사) ──────────────────────────────────────
+export const surveys = mysqlTable("surveys", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId"),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  questions: json("questions").notNull(), // [{id, text, type: 'rating'|'text'|'choice', options?: string[]}]
+  status: mysqlEnum("status", ["draft", "active", "closed"]).default("draft").notNull(),
+  sentViaTelegram: boolean("sentViaTelegram").default(false),
+  sentAt: timestamp("sentAt"),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Survey = typeof surveys.$inferSelect;
+export type InsertSurvey = typeof surveys.$inferInsert;
+
+// ── Survey Responses (설문 응답) ────────────────────────────
+export const surveyResponses = mysqlTable("survey_responses", {
+  id: int("id").autoincrement().primaryKey(),
+  surveyId: int("surveyId").notNull(),
+  registrationId: int("registrationId"),
+  respondentName: varchar("respondentName", { length: 255 }),
+  respondentPhone: varchar("respondentPhone", { length: 50 }),
+  answers: json("answers").notNull(), // [{questionId, value}]
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SurveyResponse = typeof surveyResponses.$inferSelect;
+export type InsertSurveyResponse = typeof surveyResponses.$inferInsert;
+
+// ── Broadcast Messages (단체 메시지) ────────────────────────
+export const broadcastMessages = mysqlTable("broadcast_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId"), // null = 전체
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  targetType: mysqlEnum("targetType", ["all", "meetup", "approved_only"]).default("all").notNull(),
+  sentViaTelegram: boolean("sentViaTelegram").default(false),
+  sentViaWeb: boolean("sentViaWeb").default(false),
+  recipientCount: int("recipientCount").default(0),
+  sentBy: int("sentBy"),
+  sentAt: timestamp("sentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BroadcastMessage = typeof broadcastMessages.$inferSelect;
+export type InsertBroadcastMessage = typeof broadcastMessages.$inferInsert;
+
+// ── AI Chatbot Logs (AI 챗봇 대화 로그) ─────────────────────
+export const chatbotLogs = mysqlTable("chatbot_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  registrationId: int("registrationId"),
+  sessionId: varchar("sessionId", { length: 100 }).notNull(),
+  userMessage: text("userMessage").notNull(),
+  botResponse: text("botResponse").notNull(),
+  context: varchar("context", { length: 255 }), // meetup context
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ChatbotLog = typeof chatbotLogs.$inferSelect;
+export type InsertChatbotLog = typeof chatbotLogs.$inferInsert;

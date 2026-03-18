@@ -969,6 +969,196 @@ export const appRouter = router({
         }));
       }),
   }),
+
+  // ══════════════════════════════════════════════════════
+  // v3.3 - AI Chatbot, Surveys, Broadcast Messages
+  // ══════════════════════════════════════════════════════
+
+  chatbot: router({
+    ask: publicProcedure
+      .input(z.object({
+        sessionId: z.string(),
+        message: z.string(),
+        meetupId: z.number().optional(),
+        registrationId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // Build context from meetup info
+        let contextInfo = "";
+        if (input.meetupId) {
+          const meetup = await db.getMeetupById(input.meetupId);
+          if (meetup) {
+            contextInfo += `\n밋업 정보: ${meetup.title}, 장소: ${meetup.location || "미정"}, 국가: ${meetup.destinationCountry || "미정"}`;
+            if (meetup.destinationCountry) {
+              const ti = await db.getTravelInfoByCountry(meetup.destinationCountry);
+              if (ti) {
+                contextInfo += `\n여행 준비물: ${JSON.stringify(ti.requiredItems || [])}`;
+                contextInfo += `\n비자 필요: ${ti.visaRequired ? "예" : "아니오"}`;
+                contextInfo += `\n시간대: ${ti.timezone || ""}, 통화: ${ti.currency || ""}, 플러그: ${ti.plugType || ""}`;
+                if (ti.immigrationUrl) contextInfo += `\n출입국 신청: ${ti.immigrationUrl}`;
+              }
+            }
+          }
+        }
+        // Get chat history
+        const history = await db.getChatbotLogs(input.sessionId);
+        const chatHistory = history.slice(-10).flatMap(h => [
+          { role: "user" as const, content: h.userMessage },
+          { role: "assistant" as const, content: h.botResponse },
+        ]);
+
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: `당신은 해외 밋업 출장 도우미 AI입니다. 참석자들의 질문에 친절하게 답변해주세요.\n현재 컨텍스트:${contextInfo}\n\n답변 시 다음을 참고하세요:\n- 여행 준비물, 비자, 출입국 관련 질문에 정확히 답변\n- 일정, 픽업, 숙소 관련 안내\n- 현지 문화, 날씨, 교통 정보 제공\n- 모르는 내용은 백오피스 관리자에게 문의하라고 안내` },
+            ...chatHistory,
+            { role: "user", content: input.message },
+          ],
+        });
+
+        const rawContent = response.choices?.[0]?.message?.content;
+        const botResponse: string = typeof rawContent === "string" ? rawContent : "죄송합니다. 잠시 후 다시 시도해주세요.";
+
+        await db.createChatbotLog({
+          sessionId: input.sessionId,
+          registrationId: input.registrationId || null,
+          userMessage: input.message,
+          botResponse,
+          context: input.meetupId ? `meetup:${input.meetupId}` : null,
+        });
+
+        return { response: botResponse };
+      }),
+    history: publicProcedure
+      .input(z.object({ sessionId: z.string() }))
+      .query(({ input }) => db.getChatbotLogs(input.sessionId)),
+  }),
+
+  survey: router({
+    create: adminProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        title: z.string(),
+        description: z.string().optional(),
+        questions: z.array(z.object({
+          id: z.string(),
+          text: z.string(),
+          type: z.enum(["rating", "text", "choice"]),
+          options: z.array(z.string()).optional(),
+        })),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const result = await db.createSurvey({
+          ...input,
+          questions: input.questions,
+          createdBy: ctx.user.id,
+        });
+        return result;
+      }),
+    list: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }).optional())
+      .query(({ input }) => db.getSurveys(input?.meetupId)),
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(({ input }) => db.getSurveyById(input.id)),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        status: z.enum(["draft", "active", "closed"]).optional(),
+        questions: z.any().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateSurvey(id, data);
+        return { success: true };
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteSurvey(input.id);
+        return { success: true };
+      }),
+    respond: publicProcedure
+      .input(z.object({
+        surveyId: z.number(),
+        registrationId: z.number().optional(),
+        respondentName: z.string().optional(),
+        respondentPhone: z.string().optional(),
+        answers: z.array(z.object({ questionId: z.string(), value: z.any() })),
+      }))
+      .mutation(async ({ input }) => {
+        const result = await db.createSurveyResponse({
+          surveyId: input.surveyId,
+          registrationId: input.registrationId || null,
+          respondentName: input.respondentName || null,
+          respondentPhone: input.respondentPhone || null,
+          answers: input.answers,
+        });
+        return result;
+      }),
+    responses: adminProcedure
+      .input(z.object({ surveyId: z.number() }))
+      .query(({ input }) => db.getSurveyResponses(input.surveyId)),
+    sendViaTelegram: adminProcedure
+      .input(z.object({ surveyId: z.number(), meetupId: z.number().optional() }))
+      .mutation(async ({ input }) => {
+        const survey = await db.getSurveyById(input.surveyId);
+        if (!survey) throw new TRPCError({ code: "NOT_FOUND" });
+        const regs = await db.getApprovedRegistrations(input.meetupId ?? undefined);
+        const surveyUrl = `설문조사: ${survey.title}`;
+        const questions = (survey.questions as any[]) || [];
+        let msg = `📋 설문조사 안내\n\n제목: ${survey.title}`;
+        if (survey.description) msg += `\n설명: ${survey.description}`;
+        msg += `\n\n질문 ${questions.length}개`;
+        msg += `\n\n웹사이트에서 응답해주세요.`;
+        await sendTelegram(msg);
+        await db.updateSurvey(input.surveyId, { sentViaTelegram: true, sentAt: new Date(), status: "active" });
+        return { success: true, recipientCount: regs.length };
+      }),
+  }),
+
+  broadcast: router({
+    send: adminProcedure
+      .input(z.object({
+        title: z.string(),
+        content: z.string(),
+        meetupId: z.number().optional(),
+        targetType: z.enum(["all", "meetup", "approved_only"]).default("all"),
+        sendViaTelegram: z.boolean().default(true),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const regs = input.meetupId
+          ? await db.getApprovedRegistrations(input.meetupId)
+          : await db.getApprovedRegistrations();
+
+        // Send via telegram
+        let telegramSent = false;
+        if (input.sendViaTelegram) {
+          let msg = `📢 단체 공지\n\n${input.title}\n\n${input.content}`;
+          if (regs.length > 0) {
+            msg += `\n\n대상: ${regs.length}명`;
+          }
+          telegramSent = await sendTelegram(msg);
+        }
+
+        const result = await db.createBroadcastMessage({
+          meetupId: input.meetupId || null,
+          title: input.title,
+          content: input.content,
+          targetType: input.targetType,
+          sentViaTelegram: telegramSent,
+          sentViaWeb: true,
+          recipientCount: regs.length,
+          sentBy: ctx.user.id,
+          sentAt: new Date(),
+        });
+
+        return { success: true, recipientCount: regs.length, telegramSent };
+      }),
+    list: adminProcedure
+      .query(() => db.getBroadcastMessages()),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

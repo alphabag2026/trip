@@ -13,6 +13,13 @@ import {
   scheduleEvents, InsertScheduleEvent,
   pickupPhotos, InsertPickupPhoto,
   modificationRequests, InsertModificationRequest,
+  communicationChannels, InsertCommunicationChannel,
+  messages, InsertMessage,
+  vouchers, InsertVoucher,
+  surveys, InsertSurvey,
+  surveyResponses, InsertSurveyResponse,
+  broadcastMessages, InsertBroadcastMessage,
+  chatbotLogs, InsertChatbotLog,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -421,12 +428,6 @@ export async function updateModificationRequest(id: number, data: Partial<Insert
 // v3.0 NEW FUNCTIONS
 // ══════════════════════════════════════════════════════
 
-import {
-  communicationChannels, InsertCommunicationChannel,
-  messages, InsertMessage,
-  vouchers, InsertVoucher,
-} from "../drizzle/schema";
-
 // ── Communication Channels ───────────────────────────
 export async function createChannel(data: InsertCommunicationChannel) {
   const db = await getDb(); if (!db) throw new Error("DB not available");
@@ -538,4 +539,84 @@ export async function getAssignmentsForRegistration(registrationId: number) {
     return ids && ids.includes(registrationId);
   });
   return { flights, pickups, accommodations };
+}
+
+// ══════════════════════════════════════════════════════════
+// v3.3 - Surveys, Broadcast Messages, AI Chatbot Logs
+// ══════════════════════════════════════════════════════════
+
+// ── Surveys ─────────────────────────────────────────────
+export async function createSurvey(data: InsertSurvey) {
+  const d = await getDb(); if (!d) return null;
+  const [result] = await d.insert(surveys).values(data).$returningId();
+  return result;
+}
+
+export async function getSurveys(meetupId?: number) {
+  const d = await getDb(); if (!d) return [];
+  let q = d.select().from(surveys);
+  if (meetupId) q = q.where(eq(surveys.meetupId, meetupId)) as any;
+  return q.orderBy(desc(surveys.createdAt));
+}
+
+export async function getSurveyById(id: number) {
+  const d = await getDb(); if (!d) return null;
+  const rows = await d.select().from(surveys).where(eq(surveys.id, id)).limit(1);
+  return rows[0] || null;
+}
+
+export async function updateSurvey(id: number, data: Partial<InsertSurvey>) {
+  const d = await getDb(); if (!d) return;
+  await d.update(surveys).set(data).where(eq(surveys.id, id));
+}
+
+export async function deleteSurvey(id: number) {
+  const d = await getDb(); if (!d) return;
+  await d.delete(surveyResponses).where(eq(surveyResponses.surveyId, id));
+  await d.delete(surveys).where(eq(surveys.id, id));
+}
+
+// ── Survey Responses ────────────────────────────────────
+export async function createSurveyResponse(data: InsertSurveyResponse) {
+  const d = await getDb(); if (!d) return null;
+  const [result] = await d.insert(surveyResponses).values(data).$returningId();
+  return result;
+}
+
+export async function getSurveyResponses(surveyId: number) {
+  const d = await getDb(); if (!d) return [];
+  return d.select().from(surveyResponses).where(eq(surveyResponses.surveyId, surveyId)).orderBy(desc(surveyResponses.createdAt));
+}
+
+// ── Broadcast Messages ──────────────────────────────────
+export async function createBroadcastMessage(data: InsertBroadcastMessage) {
+  const d = await getDb(); if (!d) return null;
+  const [result] = await d.insert(broadcastMessages).values(data).$returningId();
+  return result;
+}
+
+export async function getBroadcastMessages() {
+  const d = await getDb(); if (!d) return [];
+  return d.select().from(broadcastMessages).orderBy(desc(broadcastMessages.createdAt));
+}
+
+// ── AI Chatbot Logs ─────────────────────────────────────
+export async function createChatbotLog(data: InsertChatbotLog) {
+  const d = await getDb(); if (!d) return null;
+  const [result] = await d.insert(chatbotLogs).values(data).$returningId();
+  return result;
+}
+
+export async function getChatbotLogs(sessionId: string) {
+  const d = await getDb(); if (!d) return [];
+  return d.select().from(chatbotLogs).where(eq(chatbotLogs.sessionId, sessionId)).orderBy(chatbotLogs.createdAt);
+}
+
+// ── Helper: Get approved registrations for broadcast ────
+export async function getApprovedRegistrations(meetupId?: number) {
+  const d = await getDb(); if (!d) return [];
+  if (meetupId) {
+    return d.select().from(registrations).where(and(eq(registrations.status, "approved"), eq(registrations.meetupId, meetupId)));
+  }
+  return d.select().from(registrations).where(eq(registrations.status, "approved"));
 }

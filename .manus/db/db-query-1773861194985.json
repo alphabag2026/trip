@@ -1,0 +1,31 @@
+{
+  "query": "SHOW TABLES LIKE 'surveys'; SHOW TABLES LIKE 'survey_responses'; SHOW TABLES LIKE 'broadcast_messages'; SHOW TABLES LIKE 'chatbot_logs';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SHOW TABLES LIKE 'surveys'; SHOW TABLES LIKE 'survey_responses'; SHOW TABLES LIKE 'broadcast_messages'; SHOW TABLES LIKE 'chatbot_logs';",
+  "rows": [
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (surveys)": "surveys"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (surveys)": "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (survey_responses)"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (surveys)": "survey_responses"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (surveys)": "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (broadcast_messages)"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (surveys)": "broadcast_messages"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (surveys)": "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (chatbot_logs)"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (surveys)": "chatbot_logs"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (surveys)\nsurveys\nTables_in_9L2UFkGMTFNGvGrFPN8jYv (survey_responses)\nsurvey_responses\nTables_in_9L2UFkGMTFNGvGrFPN8jYv (broadcast_messages)\nbroadcast_messages\nTables_in_9L2UFkGMTFNGvGrFPN8jYv (chatbot_logs)\nchatbot_logs\n",
+  "stderr": "",
+  "execution_time_ms": 2247
+}

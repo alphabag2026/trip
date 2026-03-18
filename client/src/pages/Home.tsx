@@ -21,6 +21,7 @@ export default function Home() {
             <Link href="/register" className="text-muted-foreground hover:text-foreground transition-colors">밋업 신청</Link>
             <Link href="/lookup" className="text-muted-foreground hover:text-foreground transition-colors">여정표 조회</Link>
             <Link href="/flight-pickup" className="text-muted-foreground hover:text-foreground transition-colors">항공편/픽업</Link>
+            <Link href="/chatbot" className="text-muted-foreground hover:text-foreground transition-colors">AI 도우미</Link>
           </nav>
           <div className="flex items-center gap-3">
             {isAuthenticated && user?.role === "admin" && (
@@ -86,6 +87,8 @@ export default function Home() {
               { icon: MapPin, title: "국가별 맞춤 정보", desc: "목적지 국가의 여행 준비물, 출입국 정보, 비자 요건을 자동으로 안내" },
               { icon: Globe, title: "텔레그램 알림", desc: "신청 접수, 지연 알림, 10분 전 이동 알림까지 텔레그램으로 자동 전송" },
               { icon: Search, title: "데이터 검색/분석", desc: "기간별/국가별/유형별 필터링으로 참가자 데이터 및 연관성 분석" },
+              { icon: MessageCircle, title: "AI 출장 도우미", desc: "LLM 기반 AI 챗봇이 여행 준비물, 비자, 일정 등 출장 관련 질문에 자동 답변" },
+              { icon: ClipboardList, title: "만족도 설문", desc: "밋업 후 참석자 만족도 설문조사 생성 및 텔레그램 발송, 결과 통계 분석" },
             ].map((f, i) => (
               <Card key={i} className="bg-card/50 border-border/50 hover:border-primary/30 transition-colors">
                 <CardContent className="p-6">
@@ -113,6 +116,9 @@ export default function Home() {
           </Link>
           <Link href="/flight-pickup" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
             <Plane className="h-5 w-5" /><span>항공/픽업</span>
+          </Link>
+          <Link href="/chatbot" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
+            <MessageCircle className="h-5 w-5" /><span>AI</span>
           </Link>
         </div>
       </div>
