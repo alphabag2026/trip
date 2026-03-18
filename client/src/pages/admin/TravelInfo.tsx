@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, Globe, ExternalLink } from "lucide-react";
+import { Plus, Trash2, Globe, ExternalLink, Sparkles, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const defaultForm = {
@@ -17,15 +18,50 @@ const defaultForm = {
   timezone: "", currency: "", language: "", plugType: "", additionalNotes: "",
 };
 
+const POPULAR_COUNTRIES = [
+  { code: "TH", name: "Thailand", nameKo: "태국" },
+  { code: "AE", name: "United Arab Emirates", nameKo: "아랍에미리트(두바이)" },
+  { code: "SG", name: "Singapore", nameKo: "싱가포르" },
+  { code: "JP", name: "Japan", nameKo: "일본" },
+  { code: "VN", name: "Vietnam", nameKo: "베트남" },
+  { code: "PH", name: "Philippines", nameKo: "필리핀" },
+  { code: "MY", name: "Malaysia", nameKo: "말레이시아" },
+  { code: "ID", name: "Indonesia", nameKo: "인도네시아" },
+  { code: "CN", name: "China", nameKo: "중국" },
+  { code: "HK", name: "Hong Kong", nameKo: "홍콩" },
+  { code: "TW", name: "Taiwan", nameKo: "대만" },
+  { code: "US", name: "United States", nameKo: "미국" },
+  { code: "GB", name: "United Kingdom", nameKo: "영국" },
+  { code: "DE", name: "Germany", nameKo: "독일" },
+  { code: "FR", name: "France", nameKo: "프랑스" },
+  { code: "AU", name: "Australia", nameKo: "호주" },
+  { code: "KH", name: "Cambodia", nameKo: "캄보디아" },
+  { code: "IN", name: "India", nameKo: "인도" },
+  { code: "TR", name: "Turkey", nameKo: "터키" },
+  { code: "ES", name: "Spain", nameKo: "스페인" },
+];
+
 export default function AdminTravelInfo() {
   const [showCreate, setShowCreate] = useState(false);
+  const [showSend, setShowSend] = useState(false);
+  const [sendCountryCode, setSendCountryCode] = useState("");
+  const [sendMeetupId, setSendMeetupId] = useState<string>("");
   const [itemInput, setItemInput] = useState("");
   const { data: countries, refetch } = trpc.travelInfo.list.useQuery();
+  const { data: meetups } = trpc.meetup.list.useQuery({});
   const upsertMutation = trpc.travelInfo.upsert.useMutation({
     onSuccess: () => { refetch(); setShowCreate(false); toast.success("저장되었습니다."); },
   });
   const deleteMutation = trpc.travelInfo.delete.useMutation({
     onSuccess: () => { refetch(); toast.success("삭제되었습니다."); },
+  });
+  const generateMutation = trpc.travelInfo.generateInfo.useMutation({
+    onSuccess: () => { refetch(); toast.success("AI가 여행 정보를 자동 생성했습니다!"); },
+    onError: (e) => toast.error(`생성 실패: ${e.message}`),
+  });
+  const sendMutation = trpc.travelInfo.sendToParticipants.useMutation({
+    onSuccess: (data) => { setShowSend(false); toast.success(`${data.sentCount}명에게 여행 정보를 전송했습니다.`); },
+    onError: (e) => toast.error(`전송 실패: ${e.message}`),
   });
   const [form, setForm] = useState(defaultForm);
 
@@ -52,19 +88,64 @@ export default function AdminTravelInfo() {
     setShowCreate(true);
   };
 
+  const handleAutoGenerate = (country: { code: string; name: string }) => {
+    if (confirm(`${country.name} 여행 정보를 AI로 자동 생성하시겠습니까?`)) {
+      generateMutation.mutate({ countryCode: country.code, countryName: country.name });
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold">국가별 여행 정보</h1>
-        <Button onClick={() => { setForm(defaultForm); setShowCreate(true); }}><Plus className="h-4 w-4 mr-2" />국가 추가</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => { setShowSend(true); }}>
+            <Send className="h-4 w-4 mr-2" />참석자에게 전송
+          </Button>
+          <Button onClick={() => { setForm(defaultForm); setShowCreate(true); }}>
+            <Plus className="h-4 w-4 mr-2" />국가 추가
+          </Button>
+        </div>
       </div>
+
+      {/* AI 자동 생성 섹션 */}
+      <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+        <CardContent className="p-4">
+          <h3 className="font-semibold flex items-center gap-2 mb-3">
+            <Sparkles className="h-4 w-4 text-primary" />
+            AI 자동 생성 - 국가 선택
+          </h3>
+          <p className="text-sm text-muted-foreground mb-3">
+            국가를 선택하면 AI가 여행 준비물, 출입국 정보, 비자, 통화, 시간대 등을 자동으로 생성합니다.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {POPULAR_COUNTRIES.map(c => {
+              const exists = countries?.some((x: any) => x.countryCode === c.code);
+              return (
+                <Button
+                  key={c.code}
+                  variant={exists ? "secondary" : "outline"}
+                  size="sm"
+                  disabled={generateMutation.isPending}
+                  onClick={() => handleAutoGenerate({ code: c.code, name: c.name })}
+                  className="text-xs"
+                >
+                  {generateMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                  {c.nameKo} ({c.code})
+                  {exists && " ✓"}
+                </Button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
         {countries?.map((c: any) => (
           <Card key={c.id} className="bg-card border-border cursor-pointer hover:border-primary/30 transition-colors" onClick={() => openEdit(c)}>
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
-                <div>
+                <div className="flex-1">
                   <h3 className="font-semibold flex items-center gap-2">
                     <Globe className="h-4 w-4 text-primary" />
                     {c.countryNameKo || c.countryName} ({c.countryCode})
@@ -73,23 +154,38 @@ export default function AdminTravelInfo() {
                     {c.visaRequired && <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400">비자 필요</span>}
                     {c.currency && <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{c.currency}</span>}
                     {c.timezone && <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{c.timezone}</span>}
+                    {c.language && <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{c.language}</span>}
+                    {c.plugType && <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">🔌 {c.plugType}</span>}
                   </div>
+                  {(c.requiredItems as string[])?.length > 0 && (
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      준비물: {(c.requiredItems as string[]).slice(0, 5).join(", ")}
+                      {(c.requiredItems as string[]).length > 5 && ` 외 ${(c.requiredItems as string[]).length - 5}건`}
+                    </div>
+                  )}
                   {c.immigrationUrl && (
                     <a href={c.immigrationUrl} target="_blank" rel="noopener" className="text-xs text-primary flex items-center gap-1 mt-2" onClick={e => e.stopPropagation()}>
                       <ExternalLink className="h-3 w-3" />출입국 신청
                     </a>
                   )}
                 </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={e => {
-                  e.stopPropagation();
-                  if (confirm("삭제하시겠습니까?")) deleteMutation.mutate({ id: c.id });
-                }}><Trash2 className="h-4 w-4" /></Button>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={e => {
+                    e.stopPropagation();
+                    setSendCountryCode(c.countryCode);
+                    setShowSend(true);
+                  }}><Send className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={e => {
+                    e.stopPropagation();
+                    if (confirm("삭제하시겠습니까?")) deleteMutation.mutate({ id: c.id });
+                  }}><Trash2 className="h-4 w-4" /></Button>
+                </div>
               </div>
             </CardContent>
           </Card>
         ))}
         {(!countries || countries.length === 0) && (
-          <div className="col-span-2 text-center py-12 text-muted-foreground">등록된 국가 정보가 없습니다.</div>
+          <div className="col-span-2 text-center py-12 text-muted-foreground">등록된 국가 정보가 없습니다. 위에서 AI 자동 생성을 사용해보세요.</div>
         )}
       </div>
 
@@ -147,6 +243,57 @@ export default function AdminTravelInfo() {
             <div><Label>추가 안내</Label><Textarea value={form.additionalNotes} onChange={e => setForm(p => ({...p, additionalNotes: e.target.value}))} rows={3} /></div>
             <Button type="submit" className="w-full" disabled={upsertMutation.isPending}>저장</Button>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send to Participants Dialog */}
+      <Dialog open={showSend} onOpenChange={setShowSend}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>참석자에게 여행 정보 전송</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>국가 선택 *</Label>
+              <Select value={sendCountryCode} onValueChange={setSendCountryCode}>
+                <SelectTrigger><SelectValue placeholder="국가 선택" /></SelectTrigger>
+                <SelectContent>
+                  {countries?.map((c: any) => (
+                    <SelectItem key={c.countryCode} value={c.countryCode}>
+                      {c.countryNameKo || c.countryName} ({c.countryCode})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>밋업 선택 (선택사항)</Label>
+              <Select value={sendMeetupId} onValueChange={setSendMeetupId}>
+                <SelectTrigger><SelectValue placeholder="전체 승인된 참석자" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">전체 승인된 참석자</SelectItem>
+                  {meetups?.map((m: any) => (
+                    <SelectItem key={m.id} value={String(m.id)}>{m.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              선택한 국가의 여행 준비물, 출입국 정보, 통화, 시간대 등을 텔레그램으로 전송합니다.
+            </p>
+            <Button
+              className="w-full"
+              disabled={!sendCountryCode || sendMutation.isPending}
+              onClick={() => {
+                sendMutation.mutate({
+                  countryCode: sendCountryCode,
+                  meetupId: sendMeetupId && sendMeetupId !== "all" ? Number(sendMeetupId) : undefined,
+                  method: "telegram",
+                });
+              }}
+            >
+              {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+              텔레그램으로 전송
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

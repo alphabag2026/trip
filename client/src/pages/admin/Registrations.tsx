@@ -1,24 +1,30 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, Download, Eye, ScanLine, CheckCircle, XCircle, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, Download, Eye, ScanLine, Trash2, FileSpreadsheet, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminRegistrations() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [selectedReg, setSelectedReg] = useState<any>(null);
 
   const { data: regs, refetch } = trpc.registration.list.useQuery({
     search: search || undefined,
     category: categoryFilter !== "all" ? categoryFilter : undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
   });
+
+  const { data: ocrData } = trpc.registration.exportPassportOcr.useQuery({});
 
   const updateMutation = trpc.registration.update.useMutation({
     onSuccess: () => { refetch(); toast.success("상태가 업데이트되었습니다."); },
@@ -27,17 +33,20 @@ export default function AdminRegistrations() {
     onSuccess: () => { refetch(); toast.success("삭제되었습니다."); },
   });
   const ocrMutation = trpc.registration.ocrPassport.useMutation({
-    onSuccess: (data) => { refetch(); toast.success("OCR 처리 완료"); },
+    onSuccess: () => { refetch(); toast.success("OCR 처리 완료"); },
   });
 
   const handleExport = () => {
     if (!regs || regs.length === 0) return;
-    const headers = ["ID","이름","전화번호","메신저ID","구분","분류","상태","추천자","팀","지갑","비고","신청일"];
+    const headers = ["ID","이름","전화번호","메신저ID","구분","분류","상태","추천자","팀","지갑","비고","항공확정","숙소확정","픽업확정","신청일"];
     const rows = regs.map((r: any) => [
       r.id, r.name, r.phone, r.messengerId,
       r.locationType === "overseas" ? "해외" : "내륙",
       r.category, r.status, r.referrerName || "", r.teamName || "",
       r.walletAddress || "", r.notes || "",
+      r.flightConfirmed ? "Y" : "N",
+      r.accommodationConfirmed ? "Y" : "N",
+      r.pickupConfirmed ? "Y" : "N",
       new Date(r.createdAt).toLocaleDateString("ko-KR"),
     ]);
     const bom = "\uFEFF";
@@ -50,25 +59,45 @@ export default function AdminRegistrations() {
     toast.success("CSV 파일이 다운로드되었습니다.");
   };
 
+  const handleExportPassportOcr = () => {
+    if (!ocrData || ocrData.length === 0) { toast.error("OCR 데이터가 없습니다."); return; }
+    const headers = ["신청ID","이름","전화번호","메신저","팀","분류","상태","여권이름","여권번호","국적","생년월일","만료일","성별","발급국"];
+    const rows = ocrData.map((r: any) => [
+      r.registrationId, r.name, r.phone, r.messengerId, r.teamName,
+      r.category, r.status, r.passportFullName, r.passportNumber,
+      r.nationality, r.dateOfBirth, r.expiryDate, r.gender, r.issuingCountry,
+    ]);
+    const bom = "\uFEFF";
+    const csv = bom + [headers.join(","), ...rows.map(r => r.map((c: any) => `"${String(c).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `passport_ocr_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    toast.success("여권 OCR 데이터가 다운로드되었습니다.");
+  };
+
   const categoryLabels: Record<string, string> = {
     meetup: "밋업", pre_visit: "사전방문", event: "이벤트", meeting: "미팅", other: "기타"
-  };
-  const statusLabels: Record<string, string> = {
-    pending: "대기", approved: "승인", rejected: "거절", completed: "완료"
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">신청 관리</h1>
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="h-4 w-4 mr-2" />엑셀 다운로드
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={handleExportPassportOcr}>
+            <FileSpreadsheet className="h-4 w-4 mr-2" />여권 OCR 엑셀
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />전체 엑셀
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-col md:flex-row gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input className="pl-9" placeholder="이름, 전화번호, 메신저 검색..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
@@ -93,6 +122,8 @@ export default function AdminRegistrations() {
             <SelectItem value="completed">완료</SelectItem>
           </SelectContent>
         </Select>
+        <Input type="date" className="w-[160px]" value={dateFrom} onChange={e => setDateFrom(e.target.value)} placeholder="시작일" />
+        <Input type="date" className="w-[160px]" value={dateTo} onChange={e => setDateTo(e.target.value)} placeholder="종료일" />
       </div>
 
       {/* Table */}
@@ -109,6 +140,7 @@ export default function AdminRegistrations() {
                   <th className="text-left py-3 px-4">메신저</th>
                   <th className="text-left py-3 px-4">추천자</th>
                   <th className="text-left py-3 px-4">상태</th>
+                  <th className="text-left py-3 px-4">배치확정</th>
                   <th className="text-left py-3 px-4">여권</th>
                   <th className="text-left py-3 px-4">작업</th>
                 </tr>
@@ -138,6 +170,13 @@ export default function AdminRegistrations() {
                           <SelectItem value="completed">완료</SelectItem>
                         </SelectContent>
                       </Select>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex gap-1">
+                        <span title="항공">{r.flightConfirmed ? <CheckCircle2 className="h-4 w-4 text-green-400" /> : <Clock className="h-4 w-4 text-muted-foreground" />}</span>
+                        <span title="숙소">{r.accommodationConfirmed ? <CheckCircle2 className="h-4 w-4 text-blue-400" /> : <Clock className="h-4 w-4 text-muted-foreground" />}</span>
+                        <span title="픽업">{r.pickupConfirmed ? <CheckCircle2 className="h-4 w-4 text-amber-400" /> : <Clock className="h-4 w-4 text-muted-foreground" />}</span>
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       {r.passportImageUrl ? (
@@ -180,13 +219,21 @@ export default function AdminRegistrations() {
               )}
               {selectedReg.passportOcrData && (
                 <div className="bg-secondary/50 rounded-lg p-4 text-sm space-y-1">
-                  <h4 className="font-semibold mb-2">OCR 결과</h4>
+                  <h4 className="font-semibold mb-2">OCR 추출 결과</h4>
                   {Object.entries(selectedReg.passportOcrData).map(([k, v]) => (
                     <div key={k} className="flex justify-between">
                       <span className="text-muted-foreground">{k}</span>
                       <span>{String(v)}</span>
                     </div>
                   ))}
+                </div>
+              )}
+              {!selectedReg.passportOcrData && (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground mb-3">OCR 데이터가 없습니다.</p>
+                  <Button onClick={() => { ocrMutation.mutate({ registrationId: selectedReg.id }); setSelectedReg(null); }} disabled={ocrMutation.isPending}>
+                    <ScanLine className="h-4 w-4 mr-2" />OCR 실행
+                  </Button>
                 </div>
               )}
             </div>

@@ -148,7 +148,28 @@ export const appRouter = router({
         const key = `passports/${input.registrationId}-${nanoid(8)}.jpg`;
         const { url } = await storagePut(key, buffer, input.mimeType);
         await db.updateRegistration(input.registrationId, { passportImageUrl: url });
-        return { url };
+        // v3.1: 여권 업로드 시 자동 OCR 실행
+        try {
+          const ocrResponse = await invokeLLM({
+            messages: [
+              { role: "system", content: "You are a passport OCR system. Extract: fullName, passportNumber, nationality, dateOfBirth (YYYY-MM-DD), expiryDate (YYYY-MM-DD), gender (M/F), issuingCountry. Return ONLY valid JSON." },
+              { role: "user", content: [
+                { type: "text", text: "Extract passport information from this image:" },
+                { type: "image_url", image_url: { url, detail: "high" } },
+              ]},
+            ],
+          });
+          const rawOcr = ocrResponse.choices?.[0]?.message?.content;
+          const ocrText = typeof rawOcr === "string" ? rawOcr : "{}";
+          let ocrData;
+          try { const jsonMatch = ocrText.match(/\{[\s\S]*\}/); ocrData = jsonMatch ? JSON.parse(jsonMatch[0]) : {}; }
+          catch { ocrData = { raw: ocrText }; }
+          await db.updateRegistration(input.registrationId, { passportOcrData: ocrData });
+          return { url, ocrData, ocrSuccess: true };
+        } catch (e) {
+          console.error("[OCR] Auto OCR failed:", e);
+          return { url, ocrData: null, ocrSuccess: false };
+        }
       }),
     ocrPassport: adminProcedure
       .input(z.object({ registrationId: z.number() }))
@@ -179,6 +200,25 @@ export const appRouter = router({
       .input(z.object({ category: z.string().optional(), status: z.string().optional(), search: z.string().optional(),
         dateFrom: z.string().optional(), dateTo: z.string().optional() }).optional())
       .query(({ input }) => db.getRegistrations(input)),
+    // v3.1: 여권 OCR 데이터 엑셀 다운로드용 조회
+    exportPassportOcr: adminProcedure
+      .input(z.object({ meetupId: z.number().optional(), status: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        const regs = await db.getRegistrations(input ? { meetupId: input.meetupId, status: input.status } : undefined);
+        return regs
+          .filter(r => r.passportOcrData)
+          .map(r => {
+            const ocr = r.passportOcrData as any || {};
+            return {
+              registrationId: r.id, name: r.name, phone: r.phone, messengerId: r.messengerId,
+              teamName: r.teamName || "", category: r.category, status: r.status,
+              passportFullName: ocr.fullName || "", passportNumber: ocr.passportNumber || "",
+              nationality: ocr.nationality || "", dateOfBirth: ocr.dateOfBirth || "",
+              expiryDate: ocr.expiryDate || "", gender: ocr.gender || "",
+              issuingCountry: ocr.issuingCountry || "",
+            };
+          });
+      }),
   }),
 
   // ── Flight Schedules ─────────────────────────────
@@ -559,6 +599,75 @@ export const appRouter = router({
       .mutation(async ({ input }) => { await db.upsertTravelInfo(input); return { success: true }; }),
     delete: adminProcedure.input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => { await db.deleteTravelInfo(input.id); return { success: true }; }),
+    // v3.1: LLM 기반 국가별 여행 준비물/정보 자동 생성
+    generateInfo: adminProcedure
+      .input(z.object({ countryCode: z.string().min(1), countryName: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: "You are a travel information expert. Generate comprehensive travel preparation info for the given country in Korean. Return ONLY valid JSON with these fields: countryNameKo (Korean name), requiredItems (array of strings - essential items to prepare), immigrationUrl (official immigration/visa website URL), immigrationNotes (immigration card/visa notes in Korean), visaRequired (boolean for Korean passport holders), visaNotes (visa details), emergencyContact (local emergency numbers), timezone (e.g. UTC+7), currency (local currency name and code), language (official language), plugType (power plug type e.g. Type A/B), additionalNotes (other useful tips in Korean)." },
+            { role: "user", content: `Generate travel preparation information for: ${input.countryName} (${input.countryCode})` },
+          ],
+        });
+        const rawContent = response.choices?.[0]?.message?.content;
+        const text = typeof rawContent === "string" ? rawContent : "{}";
+        let info;
+        try { const jsonMatch = text.match(/\{[\s\S]*\}/); info = jsonMatch ? JSON.parse(jsonMatch[0]) : {}; }
+        catch { info = {}; }
+        // Save to DB
+        await db.upsertTravelInfo({
+          countryCode: input.countryCode, countryName: input.countryName,
+          countryNameKo: info.countryNameKo || input.countryName,
+          requiredItems: info.requiredItems || [],
+          immigrationUrl: info.immigrationUrl || "",
+          immigrationNotes: info.immigrationNotes || "",
+          visaRequired: info.visaRequired ?? false,
+          visaNotes: info.visaNotes || "",
+          emergencyContact: info.emergencyContact || "",
+          timezone: info.timezone || "",
+          currency: info.currency || "",
+          language: info.language || "",
+          plugType: info.plugType || "",
+          additionalNotes: info.additionalNotes || "",
+        });
+        return { success: true, info };
+      }),
+    // v3.1: 참석자에게 국가별 여행 준비물 일괄/개별 전송
+    sendToParticipants: adminProcedure
+      .input(z.object({
+        countryCode: z.string(), meetupId: z.number().optional(),
+        registrationIds: z.array(z.number()).optional(),
+        method: z.enum(["telegram", "web"]).default("telegram"),
+      }))
+      .mutation(async ({ input }) => {
+        const info = await db.getTravelInfoByCountry(input.countryCode);
+        if (!info) throw new TRPCError({ code: "NOT_FOUND", message: "해당 국가 여행 정보가 없습니다" });
+        let regs;
+        if (input.registrationIds?.length) {
+          const allRegs = await db.getRegistrations();
+          regs = allRegs.filter(r => input.registrationIds!.includes(r.id));
+        } else if (input.meetupId) {
+          regs = await db.getRegistrations({ meetupId: input.meetupId, status: "approved" });
+        } else {
+          regs = await db.getRegistrations({ status: "approved" });
+        }
+        if (input.method === "telegram") {
+          const items = (info.requiredItems as string[] || []).join(", ");
+          let msg = `🌍 ${info.countryNameKo || info.countryName} 여행 준비 안내\n${'─'.repeat(20)}\n`;
+          msg += `📋 준비물: ${items || '없음'}\n`;
+          msg += `💱 통화: ${info.currency || '미정'}\n`;
+          msg += `🕐 시간대: ${info.timezone || '미정'}\n`;
+          msg += `🗣 언어: ${info.language || '미정'}\n`;
+          msg += `🔌 플러그: ${info.plugType || '미정'}\n`;
+          if (info.visaRequired) msg += `⚠️ 비자 필요: ${info.visaNotes || '확인 필요'}\n`;
+          if (info.immigrationUrl) msg += `🔗 출입국 신청: ${info.immigrationUrl}\n`;
+          if (info.immigrationNotes) msg += `📝 출입국 참고: ${info.immigrationNotes}\n`;
+          if (info.emergencyContact) msg += `🚨 긴급연락처: ${info.emergencyContact}\n`;
+          msg += `\n대상자 ${regs.length}명: ${regs.map(r => r.name).join(", ")}`;
+          await sendTelegram(msg);
+        }
+        return { success: true, sentCount: regs.length };
+      }),
   }),
 
   // ── Itineraries ──────────────────────────────────
@@ -769,7 +878,25 @@ export const appRouter = router({
       .input(z.object({ registrationId: z.number(), type: z.enum(["flight", "accommodation", "pickup"]) }))
       .mutation(async ({ input }) => {
         await db.confirmAssignment(input.registrationId, input.type);
+        // v3.1: 관리자에게 배치 확정 알림 전송
+        const reg = await db.getRegistrationById(input.registrationId);
+        const typeLabel = input.type === "flight" ? "항공편" : input.type === "accommodation" ? "숙소" : "픽업 차량";
+        if (reg) {
+          await sendTelegram(`✅ 배치 확정 알림\n${reg.name}님이 ${typeLabel} 배치를 확정했습니다.\n전화: ${reg.phone} / 메신저: ${reg.messengerId}`);
+        }
         return { success: true };
+      }),
+    // v3.1: 배치 확정 현황 조회
+    confirmationStatus: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        const regs = await db.getRegistrations(input?.meetupId ? { meetupId: input.meetupId, status: "approved" } : { status: "approved" });
+        return regs.map(r => ({
+          id: r.id, name: r.name, phone: r.phone,
+          flightConfirmed: (r as any).flightConfirmed || false,
+          accommodationConfirmed: (r as any).accommodationConfirmed || false,
+          pickupConfirmed: (r as any).pickupConfirmed || false,
+        }));
       }),
   }),
 });
