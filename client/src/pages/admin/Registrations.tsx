@@ -1,0 +1,198 @@
+import { useState, useMemo } from "react";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Search, Download, Eye, ScanLine, CheckCircle, XCircle, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+export default function AdminRegistrations() {
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedReg, setSelectedReg] = useState<any>(null);
+
+  const { data: regs, refetch } = trpc.registration.list.useQuery({
+    search: search || undefined,
+    category: categoryFilter !== "all" ? categoryFilter : undefined,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+  });
+
+  const updateMutation = trpc.registration.update.useMutation({
+    onSuccess: () => { refetch(); toast.success("상태가 업데이트되었습니다."); },
+  });
+  const deleteMutation = trpc.registration.delete.useMutation({
+    onSuccess: () => { refetch(); toast.success("삭제되었습니다."); },
+  });
+  const ocrMutation = trpc.registration.ocrPassport.useMutation({
+    onSuccess: (data) => { refetch(); toast.success("OCR 처리 완료"); },
+  });
+
+  const handleExport = () => {
+    if (!regs || regs.length === 0) return;
+    const headers = ["ID","이름","전화번호","메신저ID","구분","분류","상태","추천자","팀","지갑","비고","신청일"];
+    const rows = regs.map((r: any) => [
+      r.id, r.name, r.phone, r.messengerId,
+      r.locationType === "overseas" ? "해외" : "내륙",
+      r.category, r.status, r.referrerName || "", r.teamName || "",
+      r.walletAddress || "", r.notes || "",
+      new Date(r.createdAt).toLocaleDateString("ko-KR"),
+    ]);
+    const bom = "\uFEFF";
+    const csv = bom + [headers.join(","), ...rows.map(r => r.map((c: any) => `"${String(c).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `registrations_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    toast.success("CSV 파일이 다운로드되었습니다.");
+  };
+
+  const categoryLabels: Record<string, string> = {
+    meetup: "밋업", pre_visit: "사전방문", event: "이벤트", meeting: "미팅", other: "기타"
+  };
+  const statusLabels: Record<string, string> = {
+    pending: "대기", approved: "승인", rejected: "거절", completed: "완료"
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold">신청 관리</h1>
+        <Button variant="outline" size="sm" onClick={handleExport}>
+          <Download className="h-4 w-4 mr-2" />엑셀 다운로드
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input className="pl-9" placeholder="이름, 전화번호, 메신저 검색..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-[140px]"><SelectValue placeholder="분류" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">전체 분류</SelectItem>
+            <SelectItem value="meetup">밋업</SelectItem>
+            <SelectItem value="pre_visit">사전방문</SelectItem>
+            <SelectItem value="event">이벤트</SelectItem>
+            <SelectItem value="meeting">미팅</SelectItem>
+            <SelectItem value="other">기타</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[140px]"><SelectValue placeholder="상태" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">전체 상태</SelectItem>
+            <SelectItem value="pending">대기</SelectItem>
+            <SelectItem value="approved">승인</SelectItem>
+            <SelectItem value="rejected">거절</SelectItem>
+            <SelectItem value="completed">완료</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Table */}
+      <Card className="bg-card border-border">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="text-left py-3 px-4">이름</th>
+                  <th className="text-left py-3 px-4">구분</th>
+                  <th className="text-left py-3 px-4">분류</th>
+                  <th className="text-left py-3 px-4">전화번호</th>
+                  <th className="text-left py-3 px-4">메신저</th>
+                  <th className="text-left py-3 px-4">추천자</th>
+                  <th className="text-left py-3 px-4">상태</th>
+                  <th className="text-left py-3 px-4">여권</th>
+                  <th className="text-left py-3 px-4">작업</th>
+                </tr>
+              </thead>
+              <tbody>
+                {regs?.map((r: any) => (
+                  <tr key={r.id} className="border-b border-border/50 hover:bg-secondary/30">
+                    <td className="py-3 px-4 font-medium">{r.name}</td>
+                    <td className="py-3 px-4">
+                      <span className={`text-xs px-2 py-0.5 rounded ${r.locationType === "overseas" ? "bg-cyan-500/20 text-cyan-400" : "bg-purple-500/20 text-purple-400"}`}>
+                        {r.locationType === "overseas" ? "해외" : "내륙"}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-muted-foreground">{categoryLabels[r.category] || r.category}</td>
+                    <td className="py-3 px-4">{r.phone}</td>
+                    <td className="py-3 px-4">{r.messengerId}</td>
+                    <td className="py-3 px-4 text-muted-foreground">{r.referrerName || "-"}</td>
+                    <td className="py-3 px-4">
+                      <Select value={r.status} onValueChange={v => updateMutation.mutate({ id: r.id, status: v as any })}>
+                        <SelectTrigger className="h-7 w-[90px] text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">대기</SelectItem>
+                          <SelectItem value="approved">승인</SelectItem>
+                          <SelectItem value="rejected">거절</SelectItem>
+                          <SelectItem value="completed">완료</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="py-3 px-4">
+                      {r.passportImageUrl ? (
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedReg(r)}>
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => ocrMutation.mutate({ registrationId: r.id })} disabled={ocrMutation.isPending}>
+                            <ScanLine className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : <span className="text-xs text-muted-foreground">-</span>}
+                    </td>
+                    <td className="py-3 px-4">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => {
+                        if (confirm("정말 삭제하시겠습니까?")) deleteMutation.mutate({ id: r.id });
+                      }}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {(!regs || regs.length === 0) && (
+              <div className="text-center py-12 text-muted-foreground">등록된 신청이 없습니다.</div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Passport Detail Dialog */}
+      {selectedReg && (
+        <Dialog open={!!selectedReg} onOpenChange={() => setSelectedReg(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>{selectedReg.name} - 여권 정보</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              {selectedReg.passportImageUrl && (
+                <img src={selectedReg.passportImageUrl} alt="여권" className="w-full rounded-lg" />
+              )}
+              {selectedReg.passportOcrData && (
+                <div className="bg-secondary/50 rounded-lg p-4 text-sm space-y-1">
+                  <h4 className="font-semibold mb-2">OCR 결과</h4>
+                  {Object.entries(selectedReg.passportOcrData).map(([k, v]) => (
+                    <div key={k} className="flex justify-between">
+                      <span className="text-muted-foreground">{k}</span>
+                      <span>{String(v)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}

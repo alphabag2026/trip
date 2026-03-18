@@ -5,31 +5,63 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import Register from "./pages/Register";
+import Lookup from "./pages/Lookup";
+import TokenStatus from "./pages/TokenStatus";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminRegistrations from "./pages/admin/Registrations";
+import AdminMeetups from "./pages/admin/Meetups";
+import AdminItineraries from "./pages/admin/Itineraries";
+import AdminTravelInfo from "./pages/admin/TravelInfo";
+import AdminTelegram from "./pages/admin/Telegram";
+import AdminSearch from "./pages/admin/Search";
+import DashboardLayout from "./components/DashboardLayout";
 
-function Router() {
-  // make sure to consider if you need authentication for certain routes
+function PublicRouter() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
+      <Route path="/" component={Home} />
+      <Route path="/register" component={Register} />
+      <Route path="/register/:meetupId" component={Register} />
+      <Route path="/lookup" component={Lookup} />
+      <Route path="/token-status" component={TokenStatus} />
+      <Route path="/404" component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
+function AdminRouter() {
+  return (
+    <DashboardLayout>
+      <Switch>
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/registrations" component={AdminRegistrations} />
+        <Route path="/admin/meetups" component={AdminMeetups} />
+        <Route path="/admin/itineraries" component={AdminItineraries} />
+        <Route path="/admin/travel-info" component={AdminTravelInfo} />
+        <Route path="/admin/telegram" component={AdminTelegram} />
+        <Route path="/admin/search" component={AdminSearch} />
+        <Route component={NotFound} />
+      </Switch>
+    </DashboardLayout>
+  );
+}
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/admin/:rest*" component={AdminRouter} />
+      <Route>
+        <PublicRouter />
+      </Route>
+    </Switch>
+  );
+}
 
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
           <Router />
