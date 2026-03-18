@@ -40,6 +40,7 @@ const menuItems = [
   { icon: Globe, label: "국가별 여행정보", path: "/admin/travel-info" },
   { icon: Send, label: "텔레그램 설정", path: "/admin/telegram" },
   { icon: MessageCircle, label: "소통 채널", path: "/admin/channels" },
+  { icon: MessageCircle, label: "실시간 채팅", path: "/admin/chat" },
   { icon: FileText, label: "바우처 관리", path: "/admin/vouchers" },
   { icon: Search, label: "검색/연관성", path: "/admin/search" },
   { icon: Home, label: "홈으로", path: "/" },

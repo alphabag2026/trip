@@ -1,15 +1,48 @@
 import { trpc } from "@/lib/trpc";
 import { useParams } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { CalendarDays, MapPin, Clock, Plane, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CalendarDays, MapPin, Clock, Bell, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
+import { useEffect, useState } from "react";
 
 export default function ScheduleView() {
   const { meetupId } = useParams<{ meetupId: string }>();
   const mid = Number(meetupId);
   const { data: meetup } = trpc.meetup.getById.useQuery({ id: mid }, { enabled: !!mid });
-  const { data: events = [] } = trpc.schedule.list.useQuery({ meetupId: mid }, { enabled: !!mid });
+  const { data: events = [] } = trpc.schedule.list.useQuery(
+    { meetupId: mid },
+    { enabled: !!mid, refetchInterval: 5000 }
+  );
+
+  // 10분 전 알림 자동 체크 (30초마다 폴링)
+  const checkNotify = trpc.schedule.checkAndNotify.useMutation();
+  const [lastNotifyCheck, setLastNotifyCheck] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkNotify.mutate(undefined, {
+        onSuccess: (result) => {
+          setLastNotifyCheck(new Date());
+          if (result.triggered > 0) {
+            // 알림이 발송되면 이벤트 목록 갱신
+          }
+        },
+      });
+    }, 30000); // 30초마다 체크
+    return () => clearInterval(interval);
+  }, []);
+
+  // 현재 시간 기준 다음 이벤트 찾기
+  const now = Date.now();
+  const upcomingEvents = events
+    .filter((e: any) => new Date(e.eventTime).getTime() > now)
+    .sort((a: any, b: any) => new Date(a.eventTime).getTime() - new Date(b.eventTime).getTime());
+  const nextEvent = upcomingEvents[0];
+  const nextEventMinutes = nextEvent
+    ? Math.floor((new Date(nextEvent.eventTime).getTime() - now) / 60000)
+    : null;
 
   if (!meetup) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -20,17 +53,56 @@ export default function ScheduleView() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container py-4">
-          <h1 className="text-xl font-bold text-foreground">{meetup.title}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {meetup.scheduleStart && new Date(meetup.scheduleStart).toLocaleDateString("ko-KR")}
-            {meetup.scheduleEnd && ` ~ ${new Date(meetup.scheduleEnd).toLocaleDateString("ko-KR")}`}
-            {meetup.location && ` | ${meetup.location}`}
-          </p>
+        <div className="container py-4 flex items-center gap-4">
+          <Link href="/">
+            <Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button>
+          </Link>
+          <div>
+            <h1 className="text-xl font-bold text-foreground">{meetup.title}</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {meetup.scheduleStart && new Date(meetup.scheduleStart).toLocaleDateString("ko-KR")}
+              {meetup.scheduleEnd && ` ~ ${new Date(meetup.scheduleEnd).toLocaleDateString("ko-KR")}`}
+              {meetup.location && ` | ${meetup.location}`}
+            </p>
+          </div>
+          <Badge variant="outline" className="ml-auto text-xs">5초마다 자동 갱신</Badge>
         </div>
       </header>
 
-      <main className="container py-6 space-y-4">
+      <main className="container py-6 max-w-3xl mx-auto space-y-4">
+        {/* 다음 일정 알림 배너 */}
+        {nextEvent && nextEventMinutes !== null && nextEventMinutes <= 15 && (
+          <div className={`p-4 rounded-lg border-2 ${
+            nextEventMinutes <= 5 ? "border-red-500 bg-red-500/10" :
+            nextEventMinutes <= 10 ? "border-yellow-500 bg-yellow-500/10" :
+            "border-blue-500 bg-blue-500/10"
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-full ${
+                nextEventMinutes <= 5 ? "bg-red-500/20" :
+                nextEventMinutes <= 10 ? "bg-yellow-500/20" :
+                "bg-blue-500/20"
+              }`}>
+                {nextEventMinutes <= 5 ? (
+                  <AlertTriangle className="h-5 w-5 text-red-500 animate-pulse" />
+                ) : (
+                  <Bell className="h-5 w-5 text-yellow-500" />
+                )}
+              </div>
+              <div>
+                <p className="font-bold text-sm">
+                  {nextEventMinutes <= 0 ? "지금 시작!" :
+                   nextEventMinutes <= 5 ? `${nextEventMinutes}분 후 시작!` :
+                   `${nextEventMinutes}분 후 다음 일정`}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {nextEvent.title} {nextEvent.location ? `| ${nextEvent.location}` : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <CalendarDays className="h-5 w-5 text-primary" /> 일정표
         </h2>
@@ -39,26 +111,51 @@ export default function ScheduleView() {
           <Card><CardContent className="py-8 text-center text-muted-foreground">등록된 일정이 없습니다.</CardContent></Card>
         ) : (
           <div className="space-y-3">
-            {events.map((event, idx) => {
+            {events.map((event: any, idx: number) => {
               const eventTime = new Date(event.eventTime);
-              const isUpcoming = eventTime.getTime() - Date.now() < 10 * 60 * 1000 && eventTime.getTime() > Date.now();
+              const minutesUntil = Math.floor((eventTime.getTime() - now) / 60000);
+              const isPast = eventTime.getTime() < now;
+              const isUpcoming = minutesUntil > 0 && minutesUntil <= 10;
+              const isSoon = minutesUntil > 0 && minutesUntil <= 5;
+              const isNow = minutesUntil <= 0 && minutesUntil > -30;
+
               return (
-                <Card key={event.id} className={`transition-all ${isUpcoming ? "ring-2 ring-yellow-500 bg-yellow-500/5" : ""}`}>
+                <Card key={event.id} className={`transition-all ${
+                  isSoon ? "ring-2 ring-red-500 bg-red-500/5" :
+                  isUpcoming ? "ring-2 ring-yellow-500 bg-yellow-500/5" :
+                  isNow ? "ring-1 ring-green-500 bg-green-500/5" :
+                  isPast ? "opacity-60" : ""
+                }`}>
                   <CardContent className="py-4">
                     <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                      <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold ${
+                        isNow ? "bg-green-500/20 text-green-500" :
+                        isSoon ? "bg-red-500/20 text-red-500 animate-pulse" :
+                        isUpcoming ? "bg-yellow-500/20 text-yellow-500" :
+                        isPast ? "bg-muted text-muted-foreground" :
+                        "bg-primary/10 text-primary"
+                      }`}>
                         {idx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-foreground">{event.title}</h3>
-                          {isUpcoming && <Badge variant="outline" className="text-yellow-500 border-yellow-500 text-xs">곧 시작</Badge>}
+                          {isNow && <Badge className="bg-green-500 text-white text-xs">진행중</Badge>}
+                          {isSoon && <Badge className="bg-red-500 text-white text-xs animate-pulse">{minutesUntil}분 후!</Badge>}
+                          {isUpcoming && !isSoon && <Badge variant="outline" className="text-yellow-500 border-yellow-500 text-xs">{minutesUntil}분 후</Badge>}
+                          {isPast && !isNow && <Badge variant="outline" className="text-muted-foreground text-xs">완료</Badge>}
+                          {event.notified && <Bell className="h-3 w-3 text-muted-foreground" />}
                         </div>
                         <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5" />
                             {eventTime.toLocaleString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </span>
+                          {event.endTime && (
+                            <span className="text-xs">
+                              ~ {new Date(event.endTime).toLocaleString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          )}
                           {event.location && (
                             <span className="flex items-center gap-1">
                               <MapPin className="h-3.5 w-3.5" /> {event.location}
@@ -74,6 +171,20 @@ export default function ScheduleView() {
             })}
           </div>
         )}
+
+        {/* Quick Actions */}
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex flex-wrap gap-2">
+              <Link href="/flight-pickup">
+                <Button variant="outline" size="sm">항공편/픽업 안내</Button>
+              </Link>
+              <Link href="/lookup">
+                <Button variant="outline" size="sm">여정표 조회</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

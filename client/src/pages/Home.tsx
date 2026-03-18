@@ -20,6 +20,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-6 text-sm">
             <Link href="/register" className="text-muted-foreground hover:text-foreground transition-colors">밋업 신청</Link>
             <Link href="/lookup" className="text-muted-foreground hover:text-foreground transition-colors">여정표 조회</Link>
+            <Link href="/flight-pickup" className="text-muted-foreground hover:text-foreground transition-colors">항공편/픽업</Link>
           </nav>
           <div className="flex items-center gap-3">
             {isAuthenticated && user?.role === "admin" && (
@@ -109,6 +110,9 @@ export default function Home() {
           </Link>
           <Link href="/lookup" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
             <Search className="h-5 w-5" /><span>조회</span>
+          </Link>
+          <Link href="/flight-pickup" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
+            <Plane className="h-5 w-5" /><span>항공/픽업</span>
           </Link>
         </div>
       </div>

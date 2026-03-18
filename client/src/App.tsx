@@ -25,6 +25,8 @@ import AdminScheduleEvents from "./pages/admin/ScheduleEvents";
 import AdminModRequests from "./pages/admin/ModRequests";
 import AdminChannels from "./pages/admin/Channels";
 import AdminVouchers from "./pages/admin/Vouchers";
+import FlightPickupInfo from "./pages/FlightPickupInfo";
+import AdminChatDashboard from "./pages/admin/ChatDashboard";
 import DashboardLayout from "./components/DashboardLayout";
 
 function PublicRouter() {
@@ -38,6 +40,7 @@ function PublicRouter() {
       <Route path="/pickup/:meetupId" component={PickupBoard} />
       <Route path="/channel/:channelId" component={CommChannel} />
       <Route path="/my-assignments/:regId" component={MyAssignments} />
+      <Route path="/flight-pickup" component={FlightPickupInfo} />
       <Route path="/404" component={NotFound} />
     </Switch>
   );
@@ -61,6 +64,7 @@ function AdminRouter() {
         <Route path="/admin/mod-requests" component={AdminModRequests} />
         <Route path="/admin/channels" component={AdminChannels} />
         <Route path="/admin/vouchers" component={AdminVouchers} />
+        <Route path="/admin/chat" component={AdminChatDashboard} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

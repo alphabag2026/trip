@@ -231,6 +231,10 @@ export const appRouter = router({
       .input(z.object({ registrationId: z.number() }))
       .query(({ input }) => db.getFlightSchedules({ registrationId: input.registrationId })),
     delayed: adminProcedure.query(() => db.getDelayedFlights()),
+    // 참석자용: 내 항공편 실시간 조회
+    getMyFlights: publicProcedure
+      .input(z.object({ registrationId: z.number() }))
+      .query(({ input }) => db.getFlightSchedules({ registrationId: input.registrationId })),
     create: adminProcedure
       .input(z.object({
         meetupId: z.number().optional(), registrationId: z.number().optional(),
@@ -311,11 +315,37 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
+        const oldPickup = await db.getPickupAssignmentById(id);
         await db.updatePickupAssignment(id, {
           ...data,
           pickupTime: data.pickupTime ? new Date(data.pickupTime) : undefined,
         });
+        // 픽업 상태 변경 시 텔레그램 알림
+        if (data.status && oldPickup && data.status !== oldPickup.status) {
+          const statusLabel: Record<string, string> = { pending: "대기", en_route: "이동중", waiting: "대기중", picked_up: "픽업완료", completed: "완료" };
+          await sendTelegram(`🚗 픽업 상태 변경\n차량: ${oldPickup.vehicleName}\n상태: ${statusLabel[data.status] || data.status}\n기사: ${oldPickup.driverName || "미정"}\n장소: ${oldPickup.pickupLocation || "미정"}`);
+          // 해당 차량 탑승자들에게 알림
+          const regIds = oldPickup.assignedRegistrationIds as number[] | null;
+          if (regIds) {
+            for (const regId of regIds) {
+              const reg = await db.getRegistrationById(regId);
+              if (reg?.messengerId) {
+                await sendTelegram(`🚗 ${reg.name}님, 픽업 차량(${oldPickup.vehicleName}) 상태: ${statusLabel[data.status] || data.status}\n기사: ${oldPickup.driverName || "미정"} / 연락처: ${oldPickup.driverPhone || "미정"}\n장소: ${oldPickup.pickupLocation || "미정"}`);
+              }
+            }
+          }
+        }
         return { success: true };
+      }),
+    // 참석자용: 내 픽업 정보 조회
+    getMyPickup: publicProcedure
+      .input(z.object({ registrationId: z.number() }))
+      .query(async ({ input }) => {
+        const allPickups = await db.getPickupAssignments();
+        return allPickups.filter(p => {
+          const ids = p.assignedRegistrationIds as number[] | null;
+          return ids && ids.includes(input.registrationId);
+        });
       }),
     delete: adminProcedure.input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => { await db.deletePickupAssignment(input.id); return { success: true }; }),
@@ -461,7 +491,7 @@ export const appRouter = router({
       }),
     delete: adminProcedure.input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => { await db.deleteScheduleEvent(input.id); return { success: true }; }),
-    // 10분 전 알림 트리거
+    // 10분 전 알림 트리거 (관리자 텔레그램 + 참석자별)
     triggerNotifications: adminProcedure.mutation(async () => {
       const upcoming = await db.getUpcomingEvents(10);
       let sent = 0;
@@ -472,8 +502,31 @@ export const appRouter = router({
           await db.updateScheduleEvent(event.id, { notified: true, notifiedAt: new Date() });
           sent++;
         }
+        // 참석자별 개별 알림 (밋업에 속한 승인된 참석자들에게)
+        if (event.meetupId) {
+          const regs = await db.getRegistrations({ meetupId: event.meetupId, status: "approved" });
+          for (const reg of regs) {
+            if (reg.messengerId) {
+              await sendTelegram(`📢 ${reg.name}님, ${event.notifyBefore || 10}분 후 다음 일정이 시작됩니다!\n📍 ${event.title}\n📌 ${event.location || "미정"}\n🕐 ${event.eventTime.toLocaleString("ko-KR")}\n\n준비하시고 이동해 주세요!`);
+            }
+          }
+        }
       }
       return { triggered: sent, total: upcoming.length };
+    }),
+    // 자동 스케줄 체크 (프론트에서 폴링)
+    checkAndNotify: publicProcedure.mutation(async () => {
+      const upcoming = await db.getUpcomingEvents(10);
+      let sent = 0;
+      for (const event of upcoming) {
+        const msg = `⏰ 자동 알림 (${event.notifyBefore || 10}분 전)\n📍 ${event.title}\n🕐 ${event.eventTime.toLocaleString("ko-KR")}\n📌 ${event.location || "미정"}`;
+        const ok = await sendTelegram(msg);
+        if (ok) {
+          await db.updateScheduleEvent(event.id, { notified: true, notifiedAt: new Date() });
+          sent++;
+        }
+      }
+      return { triggered: sent, total: upcoming.length, checkedAt: new Date() };
     }),
   }),
 
@@ -754,6 +807,23 @@ export const appRouter = router({
       .mutation(async ({ input }) => { const { id, ...data } = input; await db.updateChannel(id, data); return { success: true }; }),
     delete: adminProcedure.input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => { await db.deleteChannel(input.id); return { success: true }; }),
+    // 백오피스용: 모든 채널 + 읽지 않은 메시지 카운트
+    allWithUnread: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        const channels = await db.getChannels(input?.meetupId);
+        const result = [];
+        for (const ch of channels) {
+          const unread = await db.getUnreadCount(ch.id);
+          const messages = await db.getMessages(ch.id, 1);
+          result.push({
+            ...ch,
+            unreadCount: unread,
+            lastMessage: messages[0] || null,
+          });
+        }
+        return result;
+      }),
   }),
 
   // ── Messages (v3.0) ─────────────────────────────────
