@@ -116,6 +116,7 @@ export const appRouter = router({
         checkedBagCount: z.number().optional(),
         checkedBagWeight: z.string().optional(),
         checkedBagNotes: z.string().optional(),
+        preferredDepartureTime: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const id = await db.createRegistration({
@@ -128,7 +129,8 @@ export const appRouter = router({
           const schedule = input.scheduleStart
             ? (input.scheduleEnd ? `${input.scheduleStart} ~ ${input.scheduleEnd}` : input.scheduleStart) : "미정";
           const bagInfo = input.checkedBagRequest ? `\n🧳 위탁수화물: ${input.checkedBagCount || 0}개 (${input.checkedBagWeight || "-"}) ${input.checkedBagNotes || ""}` : "";
-          const message = `📋 새 밋업 신청\n[${locationLabel}] ${input.name} / ${schedule} / ${input.phone} / ${input.messengerId} / ${input.notes || "-"} / ${input.referrerName || "-"}${bagInfo}`;
+          const departureTimeInfo = input.preferredDepartureTime ? `\n🕐 출발 희망시간대: ${input.preferredDepartureTime}` : "";
+          const message = `📋 새 밋업 신청\n[${locationLabel}] ${input.name} / ${schedule} / ${input.phone} / ${input.messengerId} / ${input.notes || "-"} / ${input.referrerName || "-"}${bagInfo}${departureTimeInfo}`;
           const sent = await sendTelegram(message);
           if (sent) await db.updateRegistration(id, { telegramNotified: true });
         } catch (e) { console.error("[Telegram] Failed:", e); }

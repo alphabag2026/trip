@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle } from "lucide-react";
+import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle, Clock } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 
@@ -28,6 +28,7 @@ export default function Register() {
     checkedBagCount: "1",
     checkedBagWeight: "23kg",
     checkedBagNotes: "",
+    preferredDepartureTime: "",
   });
 
   // 밋업 목록 조회 (수화물 공지 포함)
@@ -70,6 +71,7 @@ export default function Register() {
         checkedBagCount: checkedBagRequest ? parseInt(form.checkedBagCount) || 1 : 0,
         checkedBagWeight: checkedBagRequest ? form.checkedBagWeight : undefined,
         checkedBagNotes: checkedBagRequest ? form.checkedBagNotes || undefined : undefined,
+        preferredDepartureTime: form.preferredDepartureTime || undefined,
       });
 
       // Upload passport if exists
@@ -179,6 +181,23 @@ export default function Register() {
                   <Input id="scheduleEnd" type="date" value={form.scheduleEnd} onChange={e => handleChange("scheduleEnd", e.target.value)} />
                 </div>
               )}
+              <div>
+                <Label htmlFor="preferredDepartureTime" className="flex items-center gap-1">
+                  <Clock className="h-3.5 w-3.5 text-primary" />
+                  출발 희망시간대
+                </Label>
+                <Select value={form.preferredDepartureTime} onValueChange={v => handleChange("preferredDepartureTime", v)}>
+                  <SelectTrigger><SelectValue placeholder="희망시간대를 선택해주세요" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="새벽 (05:00~08:00)">새벽 (05:00~08:00)</SelectItem>
+                    <SelectItem value="오전 (08:00~12:00)">오전 (08:00~12:00)</SelectItem>
+                    <SelectItem value="오후 (12:00~17:00)">오후 (12:00~17:00)</SelectItem>
+                    <SelectItem value="저녁 (17:00~21:00)">저녁 (17:00~21:00)</SelectItem>
+                    <SelectItem value="심야 (21:00~05:00)">심야 (21:00~05:00)</SelectItem>
+                    <SelectItem value="상관없음">상관없음</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <Label htmlFor="phone">전화번호 *</Label>
                 <Input id="phone" type="tel" value={form.phone} onChange={e => handleChange("phone", e.target.value)} placeholder="010-1234-5678" required />

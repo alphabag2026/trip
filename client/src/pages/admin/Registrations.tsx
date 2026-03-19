@@ -38,12 +38,13 @@ export default function AdminRegistrations() {
 
   const handleExport = () => {
     if (!regs || regs.length === 0) return;
-    const headers = ["ID","이름","전화번호","메신저ID","구분","분류","상태","추천자","팀","지갑","비고","항공확정","숙소확정","픽업확정","수화물신청","수화물개수","수화물무게","수화물메모","신청일"];
+    const headers = ["ID","이름","전화번호","메신저ID","구분","분류","상태","추천자","팀","지갑","비고","출발희망시간대","항공확정","숙소확정","픽업확정","수화물신청","수화물개수","수화물무게","수화물메모","신청일"];
     const rows = regs.map((r: any) => [
       r.id, r.name, r.phone, r.messengerId,
       r.locationType === "overseas" ? "해외" : "내륙",
       r.category, r.status, r.referrerName || "", r.teamName || "",
       r.walletAddress || "", r.notes || "",
+      r.preferredDepartureTime || "",
       r.flightConfirmed ? "Y" : "N",
       r.accommodationConfirmed ? "Y" : "N",
       r.pickupConfirmed ? "Y" : "N",
@@ -145,6 +146,7 @@ export default function AdminRegistrations() {
                   <th className="text-left py-3 px-4">추천자</th>
                   <th className="text-left py-3 px-4">상태</th>
                   <th className="text-left py-3 px-4">배치확정</th>
+                  <th className="text-left py-3 px-4">출발시간</th>
                   <th className="text-left py-3 px-4">수화물</th>
                   <th className="text-left py-3 px-4">여권</th>
                   <th className="text-left py-3 px-4">작업</th>
@@ -182,6 +184,13 @@ export default function AdminRegistrations() {
                         <span title="숙소">{r.accommodationConfirmed ? <CheckCircle2 className="h-4 w-4 text-blue-400" /> : <Clock className="h-4 w-4 text-muted-foreground" />}</span>
                         <span title="픽업">{r.pickupConfirmed ? <CheckCircle2 className="h-4 w-4 text-amber-400" /> : <Clock className="h-4 w-4 text-muted-foreground" />}</span>
                       </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      {r.preferredDepartureTime ? (
+                        <span className="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1 w-fit">
+                          <Clock className="h-3 w-3" />{r.preferredDepartureTime.replace(/ \(.*\)/, "")}
+                        </span>
+                      ) : <span className="text-xs text-muted-foreground">-</span>}
                     </td>
                     <td className="py-3 px-4">
                       {r.checkedBagRequest ? (
@@ -228,6 +237,11 @@ export default function AdminRegistrations() {
             <div className="space-y-4">
               {selectedReg.passportImageUrl && (
                 <img src={selectedReg.passportImageUrl} alt="여권" className="w-full rounded-lg" />
+              )}
+              {selectedReg.preferredDepartureTime && (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />출발 희망시간대</span><span className="font-medium">{selectedReg.preferredDepartureTime}</span></div>
+                </div>
               )}
               {selectedReg.checkedBagRequest && (
                 <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-sm space-y-1">

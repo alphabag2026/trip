@@ -68,6 +68,7 @@ export const registrations = mysqlTable("registrations", {
   checkedBagCount: int("checkedBagCount").default(0),
   checkedBagWeight: varchar("checkedBagWeight", { length: 50 }),
   checkedBagNotes: text("checkedBagNotes"),
+  preferredDepartureTime: varchar("preferredDepartureTime", { length: 50 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

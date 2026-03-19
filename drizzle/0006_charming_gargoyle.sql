@@ -1,0 +1,1 @@
+ALTER TABLE `registrations` ADD `preferredDepartureTime` varchar(50);

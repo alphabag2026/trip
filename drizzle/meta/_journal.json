@@ -43,6 +43,13 @@
       "when": 1773898736834,
       "tag": "0005_melted_chamber",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1773900338533,
+      "tag": "0006_charming_gargoyle",
+      "breakpoints": true
     }
   ]
 }
