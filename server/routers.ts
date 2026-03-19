@@ -1169,6 +1169,191 @@ export const appRouter = router({
     list: adminProcedure
       .query(() => db.getBroadcastMessages()),
   }),
+
+  // ── Baggage Tracking ─────────────────────────────────
+  baggage: router({
+    create: publicProcedure
+      .input(z.object({
+        registrationId: z.number(),
+        meetupId: z.number().optional(),
+        flightScheduleId: z.number().optional(),
+        tagNumber: z.string().optional(),
+        baggageType: z.string().optional(),
+        weight: z.string().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const result = await db.createBaggageTracking(input);
+        return result;
+      }),
+    uploadTagPhoto: publicProcedure
+      .input(z.object({
+        baggageId: z.number(),
+        imageBase64: z.string(),
+        mimeType: z.string().default("image/jpeg"),
+      }))
+      .mutation(async ({ input }) => {
+        const buffer = Buffer.from(input.imageBase64, "base64");
+        const key = `baggage-tags/${input.baggageId}-${nanoid(8)}.jpg`;
+        const { url } = await storagePut(key, buffer, input.mimeType);
+
+        // LLM OCR: 수화물 태그 번호 인식
+        let ocrResult: any = null;
+        let tagNumber: string | undefined;
+        try {
+          const ocrResponse = await invokeLLM({
+            messages: [
+              { role: "system", content: "수화물 태그 사진에서 태그 번호를 인식해주세요. 태그 번호는 보통 10자리 숫자입니다. JSON으로 응답해주세요." },
+              { role: "user", content: [
+                { type: "text" as const, text: "이 수화물 태그 사진에서 태그 번호를 읽어주세요." },
+                { type: "image_url" as const, image_url: { url } }
+              ]}
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: {
+                name: "baggage_tag_ocr",
+                strict: true,
+                schema: {
+                  type: "object",
+                  properties: {
+                    tagNumber: { type: "string", description: "수화물 태그 번호" },
+                    airline: { type: "string", description: "항공사 이름" },
+                    destination: { type: "string", description: "목적지 공항 코드" },
+                    confidence: { type: "string", description: "인식 신뢰도 (high/medium/low)" },
+                  },
+                  required: ["tagNumber", "airline", "destination", "confidence"],
+                  additionalProperties: false,
+                },
+              },
+            },
+          });
+          const parsed = JSON.parse(ocrResponse.choices[0].message.content as string);
+          ocrResult = parsed;
+          tagNumber = parsed.tagNumber;
+        } catch (e) {
+          console.error("[Baggage OCR] Failed:", e);
+        }
+
+        await db.updateBaggageTracking(input.baggageId, {
+          tagPhotoUrl: url,
+          ocrResult,
+          ...(tagNumber ? { tagNumber } : {}),
+        });
+
+        return { url, ocrResult, tagNumber };
+      }),
+    getByRegistration: publicProcedure
+      .input(z.object({ registrationId: z.number() }))
+      .query(({ input }) => db.getBaggageByRegistration(input.registrationId)),
+    getByMeetup: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(({ input }) => db.getBaggageByMeetup(input.meetupId)),
+    list: adminProcedure.query(() => db.getAllBaggage()),
+    updateStatus: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        baggageStatus: z.enum(["checked_in", "loaded", "in_transit", "arrived", "claimed", "delayed", "lost"]),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const updateData: any = { baggageStatus: input.baggageStatus };
+        if (input.notes) updateData.notes = input.notes;
+        if (input.baggageStatus === "claimed") updateData.claimedAt = new Date();
+        await db.updateBaggageTracking(input.id, updateData);
+        return { success: true };
+      }),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        tagNumber: z.string().optional(),
+        baggageType: z.string().optional(),
+        weight: z.string().optional(),
+        description: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateBaggageTracking(id, data);
+        return { success: true };
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteBaggageTracking(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ── Checkin Info ────────────────────────────────────
+  checkin: router({
+    create: adminProcedure
+      .input(z.object({
+        registrationId: z.number(),
+        meetupId: z.number().optional(),
+        flightScheduleId: z.number().optional(),
+        airline: z.string().optional(),
+        flightNo: z.string().optional(),
+        checkinCounter: z.string().optional(),
+        gateNumber: z.string().optional(),
+        seatNumber: z.string().optional(),
+        boardingTime: z.string().optional(),
+        checkinStatus: z.enum(["not_checked_in", "online_checkin", "counter_checkin", "boarding_pass_issued", "boarded"]).optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const result = await db.createCheckinInfo({
+          ...input,
+          boardingTime: input.boardingTime ? new Date(input.boardingTime) : undefined,
+        });
+        return result;
+      }),
+    getByRegistration: publicProcedure
+      .input(z.object({ registrationId: z.number() }))
+      .query(({ input }) => db.getCheckinByRegistration(input.registrationId)),
+    getByMeetup: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(({ input }) => db.getCheckinByMeetup(input.meetupId)),
+    list: adminProcedure.query(() => db.getAllCheckins()),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        checkinCounter: z.string().optional(),
+        gateNumber: z.string().optional(),
+        seatNumber: z.string().optional(),
+        boardingTime: z.string().optional(),
+        checkinStatus: z.enum(["not_checked_in", "online_checkin", "counter_checkin", "boarding_pass_issued", "boarded"]).optional(),
+        boardingPassUrl: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateCheckinInfo(id, {
+          ...data,
+          boardingTime: data.boardingTime ? new Date(data.boardingTime) : undefined,
+        });
+        return { success: true };
+      }),
+    uploadBoardingPass: publicProcedure
+      .input(z.object({
+        checkinId: z.number(),
+        imageBase64: z.string(),
+        mimeType: z.string().default("image/jpeg"),
+      }))
+      .mutation(async ({ input }) => {
+        const buffer = Buffer.from(input.imageBase64, "base64");
+        const key = `boarding-passes/${input.checkinId}-${nanoid(8)}.jpg`;
+        const { url } = await storagePut(key, buffer, input.mimeType);
+        await db.updateCheckinInfo(input.checkinId, { boardingPassUrl: url });
+        return { url };
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteCheckinInfo(input.id);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

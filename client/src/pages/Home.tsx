@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plane, ClipboardList, Search, Shield, MapPin, Globe, MessageCircle, Car, Hotel } from "lucide-react";
+import { Plane, ClipboardList, Search, Shield, MapPin, Globe, MessageCircle, Car, Hotel, Luggage } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 
@@ -22,6 +22,7 @@ export default function Home() {
             <Link href="/lookup" className="text-muted-foreground hover:text-foreground transition-colors">여정표 조회</Link>
             <Link href="/flight-pickup" className="text-muted-foreground hover:text-foreground transition-colors">항공편/픽업</Link>
             <Link href="/chatbot" className="text-muted-foreground hover:text-foreground transition-colors">AI 도우미</Link>
+            <Link href="/flight-tracker" className="text-muted-foreground hover:text-foreground transition-colors">수화물 추적</Link>
           </nav>
           <div className="flex items-center gap-3">
             {isAuthenticated && user?.role === "admin" && (
@@ -89,6 +90,7 @@ export default function Home() {
               { icon: Search, title: "데이터 검색/분석", desc: "기간별/국가별/유형별 필터링으로 참가자 데이터 및 연관성 분석" },
               { icon: MessageCircle, title: "AI 출장 도우미", desc: "LLM 기반 AI 챗봇이 여행 준비물, 비자, 일정 등 출장 관련 질문에 자동 답변" },
               { icon: ClipboardList, title: "만족도 설문", desc: "밋업 후 참석자 만족도 설문조사 생성 및 텔레그램 발송, 결과 통계 분석" },
+              { icon: Luggage, title: "수화물 추적", desc: "수화물 태그 사진 업로드로 AI 번호 인식, 실시간 상태 추적 및 체크인 정보 확인" },
             ].map((f, i) => (
               <Card key={i} className="bg-card/50 border-border/50 hover:border-primary/30 transition-colors">
                 <CardContent className="p-6">

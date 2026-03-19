@@ -384,6 +384,55 @@ export const broadcastMessages = mysqlTable("broadcast_messages", {
 export type BroadcastMessage = typeof broadcastMessages.$inferSelect;
 export type InsertBroadcastMessage = typeof broadcastMessages.$inferInsert;
 
+// ══════════════════════════════════════════════════════════
+// v3.6 NEW TABLES
+// ══════════════════════════════════════════════════════════
+
+// ── Baggage Tracking (수화물 추적) ──────────────────────────
+export const baggageTracking = mysqlTable("baggage_tracking", {
+  id: int("id").autoincrement().primaryKey(),
+  registrationId: int("registrationId").notNull(),
+  meetupId: int("meetupId"),
+  flightScheduleId: int("flightScheduleId"),
+  tagNumber: varchar("tagNumber", { length: 100 }),
+  tagPhotoUrl: varchar("tagPhotoUrl", { length: 1000 }),
+  ocrResult: json("ocrResult"), // OCR 인식 결과
+  baggageStatus: mysqlEnum("baggageStatus", ["checked_in", "loaded", "in_transit", "arrived", "claimed", "delayed", "lost"]).default("checked_in").notNull(),
+  baggageType: varchar("baggageType", { length: 100 }), // 일반/골프백/특수
+  weight: varchar("weight", { length: 50 }),
+  description: text("description"),
+  statusUpdatedAt: timestamp("statusUpdatedAt"),
+  claimedAt: timestamp("claimedAt"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BaggageTracking = typeof baggageTracking.$inferSelect;
+export type InsertBaggageTracking = typeof baggageTracking.$inferInsert;
+
+// ── Checkin Info (체크인 정보) ──────────────────────────────
+export const checkinInfo = mysqlTable("checkin_info", {
+  id: int("id").autoincrement().primaryKey(),
+  registrationId: int("registrationId").notNull(),
+  meetupId: int("meetupId"),
+  flightScheduleId: int("flightScheduleId"),
+  airline: varchar("airline", { length: 255 }),
+  flightNo: varchar("flightNo", { length: 50 }),
+  checkinCounter: varchar("checkinCounter", { length: 100 }),
+  gateNumber: varchar("gateNumber", { length: 50 }),
+  seatNumber: varchar("seatNumber", { length: 20 }),
+  boardingTime: timestamp("boardingTime"),
+  checkinStatus: mysqlEnum("checkinStatus", ["not_checked_in", "online_checkin", "counter_checkin", "boarding_pass_issued", "boarded"]).default("not_checked_in").notNull(),
+  boardingPassUrl: varchar("boardingPassUrl", { length: 1000 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CheckinInfo = typeof checkinInfo.$inferSelect;
+export type InsertCheckinInfo = typeof checkinInfo.$inferInsert;
+
 // ── AI Chatbot Logs (AI 챗봇 대화 로그) ─────────────────────
 export const chatbotLogs = mysqlTable("chatbot_logs", {
   id: int("id").autoincrement().primaryKey(),

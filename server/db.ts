@@ -20,6 +20,8 @@ import {
   surveyResponses, InsertSurveyResponse,
   broadcastMessages, InsertBroadcastMessage,
   chatbotLogs, InsertChatbotLog,
+  baggageTracking, InsertBaggageTracking,
+  checkinInfo, InsertCheckinInfo,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -619,4 +621,69 @@ export async function getApprovedRegistrations(meetupId?: number) {
     return d.select().from(registrations).where(and(eq(registrations.status, "approved"), eq(registrations.meetupId, meetupId)));
   }
   return d.select().from(registrations).where(eq(registrations.status, "approved"));
+}
+
+
+// ── Baggage Tracking ─────────────────────────────────────
+export async function createBaggageTracking(data: InsertBaggageTracking) {
+  const d = await getDb(); if (!d) return null;
+  const [result] = await d.insert(baggageTracking).values(data).$returningId();
+  return result;
+}
+
+export async function getBaggageByRegistration(registrationId: number) {
+  const d = await getDb(); if (!d) return [];
+  return d.select().from(baggageTracking).where(eq(baggageTracking.registrationId, registrationId)).orderBy(baggageTracking.createdAt);
+}
+
+export async function getBaggageByMeetup(meetupId: number) {
+  const d = await getDb(); if (!d) return [];
+  return d.select().from(baggageTracking).where(eq(baggageTracking.meetupId, meetupId)).orderBy(baggageTracking.createdAt);
+}
+
+export async function getAllBaggage() {
+  const d = await getDb(); if (!d) return [];
+  return d.select().from(baggageTracking).orderBy(desc(baggageTracking.createdAt));
+}
+
+export async function updateBaggageTracking(id: number, data: Partial<InsertBaggageTracking>) {
+  const d = await getDb(); if (!d) return;
+  await d.update(baggageTracking).set({ ...data, statusUpdatedAt: new Date() }).where(eq(baggageTracking.id, id));
+}
+
+export async function deleteBaggageTracking(id: number) {
+  const d = await getDb(); if (!d) return;
+  await d.delete(baggageTracking).where(eq(baggageTracking.id, id));
+}
+
+// ── Checkin Info ─────────────────────────────────────────
+export async function createCheckinInfo(data: InsertCheckinInfo) {
+  const d = await getDb(); if (!d) return null;
+  const [result] = await d.insert(checkinInfo).values(data).$returningId();
+  return result;
+}
+
+export async function getCheckinByRegistration(registrationId: number) {
+  const d = await getDb(); if (!d) return [];
+  return d.select().from(checkinInfo).where(eq(checkinInfo.registrationId, registrationId)).orderBy(checkinInfo.createdAt);
+}
+
+export async function getCheckinByMeetup(meetupId: number) {
+  const d = await getDb(); if (!d) return [];
+  return d.select().from(checkinInfo).where(eq(checkinInfo.meetupId, meetupId)).orderBy(checkinInfo.createdAt);
+}
+
+export async function getAllCheckins() {
+  const d = await getDb(); if (!d) return [];
+  return d.select().from(checkinInfo).orderBy(desc(checkinInfo.createdAt));
+}
+
+export async function updateCheckinInfo(id: number, data: Partial<InsertCheckinInfo>) {
+  const d = await getDb(); if (!d) return;
+  await d.update(checkinInfo).set(data).where(eq(checkinInfo.id, id));
+}
+
+export async function deleteCheckinInfo(id: number) {
+  const d = await getDb(); if (!d) return;
+  await d.delete(checkinInfo).where(eq(checkinInfo.id, id));
 }

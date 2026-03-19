@@ -50,6 +50,13 @@
       "when": 1773900338533,
       "tag": "0006_charming_gargoyle",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1773910582108,
+      "tag": "0007_third_psylocke",
+      "breakpoints": true
     }
   ]
 }
