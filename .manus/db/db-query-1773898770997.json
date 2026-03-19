@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE `meetups` SET `baggageNotice` = '초과화물은 직접부담할 수 있습니다.' WHERE `baggageNotice` IS NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute UPDATE `meetups` SET `baggageNotice` = '초과화물은 직접부담할 수 있습니다.' WHERE `baggageNotice` IS NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1654
+}

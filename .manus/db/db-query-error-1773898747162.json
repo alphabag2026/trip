@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE `meetups` ADD `baggageNotice` text DEFAULT ('초과화물은 직접부담할 수 있습니다.');\nALTER TABLE `registrations` ADD `checkedBagRequest` boolean DEFAULT false;\nALTER TABLE `registrations` ADD `checkedBagCount` int DEFAULT 0;\nALTER TABLE `registrations` ADD `checkedBagWeight` varchar(50);\nALTER TABLE `registrations` ADD `checkedBagNotes` text;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute ALTER TABLE `meetups` ADD `baggageNotice` text DEFAULT ('초과화물은 직접부담할 수 있습니다.');\nALTER TABLE `registrations` ADD `checkedBagRequest` boolean DEFAULT false;\nALTER TABLE `registrations` ADD `checkedBagCount` int DEFAULT 0;\nALTER TABLE `registrations` ADD `checkedBagWeight` varchar(50);\nALTER TABLE `registrations` ADD `checkedBagNotes` text;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 107 near \"'초과화물은 직접부담할 수 있습니다.')\""
+  ]
+}

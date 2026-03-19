@@ -54,10 +54,12 @@ export const appRouter = router({
         destinationCountry: z.string().optional(), location: z.string().optional(),
         scheduleStart: z.string().optional(), scheduleEnd: z.string().optional(),
         description: z.string().optional(), maxParticipants: z.number().optional(),
+        baggageNotice: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const id = await db.createMeetup({
           ...input,
+          baggageNotice: input.baggageNotice || "초과화물은 직접부담할 수 있습니다.",
           scheduleStart: input.scheduleStart ? new Date(input.scheduleStart) : undefined,
           scheduleEnd: input.scheduleEnd ? new Date(input.scheduleEnd) : undefined,
           createdBy: ctx.user.id,
@@ -73,6 +75,7 @@ export const appRouter = router({
         scheduleStart: z.string().optional(), scheduleEnd: z.string().optional(),
         description: z.string().optional(), maxParticipants: z.number().optional(),
         status: z.enum(["draft", "open", "closed", "completed"]).optional(),
+        baggageNotice: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
@@ -109,6 +112,10 @@ export const appRouter = router({
         notes: z.string().optional(), roommatePreference: z.string().optional(),
         category: z.enum(["meetup", "pre_visit", "event", "meeting", "other"]).default("meetup"),
         customCategory: z.string().optional(),
+        checkedBagRequest: z.boolean().optional(),
+        checkedBagCount: z.number().optional(),
+        checkedBagWeight: z.string().optional(),
+        checkedBagNotes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const id = await db.createRegistration({
@@ -120,7 +127,8 @@ export const appRouter = router({
           const locationLabel = input.locationType === "overseas" ? "해외" : "내륙";
           const schedule = input.scheduleStart
             ? (input.scheduleEnd ? `${input.scheduleStart} ~ ${input.scheduleEnd}` : input.scheduleStart) : "미정";
-          const message = `📋 새 밋업 신청\n[${locationLabel}] ${input.name} / ${schedule} / ${input.phone} / ${input.messengerId} / ${input.notes || "-"} / ${input.referrerName || "-"}`;
+          const bagInfo = input.checkedBagRequest ? `\n🧳 위탁수화물: ${input.checkedBagCount || 0}개 (${input.checkedBagWeight || "-"}) ${input.checkedBagNotes || ""}` : "";
+          const message = `📋 새 밋업 신청\n[${locationLabel}] ${input.name} / ${schedule} / ${input.phone} / ${input.messengerId} / ${input.notes || "-"} / ${input.referrerName || "-"}${bagInfo}`;
           const sent = await sendTelegram(message);
           if (sent) await db.updateRegistration(id, { telegramNotified: true });
         } catch (e) { console.error("[Telegram] Failed:", e); }

@@ -6,21 +6,36 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plane, ArrowLeft, CheckCircle, Upload, Info } from "lucide-react";
-import { Link } from "wouter";
+import { Switch } from "@/components/ui/switch";
+import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle } from "lucide-react";
+import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 
 export default function Register() {
+  const params = useParams<{ meetupId?: string }>();
+  const meetupId = params.meetupId ? parseInt(params.meetupId) : undefined;
+
   const [locationType, setLocationType] = useState<"domestic" | "overseas">("domestic");
   const [submitted, setSubmitted] = useState(false);
   const [passportFile, setPassportFile] = useState<File | null>(null);
+  const [checkedBagRequest, setCheckedBagRequest] = useState(false);
   const [form, setForm] = useState({
     name: "", phone: "", messengerId: "",
     scheduleStart: "", scheduleEnd: "",
     walletAddress: "", referrerName: "", teamName: "",
     teamIntro: "", notes: "", roommatePreference: "",
     category: "meetup" as const,
+    checkedBagCount: "1",
+    checkedBagWeight: "23kg",
+    checkedBagNotes: "",
   });
+
+  // 밋업 목록 조회 (수화물 공지 포함)
+  const { data: meetups } = trpc.meetup.list.useQuery({ status: "open" });
+  const { data: selectedMeetup } = trpc.meetup.getById.useQuery(
+    { id: meetupId! },
+    { enabled: !!meetupId }
+  );
 
   const createMutation = trpc.registration.create.useMutation();
   const uploadPassportMutation = trpc.registration.uploadPassport.useMutation();
@@ -28,6 +43,9 @@ export default function Register() {
   const handleChange = useCallback((field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
   }, []);
+
+  // 수화물 공지 가져오기 (선택된 밋업 또는 기본값)
+  const baggageNotice = selectedMeetup?.baggageNotice || "초과화물은 직접부담할 수 있습니다.";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +56,7 @@ export default function Register() {
     try {
       const result = await createMutation.mutateAsync({
         ...form,
+        meetupId,
         locationType,
         scheduleStart: form.scheduleStart || undefined,
         scheduleEnd: form.scheduleEnd || undefined,
@@ -47,6 +66,10 @@ export default function Register() {
         teamIntro: form.teamIntro || undefined,
         notes: form.notes || undefined,
         roommatePreference: form.roommatePreference || undefined,
+        checkedBagRequest,
+        checkedBagCount: checkedBagRequest ? parseInt(form.checkedBagCount) || 1 : 0,
+        checkedBagWeight: checkedBagRequest ? form.checkedBagWeight : undefined,
+        checkedBagNotes: checkedBagRequest ? form.checkedBagNotes || undefined : undefined,
       });
 
       // Upload passport if exists
@@ -128,6 +151,15 @@ export default function Register() {
           </div>
         )}
 
+        {/* 수화물 공지 */}
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-6 flex items-start gap-3">
+          <Luggage className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-amber-500 mb-1">수화물 안내</p>
+            <p className="text-sm text-amber-400/90">{baggageNotice}</p>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 필수 입력 */}
           <Card className="bg-card border-border">
@@ -156,6 +188,66 @@ export default function Register() {
                 <Input id="messengerId" value={form.messengerId} onChange={e => handleChange("messengerId", e.target.value)} placeholder="텔레그램/카카오톡 ID" required />
               </div>
             </CardContent>
+          </Card>
+
+          {/* 위탁수화물 신청서 */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Luggage className="h-5 w-5 text-primary" />
+                  위탁수화물 신청
+                </CardTitle>
+                <Switch
+                  checked={checkedBagRequest}
+                  onCheckedChange={setCheckedBagRequest}
+                />
+              </div>
+            </CardHeader>
+            {checkedBagRequest && (
+              <CardContent className="space-y-4">
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                  <p className="text-xs text-amber-400/80">{baggageNotice}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="checkedBagCount">수화물 개수</Label>
+                    <Select value={form.checkedBagCount} onValueChange={v => handleChange("checkedBagCount", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1개</SelectItem>
+                        <SelectItem value="2">2개</SelectItem>
+                        <SelectItem value="3">3개</SelectItem>
+                        <SelectItem value="4">4개</SelectItem>
+                        <SelectItem value="5">5개 이상</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="checkedBagWeight">무게 (1개당)</Label>
+                    <Select value={form.checkedBagWeight} onValueChange={v => handleChange("checkedBagWeight", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="23kg">23kg (일반)</SelectItem>
+                        <SelectItem value="32kg">32kg (초과)</SelectItem>
+                        <SelectItem value="기타">기타 (메모에 기재)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="checkedBagNotes">수화물 관련 메모</Label>
+                  <Textarea
+                    id="checkedBagNotes"
+                    value={form.checkedBagNotes}
+                    onChange={e => handleChange("checkedBagNotes", e.target.value)}
+                    placeholder="수화물 관련 특이사항 (골프백, 스키장비, 악기 등 특수 수화물이 있으면 기재해주세요)"
+                    rows={3}
+                  />
+                </div>
+              </CardContent>
+            )}
           </Card>
 
           {/* 선택 입력 */}

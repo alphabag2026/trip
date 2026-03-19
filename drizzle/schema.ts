@@ -29,6 +29,7 @@ export const meetups = mysqlTable("meetups", {
   description: text("description"),
   maxParticipants: int("maxParticipants"),
   status: mysqlEnum("status", ["draft", "open", "closed", "completed"]).default("open").notNull(),
+  baggageNotice: text("baggageNotice").default("초과화물은 직접부담할 수 있습니다."),
   createdBy: int("createdBy"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -63,6 +64,10 @@ export const registrations = mysqlTable("registrations", {
   flightConfirmed: boolean("flightConfirmed").default(false),
   accommodationConfirmed: boolean("accommodationConfirmed").default(false),
   pickupConfirmed: boolean("pickupConfirmed").default(false),
+  checkedBagRequest: boolean("checkedBagRequest").default(false),
+  checkedBagCount: int("checkedBagCount").default(0),
+  checkedBagWeight: varchar("checkedBagWeight", { length: 50 }),
+  checkedBagNotes: text("checkedBagNotes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
