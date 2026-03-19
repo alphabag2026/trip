@@ -69,6 +69,10 @@ export const registrations = mysqlTable("registrations", {
   checkedBagWeight: varchar("checkedBagWeight", { length: 50 }),
   checkedBagNotes: text("checkedBagNotes"),
   preferredDepartureTime: varchar("preferredDepartureTime", { length: 50 }),
+  mealPreference: varchar("mealPreference", { length: 100 }),
+  allergies: text("allergies"),
+  drinkAlcohol: mysqlEnum("drinkAlcohol", ["yes", "no", "sometimes"]),
+  smoking: mysqlEnum("smoking", ["yes", "no"]),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

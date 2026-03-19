@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,8 +10,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Plane, ArrowLeft, ClipboardList, Star, CheckCircle2, Loader2 } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
+import LanguageSelector from "@/components/LanguageSelector";
 
 export default function SurveyResponse() {
+  const { t } = useTranslation();
   const params = useParams<{ surveyId: string }>();
   const surveyId = parseInt(params.surveyId || "0");
 
@@ -24,23 +27,21 @@ export default function SurveyResponse() {
   const respondMutation = trpc.survey.respond.useMutation({
     onSuccess: () => {
       setSubmitted(true);
-      toast.success("설문에 응답해주셔서 감사합니다!");
+      toast.success(t("survey.thankYou"));
     },
     onError: () => {
-      toast.error("제출 중 오류가 발생했습니다.");
+      toast.error(t("survey.submitError"));
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!survey) return;
-
     const questions = (survey.questions as any[]) || [];
     const answerArray = questions.map(q => ({
       questionId: q.id,
       value: answers[q.id] ?? "",
     }));
-
     respondMutation.mutate({
       surveyId,
       respondentName: respondentName || undefined,
@@ -65,19 +66,20 @@ export default function SurveyResponse() {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
-          <div className="container flex items-center h-16">
+          <div className="container flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
               <Plane className="h-6 w-6 text-primary" />
               <span className="font-bold text-lg">Meetup Travel</span>
             </Link>
+            <LanguageSelector />
           </div>
         </header>
         <div className="container py-20 text-center">
           <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">설문을 찾을 수 없습니다</h2>
-          <p className="text-muted-foreground mb-6">유효하지 않은 설문 링크입니다.</p>
+          <h2 className="text-xl font-semibold mb-2">{t("survey.notFound")}</h2>
+          <p className="text-muted-foreground mb-6">{t("survey.invalidLink")}</p>
           <Link href="/">
-            <Button variant="outline">홈으로 돌아가기</Button>
+            <Button variant="outline">{t("common.back")}</Button>
           </Link>
         </div>
       </div>
@@ -88,19 +90,20 @@ export default function SurveyResponse() {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
-          <div className="container flex items-center h-16">
+          <div className="container flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
               <Plane className="h-6 w-6 text-primary" />
               <span className="font-bold text-lg">Meetup Travel</span>
             </Link>
+            <LanguageSelector />
           </div>
         </header>
         <div className="container py-20 text-center">
           <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">설문이 종료되었습니다</h2>
-          <p className="text-muted-foreground mb-6">이 설문은 더 이상 응답을 받지 않습니다.</p>
+          <h2 className="text-xl font-semibold mb-2">{t("survey.closed")}</h2>
+          <p className="text-muted-foreground mb-6">{t("survey.closedDesc")}</p>
           <Link href="/">
-            <Button variant="outline">홈으로 돌아가기</Button>
+            <Button variant="outline">{t("common.back")}</Button>
           </Link>
         </div>
       </div>
@@ -113,24 +116,22 @@ export default function SurveyResponse() {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
-          <div className="container flex items-center h-16">
+          <div className="container flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
               <Plane className="h-6 w-6 text-primary" />
               <span className="font-bold text-lg">Meetup Travel</span>
             </Link>
+            <LanguageSelector />
           </div>
         </header>
         <div className="container py-20 text-center max-w-lg mx-auto">
           <div className="h-16 w-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="h-8 w-8 text-green-500" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">응답이 제출되었습니다</h2>
-          <p className="text-muted-foreground mb-6">
-            소중한 의견 감사합니다.<br />
-            더 나은 밋업을 위해 노력하겠습니다.
-          </p>
+          <h2 className="text-2xl font-bold mb-2">{t("survey.submitted")}</h2>
+          <p className="text-muted-foreground mb-6">{t("survey.submittedDesc")}</p>
           <Link href="/">
-            <Button>홈으로 돌아가기</Button>
+            <Button>{t("common.back")}</Button>
           </Link>
         </div>
       </div>
@@ -139,19 +140,19 @@ export default function SurveyResponse() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
         <div className="container flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
             <Plane className="h-6 w-6 text-primary" />
             <span className="font-bold text-lg">Meetup Travel</span>
           </Link>
+          <LanguageSelector />
         </div>
       </header>
 
       <div className="container py-6 max-w-2xl mx-auto">
         <Link href="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
-          <ArrowLeft className="h-4 w-4" /> 홈으로
+          <ArrowLeft className="h-4 w-4" /> {t("common.back")}
         </Link>
 
         <Card className="border-border/50 mb-6">
@@ -171,34 +172,32 @@ export default function SurveyResponse() {
         </Card>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Respondent info */}
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-base">응답자 정보 (선택)</CardTitle>
+              <CardTitle className="text-base">{t("survey.respondentInfo")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>이름</Label>
+                  <Label>{t("lookup.name")}</Label>
                   <Input
                     value={respondentName}
                     onChange={e => setRespondentName(e.target.value)}
-                    placeholder="이름을 입력하세요"
+                    placeholder={t("lookup.namePh")}
                   />
                 </div>
                 <div>
-                  <Label>전화번호</Label>
+                  <Label>{t("lookup.phone")}</Label>
                   <Input
                     value={respondentPhone}
                     onChange={e => setRespondentPhone(e.target.value)}
-                    placeholder="전화번호를 입력하세요"
+                    placeholder={t("lookup.phonePh")}
                   />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Questions */}
           {questions.map((q: any, idx: number) => (
             <Card key={q.id} className="border-border/50">
               <CardHeader>
@@ -228,7 +227,7 @@ export default function SurveyResponse() {
                     ))}
                     {answers[q.id] && (
                       <span className="text-sm text-muted-foreground ml-2">
-                        {answers[q.id]}점
+                        {answers[q.id]}{t("survey.points", "점")}
                       </span>
                     )}
                   </div>
@@ -238,7 +237,7 @@ export default function SurveyResponse() {
                   <Textarea
                     value={(answers[q.id] as string) || ""}
                     onChange={e => setAnswer(q.id, e.target.value)}
-                    placeholder="답변을 입력하세요..."
+                    placeholder={t("survey.answerPh")}
                     rows={3}
                   />
                 )}
@@ -269,10 +268,10 @@ export default function SurveyResponse() {
             {respondMutation.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                제출 중...
+                {t("survey.submitting")}
               </>
             ) : (
-              "설문 제출하기"
+              t("survey.submit")
             )}
           </Button>
         </form>

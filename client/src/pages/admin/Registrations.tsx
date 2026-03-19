@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Download, Eye, ScanLine, Trash2, FileSpreadsheet, CheckCircle2, Clock, Luggage } from "lucide-react";
+import { Search, Download, Eye, ScanLine, Trash2, FileSpreadsheet, CheckCircle2, Clock, Luggage, UtensilsCrossed, Wine, Cigarette } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminRegistrations() {
@@ -38,13 +38,17 @@ export default function AdminRegistrations() {
 
   const handleExport = () => {
     if (!regs || regs.length === 0) return;
-    const headers = ["ID","이름","전화번호","메신저ID","구분","분류","상태","추천자","팀","지갑","비고","출발희망시간대","항공확정","숙소확정","픽업확정","수화물신청","수화물개수","수화물무게","수화물메모","신청일"];
+    const headers = ["ID","이름","전화번호","메신저ID","구분","분류","상태","추천자","팀","지갑","비고","출발희망시간대","식사선호","알레르기","음주","흡연","항공확정","숙소확정","픽업확정","수화물신청","수화물개수","수화물무게","수화물메모","신청일"];
     const rows = regs.map((r: any) => [
       r.id, r.name, r.phone, r.messengerId,
       r.locationType === "overseas" ? "해외" : "내륙",
       r.category, r.status, r.referrerName || "", r.teamName || "",
       r.walletAddress || "", r.notes || "",
       r.preferredDepartureTime || "",
+      r.mealPreference || "",
+      r.allergies || "",
+      r.drinkAlcohol === "yes" ? "음주" : r.drinkAlcohol === "sometimes" ? "가끔" : r.drinkAlcohol === "no" ? "비음주" : "",
+      r.smoking === "yes" ? "흡연" : r.smoking === "no" ? "비흡연" : "",
       r.flightConfirmed ? "Y" : "N",
       r.accommodationConfirmed ? "Y" : "N",
       r.pickupConfirmed ? "Y" : "N",
@@ -241,6 +245,15 @@ export default function AdminRegistrations() {
               {selectedReg.preferredDepartureTime && (
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-sm">
                   <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />출발 희망시간대</span><span className="font-medium">{selectedReg.preferredDepartureTime}</span></div>
+                </div>
+              )}
+              {(selectedReg.mealPreference || selectedReg.allergies || selectedReg.drinkAlcohol || selectedReg.smoking) && (
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-sm space-y-1">
+                  <h4 className="font-semibold flex items-center gap-2 mb-2"><UtensilsCrossed className="h-4 w-4 text-green-500" />식사 및 생활 정보</h4>
+                  {selectedReg.mealPreference && <div className="flex justify-between"><span className="text-muted-foreground">식사 선호</span><span>{selectedReg.mealPreference}</span></div>}
+                  {selectedReg.allergies && <div className="flex justify-between"><span className="text-muted-foreground">알레르기</span><span>{selectedReg.allergies}</span></div>}
+                  {selectedReg.drinkAlcohol && <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><Wine className="h-3 w-3" />음주</span><span>{selectedReg.drinkAlcohol === "yes" ? "음주" : selectedReg.drinkAlcohol === "sometimes" ? "가끔" : "비음주"}</span></div>}
+                  {selectedReg.smoking && <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><Cigarette className="h-3 w-3" />흡연</span><span>{selectedReg.smoking === "yes" ? "흡연" : "비흡연"}</span></div>}
                 </div>
               )}
               {selectedReg.checkedBagRequest && (

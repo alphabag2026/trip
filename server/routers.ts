@@ -117,6 +117,10 @@ export const appRouter = router({
         checkedBagWeight: z.string().optional(),
         checkedBagNotes: z.string().optional(),
         preferredDepartureTime: z.string().optional(),
+        mealPreference: z.string().optional(),
+        allergies: z.string().optional(),
+        drinkAlcohol: z.enum(["yes", "no", "sometimes"]).optional(),
+        smoking: z.enum(["yes", "no"]).optional(),
       }))
       .mutation(async ({ input }) => {
         const id = await db.createRegistration({
@@ -130,7 +134,12 @@ export const appRouter = router({
             ? (input.scheduleEnd ? `${input.scheduleStart} ~ ${input.scheduleEnd}` : input.scheduleStart) : "미정";
           const bagInfo = input.checkedBagRequest ? `\n🧳 위탁수화물: ${input.checkedBagCount || 0}개 (${input.checkedBagWeight || "-"}) ${input.checkedBagNotes || ""}` : "";
           const departureTimeInfo = input.preferredDepartureTime ? `\n🕐 출발 희망시간대: ${input.preferredDepartureTime}` : "";
-          const message = `📋 새 밋업 신청\n[${locationLabel}] ${input.name} / ${schedule} / ${input.phone} / ${input.messengerId} / ${input.notes || "-"} / ${input.referrerName || "-"}${bagInfo}${departureTimeInfo}`;
+          const mealInfo = input.mealPreference ? `\n🍽 식사: ${input.mealPreference}` : "";
+          const allergyInfo = input.allergies ? `\n⚠️ 알레르기: ${input.allergies}` : "";
+          const drinkLabel = input.drinkAlcohol === "yes" ? "음주" : input.drinkAlcohol === "sometimes" ? "가끔" : input.drinkAlcohol === "no" ? "비음주" : "";
+          const drinkInfo = drinkLabel ? `\n🍺 ${drinkLabel}` : "";
+          const smokeInfo = input.smoking ? `\n🚬 ${input.smoking === "yes" ? "흡연" : "비흡연"}` : "";
+          const message = `📋 새 밋업 신청\n[${locationLabel}] ${input.name} / ${schedule} / ${input.phone} / ${input.messengerId} / ${input.notes || "-"} / ${input.referrerName || "-"}${bagInfo}${departureTimeInfo}${mealInfo}${allergyInfo}${drinkInfo}${smokeInfo}`;
           const sent = await sendTelegram(message);
           if (sent) await db.updateRegistration(id, { telegramNotified: true });
         } catch (e) { console.error("[Telegram] Failed:", e); }
