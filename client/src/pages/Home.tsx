@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plane, ClipboardList, Search, Shield, MapPin, Globe, MessageCircle, Car, Hotel, Luggage } from "lucide-react";
+import { Plane, ClipboardList, Search, Shield, MapPin, Globe, MessageCircle, Car, Hotel, Luggage, User } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useTranslation } from "react-i18next";
@@ -26,6 +26,7 @@ export default function Home() {
             <Link href="/flight-pickup" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.flightPickup")}</Link>
             <Link href="/chatbot" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.chatbot")}</Link>
             <Link href="/flight-tracker" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.flightTracker")}</Link>
+            <Link href="/my-profile" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.myProfile") || "마이페이지"}</Link>
           </nav>
           <div className="flex items-center gap-3">
             <LanguageSelector />
@@ -124,6 +125,9 @@ export default function Home() {
           </Link>
           <Link href="/chatbot" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
             <MessageCircle className="h-5 w-5" /><span>{t("nav.ai")}</span>
+          </Link>
+          <Link href="/my-profile" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
+            <User className="h-5 w-5" /><span>{t("nav.myProfile") || "마이페이지"}</span>
           </Link>
         </div>
       </div>

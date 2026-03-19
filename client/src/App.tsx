@@ -33,6 +33,9 @@ import AdminSurveys from "./pages/admin/Surveys";
 import AdminBroadcast from "./pages/admin/Broadcast";
 import AdminBaggageCheckin from "./pages/admin/BaggageCheckin";
 import FlightTracker from "./pages/FlightTracker";
+import MyProfile from "./pages/MyProfile";
+import AdminMealDashboard from "./pages/admin/MealDashboard";
+import AdminHotelRooms from "./pages/admin/HotelRooms";
 import DashboardLayout from "./components/DashboardLayout";
 
 function PublicRouter() {
@@ -50,6 +53,7 @@ function PublicRouter() {
       <Route path="/chatbot" component={AIChatbot} />
       <Route path="/flight-tracker" component={FlightTracker} />
       <Route path="/survey/:surveyId" component={SurveyResponse} />
+      <Route path="/my-profile" component={MyProfile} />
       <Route path="/404" component={NotFound} />
     </Switch>
   );
@@ -77,6 +81,8 @@ function AdminRouter() {
         <Route path="/admin/surveys" component={AdminSurveys} />
         <Route path="/admin/broadcast" component={AdminBroadcast} />
         <Route path="/admin/baggage-checkin" component={AdminBaggageCheckin} />
+        <Route path="/admin/meal-dashboard" component={AdminMealDashboard} />
+        <Route path="/admin/hotel-rooms" component={AdminHotelRooms} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

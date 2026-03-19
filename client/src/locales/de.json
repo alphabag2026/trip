@@ -11,7 +11,8 @@
     "home": "Start",
     "apply": "Anmelden",
     "search": "Suchen",
-    "ai": "KI"
+    "ai": "KI",
+    "myProfile": "Mein Profil"
   },
   "home": {
     "badge": "Global Meetup & Business Trip Management",

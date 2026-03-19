@@ -64,6 +64,13 @@
       "when": 1773912870723,
       "tag": "0008_freezing_peter_quill",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1773936738376,
+      "tag": "0009_fancy_sugar_man",
+      "breakpoints": true
     }
   ]
 }

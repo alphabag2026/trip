@@ -687,3 +687,67 @@ export async function deleteCheckinInfo(id: number) {
   const d = await getDb(); if (!d) return;
   await d.delete(checkinInfo).where(eq(checkinInfo.id, id));
 }
+
+
+// ══════════════════════════════════════════════════════════
+// v3.8 - 식사 통계, 프로필 수정, 호텔 방 배정
+// ══════════════════════════════════════════════════════════
+
+export async function getMealStats(meetupId?: number) {
+  const d = await getDb(); if (!d) return { mealPreferences: {}, allergies: {}, drinkAlcohol: {}, smoking: {}, total: 0 };
+  const where = meetupId ? eq(registrations.meetupId, meetupId) : undefined;
+  const rows = where
+    ? await d.select().from(registrations).where(where)
+    : await d.select().from(registrations);
+  const mealPreferences: Record<string, number> = {};
+  const allergiesMap: Record<string, number> = {};
+  const drinkAlcoholMap: Record<string, number> = {};
+  const smokingMap: Record<string, number> = {};
+  for (const r of rows) {
+    if (r.mealPreference) mealPreferences[r.mealPreference] = (mealPreferences[r.mealPreference] || 0) + 1;
+    if (r.allergies) {
+      for (const a of r.allergies.split(/[,，、]/).map(s => s.trim()).filter(Boolean)) {
+        allergiesMap[a] = (allergiesMap[a] || 0) + 1;
+      }
+    }
+    if (r.drinkAlcohol) drinkAlcoholMap[r.drinkAlcohol] = (drinkAlcoholMap[r.drinkAlcohol] || 0) + 1;
+    if (r.smoking) smokingMap[r.smoking] = (smokingMap[r.smoking] || 0) + 1;
+  }
+  return { mealPreferences, allergies: allergiesMap, drinkAlcohol: drinkAlcoholMap, smoking: smokingMap, total: rows.length };
+}
+
+export async function updateRegistrationProfile(id: number, data: {
+  mealPreference?: string; allergies?: string; drinkAlcohol?: string; smoking?: string;
+  preferredDepartureTime?: string; checkedBagRequest?: boolean; checkedBagCount?: number;
+  checkedBagWeight?: string; checkedBagNotes?: string; roommatePreference?: string;
+}) {
+  const d = await getDb(); if (!d) return;
+  await d.update(registrations).set(data as any).where(eq(registrations.id, id));
+}
+
+export async function updateHotelRoom(registrationId: number, data: {
+  hotelRoomNumber?: string | null; hotelFloor?: string | null; hotelNotes?: string | null;
+}) {
+  const d = await getDb(); if (!d) return;
+  await d.update(registrations).set(data as any).where(eq(registrations.id, registrationId));
+}
+
+export async function getHotelRoomAssignments(meetupId?: number) {
+  const d = await getDb(); if (!d) return [];
+  const where = meetupId ? eq(registrations.meetupId, meetupId) : undefined;
+  const rows = where
+    ? await d.select().from(registrations).where(where).orderBy(registrations.hotelRoomNumber)
+    : await d.select().from(registrations).orderBy(registrations.hotelRoomNumber);
+  return rows;
+}
+
+export async function bulkUpdateHotelRooms(assignments: { registrationId: number; roomNumber: string; floor?: string; notes?: string }[]) {
+  const d = await getDb(); if (!d) return;
+  for (const a of assignments) {
+    await d.update(registrations).set({
+      hotelRoomNumber: a.roomNumber,
+      hotelFloor: a.floor || null,
+      hotelNotes: a.notes || null,
+    } as any).where(eq(registrations.id, a.registrationId));
+  }
+}

@@ -1363,6 +1363,96 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // ══ v3.8 - 식사 통계, 프로필 수정, 호텔 방 배정 ══
+  mealStats: router({
+    get: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }))
+      .query(async ({ input }) => {
+        return db.getMealStats(input.meetupId);
+      }),
+  }),
+
+  profile: router({
+    get: publicProcedure
+      .input(z.object({ name: z.string().min(1), phone: z.string().min(1) }))
+      .query(async ({ input }) => {
+        const results = await db.getRegistrationByNameAndPhone(input.name, input.phone);
+        if (results.length === 0) return null;
+        return results[0];
+      }),
+    update: publicProcedure
+      .input(z.object({
+        registrationId: z.number(),
+        name: z.string().min(1),
+        phone: z.string().min(1),
+        mealPreference: z.string().optional(),
+        allergies: z.string().optional(),
+        drinkAlcohol: z.enum(["yes", "no", "sometimes"]).optional(),
+        smoking: z.enum(["yes", "no"]).optional(),
+        preferredDepartureTime: z.string().optional(),
+        checkedBagRequest: z.boolean().optional(),
+        checkedBagCount: z.number().optional(),
+        checkedBagWeight: z.string().optional(),
+        checkedBagNotes: z.string().optional(),
+        roommatePreference: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // 본인 인증: 이름+전화번호로 확인
+        const results = await db.getRegistrationByNameAndPhone(input.name, input.phone);
+        const match = results.find((r: any) => r.id === input.registrationId);
+        if (!match) throw new TRPCError({ code: "FORBIDDEN", message: "본인 인증에 실패했습니다." });
+        const { registrationId, name, phone, ...updateData } = input;
+        await db.updateRegistrationProfile(registrationId, updateData as any);
+        return { success: true };
+      }),
+  }),
+
+  hotelRoom: router({
+    list: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }))
+      .query(async ({ input }) => {
+        return db.getHotelRoomAssignments(input.meetupId);
+      }),
+    assign: adminProcedure
+      .input(z.object({
+        registrationId: z.number(),
+        roomNumber: z.string(),
+        floor: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateHotelRoom(input.registrationId, {
+          hotelRoomNumber: input.roomNumber,
+          hotelFloor: input.floor || null,
+          hotelNotes: input.notes || null,
+        });
+        return { success: true };
+      }),
+    bulkAssign: adminProcedure
+      .input(z.object({
+        assignments: z.array(z.object({
+          registrationId: z.number(),
+          roomNumber: z.string(),
+          floor: z.string().optional(),
+          notes: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        await db.bulkUpdateHotelRooms(input.assignments);
+        return { success: true, count: input.assignments.length };
+      }),
+    remove: adminProcedure
+      .input(z.object({ registrationId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.updateHotelRoom(input.registrationId, {
+          hotelRoomNumber: null,
+          hotelFloor: null,
+          hotelNotes: null,
+        });
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

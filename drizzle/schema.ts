@@ -73,6 +73,9 @@ export const registrations = mysqlTable("registrations", {
   allergies: text("allergies"),
   drinkAlcohol: mysqlEnum("drinkAlcohol", ["yes", "no", "sometimes"]),
   smoking: mysqlEnum("smoking", ["yes", "no"]),
+  hotelRoomNumber: varchar("hotelRoomNumber", { length: 50 }),
+  hotelFloor: varchar("hotelFloor", { length: 20 }),
+  hotelNotes: text("hotelNotes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
