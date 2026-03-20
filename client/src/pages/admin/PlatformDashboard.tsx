@@ -1,18 +1,17 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   Building2, Users, Globe, MapPin, Handshake,
-  CalendarDays, UserPlus, Shield, ChevronRight,
+  CalendarDays, UserPlus, Shield, AlertTriangle,
   BarChart3, TrendingUp, Activity, Edit, Trash2,
   Phone, Mail, ExternalLink, Plus
 } from "lucide-react";
@@ -31,6 +30,13 @@ const orgTypeBadgeColors: Record<string, string> = {
   partner: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
 };
 
+const orgTypeColors: Record<string, string> = {
+  platform: "#a855f7",
+  organizer: "#3b82f6",
+  agency: "#22c55e",
+  partner: "#f97316",
+};
+
 const roleLabels: Record<string, string> = {
   user: "일반 사용자",
   admin: "관리자",
@@ -46,6 +52,73 @@ const emptyOrg = {
   address: "", description: "", website: "", telegramChatId: "",
 };
 
+// ═══════════════════════════════════════════════════════════════
+// DonutChart - SVG 기반 도넛 차트 컴포넌트
+// ═══════════════════════════════════════════════════════════════
+function DonutChart({ data, size = 200, strokeWidth = 32 }: {
+  data: Array<{ label: string; value: number; color: string }>;
+  size?: number;
+  strokeWidth?: number;
+}) {
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+  if (total === 0) return null;
+
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const center = size / 2;
+
+  let cumulativeOffset = 0;
+  const segments = data.map((d) => {
+    const pct = d.value / total;
+    const dashArray = pct * circumference;
+    const dashOffset = -cumulativeOffset * circumference;
+    cumulativeOffset += pct;
+    return { ...d, pct, dashArray, dashOffset };
+  });
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {/* Background circle */}
+          <circle cx={center} cy={center} r={radius} fill="none" stroke="currentColor" strokeWidth={strokeWidth} className="text-muted/20" />
+          {/* Segments */}
+          {segments.map((seg, i) => (
+            <circle
+              key={i}
+              cx={center} cy={center} r={radius}
+              fill="none"
+              stroke={seg.color}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${seg.dashArray} ${circumference - seg.dashArray}`}
+              strokeDashoffset={seg.dashOffset}
+              strokeLinecap="butt"
+              transform={`rotate(-90 ${center} ${center})`}
+              className="transition-all duration-500"
+            />
+          ))}
+        </svg>
+        {/* Center text */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-3xl font-bold">{total}</span>
+          <span className="text-xs text-muted-foreground">전체</span>
+        </div>
+      </div>
+      {/* Legend */}
+      <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+        {segments.map((seg, i) => (
+          <div key={i} className="flex items-center gap-2 text-sm">
+            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: seg.color }} />
+            <span className="text-muted-foreground">{seg.label}</span>
+            <span className="font-semibold ml-auto">{seg.value}</span>
+            <span className="text-xs text-muted-foreground">({Math.round(seg.pct * 100)}%)</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function PlatformDashboard() {
   const [activeTab, setActiveTab] = useState<"overview" | "organizations" | "users">("overview");
   const [orgFilter, setOrgFilter] = useState<string>("all");
@@ -53,6 +126,15 @@ export default function PlatformDashboard() {
   const [editingOrgId, setEditingOrgId] = useState<number | null>(null);
   const [orgForm, setOrgForm] = useState(emptyOrg);
   const [userSearch, setUserSearch] = useState("");
+
+  // 역할 변경 확인 모달 상태
+  const [roleChangeConfirm, setRoleChangeConfirm] = useState<{
+    open: boolean;
+    userId: number;
+    userName: string;
+    currentRole: string;
+    newRole: string;
+  }>({ open: false, userId: 0, userName: "", currentRole: "", newRole: "" });
 
   const utils = trpc.useUtils();
   const statsQuery = trpc.platform.stats.useQuery();
@@ -84,6 +166,7 @@ export default function PlatformDashboard() {
     onSuccess: () => {
       toast.success("역할이 변경되었습니다");
       utils.platform.users.invalidate();
+      setRoleChangeConfirm({ open: false, userId: 0, userName: "", currentRole: "", newRole: "" });
     },
     onError: (e) => toast.error(e.message),
   });
@@ -137,12 +220,40 @@ export default function PlatformDashboard() {
     }
   }
 
+  function handleRoleChangeRequest(user: any, newRole: string) {
+    if (user.role === newRole) return;
+    setRoleChangeConfirm({
+      open: true,
+      userId: user.id,
+      userName: user.name || "이름 없음",
+      currentRole: user.role,
+      newRole,
+    });
+  }
+
+  function confirmRoleChange() {
+    updateRoleMutation.mutate({
+      userId: roleChangeConfirm.userId,
+      role: roleChangeConfirm.newRole as "user" | "admin" | "superadmin" | "organizer" | "agency" | "partner",
+    });
+  }
+
   const stats = statsQuery.data;
   const filteredUsers = usersQuery.data?.filter((u: any) =>
     !userSearch ||
     u.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
     u.email?.toLowerCase().includes(userSearch.toLowerCase())
   ) || [];
+
+  // 도넛 차트 데이터
+  const donutData = useMemo(() => {
+    if (!stats?.orgByType || stats.orgByType.length === 0) return [];
+    return stats.orgByType.map((item: any) => ({
+      label: orgTypeLabels[item.type] || item.type,
+      value: Number(item.count) || 0,
+      color: orgTypeColors[item.type] || "#6b7280",
+    }));
+  }, [stats?.orgByType]);
 
   return (
     <div className="space-y-6">
@@ -239,26 +350,15 @@ export default function PlatformDashboard() {
             </Card>
           </div>
 
-          {/* Org Type Distribution + Partner Categories */}
+          {/* Donut Chart + Partner Categories */}
           <div className="grid md:grid-cols-2 gap-6">
             <Card>
               <CardHeader><CardTitle className="text-base flex items-center gap-2"><TrendingUp className="h-4 w-4" /> 조직 유형별 분포</CardTitle></CardHeader>
-              <CardContent>
-                {stats?.orgByType && stats.orgByType.length > 0 ? (
-                  <div className="space-y-3">
-                    {stats.orgByType.map((item: any) => (
-                      <div key={item.type} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Badge className={orgTypeBadgeColors[item.type] || "bg-gray-100 text-gray-800"}>
-                            {orgTypeLabels[item.type] || item.type}
-                          </Badge>
-                        </div>
-                        <span className="text-lg font-semibold">{item.count}</span>
-                      </div>
-                    ))}
-                  </div>
+              <CardContent className="flex justify-center">
+                {donutData.length > 0 ? (
+                  <DonutChart data={donutData} size={220} strokeWidth={36} />
                 ) : (
-                  <div className="text-center py-4">
+                  <div className="text-center py-8">
                     <p className="text-muted-foreground text-sm">등록된 조직이 없습니다</p>
                     <Button size="sm" className="mt-2" onClick={() => setActiveTab("organizations")}>
                       조직 등록하기
@@ -391,10 +491,7 @@ export default function PlatformDashboard() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost" size="icon" className="h-8 w-8"
-                          onClick={() => openEditOrg(org)}
-                        >
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditOrg(org)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
@@ -466,7 +563,7 @@ export default function PlatformDashboard() {
                         <td className="py-2 px-3">
                           <Select
                             value={user.role}
-                            onValueChange={(role: any) => updateRoleMutation.mutate({ userId: user.id, role })}
+                            onValueChange={(role: any) => handleRoleChangeRequest(user, role)}
                           >
                             <SelectTrigger className="w-[140px] h-8">
                               <SelectValue />
@@ -543,6 +640,59 @@ export default function PlatformDashboard() {
               onClick={handleOrgSubmit}
             >
               {createOrgMutation.isPending || updateOrgMutation.isPending ? "처리 중..." : editingOrgId ? "수정" : "등록"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ════════════════════ Role Change Confirmation Dialog ════════════════════ */}
+      <Dialog open={roleChangeConfirm.open} onOpenChange={(open) => { if (!open) setRoleChangeConfirm({ open: false, userId: 0, userName: "", currentRole: "", newRole: "" }); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              역할 변경 확인
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              다음 사용자의 역할을 변경하시겠습니까?
+            </p>
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">사용자</span>
+                <span className="font-semibold">{roleChangeConfirm.userName}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">현재 역할</span>
+                <Badge variant="outline">{roleLabels[roleChangeConfirm.currentRole] || roleChangeConfirm.currentRole}</Badge>
+              </div>
+              <div className="flex items-center justify-center">
+                <span className="text-lg text-muted-foreground">↓</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">변경 역할</span>
+                <Badge>{roleLabels[roleChangeConfirm.newRole] || roleChangeConfirm.newRole}</Badge>
+              </div>
+            </div>
+            {(roleChangeConfirm.newRole === "superadmin" || roleChangeConfirm.newRole === "admin") && (
+              <div className="flex items-start gap-2 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  관리자 이상의 권한을 부여하면 해당 사용자가 플랫폼의 주요 설정을 변경할 수 있습니다. 신중하게 결정해 주세요.
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRoleChangeConfirm({ open: false, userId: 0, userName: "", currentRole: "", newRole: "" })}>
+              취소
+            </Button>
+            <Button
+              onClick={confirmRoleChange}
+              disabled={updateRoleMutation.isPending}
+            >
+              {updateRoleMutation.isPending ? "변경 중..." : "역할 변경"}
             </Button>
           </DialogFooter>
         </DialogContent>

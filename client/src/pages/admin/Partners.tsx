@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import {
   Handshake, MapPin, Phone, Mail, Globe, Star,
   Plus, Search, Filter, Trash2, Edit, ExternalLink,
   Utensils, Hotel, Music, Sparkles, Map, Ship, Car, Languages, Activity, MoreHorizontal,
-  Clock, Users, ToggleLeft
+  Clock, Users, ToggleLeft, ArrowUpDown, ArrowDown, ArrowUp
 } from "lucide-react";
 
 const categoryIcons: Record<string, any> = {
@@ -36,6 +36,8 @@ export default function PartnersPage() {
   const [filterRegion, setFilterRegion] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [form, setForm] = useState(emptyForm);
+  const [sortBy, setSortBy] = useState<"name" | "rating" | "capacity">("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const utils = trpc.useUtils();
   const categoriesQuery = trpc.partnerCategory.list.useQuery();
@@ -102,11 +104,20 @@ export default function PartnersPage() {
   }
 
   const categories = categoriesQuery.data || [];
-  const partners = (partnersQuery.data || []).filter((p: any) =>
-    !searchTerm || p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.contactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.region?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const partners = useMemo(() => {
+    const filtered = (partnersQuery.data || []).filter((p: any) =>
+      !searchTerm || p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.contactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.region?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    return [...filtered].sort((a: any, b: any) => {
+      let cmp = 0;
+      if (sortBy === "rating") cmp = (a.rating || 0) - (b.rating || 0);
+      else if (sortBy === "capacity") cmp = (a.capacity || 0) - (b.capacity || 0);
+      else cmp = (a.name || "").localeCompare(b.name || "");
+      return sortDir === "desc" ? -cmp : cmp;
+    });
+  }, [partnersQuery.data, searchTerm, sortBy, sortDir]);
 
   // 지역 목록 추출
   const regions = Array.from(new Set((partnersQuery.data || []).map((p: any) => p.region).filter(Boolean)));
@@ -218,6 +229,22 @@ export default function PartnersPage() {
             </SelectContent>
           </Select>
         )}
+        <Select value={`${sortBy}-${sortDir}`} onValueChange={v => {
+          const [field, dir] = v.split("-") as ["name" | "rating" | "capacity", "asc" | "desc"];
+          setSortBy(field); setSortDir(dir);
+        }}>
+          <SelectTrigger className="w-[170px]">
+            <ArrowUpDown className="h-4 w-4 mr-1" /><SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="rating-desc"><span className="flex items-center gap-1"><ArrowDown className="h-3 w-3" />평점 높은 순</span></SelectItem>
+            <SelectItem value="rating-asc"><span className="flex items-center gap-1"><ArrowUp className="h-3 w-3" />평점 낮은 순</span></SelectItem>
+            <SelectItem value="name-asc"><span className="flex items-center gap-1"><ArrowDown className="h-3 w-3" />이름순 (ㄱ-ㅎ)</span></SelectItem>
+            <SelectItem value="name-desc"><span className="flex items-center gap-1"><ArrowUp className="h-3 w-3" />이름순 (ㅎ-ㄱ)</span></SelectItem>
+            <SelectItem value="capacity-desc"><span className="flex items-center gap-1"><ArrowDown className="h-3 w-3" />수용인원 많은 순</span></SelectItem>
+            <SelectItem value="capacity-asc"><span className="flex items-center gap-1"><ArrowUp className="h-3 w-3" />수용인원 적은 순</span></SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Partner Cards */}
