@@ -4,8 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Plane, ClipboardList, Search, Shield, MapPin, Globe,
   MessageCircle, Car, Hotel, Luggage, User, LayoutDashboard,
-  UserPlus, LogIn, ArrowRight, CheckCircle2, Building2, Users, Briefcase, LogOut
+  UserPlus, LogIn, ArrowRight, CheckCircle2, Building2, Users, Briefcase, LogOut, AlertCircle
 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,17 @@ import LanguageSelector from "@/components/LanguageSelector";
 export default function Home() {
   const { user, isAuthenticated, logout } = useAuth();
   const { t } = useTranslation();
+
+  // 온보딩 상태 조회 (로그인 사용자만)
+  const { data: onboardingStatus } = trpc.userProfile.onboardingStatus.useQuery(
+    undefined,
+    {
+      enabled: isAuthenticated,
+      retry: false,
+      refetchOnWindowFocus: false,
+    }
+  );
+  const needsOnboarding = isAuthenticated && onboardingStatus && !onboardingStatus.onboardingCompleted;
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,6 +152,24 @@ export default function Home() {
             <p className="text-sm text-muted-foreground">
               {t("home.signupHint")}
             </p>
+          </div>
+        </section>
+      )}
+
+      {/* Onboarding Banner - 온보딩 미완료 사용자 안내 */}
+      {needsOnboarding && (
+        <section className="bg-primary/10 border-b border-primary/20">
+          <div className="container py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm">
+              <AlertCircle className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="text-foreground">{t("home.onboardingBanner", "프로필 설정을 완료하면 모든 기능을 이용할 수 있습니다.")}</span>
+            </div>
+            <Link href="/onboarding">
+              <Button size="sm" variant="default" className="gap-1 whitespace-nowrap">
+                {t("home.completeOnboarding", "프로필 설정하기")}
+                <ArrowRight className="h-3 w-3" />
+              </Button>
+            </Link>
           </div>
         </section>
       )}

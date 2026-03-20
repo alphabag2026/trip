@@ -82,7 +82,9 @@
     "ctaLogin": "Already have an account?",
     "navFeatures": "Key Features",
     "navRoles": "User Types",
-    "navHow": "How It Works"
+    "navHow": "How It Works",
+    "onboardingBanner": "Complete your profile setup to access all features.",
+    "completeOnboarding": "Set Up Profile"
   },
   "register": {
     "title": "Meetup Registration",

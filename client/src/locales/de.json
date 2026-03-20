@@ -47,7 +47,9 @@
     "feat_survey_desc": "Create post-meetup surveys, send via Telegram, analyze results",
     "feat_baggage": "Baggage Tracking",
     "feat_baggage_desc": "Upload baggage tag photo for AI recognition, real-time status tracking",
-    "footer": "© 2026 Meetup Travel Automation System. All rights reserved."
+    "footer": "© 2026 Meetup Travel Automation System. All rights reserved.",
+    "onboardingBanner": "Vervollständigen Sie Ihr Profil, um alle Funktionen nutzen zu können.",
+    "completeOnboarding": "Profil einrichten"
   },
   "register": {
     "title": "Meetup Registration",
