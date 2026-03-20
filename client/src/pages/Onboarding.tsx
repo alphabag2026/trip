@@ -128,7 +128,7 @@ export default function Onboarding() {
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container flex items-center justify-between h-14">
-          <span className="text-lg font-bold text-primary">Meetup Travel</span>
+          <a href="/" className="text-lg font-bold text-primary hover:opacity-80 transition-opacity cursor-pointer">Meetup Travel</a>
           <span className="text-sm text-muted-foreground">{user?.name}님 환영합니다</span>
         </div>
       </header>

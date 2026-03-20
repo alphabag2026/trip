@@ -192,11 +192,11 @@ function DashboardLayoutContent({
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </button>
               {!isCollapsed ? (
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-semibold tracking-tight truncate">
-                    백오피스
+                <a href="/" className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity">
+                  <span className="font-semibold tracking-tight truncate text-primary">
+                    Meetup Travel
                   </span>
-                </div>
+                </a>
               ) : null}
             </div>
           </SidebarHeader>
