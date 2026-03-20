@@ -47,6 +47,7 @@ import { OnboardingGuard } from "./components/OnboardingGuard";
 import RoleDashboard from "./pages/dashboard/RoleDashboard";
 import InviteAccept from "./pages/InviteAccept";
 import ImmigrationChecklist from "./pages/ImmigrationChecklist";
+import MobileBottomNav from "./components/MobileBottomNav";
 
 function PublicRouter() {
   return (
@@ -127,6 +128,7 @@ function App() {
           <Toaster />
           <OnboardingGuard>
             <Router />
+            <MobileBottomNav />
           </OnboardingGuard>
         </TooltipProvider>
       </ThemeProvider>

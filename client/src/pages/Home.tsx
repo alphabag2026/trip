@@ -375,46 +375,6 @@ export default function Home() {
         </section>
       )}
 
-      {/* Mobile Nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border z-50">
-        <div className="flex justify-around py-2">
-          {isAuthenticated ? (
-            <>
-              <Link href="/" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
-                <Globe className="h-5 w-5" /><span>{t("nav.home")}</span>
-              </Link>
-              <Link href="/register" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
-                <ClipboardList className="h-5 w-5" /><span>{t("nav.apply")}</span>
-              </Link>
-              <Link href="/lookup" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
-                <Search className="h-5 w-5" /><span>{t("nav.search")}</span>
-              </Link>
-              <Link href="/dashboard" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
-                <LayoutDashboard className="h-5 w-5" /><span>{t("nav.dashboard")}</span>
-              </Link>
-              <Link href="/my-page" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
-                <User className="h-5 w-5" /><span>{t("nav.myProfile")}</span>
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link href="/" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
-                <Globe className="h-5 w-5" /><span>{t("nav.home")}</span>
-              </Link>
-              <a href="#features" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
-                <Search className="h-5 w-5" /><span>{t("nav.features")}</span>
-              </a>
-              <a href={getLoginUrl("/onboarding")} className="flex flex-col items-center gap-1 p-2 text-xs text-primary font-semibold">
-                <UserPlus className="h-5 w-5" /><span>{t("nav.signup")}</span>
-              </a>
-              <a href={getLoginUrl()} className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
-                <LogIn className="h-5 w-5" /><span>{t("nav.login")}</span>
-              </a>
-            </>
-          )}
-        </div>
-      </div>
-
       {/* Footer */}
       <footer className="border-t border-border/30 py-8 mb-16 md:mb-0">
         <div className="container text-center text-sm text-muted-foreground">
