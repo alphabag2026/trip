@@ -39,6 +39,8 @@ import AdminHotelRooms from "./pages/admin/HotelRooms";
 import AdminPlatformDashboard from "./pages/admin/PlatformDashboard";
 import AdminPartners from "./pages/admin/Partners";
 import DashboardLayout from "./components/DashboardLayout";
+import Onboarding from "./pages/Onboarding";
+import MyPage from "./pages/MyPage";
 
 function PublicRouter() {
   return (
@@ -56,6 +58,8 @@ function PublicRouter() {
       <Route path="/flight-tracker" component={FlightTracker} />
       <Route path="/survey/:surveyId" component={SurveyResponse} />
       <Route path="/my-profile" component={MyProfile} />
+      <Route path="/onboarding" component={Onboarding} />
+      <Route path="/my-page" component={MyPage} />
       <Route path="/404" component={NotFound} />
     </Switch>
   );

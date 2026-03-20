@@ -558,3 +558,58 @@ export const meetupPartners = mysqlTable("meetup_partners", {
 
 export type MeetupPartner = typeof meetupPartners.$inferSelect;
 export type InsertMeetupPartner = typeof meetupPartners.$inferInsert;
+
+// ══════════════════════════════════════════════════════════
+// v4.2 NEW TABLES - 회원 프로필 & 여권 & 출장이력
+// ══════════════════════════════════════════════════════════
+
+// ── User Profiles (상세 프로필 정보) ──────────────────────────
+export const userProfiles = mysqlTable("user_profiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  phone: varchar("phone", { length: 50 }),
+  nationality: varchar("nationality", { length: 100 }),
+  birthDate: varchar("birthDate", { length: 20 }), // YYYY-MM-DD
+  gender: mysqlEnum("gender", ["male", "female", "other"]),
+  organization: varchar("organization", { length: 255 }), // 소속 회사/팀
+  position: varchar("position", { length: 255 }), // 직책
+  department: varchar("department", { length: 255 }), // 부서
+  bio: text("bio"), // 자기소개
+  emergencyContact: varchar("emergencyContact", { length: 255 }), // 비상연락처
+  emergencyPhone: varchar("emergencyPhone", { length: 50 }),
+  dietaryRestrictions: varchar("dietaryRestrictions", { length: 500 }), // 식이제한
+  allergies: text("allergies"), // 알레르기
+  medicalNotes: text("medicalNotes"), // 건강 특이사항
+  preferredLanguage: varchar("preferredLanguage", { length: 50 }).default("ko"),
+  telegramId: varchar("telegramId", { length: 255 }),
+  onboardingCompleted: boolean("onboardingCompleted").default(false),
+  profileImageUrl: varchar("profileImageUrl", { length: 1000 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertUserProfile = typeof userProfiles.$inferInsert;
+
+// ── Passport Info (여권 정보 - 1회 등록) ──────────────────────
+export const passportInfo = mysqlTable("passport_info", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  passportNumber: varchar("passportNumber", { length: 50 }),
+  issuingCountry: varchar("issuingCountry", { length: 100 }),
+  nationality: varchar("nationality", { length: 100 }),
+  fullName: varchar("fullName", { length: 255 }), // 여권상 영문 이름
+  birthDate: varchar("birthDate", { length: 20 }),
+  gender: mysqlEnum("gender", ["M", "F"]),
+  issueDate: varchar("issueDate", { length: 20 }),
+  expiryDate: varchar("expiryDate", { length: 20 }),
+  passportImageUrl: varchar("passportImageUrl", { length: 1000 }),
+  passportImageKey: varchar("passportImageKey", { length: 500 }),
+  ocrData: json("ocrData"), // OCR 인식 결과 전체
+  isVerified: boolean("isVerified").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PassportInfo = typeof passportInfo.$inferSelect;
+export type InsertPassportInfo = typeof passportInfo.$inferInsert;

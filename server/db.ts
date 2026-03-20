@@ -27,6 +27,8 @@ import {
   partners, InsertPartner,
   organizationMembers, InsertOrganizationMember,
   meetupPartners, InsertMeetupPartner,
+  userProfiles, InsertUserProfile,
+  passportInfo, InsertPassportInfo,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -931,4 +933,103 @@ export async function updateUserRole(userId: number, role: string, organizationI
 export async function getAllUsers() {
   const db = await getDb(); if (!db) return [];
   return db.select().from(users).orderBy(desc(users.createdAt));
+}
+
+// ══════════════════════════════════════════════════════════
+// v4.2 - 프로필 / 여권 / 출장이력
+// ══════════════════════════════════════════════════════════
+
+export async function getUserProfile(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId));
+  return rows[0] || null;
+}
+
+export async function upsertUserProfile(userId: number, data: Partial<InsertUserProfile>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const existing = await getUserProfile(userId);
+  if (existing) {
+    await db.update(userProfiles).set({ ...data, userId }).where(eq(userProfiles.userId, userId));
+    return { ...existing, ...data };
+  } else {
+    const result = await db.insert(userProfiles).values({ ...data, userId });
+    return { id: Number((result as any)[0].insertId), userId, ...data };
+  }
+}
+
+export async function getPassportInfo(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(passportInfo).where(eq(passportInfo.userId, userId));
+  return rows[0] || null;
+}
+
+export async function upsertPassportInfo(userId: number, data: Partial<InsertPassportInfo>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const existing = await getPassportInfo(userId);
+  if (existing) {
+    await db.update(passportInfo).set({ ...data, userId }).where(eq(passportInfo.userId, userId));
+    return { ...existing, ...data };
+  } else {
+    const result = await db.insert(passportInfo).values({ ...data, userId });
+    return { id: Number((result as any)[0].insertId), userId, ...data };
+  }
+}
+
+export async function getOnboardingStatus(userId: number) {
+  const profile = await getUserProfile(userId);
+  const passport = await getPassportInfo(userId);
+  return {
+    hasProfile: !!profile,
+    hasPassport: !!passport,
+    profileCompleted: !!profile?.onboardingCompleted,
+    passportRegistered: !!passport?.passportNumber,
+    onboardingCompleted: !!profile?.onboardingCompleted,
+  };
+}
+
+export async function getTripHistory(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  // 사용자의 이름/이메일로 registrations에서 참여 이력 조회
+  // 먼저 user 정보 가져오기
+  const userRows = await db.select().from(users).where(eq(users.id, userId));
+  const user = userRows[0];
+  if (!user) return [];
+
+  // registrations에서 해당 사용자의 참여 기록 조회 (이름 또는 messengerId 기반)
+  const allRegs = await db.select().from(registrations);
+  const userRegs = allRegs.filter((r: any) => {
+    if (user.name && r.name && r.name.toLowerCase() === user.name.toLowerCase()) return true;
+    if (user.email && r.messengerId && r.messengerId.toLowerCase() === user.email.toLowerCase()) return true;
+    return false;
+  });
+
+  // 밋업 정보와 조인
+  const allMeetups = await db.select().from(meetups);
+  const meetupMap = new Map(allMeetups.map((m: any) => [m.id, m]));
+
+  return userRegs.map((reg: any) => {
+    const meetup = meetupMap.get(reg.meetupId);
+    return {
+      id: reg.id,
+      meetupId: reg.meetupId,
+      meetupTitle: meetup?.title || "알 수 없음",
+      destination: meetup?.destinationCountry || meetup?.location || "-",
+      scheduleStart: meetup?.scheduleStart || reg.scheduleStart,
+      scheduleEnd: meetup?.scheduleEnd || reg.scheduleEnd,
+      status: reg.status,
+      registeredAt: reg.createdAt,
+      hotelRoom: reg.hotelRoomNumber,
+      flightConfirmed: reg.flightConfirmed,
+      accommodationConfirmed: reg.accommodationConfirmed,
+    };
+  }).sort((a: any, b: any) => {
+    const dateA = a.scheduleStart ? new Date(a.scheduleStart).getTime() : 0;
+    const dateB = b.scheduleStart ? new Date(b.scheduleStart).getTime() : 0;
+    return dateB - dateA;
+  });
 }

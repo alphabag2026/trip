@@ -1827,6 +1827,73 @@ export const appRouter = router({
         return { success: true, matched, notified, errors };
       }),
   }),
+
+  // ══════════════════════════════════════════════════════════
+  // v4.2 - 회원 프로필 / 여권 / 출장이력
+  // ══════════════════════════════════════════════════════════
+  userProfile: router({
+    get: protectedProcedure.query(async ({ ctx }) => {
+      return db.getUserProfile(ctx.user.id);
+    }),
+    upsert: protectedProcedure
+      .input(z.object({
+        phone: z.string().optional(),
+        nationality: z.string().optional(),
+        birthDate: z.string().optional(),
+        gender: z.enum(["male", "female", "other"]).optional(),
+        organization: z.string().optional(),
+        position: z.string().optional(),
+        department: z.string().optional(),
+        bio: z.string().optional(),
+        emergencyContact: z.string().optional(),
+        emergencyPhone: z.string().optional(),
+        dietaryRestrictions: z.string().optional(),
+        allergies: z.string().optional(),
+        medicalNotes: z.string().optional(),
+        preferredLanguage: z.string().optional(),
+        telegramId: z.string().optional(),
+        profileImageUrl: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return db.upsertUserProfile(ctx.user.id, input);
+      }),
+    completeOnboarding: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.upsertUserProfile(ctx.user.id, { onboardingCompleted: true });
+      return { success: true };
+    }),
+    onboardingStatus: protectedProcedure.query(async ({ ctx }) => {
+      return db.getOnboardingStatus(ctx.user.id);
+    }),
+  }),
+
+  passport: router({
+    get: protectedProcedure.query(async ({ ctx }) => {
+      return db.getPassportInfo(ctx.user.id);
+    }),
+    save: protectedProcedure
+      .input(z.object({
+        passportNumber: z.string().optional(),
+        issuingCountry: z.string().optional(),
+        nationality: z.string().optional(),
+        fullName: z.string().optional(),
+        birthDate: z.string().optional(),
+        gender: z.enum(["M", "F"]).optional(),
+        issueDate: z.string().optional(),
+        expiryDate: z.string().optional(),
+        passportImageUrl: z.string().optional(),
+        passportImageKey: z.string().optional(),
+        ocrData: z.any().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return db.upsertPassportInfo(ctx.user.id, input);
+      }),
+  }),
+
+  tripHistory: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return db.getTripHistory(ctx.user.id);
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
