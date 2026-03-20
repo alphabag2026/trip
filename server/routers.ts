@@ -1968,7 +1968,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ── Role-based Dashboard ──────────────────────────────
+   // ── Role-based Dashboard ──────────────────────────────
   roleDashboard: router({
     organizer: protectedProcedure.query(async ({ ctx }) => {
       return db.getOrganizerDashboardData(ctx.user.id);
@@ -1980,6 +1980,223 @@ export const appRouter = router({
       return db.getPartnerDashboardData(ctx.user.id);
     }),
   }),
+  // ── Hotel Vouchers ──────────────────────────────────────
+  hotelVoucher: router({
+    create: protectedProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        registrationId: z.number().optional(),
+        userId: z.number().optional(),
+        hotelName: z.string().min(1),
+        hotelNameLocal: z.string().optional(),
+        hotelAddress: z.string().min(1),
+        hotelAddressLocal: z.string().optional(),
+        hotelPhone: z.string().optional(),
+        hotelLatitude: z.string().optional(),
+        hotelLongitude: z.string().optional(),
+        bookingId: z.string().optional(),
+        guestName: z.string().optional(),
+        roomType: z.string().optional(),
+        roomCount: z.number().optional(),
+        guestsPerRoom: z.number().optional(),
+        checkInDate: z.string().optional(),
+        checkInTime: z.string().optional(),
+        checkOutDate: z.string().optional(),
+        checkOutTime: z.string().optional(),
+        includeMeals: z.boolean().optional(),
+        specialRequests: z.string().optional(),
+        includes: z.string().optional(),
+        cancellationPolicy: z.string().optional(),
+        checkInInstructions: z.string().optional(),
+        voucherFileUrl: z.string().optional(),
+        voucherFileKey: z.string().optional(),
+        voucherFileType: z.enum(["image", "pdf"]).optional(),
+        localLanguage: z.string().optional(),
+        localCurrency: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createHotelVoucher(input as any);
+        return { id };
+      }),
+    get: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getHotelVoucher(input.id);
+      }),
+    listByRegistration: protectedProcedure
+      .input(z.object({ registrationId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getHotelVouchersByRegistration(input.registrationId);
+      }),
+    listByMeetup: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getHotelVouchersByMeetup(input.meetupId);
+      }),
+    listAll: protectedProcedure.query(async () => {
+      return db.getAllHotelVouchers();
+    }),
+    listMy: protectedProcedure.query(async ({ ctx }) => {
+      return db.getHotelVouchersByUser(ctx.user.id);
+    }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        hotelName: z.string().optional(),
+        hotelNameLocal: z.string().optional(),
+        hotelAddress: z.string().optional(),
+        hotelAddressLocal: z.string().optional(),
+        hotelPhone: z.string().optional(),
+        hotelLatitude: z.string().optional(),
+        hotelLongitude: z.string().optional(),
+        bookingId: z.string().optional(),
+        guestName: z.string().optional(),
+        roomType: z.string().optional(),
+        roomCount: z.number().optional(),
+        guestsPerRoom: z.number().optional(),
+        checkInDate: z.string().optional(),
+        checkInTime: z.string().optional(),
+        checkOutDate: z.string().optional(),
+        checkOutTime: z.string().optional(),
+        includeMeals: z.boolean().optional(),
+        specialRequests: z.string().optional(),
+        includes: z.string().optional(),
+        cancellationPolicy: z.string().optional(),
+        checkInInstructions: z.string().optional(),
+        voucherFileUrl: z.string().optional(),
+        voucherFileKey: z.string().optional(),
+        voucherFileType: z.enum(["image", "pdf"]).optional(),
+        localLanguage: z.string().optional(),
+        localCurrency: z.string().optional(),
+        status: z.enum(["active", "cancelled", "expired"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateHotelVoucher(id, data as any);
+        return { success: true };
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteHotelVoucher(input.id);
+        return { success: true };
+      }),
+  }),
+  // ── Flight Tickets ──────────────────────────────────────
+  flightTicket: router({
+    create: protectedProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        registrationId: z.number().optional(),
+        userId: z.number().optional(),
+        passengerName: z.string().min(1),
+        passportNumber: z.string().optional(),
+        nationality: z.string().optional(),
+        outboundAirline: z.string().optional(),
+        outboundFlightNo: z.string().optional(),
+        outboundDepartureAirport: z.string().optional(),
+        outboundDepartureCode: z.string().optional(),
+        outboundArrivalAirport: z.string().optional(),
+        outboundArrivalCode: z.string().optional(),
+        outboundDepartureDate: z.string().optional(),
+        outboundDepartureTime: z.string().optional(),
+        outboundArrivalDate: z.string().optional(),
+        outboundArrivalTime: z.string().optional(),
+        outboundSeatClass: z.string().optional(),
+        outboundSeatNumber: z.string().optional(),
+        returnAirline: z.string().optional(),
+        returnFlightNo: z.string().optional(),
+        returnDepartureAirport: z.string().optional(),
+        returnDepartureCode: z.string().optional(),
+        returnArrivalAirport: z.string().optional(),
+        returnArrivalCode: z.string().optional(),
+        returnDepartureDate: z.string().optional(),
+        returnDepartureTime: z.string().optional(),
+        returnArrivalDate: z.string().optional(),
+        returnArrivalTime: z.string().optional(),
+        returnSeatClass: z.string().optional(),
+        returnSeatNumber: z.string().optional(),
+        bookingReference: z.string().optional(),
+        ticketNumber: z.string().optional(),
+        ticketFileUrl: z.string().optional(),
+        ticketFileKey: z.string().optional(),
+        ticketFileType: z.enum(["image", "pdf", "generated"]).optional(),
+        isGenerated: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createFlightTicket(input as any);
+        return { id };
+      }),
+    get: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getFlightTicket(input.id);
+      }),
+    listByRegistration: protectedProcedure
+      .input(z.object({ registrationId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getFlightTicketsByRegistration(input.registrationId);
+      }),
+    listByMeetup: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getFlightTicketsByMeetup(input.meetupId);
+      }),
+    listAll: protectedProcedure.query(async () => {
+      return db.getAllFlightTickets();
+    }),
+    listMy: protectedProcedure.query(async ({ ctx }) => {
+      return db.getFlightTicketsByUser(ctx.user.id);
+    }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        passengerName: z.string().optional(),
+        passportNumber: z.string().optional(),
+        nationality: z.string().optional(),
+        outboundAirline: z.string().optional(),
+        outboundFlightNo: z.string().optional(),
+        outboundDepartureAirport: z.string().optional(),
+        outboundDepartureCode: z.string().optional(),
+        outboundArrivalAirport: z.string().optional(),
+        outboundArrivalCode: z.string().optional(),
+        outboundDepartureDate: z.string().optional(),
+        outboundDepartureTime: z.string().optional(),
+        outboundArrivalDate: z.string().optional(),
+        outboundArrivalTime: z.string().optional(),
+        outboundSeatClass: z.string().optional(),
+        outboundSeatNumber: z.string().optional(),
+        returnAirline: z.string().optional(),
+        returnFlightNo: z.string().optional(),
+        returnDepartureAirport: z.string().optional(),
+        returnDepartureCode: z.string().optional(),
+        returnArrivalAirport: z.string().optional(),
+        returnArrivalCode: z.string().optional(),
+        returnDepartureDate: z.string().optional(),
+        returnDepartureTime: z.string().optional(),
+        returnArrivalDate: z.string().optional(),
+        returnArrivalTime: z.string().optional(),
+        returnSeatClass: z.string().optional(),
+        returnSeatNumber: z.string().optional(),
+        bookingReference: z.string().optional(),
+        ticketNumber: z.string().optional(),
+        ticketFileUrl: z.string().optional(),
+        ticketFileKey: z.string().optional(),
+        ticketFileType: z.enum(["image", "pdf", "generated"]).optional(),
+        isGenerated: z.boolean().optional(),
+        status: z.enum(["active", "cancelled", "used"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateFlightTicket(id, data as any);
+        return { success: true };
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteFlightTicket(input.id);
+        return { success: true };
+      }),
+  }),
 });
-
 export type AppRouter = typeof appRouter;

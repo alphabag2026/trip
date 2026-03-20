@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `flight_tickets` ADD `userId` int; ALTER TABLE `hotel_vouchers` ADD `userId` int;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute ALTER TABLE `flight_tickets` ADD `userId` int; ALTER TABLE `hotel_vouchers` ADD `userId` int;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2316
+}

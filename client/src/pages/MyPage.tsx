@@ -12,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   User, BookOpen, History, ArrowLeft, Save, Loader2, Shield, Globe, Phone,
   Building2, Briefcase, Heart, Upload, CheckCircle, MapPin, Calendar, Plane,
-  Hotel, AlertTriangle, Edit2, Eye, EyeOff
+  Hotel, AlertTriangle, Edit2, Eye, EyeOff, CreditCard, Ticket, Copy, ExternalLink,
+  ArrowRight, Navigation
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -42,6 +43,8 @@ export default function MyPage() {
   const passportQuery = trpc.passport.get.useQuery(undefined, { enabled: !!user });
   const tripQuery = trpc.tripHistory.list.useQuery(undefined, { enabled: !!user });
   const onboardingQuery = trpc.userProfile.onboardingStatus.useQuery(undefined, { enabled: !!user });
+  const vouchersQuery = trpc.hotelVoucher.listMy.useQuery(undefined, { enabled: !!user });
+  const ticketsQuery = trpc.flightTicket.listMy.useQuery(undefined, { enabled: !!user });
 
   // Profile form
   const [profileForm, setProfileForm] = useState<any>(null);
@@ -186,7 +189,7 @@ export default function MyPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="profile" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile" className="flex items-center gap-1.5">
               <User className="w-4 h-4" />개인정보
             </TabsTrigger>
@@ -195,6 +198,12 @@ export default function MyPage() {
             </TabsTrigger>
             <TabsTrigger value="trips" className="flex items-center gap-1.5">
               <History className="w-4 h-4" />출장이력
+            </TabsTrigger>
+            <TabsTrigger value="vouchers" className="flex items-center gap-1.5">
+              <CreditCard className="w-4 h-4" />호텔
+            </TabsTrigger>
+            <TabsTrigger value="tickets" className="flex items-center gap-1.5">
+              <Ticket className="w-4 h-4" />항공권
             </TabsTrigger>
           </TabsList>
 
@@ -524,6 +533,234 @@ export default function MyPage() {
                 </Card>
               </div>
             )}
+          </TabsContent>
+
+          {/* Hotel Vouchers Tab */}
+          <TabsContent value="vouchers" className="space-y-4">
+            {vouchersQuery.isLoading ? (
+              <div className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
+            ) : !vouchersQuery.data?.length ? (
+              <Card><CardContent className="py-12 text-center text-muted-foreground">배정된 호텔 바우처가 없습니다</CardContent></Card>
+            ) : vouchersQuery.data.map((v: any) => (
+              <Card key={v.id} className="overflow-hidden">
+                <CardHeader className="bg-primary/5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Hotel className="w-5 h-5 text-primary" />
+                      <CardTitle className="text-lg">{v.hotelName}</CardTitle>
+                    </div>
+                    <Badge>{v.status}</Badge>
+                  </div>
+                  {v.hotelNameLocal && <p className="text-sm text-muted-foreground mt-1">{v.hotelNameLocal}</p>}
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  {/* 주소 & 현지어 주소 */}
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <p className="text-sm">{v.hotelAddress}</p>
+                        {v.hotelAddressLocal && <p className="text-sm text-muted-foreground">{v.hotelAddressLocal}</p>}
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => {
+                        navigator.clipboard.writeText(v.hotelAddress + (v.hotelAddressLocal ? '\n' + v.hotelAddressLocal : ''));
+                        toast.success("주소가 복사되었습니다");
+                      }}>
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    {v.hotelPhone && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        <a href={`tel:${v.hotelPhone}`} className="text-primary hover:underline">{v.hotelPhone}</a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 체크인/체크아웃 */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground">Check-in / 체크인</p>
+                      <p className="font-bold">{v.checkInDate || "-"}</p>
+                      <p className="text-sm text-green-600">{v.checkInTime || "14:00"}</p>
+                    </div>
+                    <div className="bg-red-50 dark:bg-red-950/30 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground">Check-out / 체크아웃</p>
+                      <p className="font-bold">{v.checkOutDate || "-"}</p>
+                      <p className="text-sm text-red-600">{v.checkOutTime || "12:00"}</p>
+                    </div>
+                  </div>
+
+                  {/* 예약 상세 */}
+                  <div className="text-sm space-y-1">
+                    {v.bookingId && <p><strong>Booking ID:</strong> {v.bookingId}</p>}
+                    {v.guestName && <p><strong>Guest:</strong> {v.guestName}</p>}
+                    {v.roomType && <p><strong>Room:</strong> {v.roomType} x{v.roomCount}</p>}
+                    {v.includes && <p><strong>Includes:</strong> {v.includes}</p>}
+                    {v.specialRequests && <p><strong>Special:</strong> {v.specialRequests}</p>}
+                  </div>
+
+                  {/* 취소 정책 */}
+                  {v.cancellationPolicy && (
+                    <div className="text-xs bg-muted/50 rounded p-2">
+                      <strong>Cancellation Policy:</strong> {v.cancellationPolicy}
+                    </div>
+                  )}
+
+                  {/* 체크인 안내 */}
+                  {v.checkInInstructions && (
+                    <div className="text-xs bg-muted/50 rounded p-2">
+                      <strong>Check-in Instructions:</strong> {v.checkInInstructions}
+                    </div>
+                  )}
+
+                  {/* 첨부 파일 */}
+                  {v.voucherFileUrl && (
+                    <div className="border rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-2">첨부 파일 / Attached File</p>
+                      {v.voucherFileType === "pdf" ? (
+                        <a href={v.voucherFileUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">PDF 보기</a>
+                      ) : (
+                        <img src={v.voucherFileUrl} alt="Hotel Voucher" className="max-w-full rounded border" />
+                      )}
+                    </div>
+                  )}
+
+                  {/* 구글맵 / 그랩 / 주소 복사 버튼 */}
+                  <div className="flex flex-wrap gap-2 pt-2 border-t">
+                    {(v.hotelLatitude && v.hotelLongitude) ? (
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => window.open(`https://www.google.com/maps?q=${v.hotelLatitude},${v.hotelLongitude}`, "_blank")}>
+                          <MapPin className="w-4 h-4 mr-1" />구글맵
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${v.hotelLatitude},${v.hotelLongitude}`, "_blank")}>
+                          <Navigation className="w-4 h-4 mr-1" />길찾기
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => window.open(`https://grab.onelink.me/2695613898?af_dp=grab://open?screenType=BOOKING&dropOffLatitude=${v.hotelLatitude}&dropOffLongitude=${v.hotelLongitude}&dropOffAddress=${encodeURIComponent(v.hotelName)}`, "_blank")}>
+                          <ExternalLink className="w-4 h-4 mr-1" />그랩 호출
+                        </Button>
+                      </>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={() => window.open(`https://www.google.com/maps/search/${encodeURIComponent(v.hotelAddress)}`, "_blank")}>
+                        <MapPin className="w-4 h-4 mr-1" />구글맵 검색
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" onClick={() => {
+                      const text = `${v.hotelName}\n${v.hotelAddress}${v.hotelAddressLocal ? '\n' + v.hotelAddressLocal : ''}${v.hotelPhone ? '\nTel: ' + v.hotelPhone : ''}`;
+                      navigator.clipboard.writeText(text);
+                      toast.success("호텔 정보가 복사되었습니다. 친구나 택시기사에게 보내세요!");
+                    }}>
+                      <Copy className="w-4 h-4 mr-1" />정보 복사
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </TabsContent>
+
+          {/* Flight Tickets Tab */}
+          <TabsContent value="tickets" className="space-y-4">
+            {ticketsQuery.isLoading ? (
+              <div className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
+            ) : !ticketsQuery.data?.length ? (
+              <Card><CardContent className="py-12 text-center text-muted-foreground">배정된 항공권이 없습니다</CardContent></Card>
+            ) : ticketsQuery.data.map((t: any) => (
+              <Card key={t.id} className="overflow-hidden">
+                <CardHeader className="bg-blue-50 dark:bg-blue-950/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Ticket className="w-5 h-5 text-blue-600" />
+                      <CardTitle className="text-lg">E-Ticket</CardTitle>
+                    </div>
+                    <div className="flex gap-2">
+                      <Badge>{t.status}</Badge>
+                      {t.isGenerated && <Badge variant="outline" className="text-orange-600 border-orange-600">입국용</Badge>}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  {/* 승객 정보 */}
+                  <div className="grid grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Passenger / 승객</p>
+                      <p className="font-bold">{t.passengerName}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">PNR / 예약번호</p>
+                      <p className="font-bold">{t.bookingReference || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Ticket No.</p>
+                      <p className="font-bold text-xs">{t.ticketNumber || "-"}</p>
+                    </div>
+                  </div>
+
+                  {/* 출발편 */}
+                  {t.outboundFlightNo && (
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Plane className="w-4 h-4 text-blue-600" />
+                        <span className="font-semibold text-sm">Outbound / 출발편</span>
+                        <span className="text-sm font-bold ml-auto">{t.outboundAirline} {t.outboundFlightNo}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-center">
+                          <p className="text-2xl font-bold">{t.outboundDepartureCode}</p>
+                          <p className="text-xs text-muted-foreground">{t.outboundDepartureAirport}</p>
+                          <p className="text-sm mt-1">{t.outboundDepartureDate}</p>
+                          <p className="text-sm font-semibold">{t.outboundDepartureTime}</p>
+                        </div>
+                        <div className="flex-1 flex items-center justify-center px-4">
+                          <div className="w-full border-t border-dashed relative">
+                            <Plane className="w-4 h-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background text-primary" />
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl font-bold">{t.outboundArrivalCode}</p>
+                          <p className="text-xs text-muted-foreground">{t.outboundArrivalAirport}</p>
+                          <p className="text-sm mt-1">{t.outboundArrivalDate}</p>
+                          <p className="text-sm font-semibold">{t.outboundArrivalTime}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 귀국편 */}
+                  {t.returnFlightNo && (
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Plane className="w-4 h-4 text-green-600 rotate-180" />
+                        <span className="font-semibold text-sm">Return / 귀국편</span>
+                        <span className="text-sm font-bold ml-auto">{t.returnAirline} {t.returnFlightNo}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-center">
+                          <p className="text-2xl font-bold">{t.returnDepartureCode}</p>
+                          <p className="text-xs text-muted-foreground">{t.returnDepartureAirport}</p>
+                          <p className="text-sm mt-1">{t.returnDepartureDate}</p>
+                          <p className="text-sm font-semibold">{t.returnDepartureTime}</p>
+                        </div>
+                        <div className="flex-1 flex items-center justify-center px-4">
+                          <div className="w-full border-t border-dashed relative">
+                            <Plane className="w-4 h-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background text-green-600 rotate-180" />
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl font-bold">{t.returnArrivalCode}</p>
+                          <p className="text-xs text-muted-foreground">{t.returnArrivalAirport}</p>
+                          <p className="text-sm mt-1">{t.returnArrivalDate}</p>
+                          <p className="text-sm font-semibold">{t.returnArrivalTime}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="text-xs text-muted-foreground border-t pt-2">
+                    This is an electronic ticket. Present this at immigration. / 전자 항공권입니다. 이미그레이션에서 제시하세요.
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </TabsContent>
         </Tabs>
       </div>

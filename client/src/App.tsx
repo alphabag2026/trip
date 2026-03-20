@@ -38,6 +38,8 @@ import AdminMealDashboard from "./pages/admin/MealDashboard";
 import AdminHotelRooms from "./pages/admin/HotelRooms";
 import AdminPlatformDashboard from "./pages/admin/PlatformDashboard";
 import AdminPartners from "./pages/admin/Partners";
+import AdminHotelVouchers from "./pages/admin/HotelVouchers";
+import AdminFlightTickets from "./pages/admin/FlightTickets";
 import DashboardLayout from "./components/DashboardLayout";
 import Onboarding from "./pages/Onboarding";
 import MyPage from "./pages/MyPage";
@@ -96,6 +98,8 @@ function AdminRouter() {
         <Route path="/admin/hotel-rooms" component={AdminHotelRooms} />
         <Route path="/admin/platform" component={AdminPlatformDashboard} />
         <Route path="/admin/partners" component={AdminPartners} />
+        <Route path="/admin/hotel-vouchers" component={AdminHotelVouchers} />
+        <Route path="/admin/flight-tickets" component={AdminFlightTickets} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

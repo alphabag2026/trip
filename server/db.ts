@@ -30,6 +30,8 @@ import {
   userProfiles, InsertUserProfile,
   passportInfo, InsertPassportInfo,
   invitations, InsertInvitation,
+  hotelVouchers, InsertHotelVoucher,
+  flightTickets, InsertFlightTicket,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1162,4 +1164,107 @@ export async function getPartnerDashboardData(userId: number) {
     totalServices: myMeetupPartners.length,
     completedServices: myMeetupPartners.filter((mp: any) => mp.status === "completed").length,
   };
+}
+
+// ══════════════════════════════════════════════════════════
+// v4.5 - Hotel Vouchers & Flight Tickets
+// ══════════════════════════════════════════════════════════
+
+// ── Hotel Vouchers ──────────────────────────────────────
+export async function createHotelVoucher(data: InsertHotelVoucher) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(hotelVouchers).values(data);
+  return result[0].insertId;
+}
+
+export async function getHotelVoucher(id: number) {
+  const db = await getDb(); if (!db) return null;
+  const rows = await db.select().from(hotelVouchers).where(eq(hotelVouchers.id, id));
+  return rows[0] ?? null;
+}
+
+export async function getHotelVouchersByRegistration(registrationId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(hotelVouchers)
+    .where(eq(hotelVouchers.registrationId, registrationId))
+    .orderBy(desc(hotelVouchers.createdAt));
+}
+
+export async function getHotelVouchersByMeetup(meetupId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(hotelVouchers)
+    .where(eq(hotelVouchers.meetupId, meetupId))
+    .orderBy(desc(hotelVouchers.createdAt));
+}
+
+export async function getAllHotelVouchers() {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(hotelVouchers).orderBy(desc(hotelVouchers.createdAt));
+}
+
+export async function updateHotelVoucher(id: number, data: Partial<InsertHotelVoucher>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(hotelVouchers).set(data).where(eq(hotelVouchers.id, id));
+}
+
+export async function deleteHotelVoucher(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(hotelVouchers).where(eq(hotelVouchers.id, id));
+}
+
+// ── Flight Tickets ──────────────────────────────────────
+export async function createFlightTicket(data: InsertFlightTicket) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(flightTickets).values(data);
+  return result[0].insertId;
+}
+
+export async function getFlightTicket(id: number) {
+  const db = await getDb(); if (!db) return null;
+  const rows = await db.select().from(flightTickets).where(eq(flightTickets.id, id));
+  return rows[0] ?? null;
+}
+
+export async function getFlightTicketsByRegistration(registrationId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(flightTickets)
+    .where(eq(flightTickets.registrationId, registrationId))
+    .orderBy(desc(flightTickets.createdAt));
+}
+
+export async function getFlightTicketsByMeetup(meetupId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(flightTickets)
+    .where(eq(flightTickets.meetupId, meetupId))
+    .orderBy(desc(flightTickets.createdAt));
+}
+
+export async function getAllFlightTickets() {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(flightTickets).orderBy(desc(flightTickets.createdAt));
+}
+
+export async function updateFlightTicket(id: number, data: Partial<InsertFlightTicket>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(flightTickets).set(data).where(eq(flightTickets.id, id));
+}
+
+export async function deleteFlightTicket(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(flightTickets).where(eq(flightTickets.id, id));
+}
+
+// ── User-specific vouchers/tickets ──────────────────────
+export async function getHotelVouchersByUser(userId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(hotelVouchers)
+    .where(eq(hotelVouchers.userId, userId))
+    .orderBy(desc(hotelVouchers.createdAt));
+}
+
+export async function getFlightTicketsByUser(userId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(flightTickets)
+    .where(eq(flightTickets.userId, userId))
+    .orderBy(desc(flightTickets.createdAt));
 }

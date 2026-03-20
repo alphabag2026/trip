@@ -632,3 +632,103 @@ export const invitations = mysqlTable("invitations", {
 
 export type Invitation = typeof invitations.$inferSelect;
 export type InsertInvitation = typeof invitations.$inferInsert;
+
+// ══════════════════════════════════════════════════════════
+// v4.5 - 호텔 바우처 & 항공권 티켓
+// ══════════════════════════════════════════════════════════
+
+// ── Hotel Vouchers (호텔 예약확인서/바우처) ──────────────────
+export const hotelVouchers = mysqlTable("hotel_vouchers", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId"),
+  registrationId: int("registrationId"),
+  userId: int("userId"), // 배정된 사용자 ID
+  // 호텔 기본 정보
+  hotelName: varchar("hotelName", { length: 255 }).notNull(),
+  hotelNameLocal: varchar("hotelNameLocal", { length: 255 }), // 현지어 호텔명
+  hotelAddress: text("hotelAddress").notNull(),
+  hotelAddressLocal: text("hotelAddressLocal"), // 현지어 주소
+  hotelPhone: varchar("hotelPhone", { length: 100 }),
+  hotelLatitude: varchar("hotelLatitude", { length: 50 }),
+  hotelLongitude: varchar("hotelLongitude", { length: 50 }),
+  // 예약 정보
+  bookingId: varchar("bookingId", { length: 100 }),
+  guestName: varchar("guestName", { length: 255 }),
+  roomType: varchar("roomType", { length: 100 }),
+  roomCount: int("roomCount").default(1),
+  guestsPerRoom: int("guestsPerRoom").default(1),
+  checkInDate: varchar("checkInDate", { length: 20 }),
+  checkInTime: varchar("checkInTime", { length: 10 }),
+  checkOutDate: varchar("checkOutDate", { length: 20 }),
+  checkOutTime: varchar("checkOutTime", { length: 10 }),
+  includeMeals: boolean("includeMeals").default(false),
+  specialRequests: text("specialRequests"),
+  includes: text("includes"), // 포함 사항 (WiFi 등)
+  cancellationPolicy: text("cancellationPolicy"),
+  checkInInstructions: text("checkInInstructions"),
+  // 파일 (이미지/PDF)
+  voucherFileUrl: varchar("voucherFileUrl", { length: 1000 }),
+  voucherFileKey: varchar("voucherFileKey", { length: 500 }),
+  voucherFileType: mysqlEnum("voucherFileType", ["image", "pdf"]).default("image"),
+  // 현지어 정보
+  localLanguage: varchar("localLanguage", { length: 50 }), // 예: vi, th, ja
+  localCurrency: varchar("localCurrency", { length: 20 }),
+  status: mysqlEnum("status", ["active", "cancelled", "expired"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type HotelVoucher = typeof hotelVouchers.$inferSelect;
+export type InsertHotelVoucher = typeof hotelVouchers.$inferInsert;
+
+// ── Flight Tickets (왕복 항공권 티켓) ────────────────────────
+export const flightTickets = mysqlTable("flight_tickets", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId"),
+  registrationId: int("registrationId"),
+  userId: int("userId"), // 배정된 사용자 ID
+  // 승객 정보
+  passengerName: varchar("passengerName", { length: 255 }).notNull(),
+  passportNumber: varchar("passportNumber", { length: 50 }),
+  nationality: varchar("nationality", { length: 100 }),
+  // 출발편
+  outboundAirline: varchar("outboundAirline", { length: 255 }),
+  outboundFlightNo: varchar("outboundFlightNo", { length: 50 }),
+  outboundDepartureAirport: varchar("outboundDepartureAirport", { length: 255 }),
+  outboundDepartureCode: varchar("outboundDepartureCode", { length: 10 }),
+  outboundArrivalAirport: varchar("outboundArrivalAirport", { length: 255 }),
+  outboundArrivalCode: varchar("outboundArrivalCode", { length: 10 }),
+  outboundDepartureDate: varchar("outboundDepartureDate", { length: 20 }),
+  outboundDepartureTime: varchar("outboundDepartureTime", { length: 10 }),
+  outboundArrivalDate: varchar("outboundArrivalDate", { length: 20 }),
+  outboundArrivalTime: varchar("outboundArrivalTime", { length: 10 }),
+  outboundSeatClass: varchar("outboundSeatClass", { length: 50 }),
+  outboundSeatNumber: varchar("outboundSeatNumber", { length: 20 }),
+  // 귀국편
+  returnAirline: varchar("returnAirline", { length: 255 }),
+  returnFlightNo: varchar("returnFlightNo", { length: 50 }),
+  returnDepartureAirport: varchar("returnDepartureAirport", { length: 255 }),
+  returnDepartureCode: varchar("returnDepartureCode", { length: 10 }),
+  returnArrivalAirport: varchar("returnArrivalAirport", { length: 255 }),
+  returnArrivalCode: varchar("returnArrivalCode", { length: 10 }),
+  returnDepartureDate: varchar("returnDepartureDate", { length: 20 }),
+  returnDepartureTime: varchar("returnDepartureTime", { length: 10 }),
+  returnArrivalDate: varchar("returnArrivalDate", { length: 20 }),
+  returnArrivalTime: varchar("returnArrivalTime", { length: 10 }),
+  returnSeatClass: varchar("returnSeatClass", { length: 50 }),
+  returnSeatNumber: varchar("returnSeatNumber", { length: 20 }),
+  // 예약 정보
+  bookingReference: varchar("bookingReference", { length: 50 }),
+  ticketNumber: varchar("ticketNumber", { length: 50 }),
+  // 파일 (업로드된 실제 티켓 or 생성된 티켓)
+  ticketFileUrl: varchar("ticketFileUrl", { length: 1000 }),
+  ticketFileKey: varchar("ticketFileKey", { length: 500 }),
+  ticketFileType: mysqlEnum("ticketFileType", ["image", "pdf", "generated"]).default("generated"),
+  isGenerated: boolean("isGenerated").default(false), // 백오피스에서 생성된 임의 티켓 여부
+  status: mysqlEnum("status", ["active", "cancelled", "used"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FlightTicket = typeof flightTickets.$inferSelect;
+export type InsertFlightTicket = typeof flightTickets.$inferInsert;
