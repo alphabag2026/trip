@@ -41,6 +41,9 @@ import AdminPartners from "./pages/admin/Partners";
 import DashboardLayout from "./components/DashboardLayout";
 import Onboarding from "./pages/Onboarding";
 import MyPage from "./pages/MyPage";
+import { OnboardingGuard } from "./components/OnboardingGuard";
+import RoleDashboard from "./pages/dashboard/RoleDashboard";
+import InviteAccept from "./pages/InviteAccept";
 
 function PublicRouter() {
   return (
@@ -60,6 +63,8 @@ function PublicRouter() {
       <Route path="/my-profile" component={MyProfile} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/my-page" component={MyPage} />
+      <Route path="/dashboard" component={RoleDashboard} />
+      <Route path="/invite/:token" component={InviteAccept} />
       <Route path="/404" component={NotFound} />
     </Switch>
   );
@@ -114,7 +119,9 @@ function App() {
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <OnboardingGuard>
+            <Router />
+          </OnboardingGuard>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

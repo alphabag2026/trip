@@ -1894,6 +1894,92 @@ export const appRouter = router({
       return db.getTripHistory(ctx.user.id);
     }),
   }),
+
+  // ── Invitations (조직 멤버 초대) ──────────────────────────
+  invitation: router({
+    create: protectedProcedure
+      .input(z.object({
+        organizationId: z.number(),
+        email: z.string().email().optional(),
+        memberRole: z.enum(["owner", "manager", "staff", "viewer"]).default("staff"),
+        message: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // 조직 멤버인지 확인 (owner/manager만 초대 가능)
+        const members = await db.getOrganizationMembers(input.organizationId);
+        const myMembership = members.find((m: any) => m.userId === ctx.user.id);
+        if (!myMembership || (myMembership.memberRole !== "owner" && myMembership.memberRole !== "manager" && ctx.user.role !== "admin" && ctx.user.role !== "superadmin")) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "초대 권한이 없습니다" });
+        }
+        const token = nanoid(32);
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7일 후 만료
+        return db.createInvitation({
+          organizationId: input.organizationId,
+          invitedBy: ctx.user.id,
+          email: input.email || null,
+          inviteToken: token,
+          memberRole: input.memberRole,
+          message: input.message || null,
+          expiresAt,
+        });
+      }),
+    getByToken: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const inv = await db.getInvitationByToken(input.token);
+        if (!inv) throw new TRPCError({ code: "NOT_FOUND", message: "초대를 찾을 수 없습니다" });
+        // 조직 정보도 함께 반환
+        const org = await db.getOrganizationById(inv.organizationId);
+        return { ...inv, organization: org };
+      }),
+    accept: protectedProcedure
+      .input(z.object({ token: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const inv = await db.getInvitationByToken(input.token);
+        if (!inv) throw new TRPCError({ code: "NOT_FOUND", message: "초대를 찾을 수 없습니다" });
+        if (inv.status !== "pending") throw new TRPCError({ code: "BAD_REQUEST", message: "이미 처리된 초대입니다" });
+        if (new Date(inv.expiresAt) < new Date()) throw new TRPCError({ code: "BAD_REQUEST", message: "만료된 초대입니다" });
+        // 조직 멤버로 추가
+        await db.addOrganizationMember({
+          organizationId: inv.organizationId,
+          userId: ctx.user.id,
+          memberRole: inv.memberRole,
+        });
+        // 초대 상태 업데이트
+        await db.updateInvitation(inv.id, {
+          status: "accepted",
+          acceptedBy: ctx.user.id,
+          acceptedAt: new Date(),
+        });
+        // 사용자 조직 연결
+        await db.updateUserRole(ctx.user.id, ctx.user.role, inv.organizationId);
+        return { success: true };
+      }),
+    listByOrg: protectedProcedure
+      .input(z.object({ organizationId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getInvitationsByOrg(input.organizationId);
+      }),
+    cancel: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.cancelInvitation(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ── Role-based Dashboard ──────────────────────────────
+  roleDashboard: router({
+    organizer: protectedProcedure.query(async ({ ctx }) => {
+      return db.getOrganizerDashboardData(ctx.user.id);
+    }),
+    agency: protectedProcedure.query(async ({ ctx }) => {
+      return db.getAgencyDashboardData(ctx.user.id);
+    }),
+    partner: protectedProcedure.query(async ({ ctx }) => {
+      return db.getPartnerDashboardData(ctx.user.id);
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

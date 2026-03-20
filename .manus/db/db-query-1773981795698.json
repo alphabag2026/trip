@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `invitations` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`organizationId` int NOT NULL,\n\t`invitedBy` int NOT NULL,\n\t`email` varchar(320),\n\t`inviteToken` varchar(100) NOT NULL,\n\t`memberRole` enum('owner','manager','staff','viewer') NOT NULL DEFAULT 'staff',\n\t`status` enum('pending','accepted','expired','cancelled') NOT NULL DEFAULT 'pending',\n\t`message` text,\n\t`acceptedBy` int,\n\t`acceptedAt` timestamp,\n\t`expiresAt` timestamp NOT NULL,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `invitations_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `invitations_inviteToken_unique` UNIQUE(`inviteToken`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute CREATE TABLE `invitations` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`organizationId` int NOT NULL,\n\t`invitedBy` int NOT NULL,\n\t`email` varchar(320),\n\t`inviteToken` varchar(100) NOT NULL,\n\t`memberRole` enum('owner','manager','staff','viewer') NOT NULL DEFAULT 'staff',\n\t`status` enum('pending','accepted','expired','cancelled') NOT NULL DEFAULT 'pending',\n\t`message` text,\n\t`acceptedBy` int,\n\t`acceptedAt` timestamp,\n\t`expiresAt` timestamp NOT NULL,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `invitations_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `invitations_inviteToken_unique` UNIQUE(`inviteToken`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1982
+}

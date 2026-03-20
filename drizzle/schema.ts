@@ -613,3 +613,22 @@ export const passportInfo = mysqlTable("passport_info", {
 
 export type PassportInfo = typeof passportInfo.$inferSelect;
 export type InsertPassportInfo = typeof passportInfo.$inferInsert;
+
+// ── Invitations (조직 멤버 초대) ──────────────────────────
+export const invitations = mysqlTable("invitations", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  invitedBy: int("invitedBy").notNull(), // 초대한 사용자 ID
+  email: varchar("email", { length: 320 }), // 이메일 초대
+  inviteToken: varchar("inviteToken", { length: 100 }).notNull().unique(), // 초대 링크 토큰
+  memberRole: mysqlEnum("memberRole", ["owner", "manager", "staff", "viewer"]).default("staff").notNull(),
+  status: mysqlEnum("status", ["pending", "accepted", "expired", "cancelled"]).default("pending").notNull(),
+  message: text("message"), // 초대 메시지
+  acceptedBy: int("acceptedBy"), // 수락한 사용자 ID
+  acceptedAt: timestamp("acceptedAt"),
+  expiresAt: timestamp("expiresAt").notNull(), // 만료 시간
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Invitation = typeof invitations.$inferSelect;
+export type InsertInvitation = typeof invitations.$inferInsert;

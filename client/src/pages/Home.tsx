@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plane, ClipboardList, Search, Shield, MapPin, Globe, MessageCircle, Car, Hotel, Luggage, User, BookOpen } from "lucide-react";
+import { Plane, ClipboardList, Search, Shield, MapPin, Globe, MessageCircle, Car, Hotel, Luggage, User, BookOpen, LayoutDashboard } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useTranslation } from "react-i18next";
@@ -30,9 +30,17 @@ export default function Home() {
           </nav>
           <div className="flex items-center gap-3">
             <LanguageSelector />
-            {isAuthenticated && user?.role === "admin" && (
+            {isAuthenticated && (user?.role === "admin" || user?.role === "superadmin") && (
               <Link href="/admin">
                 <Button variant="outline" size="sm">{t("nav.backoffice")}</Button>
+              </Link>
+            )}
+            {isAuthenticated && user?.role !== "admin" && user?.role !== "superadmin" && (
+              <Link href="/dashboard">
+                <Button variant="outline" size="sm">
+                  <LayoutDashboard className="h-4 w-4 mr-1" />
+                  대시보드
+                </Button>
               </Link>
             )}
             {isAuthenticated ? (

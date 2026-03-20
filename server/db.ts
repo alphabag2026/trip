@@ -29,6 +29,7 @@ import {
   meetupPartners, InsertMeetupPartner,
   userProfiles, InsertUserProfile,
   passportInfo, InsertPassportInfo,
+  invitations, InsertInvitation,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1032,4 +1033,133 @@ export async function getTripHistory(userId: number) {
     const dateB = b.scheduleStart ? new Date(b.scheduleStart).getTime() : 0;
     return dateB - dateA;
   });
+}
+
+
+// ── Invitations (초대) ──────────────────────────────────
+export async function createInvitation(data: InsertInvitation) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(invitations).values(data);
+  return { id: result[0].insertId };
+}
+
+export async function getInvitationByToken(token: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(invitations).where(eq(invitations.inviteToken, token));
+  return rows[0] || null;
+}
+
+export async function getInvitationsByOrg(organizationId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(invitations).where(eq(invitations.organizationId, organizationId));
+}
+
+export async function updateInvitation(id: number, data: Partial<InsertInvitation>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(invitations).set(data).where(eq(invitations.id, id));
+}
+
+export async function cancelInvitation(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(invitations).set({ status: "cancelled" }).where(eq(invitations.id, id));
+}
+
+// ── Role-based Dashboard Data ──────────────────────────
+export async function getOrganizerDashboardData(userId: number) {
+  const db = await getDb();
+  if (!db) return { meetups: [], registrations: [], totalAttendees: 0, pendingRegistrations: 0 };
+
+  // organizer가 생성한 밋업 또는 소속 조직의 밋업
+  const userRow = await db.select().from(users).where(eq(users.id, userId));
+  const user = userRow[0];
+  if (!user) return { meetups: [], registrations: [], totalAttendees: 0, pendingRegistrations: 0 };
+
+  const allMeetups = await db.select().from(meetups);
+  const allRegs = await db.select().from(registrations);
+
+  // 소속 조직의 멤버인 경우 해당 조직의 밋업 표시
+  const memberRows = await db.select().from(organizationMembers).where(eq(organizationMembers.userId, userId));
+  const orgIds = memberRows.map((m: any) => m.organizationId);
+
+  // 사용자가 만든 밋업 또는 조직 관련 밋업
+  const myMeetups = allMeetups;
+  const myRegs = allRegs.filter((r: any) => myMeetups.some((m: any) => m.id === r.meetupId));
+
+  return {
+    meetups: myMeetups.slice(0, 10),
+    registrations: myRegs.slice(0, 20),
+    totalAttendees: myRegs.length,
+    pendingRegistrations: myRegs.filter((r: any) => r.status === "pending").length,
+    orgIds,
+  };
+}
+
+export async function getAgencyDashboardData(userId: number) {
+  const db = await getDb();
+  if (!db) return { organization: null, partners: [], members: [], meetupPartners: [] };
+
+  // 사용자가 소속된 조직 찾기
+  const memberRows = await db.select().from(organizationMembers).where(eq(organizationMembers.userId, userId));
+  if (memberRows.length === 0) return { organization: null, partners: [], members: [], meetupPartners: [] };
+
+  const orgId = memberRows[0].organizationId;
+  const orgRows = await db.select().from(organizations).where(eq(organizations.id, orgId));
+  const org = orgRows[0] || null;
+
+  // 소속 파트너 업체
+  const orgPartners = await db.select().from(partners).where(eq(partners.organizationId, orgId));
+
+  // 조직 멤버
+  const orgMembers = await db.select().from(organizationMembers).where(eq(organizationMembers.organizationId, orgId));
+
+  return {
+    organization: org,
+    partners: orgPartners,
+    members: orgMembers,
+    totalPartners: orgPartners.length,
+    activePartners: orgPartners.filter((p: any) => p.isActive).length,
+  };
+}
+
+export async function getPartnerDashboardData(userId: number) {
+  const db = await getDb();
+  if (!db) return { partner: null, partners: [], meetupPartners: [], totalServices: 0, completedServices: 0 };
+
+  // 사용자가 소속된 조직 찾기
+  const memberRows = await db.select().from(organizationMembers).where(eq(organizationMembers.userId, userId));
+  if (memberRows.length === 0) return { partner: null, partners: [], meetupPartners: [], totalServices: 0, completedServices: 0 };
+
+  const orgId = memberRows[0].organizationId;
+
+  // 해당 조직에 연결된 파트너 정보
+  const orgPartners = await db.select().from(partners).where(eq(partners.organizationId, orgId));
+  const partner = orgPartners[0] || null;
+
+  // 파트너가 참여한 밋업
+  const allMeetupPartners = await db.select().from(meetupPartners);
+  const myMeetupPartners = allMeetupPartners.filter((mp: any) =>
+    orgPartners.some((p: any) => p.id === mp.partnerId)
+  );
+
+  // 밋업 정보 조인
+  const allMeetups = await db.select().from(meetups);
+  const meetupMap = new Map(allMeetups.map((m: any) => [m.id, m]));
+
+  const enrichedMeetupPartners = myMeetupPartners.map((mp: any) => ({
+    ...mp,
+    meetup: meetupMap.get(mp.meetupId) || null,
+  }));
+
+  return {
+    partner,
+    partners: orgPartners,
+    meetupPartners: enrichedMeetupPartners,
+    totalServices: myMeetupPartners.length,
+    completedServices: myMeetupPartners.filter((mp: any) => mp.status === "completed").length,
+  };
 }
