@@ -126,7 +126,16 @@
     "passportError": "Failed to upload passport image.",
     "errorToast": "An error occurred during submission.",
     "pcs": "pcs",
-    "pcsOrMore": "or more"
+    "pcsOrMore": "or more",
+    "transportTitle": "Transportasyon",
+    "transport_flight": "Eroplano",
+    "transport_ktx": "Mabilis na Tren",
+    "transport_none": "Wala",
+    "transport_other": "Iba pa",
+    "transportNotes": "Detalye ng Transportasyon",
+    "transportNotesPh": "Hal: Bus, pribadong sasakyan, atbp.",
+    "transportFlightInfo": "Ang impormasyon ng domestic flight ay ipapadala pagkatapos ng pag-apruba.",
+    "transportKtxInfo": "Ang impormasyon ng tiket ng mabilis na tren ay ipapadala pagkatapos ng pag-apruba."
   },
   "lookup": {
     "title": "Itinerary Lookup",

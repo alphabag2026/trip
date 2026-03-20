@@ -161,7 +161,16 @@
     "passportError": "여권 이미지 업로드에 실패했습니다.",
     "errorToast": "신청 중 오류가 발생했습니다.",
     "pcs": "개",
-    "pcsOrMore": "개 이상"
+    "pcsOrMore": "개 이상",
+    "transportTitle": "교통수단",
+    "transport_flight": "비행기",
+    "transport_ktx": "고속철도",
+    "transport_none": "없음",
+    "transport_other": "기타",
+    "transportNotes": "교통수단 상세",
+    "transportNotesPh": "예: 버스, 자차 등",
+    "transportFlightInfo": "국내선 항공편 정보는 승인 후 안내됩니다. 위에서 희망 출발 시간대를 선택해주세요.",
+    "transportKtxInfo": "KTX/SRT 승차권 정보는 승인 후 안내됩니다. 위에서 희망 출발 시간대를 선택해주세요."
   },
   "lookup": {
     "title": "여정표 조회",

@@ -126,7 +126,16 @@
     "passportError": "Failed to upload passport image.",
     "errorToast": "An error occurred during submission.",
     "pcs": "pcs",
-    "pcsOrMore": "or more"
+    "pcsOrMore": "or more",
+    "transportTitle": "Vervoer",
+    "transport_flight": "Vliegtuig",
+    "transport_ktx": "Hogesnelheidstrein",
+    "transport_none": "Geen",
+    "transport_other": "Anders",
+    "transportNotes": "Vervoersdetails",
+    "transportNotesPh": "Bijv. bus, eigen auto, enz.",
+    "transportFlightInfo": "Binnenlandse vluchtinformatie wordt na goedkeuring verzonden.",
+    "transportKtxInfo": "Hogesnelheidstrein ticketinformatie wordt na goedkeuring verzonden."
   },
   "lookup": {
     "title": "Itinerary Lookup",

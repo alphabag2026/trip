@@ -126,7 +126,16 @@
     "passportError": "パスポート画像のアップロードに失敗しました。",
     "errorToast": "送信中にエラーが発生しました。",
     "pcs": "個",
-    "pcsOrMore": "個以上"
+    "pcsOrMore": "個以上",
+    "transportTitle": "交通手段",
+    "transport_flight": "飛行機",
+    "transport_ktx": "高速鉄道",
+    "transport_none": "なし",
+    "transport_other": "その他",
+    "transportNotes": "交通手段の詳細",
+    "transportNotesPh": "例：バス、自家用車など",
+    "transportFlightInfo": "国内線の情報は承認後にお知らせします。上記で希望出発時間帯を選択してください。",
+    "transportKtxInfo": "新幹線チケット情報は承認後にお知らせします。上記で希望出発時間帯を選択してください。"
   },
   "lookup": {
     "title": "旅程確認",

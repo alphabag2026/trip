@@ -126,7 +126,16 @@
     "passportError": "Failed to upload passport image.",
     "errorToast": "An error occurred during submission.",
     "pcs": "pcs",
-    "pcsOrMore": "or more"
+    "pcsOrMore": "or more",
+    "transportTitle": "وسيلة النقل",
+    "transport_flight": "طائرة",
+    "transport_ktx": "قطار سريع",
+    "transport_none": "لا يوجد",
+    "transport_other": "أخرى",
+    "transportNotes": "تفاصيل النقل",
+    "transportNotesPh": "مثال: حافلة، سيارة خاصة، إلخ.",
+    "transportFlightInfo": "سيتم إرسال معلومات الرحلة الداخلية بعد الموافقة.",
+    "transportKtxInfo": "سيتم إرسال معلومات تذكرة القطار السريع بعد الموافقة."
   },
   "lookup": {
     "title": "Itinerary Lookup",

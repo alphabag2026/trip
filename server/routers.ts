@@ -126,6 +126,8 @@ export const appRouter = router({
         allergies: z.string().optional(),
         drinkAlcohol: z.enum(["yes", "no", "sometimes"]).optional(),
         smoking: z.enum(["yes", "no"]).optional(),
+        transportType: z.enum(["flight", "ktx", "none", "other"]).optional(),
+        transportNotes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const id = await db.createRegistration({
@@ -144,7 +146,9 @@ export const appRouter = router({
           const drinkLabel = input.drinkAlcohol === "yes" ? "음주" : input.drinkAlcohol === "sometimes" ? "가끔" : input.drinkAlcohol === "no" ? "비음주" : "";
           const drinkInfo = drinkLabel ? `\n🍺 ${drinkLabel}` : "";
           const smokeInfo = input.smoking ? `\n🚬 ${input.smoking === "yes" ? "흡연" : "비흡연"}` : "";
-          const message = `📋 새 밋업 신청\n[${locationLabel}] ${input.name} / ${schedule} / ${input.phone} / ${input.messengerId} / ${input.notes || "-"} / ${input.referrerName || "-"}${bagInfo}${departureTimeInfo}${mealInfo}${allergyInfo}${drinkInfo}${smokeInfo}`;
+          const transportLabel = input.transportType === "flight" ? "비행기" : input.transportType === "ktx" ? "고속철도" : input.transportType === "none" ? "교통수단 없음" : input.transportType === "other" ? "기타" : "";
+          const transportInfo = transportLabel ? `\n🚄 교통수단: ${transportLabel}${input.transportNotes ? ` (${input.transportNotes})` : ""}` : "";
+          const message = `📋 새 밋업 신청\n[${locationLabel}] ${input.name} / ${schedule} / ${input.phone} / ${input.messengerId} / ${input.notes || "-"} / ${input.referrerName || "-"}${bagInfo}${departureTimeInfo}${transportInfo}${mealInfo}${allergyInfo}${drinkInfo}${smokeInfo}`;
           const sent = await sendTelegram(message);
           if (sent) await db.updateRegistration(id, { telegramNotified: true });
         } catch (e) { console.error("[Telegram] Failed:", e); }

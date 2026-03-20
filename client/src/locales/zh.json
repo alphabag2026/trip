@@ -126,7 +126,16 @@
     "passportError": "护照图片上传失败。",
     "errorToast": "提交时发生错误。",
     "pcs": "件",
-    "pcsOrMore": "件以上"
+    "pcsOrMore": "件以上",
+    "transportTitle": "交通方式",
+    "transport_flight": "飞机",
+    "transport_ktx": "高铁",
+    "transport_none": "无",
+    "transport_other": "其他",
+    "transportNotes": "交通详情",
+    "transportNotesPh": "例如：巴士、私家车等",
+    "transportFlightInfo": "国内航班信息将在审批后通知。请在上方选择您的首选出发时间。",
+    "transportKtxInfo": "高铁票信息将在审批后通知。请在上方选择您的首选出发时间。"
   },
   "lookup": {
     "title": "行程查询",

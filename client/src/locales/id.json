@@ -126,7 +126,16 @@
     "passportError": "Failed to upload passport image.",
     "errorToast": "An error occurred during submission.",
     "pcs": "pcs",
-    "pcsOrMore": "or more"
+    "pcsOrMore": "or more",
+    "transportTitle": "Transportasi",
+    "transport_flight": "Pesawat",
+    "transport_ktx": "Kereta Cepat",
+    "transport_none": "Tidak Ada",
+    "transport_other": "Lainnya",
+    "transportNotes": "Detail Transportasi",
+    "transportNotesPh": "Contoh: Bus, mobil pribadi, dll.",
+    "transportFlightInfo": "Informasi penerbangan domestik akan dikirim setelah persetujuan. Silakan pilih waktu keberangkatan yang diinginkan di atas.",
+    "transportKtxInfo": "Informasi tiket kereta cepat akan dikirim setelah persetujuan. Silakan pilih waktu keberangkatan yang diinginkan di atas."
   },
   "lookup": {
     "title": "Itinerary Lookup",

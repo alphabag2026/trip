@@ -126,7 +126,16 @@
     "passportError": "Failed to upload passport image.",
     "errorToast": "An error occurred during submission.",
     "pcs": "pcs",
-    "pcsOrMore": "or more"
+    "pcsOrMore": "or more",
+    "transportTitle": "Ulaşım",
+    "transport_flight": "Uçak",
+    "transport_ktx": "Yüksek Hızlı Tren",
+    "transport_none": "Yok",
+    "transport_other": "Diğer",
+    "transportNotes": "Ulaşım Detayları",
+    "transportNotesPh": "Örn: Otobüs, özel araç vb.",
+    "transportFlightInfo": "İç hat uçuş bilgileri onay sonrası gönderilecektir.",
+    "transportKtxInfo": "Yüksek hızlı tren bileti bilgileri onay sonrası gönderilecektir."
   },
   "lookup": {
     "title": "Itinerary Lookup",

@@ -126,7 +126,16 @@
     "passportError": "Failed to upload passport image.",
     "errorToast": "An error occurred during submission.",
     "pcs": "pcs",
-    "pcsOrMore": "or more"
+    "pcsOrMore": "or more",
+    "transportTitle": "Phương tiện di chuyển",
+    "transport_flight": "Máy bay",
+    "transport_ktx": "Tàu cao tốc",
+    "transport_none": "Không có",
+    "transport_other": "Khác",
+    "transportNotes": "Chi tiết phương tiện",
+    "transportNotesPh": "Ví dụ: Xe buýt, xe riêng, v.v.",
+    "transportFlightInfo": "Thông tin chuyến bay nội địa sẽ được gửi sau khi phê duyệt. Vui lòng chọn thời gian khởi hành mong muốn ở trên.",
+    "transportKtxInfo": "Thông tin vé tàu cao tốc sẽ được gửi sau khi phê duyệt. Vui lòng chọn thời gian khởi hành mong muốn ở trên."
   },
   "lookup": {
     "title": "Itinerary Lookup",

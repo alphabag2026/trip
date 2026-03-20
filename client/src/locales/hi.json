@@ -126,7 +126,16 @@
     "passportError": "Failed to upload passport image.",
     "errorToast": "An error occurred during submission.",
     "pcs": "pcs",
-    "pcsOrMore": "or more"
+    "pcsOrMore": "or more",
+    "transportTitle": "परिवहन",
+    "transport_flight": "विमान",
+    "transport_ktx": "हाई-स्पीड रेल",
+    "transport_none": "कोई नहीं",
+    "transport_other": "अन्य",
+    "transportNotes": "परिवहन विवरण",
+    "transportNotesPh": "उदा. बस, निजी कार आदि",
+    "transportFlightInfo": "घरेलू उड़ान की जानकारी अनुमोदन के बाद भेजी जाएगी।",
+    "transportKtxInfo": "हाई-स्पीड रेल टिकट की जानकारी अनुमोदन के बाद भेजी जाएगी।"
   },
   "lookup": {
     "title": "Itinerary Lookup",

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle, Clock, UtensilsCrossed, Wine, Cigarette } from "lucide-react";
+import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle, Clock, UtensilsCrossed, Wine, Cigarette, Train, Car } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -36,6 +36,8 @@ export default function Register() {
     allergies: "",
     drinkAlcohol: "" as "" | "yes" | "no" | "sometimes",
     smoking: "" as "" | "yes" | "no",
+    transportType: "" as "" | "flight" | "ktx" | "none" | "other",
+    transportNotes: "",
   });
 
   const { data: meetups } = trpc.meetup.list.useQuery({ status: "open" });
@@ -76,6 +78,8 @@ export default function Register() {
         checkedBagCount: checkedBagRequest ? parseInt(form.checkedBagCount) || 1 : 0,
         checkedBagWeight: checkedBagRequest ? form.checkedBagWeight : undefined,
         checkedBagNotes: checkedBagRequest ? form.checkedBagNotes || undefined : undefined,
+        transportType: locationType === "domestic" && form.transportType ? form.transportType as "flight" | "ktx" | "none" | "other" : undefined,
+        transportNotes: locationType === "domestic" && form.transportNotes ? form.transportNotes : undefined,
         preferredDepartureTime: form.preferredDepartureTime || undefined,
         mealPreference: form.mealPreference || undefined,
         allergies: form.allergies || undefined,
@@ -147,6 +151,65 @@ export default function Register() {
             <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" />
             <p className="text-sm text-primary">{t("register.overseasInfo")}</p>
           </div>
+        )}
+
+        {/* 내륙 교통수단 선택 */}
+        {locationType === "domestic" && (
+          <Card className="bg-card border-border mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Train className="h-5 w-5 text-primary" />
+                {t("register.transportTitle")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { value: "flight" as const, icon: Plane, label: t("register.transport_flight") },
+                  { value: "ktx" as const, icon: Train, label: t("register.transport_ktx") },
+                  { value: "none" as const, icon: Car, label: t("register.transport_none") },
+                  { value: "other" as const, icon: Info, label: t("register.transport_other") },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleChange("transportType", opt.value)}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
+                      form.transportType === opt.value
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <opt.icon className="h-6 w-6" />
+                    <span className="text-sm font-medium">{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+              {form.transportType === "other" && (
+                <div>
+                  <Label htmlFor="transportNotes">{t("register.transportNotes")}</Label>
+                  <Input
+                    id="transportNotes"
+                    value={form.transportNotes}
+                    onChange={e => handleChange("transportNotes", e.target.value)}
+                    placeholder={t("register.transportNotesPh")}
+                  />
+                </div>
+              )}
+              {form.transportType === "flight" && (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-start gap-2">
+                  <Plane className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
+                  <p className="text-xs text-blue-400">{t("register.transportFlightInfo")}</p>
+                </div>
+              )}
+              {form.transportType === "ktx" && (
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 flex items-start gap-2">
+                  <Train className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                  <p className="text-xs text-green-400">{t("register.transportKtxInfo")}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* 수화물 공지 */}

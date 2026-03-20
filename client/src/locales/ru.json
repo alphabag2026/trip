@@ -126,7 +126,16 @@
     "passportError": "Failed to upload passport image.",
     "errorToast": "An error occurred during submission.",
     "pcs": "pcs",
-    "pcsOrMore": "or more"
+    "pcsOrMore": "or more",
+    "transportTitle": "Транспорт",
+    "transport_flight": "Самолёт",
+    "transport_ktx": "Скоростной поезд",
+    "transport_none": "Нет",
+    "transport_other": "Другое",
+    "transportNotes": "Детали транспорта",
+    "transportNotesPh": "Напр.: автобус, личный автомобиль и т.д.",
+    "transportFlightInfo": "Информация о внутреннем рейсе будет отправлена после одобрения.",
+    "transportKtxInfo": "Информация о билете на скоростной поезд будет отправлена после одобрения."
   },
   "lookup": {
     "title": "Itinerary Lookup",

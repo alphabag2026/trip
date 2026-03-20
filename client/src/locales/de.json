@@ -126,7 +126,16 @@
     "passportError": "Failed to upload passport image.",
     "errorToast": "An error occurred during submission.",
     "pcs": "pcs",
-    "pcsOrMore": "or more"
+    "pcsOrMore": "or more",
+    "transportTitle": "Transport",
+    "transport_flight": "Flugzeug",
+    "transport_ktx": "Hochgeschwindigkeitszug",
+    "transport_none": "Keiner",
+    "transport_other": "Sonstiges",
+    "transportNotes": "Transportdetails",
+    "transportNotesPh": "z.B. Bus, Privatwagen usw.",
+    "transportFlightInfo": "Inlandsflug-Informationen werden nach Genehmigung gesendet.",
+    "transportKtxInfo": "Hochgeschwindigkeitszug-Ticket-Informationen werden nach Genehmigung gesendet."
   },
   "lookup": {
     "title": "Itinerary Lookup",
