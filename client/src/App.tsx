@@ -46,6 +46,7 @@ import MyPage from "./pages/MyPage";
 import { OnboardingGuard } from "./components/OnboardingGuard";
 import RoleDashboard from "./pages/dashboard/RoleDashboard";
 import InviteAccept from "./pages/InviteAccept";
+import ImmigrationChecklist from "./pages/ImmigrationChecklist";
 
 function PublicRouter() {
   return (
@@ -67,6 +68,7 @@ function PublicRouter() {
       <Route path="/my-page" component={MyPage} />
       <Route path="/dashboard" component={RoleDashboard} />
       <Route path="/invite/:token" component={InviteAccept} />
+      <Route path="/immigration-checklist" component={ImmigrationChecklist} />
       <Route path="/404" component={NotFound} />
     </Switch>
   );

@@ -1268,3 +1268,31 @@ export async function getFlightTicketsByUser(userId: number) {
     .where(eq(flightTickets.userId, userId))
     .orderBy(desc(flightTickets.createdAt));
 }
+
+// ── Bulk Operations ──────────────────────────────────────
+export async function bulkCreateHotelVouchers(dataList: InsertHotelVoucher[]) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  if (dataList.length === 0) return [];
+  const result = await db.insert(hotelVouchers).values(dataList);
+  return result[0].insertId;
+}
+
+export async function bulkCreateFlightTickets(dataList: InsertFlightTicket[]) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  if (dataList.length === 0) return [];
+  const result = await db.insert(flightTickets).values(dataList);
+  return result[0].insertId;
+}
+
+// ── Immigration Checklist helpers ──────────────────────────
+export async function getUserImmigrationStatus(userId: number) {
+  const db = await getDb(); if (!db) return { passport: null, vouchers: [], tickets: [] };
+  const passportRows = await db.select().from(passportInfo).where(eq(passportInfo.userId, userId));
+  const voucherRows = await db.select().from(hotelVouchers).where(eq(hotelVouchers.userId, userId)).orderBy(desc(hotelVouchers.createdAt));
+  const ticketRows = await db.select().from(flightTickets).where(eq(flightTickets.userId, userId)).orderBy(desc(flightTickets.createdAt));
+  return {
+    passport: passportRows[0] ?? null,
+    vouchers: voucherRows,
+    tickets: ticketRows,
+  };
+}

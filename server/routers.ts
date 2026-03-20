@@ -2081,6 +2081,41 @@ export const appRouter = router({
         await db.deleteHotelVoucher(input.id);
         return { success: true };
       }),
+    // CSV 일괄 배정
+    bulkAssign: adminProcedure
+      .input(z.object({
+        rows: z.array(z.object({
+          userId: z.number().optional(),
+          meetupId: z.number().optional(),
+          hotelName: z.string().min(1),
+          hotelAddress: z.string().min(1),
+          hotelNameLocal: z.string().optional(),
+          hotelAddressLocal: z.string().optional(),
+          hotelPhone: z.string().optional(),
+          hotelLatitude: z.string().optional(),
+          hotelLongitude: z.string().optional(),
+          guestName: z.string().optional(),
+          roomType: z.string().optional(),
+          checkInDate: z.string().optional(),
+          checkOutDate: z.string().optional(),
+          bookingId: z.string().optional(),
+          specialRequests: z.string().optional(),
+          localLanguage: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        let successCount = 0;
+        const errors: string[] = [];
+        for (const row of input.rows) {
+          try {
+            await db.createHotelVoucher(row as any);
+            successCount++;
+          } catch (e: any) {
+            errors.push(`${row.guestName || 'unknown'}: ${e.message}`);
+          }
+        }
+        return { successCount, errorCount: errors.length, errors };
+      }),
   }),
   // ── Flight Tickets ──────────────────────────────────────
   flightTicket: router({
@@ -2196,6 +2231,65 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         await db.deleteFlightTicket(input.id);
         return { success: true };
+      }),
+    // CSV 일괄 배정
+    bulkAssign: adminProcedure
+      .input(z.object({
+        rows: z.array(z.object({
+          userId: z.number().optional(),
+          meetupId: z.number().optional(),
+          passengerName: z.string().min(1),
+          passportNumber: z.string().optional(),
+          nationality: z.string().optional(),
+          outboundAirline: z.string().optional(),
+          outboundFlightNo: z.string().optional(),
+          outboundDepartureAirport: z.string().optional(),
+          outboundDepartureCode: z.string().optional(),
+          outboundArrivalAirport: z.string().optional(),
+          outboundArrivalCode: z.string().optional(),
+          outboundDepartureDate: z.string().optional(),
+          outboundDepartureTime: z.string().optional(),
+          outboundArrivalDate: z.string().optional(),
+          outboundArrivalTime: z.string().optional(),
+          returnAirline: z.string().optional(),
+          returnFlightNo: z.string().optional(),
+          returnDepartureAirport: z.string().optional(),
+          returnDepartureCode: z.string().optional(),
+          returnArrivalAirport: z.string().optional(),
+          returnArrivalCode: z.string().optional(),
+          returnDepartureDate: z.string().optional(),
+          returnDepartureTime: z.string().optional(),
+          returnArrivalDate: z.string().optional(),
+          returnArrivalTime: z.string().optional(),
+          bookingReference: z.string().optional(),
+          ticketNumber: z.string().optional(),
+          isGenerated: z.boolean().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        let successCount = 0;
+        const errors: string[] = [];
+        for (const row of input.rows) {
+          try {
+            await db.createFlightTicket(row as any);
+            successCount++;
+          } catch (e: any) {
+            errors.push(`${row.passengerName || 'unknown'}: ${e.message}`);
+          }
+        }
+        return { successCount, errorCount: errors.length, errors };
+      }),
+  }),
+
+  // ── Immigration Checklist ──────────────────────────────────
+  immigration: router({
+    myStatus: protectedProcedure.query(async ({ ctx }) => {
+      return db.getUserImmigrationStatus(ctx.user.id);
+    }),
+    statusByUser: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getUserImmigrationStatus(input.userId);
       }),
   }),
 });
