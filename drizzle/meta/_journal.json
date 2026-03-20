@@ -71,6 +71,13 @@
       "when": 1773936738376,
       "tag": "0009_fancy_sugar_man",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1773978198226,
+      "tag": "0010_nebulous_newton_destine",
+      "breakpoints": true
     }
   ]
 }

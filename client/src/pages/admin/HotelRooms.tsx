@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Hotel, Search, Users, DoorOpen, Download, Plus, Trash2, Edit } from "lucide-react";
+import { Hotel, Search, Users, DoorOpen, Download, Plus, Trash2, Edit, Upload, Send, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 
 export default function HotelRooms() {
@@ -28,6 +28,52 @@ export default function HotelRooms() {
     onSuccess: () => { rooms.refetch(); toast.success("방 배정이 해제되었습니다"); },
     onError: (e) => toast.error(e.message),
   });
+  const bulkAssignMut = trpc.hotelRoomNotify.bulkAssignCsv.useMutation({
+    onSuccess: (data: { success: boolean; matched: number; errors: string[] }) => {
+      rooms.refetch();
+      toast.success(`${data.matched}건 배정 완료${data.errors.length > 0 ? ` (${data.errors.length}건 실패)` : ""}`);
+      if (data.errors.length > 0) {
+        data.errors.forEach((err: string) => toast.error(err));
+      }
+      setShowBulkDialog(false);
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+  const notifyAssignMut = trpc.hotelRoomNotify.assignAndNotify.useMutation({
+    onSuccess: () => { rooms.refetch(); toast.success("방 배정 및 텔레그램 알림 발송 완료"); setAssignDialog({ open: false, roomNumber: "", floor: "", notes: "" }); },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+
+  const [showBulkDialog, setShowBulkDialog] = useState(false);
+  const [csvText, setCsvText] = useState("");
+  const [csvPreview, setCsvPreview] = useState<Array<{name: string; phone: string; roomNumber: string; floor?: string; notes?: string}>>([]);
+
+  function parseCsvInput(text: string) {
+    const lines = text.trim().split("\n").filter(l => l.trim());
+    const result: Array<{name: string; phone: string; roomNumber: string; floor?: string; notes?: string}> = [];
+    for (const line of lines) {
+      const parts = line.split(",").map(s => s.trim());
+      if (parts.length >= 3) {
+        result.push({ name: parts[0], phone: parts[1], roomNumber: parts[2], floor: parts[3] || undefined, notes: parts[4] || undefined });
+      }
+    }
+    return result;
+  }
+
+  function handleCsvFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      // BOM 제거 및 헤더 스킵
+      const lines = text.replace(/^\uFEFF/, "").trim().split("\n");
+      const dataLines = lines.filter(l => !l.startsWith("이름") && !l.toLowerCase().startsWith("name"));
+      setCsvText(dataLines.join("\n"));
+      setCsvPreview(parseCsvInput(dataLines.join("\n")));
+    };
+    reader.readAsText(file, "utf-8");
+  }
 
   const allRegs = rooms.data || [];
   const assigned = allRegs.filter(r => r.hotelRoomNumber);
@@ -83,6 +129,8 @@ export default function HotelRooms() {
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" onClick={exportCSV}><Download className="w-4 h-4 mr-1" />CSV</Button>
+          <Button variant="outline" size="sm" onClick={() => setShowBulkDialog(true)}><Upload className="w-4 h-4 mr-1" />일괄 배정</Button>
+
         </div>
       </div>
 
@@ -223,6 +271,59 @@ export default function HotelRooms() {
         </CardContent>
       </Card>
 
+      {/* CSV 일괄 배정 다이얼로그 */}
+      <Dialog open={showBulkDialog} onOpenChange={setShowBulkDialog}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><FileSpreadsheet className="w-5 h-5" /> CSV 일괄 방 배정</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 bg-muted rounded-lg text-sm">
+              <p className="font-medium mb-1">CSV 형식:</p>
+              <code className="text-xs">이름,전화번호,방번호,층(선택),메모(선택)</code>
+              <p className="text-xs text-muted-foreground mt-1">예: 홍길동,010-1234-5678,301,3,금연실</p>
+            </div>
+            <div>
+              <Label>CSV 파일 업로드</Label>
+              <Input type="file" accept=".csv,.txt" onChange={handleCsvFileUpload} className="mt-1" />
+            </div>
+            <div>
+              <Label>또는 직접 입력</Label>
+              <Textarea
+                placeholder="이름,전화번호,방번호,층,메모&#10;홍길동,010-1234-5678,301,3,금연실"
+                value={csvText}
+                onChange={e => { setCsvText(e.target.value); setCsvPreview(parseCsvInput(e.target.value)); }}
+                rows={5}
+              />
+            </div>
+            {csvPreview.length > 0 && (
+              <div>
+                <Label>미리보기 ({csvPreview.length}건)</Label>
+                <div className="border rounded-lg max-h-40 overflow-y-auto mt-1">
+                  <table className="w-full text-xs">
+                    <thead><tr className="border-b bg-muted"><th className="p-1.5 text-left">이름</th><th className="p-1.5 text-left">전화</th><th className="p-1.5 text-left">방</th><th className="p-1.5 text-left">층</th></tr></thead>
+                    <tbody>
+                      {csvPreview.map((row, i) => (
+                        <tr key={i} className="border-b"><td className="p-1.5">{row.name}</td><td className="p-1.5">{row.phone}</td><td className="p-1.5">{row.roomNumber}</td><td className="p-1.5">{row.floor || "-"}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkDialog(false)}>취소</Button>
+            <Button
+              disabled={csvPreview.length === 0 || bulkAssignMut.isPending}
+              onClick={() => bulkAssignMut.mutate({ assignments: csvPreview, sendNotification: true })}
+            >
+              {bulkAssignMut.isPending ? "배정 중..." : `${csvPreview.length}건 일괄 배정`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* 방 배정 다이얼로그 */}
       <Dialog open={assignDialog.open} onOpenChange={o => !o && setAssignDialog({ open: false, roomNumber: "", floor: "", notes: "" })}>
         <DialogContent>
@@ -255,9 +356,10 @@ export default function HotelRooms() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={() => setAssignDialog({ open: false, roomNumber: "", floor: "", notes: "" })}>취소</Button>
             <Button
+              variant="outline"
               disabled={!assignDialog.roomNumber || assignMut.isPending}
               onClick={() => {
                 if (!assignDialog.regId) return;
@@ -269,7 +371,22 @@ export default function HotelRooms() {
                 });
               }}
             >
-              {assignMut.isPending ? "저장 중..." : "배정 완료"}
+              {assignMut.isPending ? "저장 중..." : "배정만"}
+            </Button>
+            <Button
+              disabled={!assignDialog.roomNumber || notifyAssignMut.isPending}
+              onClick={() => {
+                if (!assignDialog.regId) return;
+                notifyAssignMut.mutate({
+                  registrationId: assignDialog.regId,
+                  roomNumber: assignDialog.roomNumber,
+                  floor: assignDialog.floor || undefined,
+                  notes: assignDialog.notes || undefined,
+                });
+              }}
+            >
+              <Send className="w-4 h-4 mr-1" />
+              {notifyAssignMut.isPending ? "발송 중..." : "배정 + 알림"}
             </Button>
           </DialogFooter>
         </DialogContent>

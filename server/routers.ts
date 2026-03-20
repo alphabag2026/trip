@@ -10,7 +10,12 @@ import { invokeLLM } from "./_core/llm";
 import { nanoid } from "nanoid";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "관리자 권한이 필요합니다" });
+  if (ctx.user.role !== "admin" && ctx.user.role !== "superadmin") throw new TRPCError({ code: "FORBIDDEN", message: "관리자 권한이 필요합니다" });
+  return next({ ctx });
+});
+
+const superadminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== "superadmin" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "슈퍼관리자 권한이 필요합니다" });
   return next({ ctx });
 });
 
@@ -1451,6 +1456,375 @@ export const appRouter = router({
           hotelNotes: null,
         });
         return { success: true };
+      }),
+  }),
+
+  // ══════════════════════════════════════════════════════════
+  // v4.0 - 멀티테넌트 클라우드 플랫폼
+  // ══════════════════════════════════════════════════════════
+
+  // ── Organizations (조직/업체 관리) ──────────────────────
+  organization: router({
+    list: superadminProcedure
+      .input(z.object({ type: z.string().optional() }))
+      .query(async ({ input }) => {
+        return db.getOrganizations(input.type);
+      }),
+    get: superadminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getOrganizationById(input.id);
+      }),
+    create: superadminProcedure
+      .input(z.object({
+        name: z.string(),
+        type: z.enum(["platform", "organizer", "agency", "partner"]),
+        region: z.string().optional(),
+        country: z.string().optional(),
+        contactName: z.string().optional(),
+        contactPhone: z.string().optional(),
+        contactEmail: z.string().optional(),
+        address: z.string().optional(),
+        description: z.string().optional(),
+        website: z.string().optional(),
+        telegramChatId: z.string().optional(),
+        parentOrgId: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const result = await db.createOrganization({ ...input, createdBy: ctx.user.id });
+        return result;
+      }),
+    update: superadminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        type: z.enum(["platform", "organizer", "agency", "partner"]).optional(),
+        region: z.string().optional(),
+        country: z.string().optional(),
+        contactName: z.string().optional(),
+        contactPhone: z.string().optional(),
+        contactEmail: z.string().optional(),
+        address: z.string().optional(),
+        description: z.string().optional(),
+        website: z.string().optional(),
+        telegramChatId: z.string().optional(),
+        isActive: z.boolean().optional(),
+        parentOrgId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateOrganization(id, data);
+        return { success: true };
+      }),
+    delete: superadminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteOrganization(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ── Partner Categories (파트너 카테고리) ────────────────
+  partnerCategory: router({
+    list: adminProcedure.query(async () => {
+      return db.getPartnerCategories();
+    }),
+    create: superadminProcedure
+      .input(z.object({
+        name: z.string(),
+        nameKo: z.string().optional(),
+        icon: z.string().optional(),
+        description: z.string().optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return db.createPartnerCategory(input);
+      }),
+    update: superadminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        nameKo: z.string().optional(),
+        icon: z.string().optional(),
+        description: z.string().optional(),
+        sortOrder: z.number().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updatePartnerCategory(id, data);
+        return { success: true };
+      }),
+    delete: superadminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deletePartnerCategory(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ── Partners (파트너 업체) ──────────────────────────────
+  partner: router({
+    list: adminProcedure
+      .input(z.object({
+        categoryId: z.number().optional(),
+        organizationId: z.number().optional(),
+        region: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        return db.getPartners(input);
+      }),
+    get: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getPartnerById(input.id);
+      }),
+    create: adminProcedure
+      .input(z.object({
+        organizationId: z.number().optional(),
+        categoryId: z.number().optional(),
+        name: z.string(),
+        region: z.string().optional(),
+        country: z.string().optional(),
+        address: z.string().optional(),
+        contactName: z.string().optional(),
+        contactPhone: z.string().optional(),
+        contactEmail: z.string().optional(),
+        website: z.string().optional(),
+        description: z.string().optional(),
+        capacity: z.number().optional(),
+        priceRange: z.string().optional(),
+        operatingHours: z.string().optional(),
+        languages: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        return db.createPartner({ ...input, managedBy: ctx.user.id });
+      }),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        organizationId: z.number().optional(),
+        categoryId: z.number().optional(),
+        name: z.string().optional(),
+        region: z.string().optional(),
+        country: z.string().optional(),
+        address: z.string().optional(),
+        contactName: z.string().optional(),
+        contactPhone: z.string().optional(),
+        contactEmail: z.string().optional(),
+        website: z.string().optional(),
+        description: z.string().optional(),
+        capacity: z.number().optional(),
+        priceRange: z.string().optional(),
+        operatingHours: z.string().optional(),
+        languages: z.string().optional(),
+        rating: z.number().optional(),
+        isActive: z.boolean().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updatePartner(id, data);
+        return { success: true };
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deletePartner(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ── Organization Members ──────────────────────────────
+  orgMember: router({
+    list: superadminProcedure
+      .input(z.object({ organizationId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getOrganizationMembers(input.organizationId);
+      }),
+    add: superadminProcedure
+      .input(z.object({
+        organizationId: z.number(),
+        userId: z.number(),
+        memberRole: z.enum(["owner", "manager", "staff", "viewer"]),
+      }))
+      .mutation(async ({ input }) => {
+        return db.addOrganizationMember(input);
+      }),
+    remove: superadminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.removeOrganizationMember(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ── Meetup Partners (밋업-파트너 연결) ─────────────────
+  meetupPartner: router({
+    list: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getMeetupPartners(input.meetupId);
+      }),
+    add: adminProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        partnerId: z.number(),
+        serviceType: z.string().optional(),
+        serviceDate: z.date().optional(),
+        serviceNotes: z.string().optional(),
+        cost: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return db.addMeetupPartner(input);
+      }),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        serviceType: z.string().optional(),
+        serviceDate: z.date().optional(),
+        serviceNotes: z.string().optional(),
+        cost: z.string().optional(),
+        status: z.enum(["pending", "confirmed", "completed", "cancelled"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateMeetupPartner(id, data);
+        return { success: true };
+      }),
+    remove: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.removeMeetupPartner(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ── Platform Stats (슈퍼어드민 대시보드) ────────────────
+  platform: router({
+    stats: superadminProcedure.query(async () => {
+      return db.getPlatformStats();
+    }),
+    users: superadminProcedure.query(async () => {
+      return db.getAllUsers();
+    }),
+    updateUserRole: superadminProcedure
+      .input(z.object({
+        userId: z.number(),
+        role: z.enum(["user", "admin", "superadmin", "organizer", "agency", "partner"]),
+        organizationId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateUserRole(input.userId, input.role, input.organizationId);
+        return { success: true };
+      }),
+    seedCategories: superadminProcedure.mutation(async () => {
+      const defaults = [
+        { name: "Restaurant", nameKo: "식당", icon: "utensils", sortOrder: 1 },
+        { name: "Hotel", nameKo: "호텔", icon: "hotel", sortOrder: 2 },
+        { name: "Club", nameKo: "클럽", icon: "music", sortOrder: 3 },
+        { name: "Massage", nameKo: "마사지", icon: "spa", sortOrder: 4 },
+        { name: "Travel", nameKo: "여행", icon: "map", sortOrder: 5 },
+        { name: "Cruise", nameKo: "크루즈", icon: "ship", sortOrder: 6 },
+        { name: "Vehicle", nameKo: "차량", icon: "car", sortOrder: 7 },
+        { name: "Interpreter", nameKo: "통역", icon: "languages", sortOrder: 8 },
+        { name: "Activity", nameKo: "액티비티", icon: "activity", sortOrder: 9 },
+        { name: "Other", nameKo: "기타", icon: "more-horizontal", sortOrder: 10 },
+      ];
+      for (const cat of defaults) {
+        await db.createPartnerCategory(cat);
+      }
+      return { success: true, count: defaults.length };
+    }),
+  }),
+
+  // ── Hotel Room Telegram Notification ────────────────────
+  hotelRoomNotify: router({
+    assignAndNotify: adminProcedure
+      .input(z.object({
+        registrationId: z.number(),
+        roomNumber: z.string(),
+        floor: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateHotelRoom(input.registrationId, {
+          hotelRoomNumber: input.roomNumber,
+          hotelFloor: input.floor || null,
+          hotelNotes: input.notes || null,
+        });
+        // 참석자 정보 조회하여 텔레그램 발송
+        const allRegs = await db.getRegistrations();
+        const reg = allRegs.find(r => r.id === input.registrationId);
+        if (reg?.messengerId) {
+          const config = await db.getTelegramConfig();
+          if (config?.enabled && config.botToken) {
+            const msg = `🏨 <b>호텔 방 배정 안내</b>\n\n` +
+              `안녕하세요, ${reg.name}님!\n` +
+              `호텔 방이 배정되었습니다.\n\n` +
+              `🔑 방 번호: <b>${input.roomNumber}</b>\n` +
+              (input.floor ? `🏢 층: <b>${input.floor}</b>\n` : "") +
+              (input.notes ? `📝 메모: ${input.notes}\n` : "") +
+              `\n궁금한 사항은 관리자에게 문의해주세요.`;
+            try {
+              await fetch(`https://api.telegram.org/bot${config.botToken}/sendMessage`, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: reg.messengerId, text: msg, parse_mode: "HTML" }),
+              });
+            } catch (e) { /* silent */ }
+          }
+        }
+        return { success: true, notified: !!reg?.messengerId };
+      }),
+    bulkAssignCsv: adminProcedure
+      .input(z.object({
+        assignments: z.array(z.object({
+          name: z.string(),
+          phone: z.string(),
+          roomNumber: z.string(),
+          floor: z.string().optional(),
+          notes: z.string().optional(),
+        })),
+        sendNotification: z.boolean().default(false),
+      }))
+      .mutation(async ({ input }) => {
+        const allRegs = await db.getRegistrations();
+        let matched = 0;
+        let notified = 0;
+        const errors: string[] = [];
+        for (const row of input.assignments) {
+          const reg = allRegs.find(r => r.name === row.name && r.phone === row.phone);
+          if (!reg) {
+            errors.push(`${row.name} (${row.phone}) - 참석자를 찾을 수 없습니다`);
+            continue;
+          }
+          await db.updateHotelRoom(reg.id, {
+            hotelRoomNumber: row.roomNumber,
+            hotelFloor: row.floor || null,
+            hotelNotes: row.notes || null,
+          });
+          matched++;
+          if (input.sendNotification && reg.messengerId) {
+            const config = await db.getTelegramConfig();
+            if (config?.enabled && config.botToken) {
+              const msg = `🏨 <b>호텔 방 배정 안내</b>\n\n` +
+                `안녕하세요, ${reg.name}님!\n` +
+                `호텔 방이 배정되었습니다.\n\n` +
+                `🔑 방 번호: <b>${row.roomNumber}</b>\n` +
+                (row.floor ? `🏢 층: <b>${row.floor}</b>\n` : "") +
+                (row.notes ? `📝 메모: ${row.notes}\n` : "");
+              try {
+                await fetch(`https://api.telegram.org/bot${config.botToken}/sendMessage`, {
+                  method: "POST", headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ chat_id: reg.messengerId, text: msg, parse_mode: "HTML" }),
+                });
+                notified++;
+              } catch (e) { /* silent */ }
+            }
+          }
+        }
+        return { success: true, matched, notified, errors };
       }),
   }),
 });

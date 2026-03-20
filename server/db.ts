@@ -22,6 +22,11 @@ import {
   chatbotLogs, InsertChatbotLog,
   baggageTracking, InsertBaggageTracking,
   checkinInfo, InsertCheckinInfo,
+  organizations, InsertOrganization,
+  partnerCategories, InsertPartnerCategory,
+  partners, InsertPartner,
+  organizationMembers, InsertOrganizationMember,
+  meetupPartners, InsertMeetupPartner,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -750,4 +755,180 @@ export async function bulkUpdateHotelRooms(assignments: { registrationId: number
       hotelNotes: a.notes || null,
     } as any).where(eq(registrations.id, a.registrationId));
   }
+}
+
+// ══════════════════════════════════════════════════════════
+// v4.0 - Organizations, Partners, Members
+// ══════════════════════════════════════════════════════════
+
+// ── Organizations ──────────────────────────────────────
+export async function createOrganization(data: InsertOrganization) {
+  const db = await getDb(); if (!db) return null;
+  const [result] = await db.insert(organizations).values(data).$returningId();
+  return result;
+}
+
+export async function getOrganizations(type?: string) {
+  const db = await getDb(); if (!db) return [];
+  if (type) {
+    return db.select().from(organizations).where(eq(organizations.type, type as any)).orderBy(desc(organizations.createdAt));
+  }
+  return db.select().from(organizations).orderBy(desc(organizations.createdAt));
+}
+
+export async function getOrganizationById(id: number) {
+  const db = await getDb(); if (!db) return null;
+  const rows = await db.select().from(organizations).where(eq(organizations.id, id));
+  return rows[0] || null;
+}
+
+export async function updateOrganization(id: number, data: Partial<InsertOrganization>) {
+  const db = await getDb(); if (!db) return;
+  await db.update(organizations).set(data).where(eq(organizations.id, id));
+}
+
+export async function deleteOrganization(id: number) {
+  const db = await getDb(); if (!db) return;
+  await db.delete(organizations).where(eq(organizations.id, id));
+}
+
+// ── Partner Categories ──────────────────────────────────
+export async function createPartnerCategory(data: InsertPartnerCategory) {
+  const db = await getDb(); if (!db) return null;
+  const [result] = await db.insert(partnerCategories).values(data).$returningId();
+  return result;
+}
+
+export async function getPartnerCategories() {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(partnerCategories).orderBy(partnerCategories.sortOrder);
+}
+
+export async function updatePartnerCategory(id: number, data: Partial<InsertPartnerCategory>) {
+  const db = await getDb(); if (!db) return;
+  await db.update(partnerCategories).set(data).where(eq(partnerCategories.id, id));
+}
+
+export async function deletePartnerCategory(id: number) {
+  const db = await getDb(); if (!db) return;
+  await db.delete(partnerCategories).where(eq(partnerCategories.id, id));
+}
+
+// ── Partners ──────────────────────────────────────────
+export async function createPartner(data: InsertPartner) {
+  const db = await getDb(); if (!db) return null;
+  const [result] = await db.insert(partners).values(data).$returningId();
+  return result;
+}
+
+export async function getPartners(filters?: { categoryId?: number; organizationId?: number; region?: string }) {
+  const db = await getDb(); if (!db) return [];
+  const conditions: any[] = [];
+  if (filters?.categoryId) conditions.push(eq(partners.categoryId, filters.categoryId));
+  if (filters?.organizationId) conditions.push(eq(partners.organizationId, filters.organizationId));
+  if (filters?.region) conditions.push(eq(partners.region, filters.region));
+  if (conditions.length > 0) {
+    return db.select().from(partners).where(and(...conditions)).orderBy(desc(partners.createdAt));
+  }
+  return db.select().from(partners).orderBy(desc(partners.createdAt));
+}
+
+export async function getPartnerById(id: number) {
+  const db = await getDb(); if (!db) return null;
+  const rows = await db.select().from(partners).where(eq(partners.id, id));
+  return rows[0] || null;
+}
+
+export async function updatePartner(id: number, data: Partial<InsertPartner>) {
+  const db = await getDb(); if (!db) return;
+  await db.update(partners).set(data).where(eq(partners.id, id));
+}
+
+export async function deletePartner(id: number) {
+  const db = await getDb(); if (!db) return;
+  await db.delete(partners).where(eq(partners.id, id));
+}
+
+// ── Organization Members ──────────────────────────────
+export async function addOrganizationMember(data: InsertOrganizationMember) {
+  const db = await getDb(); if (!db) return null;
+  const [result] = await db.insert(organizationMembers).values(data).$returningId();
+  return result;
+}
+
+export async function getOrganizationMembers(organizationId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(organizationMembers).where(eq(organizationMembers.organizationId, organizationId));
+}
+
+export async function removeOrganizationMember(id: number) {
+  const db = await getDb(); if (!db) return;
+  await db.delete(organizationMembers).where(eq(organizationMembers.id, id));
+}
+
+// ── Meetup Partners ──────────────────────────────────
+export async function addMeetupPartner(data: InsertMeetupPartner) {
+  const db = await getDb(); if (!db) return null;
+  const [result] = await db.insert(meetupPartners).values(data).$returningId();
+  return result;
+}
+
+export async function getMeetupPartners(meetupId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(meetupPartners).where(eq(meetupPartners.meetupId, meetupId));
+}
+
+export async function updateMeetupPartner(id: number, data: Partial<InsertMeetupPartner>) {
+  const db = await getDb(); if (!db) return;
+  await db.update(meetupPartners).set(data).where(eq(meetupPartners.id, id));
+}
+
+export async function removeMeetupPartner(id: number) {
+  const db = await getDb(); if (!db) return;
+  await db.delete(meetupPartners).where(eq(meetupPartners.id, id));
+}
+
+// ── Platform Stats (슈퍼어드민 대시보드) ──────────────
+export async function getPlatformStats() {
+  const db = await getDb(); if (!db) return null;
+  const [orgCount] = await db.select({ count: sql<number>`count(*)` }).from(organizations);
+  const [partnerCount] = await db.select({ count: sql<number>`count(*)` }).from(partners);
+  const [meetupCount] = await db.select({ count: sql<number>`count(*)` }).from(meetups);
+  const [regCount] = await db.select({ count: sql<number>`count(*)` }).from(registrations);
+  const [userCount] = await db.select({ count: sql<number>`count(*)` }).from(users);
+  
+  // 조직 유형별 통계
+  const orgByType = await db.select({
+    type: organizations.type,
+    count: sql<number>`count(*)`
+  }).from(organizations).groupBy(organizations.type);
+  
+  // 파트너 카테고리별 통계
+  const partnerByCategory = await db.select({
+    categoryId: partners.categoryId,
+    count: sql<number>`count(*)`
+  }).from(partners).groupBy(partners.categoryId);
+
+  return {
+    totalOrganizations: orgCount?.count || 0,
+    totalPartners: partnerCount?.count || 0,
+    totalMeetups: meetupCount?.count || 0,
+    totalRegistrations: regCount?.count || 0,
+    totalUsers: userCount?.count || 0,
+    orgByType,
+    partnerByCategory,
+  };
+}
+
+// ── User Role Management ──────────────────────────────
+export async function updateUserRole(userId: number, role: string, organizationId?: number) {
+  const db = await getDb(); if (!db) return;
+  const updateData: any = { role };
+  if (organizationId !== undefined) updateData.organizationId = organizationId;
+  await db.update(users).set(updateData).where(eq(users.id, userId));
+}
+
+export async function getAllUsers() {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(users).orderBy(desc(users.createdAt));
 }

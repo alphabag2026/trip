@@ -7,7 +7,8 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "admin", "superadmin", "organizer", "agency", "partner"]).default("user").notNull(),
+  organizationId: int("organizationId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -453,3 +454,107 @@ export const chatbotLogs = mysqlTable("chatbot_logs", {
 
 export type ChatbotLog = typeof chatbotLogs.$inferSelect;
 export type InsertChatbotLog = typeof chatbotLogs.$inferInsert;
+
+// ══════════════════════════════════════════════════════════
+// v4.0 NEW TABLES - 멀티테넌트 클라우드 플랫폼
+// ══════════════════════════════════════════════════════════
+
+// ── Organizations (조직/업체) ──────────────────────────────
+export const organizations = mysqlTable("organizations", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: mysqlEnum("type", ["platform", "organizer", "agency", "partner"]).default("organizer").notNull(),
+  region: varchar("region", { length: 255 }), // 지역 (예: 서울, 방콕, 싱가포르)
+  country: varchar("country", { length: 100 }),
+  contactName: varchar("contactName", { length: 255 }),
+  contactPhone: varchar("contactPhone", { length: 50 }),
+  contactEmail: varchar("contactEmail", { length: 320 }),
+  address: text("address"),
+  description: text("description"),
+  logoUrl: varchar("logoUrl", { length: 1000 }),
+  website: varchar("website", { length: 500 }),
+  telegramChatId: varchar("telegramChatId", { length: 100 }),
+  isActive: boolean("isActive").default(true),
+  parentOrgId: int("parentOrgId"), // 상위 조직 (에이전시 → 플랫폼)
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Organization = typeof organizations.$inferSelect;
+export type InsertOrganization = typeof organizations.$inferInsert;
+
+// ── Partner Categories (파트너 카테고리) ──────────────────────
+export const partnerCategories = mysqlTable("partner_categories", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(), // 식당, 클럽, 마사지, 여행, 크루즈, 차량, 통역 등
+  nameKo: varchar("nameKo", { length: 100 }),
+  icon: varchar("icon", { length: 50 }), // 아이콘 이름
+  description: text("description"),
+  sortOrder: int("sortOrder").default(0),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PartnerCategory = typeof partnerCategories.$inferSelect;
+export type InsertPartnerCategory = typeof partnerCategories.$inferInsert;
+
+// ── Partners (파트너 업체) ──────────────────────────────────
+export const partners = mysqlTable("partners", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId"), // 소속 에이전시/조직
+  categoryId: int("categoryId"), // 파트너 카테고리
+  name: varchar("name", { length: 255 }).notNull(),
+  region: varchar("region", { length: 255 }),
+  country: varchar("country", { length: 100 }),
+  address: text("address"),
+  contactName: varchar("contactName", { length: 255 }),
+  contactPhone: varchar("contactPhone", { length: 50 }),
+  contactEmail: varchar("contactEmail", { length: 320 }),
+  website: varchar("website", { length: 500 }),
+  description: text("description"),
+  logoUrl: varchar("logoUrl", { length: 1000 }),
+  capacity: int("capacity"), // 수용 인원 (식당/클럽 등)
+  priceRange: varchar("priceRange", { length: 100 }), // 가격대
+  operatingHours: varchar("operatingHours", { length: 255 }),
+  languages: varchar("languages", { length: 500 }), // 지원 언어 (통역 등)
+  rating: int("rating").default(0), // 평점 (1~5)
+  isActive: boolean("isActive").default(true),
+  managedBy: int("managedBy"), // 관리 담당자 (에이전시 매니저)
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Partner = typeof partners.$inferSelect;
+export type InsertPartner = typeof partners.$inferInsert;
+
+// ── Organization Members (조직-사용자 매핑) ──────────────────
+export const organizationMembers = mysqlTable("organization_members", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  userId: int("userId").notNull(),
+  memberRole: mysqlEnum("memberRole", ["owner", "manager", "staff", "viewer"]).default("staff").notNull(),
+  isActive: boolean("isActive").default(true),
+  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+});
+
+export type OrganizationMember = typeof organizationMembers.$inferSelect;
+export type InsertOrganizationMember = typeof organizationMembers.$inferInsert;
+
+// ── Meetup Partners (밋업-파트너 연결) ──────────────────────
+export const meetupPartners = mysqlTable("meetup_partners", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  partnerId: int("partnerId").notNull(),
+  serviceType: varchar("serviceType", { length: 255 }), // 제공 서비스 유형
+  serviceDate: timestamp("serviceDate"),
+  serviceNotes: text("serviceNotes"),
+  cost: varchar("cost", { length: 100 }),
+  status: mysqlEnum("status", ["pending", "confirmed", "completed", "cancelled"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MeetupPartner = typeof meetupPartners.$inferSelect;
+export type InsertMeetupPartner = typeof meetupPartners.$inferInsert;

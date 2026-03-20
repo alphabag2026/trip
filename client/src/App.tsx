@@ -36,6 +36,8 @@ import FlightTracker from "./pages/FlightTracker";
 import MyProfile from "./pages/MyProfile";
 import AdminMealDashboard from "./pages/admin/MealDashboard";
 import AdminHotelRooms from "./pages/admin/HotelRooms";
+import AdminPlatformDashboard from "./pages/admin/PlatformDashboard";
+import AdminPartners from "./pages/admin/Partners";
 import DashboardLayout from "./components/DashboardLayout";
 
 function PublicRouter() {
@@ -83,6 +85,8 @@ function AdminRouter() {
         <Route path="/admin/baggage-checkin" component={AdminBaggageCheckin} />
         <Route path="/admin/meal-dashboard" component={AdminMealDashboard} />
         <Route path="/admin/hotel-rooms" component={AdminHotelRooms} />
+        <Route path="/admin/platform" component={AdminPlatformDashboard} />
+        <Route path="/admin/partners" component={AdminPartners} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

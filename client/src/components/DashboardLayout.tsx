@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Bot, Megaphone, Luggage, UtensilsCrossed, DoorOpen } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Bot, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -48,6 +48,8 @@ const menuItems = [
   { icon: UtensilsCrossed, label: "식사/알레르기", path: "/admin/meal-dashboard" },
   { icon: DoorOpen, label: "호텔 방 배정", path: "/admin/hotel-rooms" },
   { icon: Search, label: "검색/연관성", path: "/admin/search" },
+  { icon: Cloud, label: "플랫폼 관리", path: "/admin/platform" },
+  { icon: Handshake, label: "파트너 관리", path: "/admin/partners" },
   { icon: Home, label: "홈으로", path: "/" },
 ];
 
