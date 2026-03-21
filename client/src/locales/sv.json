@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "Registrering",
     "lookup": "Sök",
@@ -51,7 +51,7 @@
     "feat_survey_desc": "Skapa undersökningar efter möten, skicka via Telegram, analysera resultat",
     "feat_baggage": "Bagagespårning",
     "feat_baggage_desc": "Ladda upp bild på bagagetagg för AI-igenkänning, statusspårning i realtid",
-    "footer": "© 2026 Meetup Travel Automation System. Alla rättigheter förbehållna.",
+    "footer": "© 2026 Alpha Trip Automation System. Alla rättigheter förbehållna.",
     "onboardingBanner": "Slutför din profilinställning för att få tillgång till alla funktioner.",
     "completeOnboarding": "Ställ in profil",
     "ctaDesc": "Registrera dig gratis och automatisera allt som rör hantering av affärsresor. Projektteam, byråer och partnerföretag är alla välkomna.",
@@ -721,7 +721,7 @@
       "updateStatus": "Uppdatera status",
       "viewPhoto": "Visa foto"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "Alla deltagare",
       "byMeetup": "Per Meetup",

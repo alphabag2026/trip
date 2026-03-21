@@ -13,6 +13,7 @@ import { User, UtensilsCrossed, Luggage, Clock, Save, ArrowLeft, CheckCircle, Al
 import { toast } from "sonner";
 import { Link } from "wouter";
 import LanguageSelector from "@/components/LanguageSelector";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const MEAL_OPTIONS = [
   { value: "regular", label: "일반식" }, { value: "vegetarian", label: "채식" },
@@ -89,8 +90,9 @@ export default function MyProfile() {
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-lg font-bold text-primary">Meetup Travel</Link>
+            <Link href="/" className="flex items-center gap-2 text-lg font-bold text-primary"><img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-7 w-7 rounded-md" />Alpha Trip</Link>
           </div>
+          <ThemeToggle />
           <LanguageSelector />
         </div>
       </header>

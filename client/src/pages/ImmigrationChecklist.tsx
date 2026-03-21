@@ -60,7 +60,7 @@ export default function ImmigrationChecklist() {
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
         <div className="container flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
-            <Plane className="h-6 w-6 text-primary" />
+            <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-7 w-7 rounded-md" />
             <span className="font-bold text-lg">{t("brand")}</span>
           </Link>
           <div className="flex items-center gap-3">

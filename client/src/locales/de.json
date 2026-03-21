@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "Anmeldung",
     "lookup": "Suche",
@@ -51,7 +51,7 @@
     "feat_survey_desc": "Erstellen Sie Umfragen nach dem Meetup, senden Sie sie über Telegram, analysieren Sie die Ergebnisse",
     "feat_baggage": "Gepäckverfolgung",
     "feat_baggage_desc": "Foto des Gepäckanhängers für KI-Erkennung hochladen, Echtzeit-Statusverfolgung",
-    "footer": "© 2026 Meetup Travel Automation System. Alle Rechte vorbehalten.",
+    "footer": "© 2026 Alpha Trip Automation System. Alle Rechte vorbehalten.",
     "onboardingBanner": "Vervollständigen Sie Ihr Profil, um alle Funktionen nutzen zu können.",
     "completeOnboarding": "Profil einrichten",
     "ctaDesc": "Melden Sie sich kostenlos an und automatisieren Sie alles rund um das Geschäftsreisemanagement. Projektteams, Agenturen und Partnerunternehmen sind alle willkommen.",
@@ -721,7 +721,7 @@
       "updateStatus": "Status aktualisieren",
       "viewPhoto": "Foto ansehen"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "Alle Teilnehmer",
       "byMeetup": "Nach Meetup",

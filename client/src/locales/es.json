@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "Registro",
     "lookup": "Consulta",
@@ -721,7 +721,7 @@
       "updateStatus": "Actualizar estado",
       "viewPhoto": "Ver foto"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "Todos los asistentes",
       "byMeetup": "Por Meetup",

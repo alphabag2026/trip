@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "Kayıt",
     "lookup": "Sorgula",
@@ -51,7 +51,7 @@
     "feat_survey_desc": "Create post-meetup surveys, send via Telegram, analyze results",
     "feat_baggage": "Baggage Tracking",
     "feat_baggage_desc": "Upload baggage tag photo for AI recognition, real-time status tracking",
-    "footer": "© 2026 Meetup Travel Automation System. All rights reserved.",
+    "footer": "© 2026 Alpha Trip Automation System. All rights reserved.",
     "onboardingBanner": "Tüm özelliklere erişmek için profil ayarlarınızı tamamlayın.",
     "completeOnboarding": "Profil Ayarla",
     "ctaDesc": "Sign up for free and automate everything about business trip management. Project teams, agencies, and partner businesses are all welcome.",
@@ -721,7 +721,7 @@
       "updateStatus": "Durumu Güncelle",
       "viewPhoto": "Fotoğrafı Görüntüle"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "Tüm Katılımcılar",
       "byMeetup": "Buluşmaya Göre",

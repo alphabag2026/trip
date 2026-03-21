@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "पंजीकरण",
     "lookup": "खोज",
@@ -51,7 +51,7 @@
     "feat_survey_desc": "Create post-meetup surveys, send via Telegram, analyze results",
     "feat_baggage": "Baggage Tracking",
     "feat_baggage_desc": "Upload baggage tag photo for AI recognition, real-time status tracking",
-    "footer": "© 2026 Meetup Travel Automation System. All rights reserved.",
+    "footer": "© 2026 Alpha Trip Automation System. All rights reserved.",
     "onboardingBanner": "सभी सुविधाओं तक पहुँचने के लिए अपनी प्रोफ़ाइल सेटअप पूरा करें।",
     "completeOnboarding": "प्रोफ़ाइल सेट करें",
     "ctaDesc": "Sign up for free and automate everything about business trip management. Project teams, agencies, and partner businesses are all welcome.",
@@ -721,7 +721,7 @@
       "updateStatus": "Update Status",
       "viewPhoto": "View Photo"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "All Attendees",
       "byMeetup": "By Meetup",

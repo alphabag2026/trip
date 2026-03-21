@@ -22,6 +22,7 @@ import {
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Bot, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -203,11 +204,16 @@ function DashboardLayoutContent({
               </button>
               {!isCollapsed ? (
                 <a href="/" className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity">
-                  <span className="font-semibold tracking-tight truncate text-primary">
-                    {t("admin.brandName")}
+                  <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-7 w-7 rounded-md flex-shrink-0" />
+                  <span className="font-semibold tracking-tight truncate text-primary" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    Alpha Trip
                   </span>
                 </a>
-              ) : null}
+              ) : (
+                <a href="/" className="hover:opacity-80 transition-opacity">
+                  <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-7 w-7 rounded-md" />
+                </a>
+              )}
             </div>
           </SidebarHeader>
 
@@ -236,6 +242,11 @@ function DashboardLayoutContent({
           </SidebarContent>
 
           <SidebarFooter className="p-3">
+            {!isCollapsed && (
+              <div className="flex items-center justify-center mb-2">
+                <ThemeToggle />
+              </div>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">

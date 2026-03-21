@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "Đăng ký",
     "lookup": "Tra cứu",
@@ -721,7 +721,7 @@
       "updateStatus": "Cập nhật trạng thái",
       "viewPhoto": "Xem ảnh"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "Tất cả người tham dự",
       "byMeetup": "Theo Meetup",

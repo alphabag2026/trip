@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "밋업 신청",
     "lookup": "여정표 조회",
@@ -53,7 +53,7 @@
     "feat_survey_desc": "밋업 후 참석자 만족도 설문조사 생성 및 텔레그램 발송, 결과 통계 분석",
     "feat_baggage": "수화물 추적",
     "feat_baggage_desc": "수화물 태그 사진 업로드로 AI 번호 인식, 실시간 상태 추적 및 체크인 정보 확인",
-    "footer": "© 2026 Meetup Travel Automation System. All rights reserved.",
+    "footer": "© 2026 Alpha Trip Automation System. All rights reserved.",
     "welcomeUser": "환영합니다, {{name}}님",
     "welcomeDesc": "밋업 신청, 여정표 조회, 출장 관리를 한곳에서 처리하세요.",
     "myPageBtn": "마이페이지",
@@ -715,7 +715,7 @@
     "loginRequiredDesc": "백오피스 접근을 위해 로그인이 필요합니다.",
     "loginBtn": "로그인",
     "logout": "로그아웃",
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "dashboard": {
       "title": "관리자 대시보드",
       "totalMeetups": "전체 밋업",

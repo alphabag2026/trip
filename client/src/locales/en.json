@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "Apply",
     "lookup": "Itinerary",
@@ -53,7 +53,7 @@
     "feat_survey_desc": "Create post-meetup surveys, send via Telegram, analyze results",
     "feat_baggage": "Baggage Tracking",
     "feat_baggage_desc": "Upload baggage tag photo for AI recognition, real-time status tracking",
-    "footer": "© 2026 Meetup Travel Automation System. All rights reserved.",
+    "footer": "© 2026 Alpha Trip Automation System. All rights reserved.",
     "welcomeUser": "Welcome, {{name}}",
     "welcomeDesc": "Manage meetup applications, itineraries, and business trips all in one place.",
     "myPageBtn": "My Page",
@@ -715,7 +715,7 @@
     "loginRequiredDesc": "Please log in to access the back office.",
     "loginBtn": "Login",
     "logout": "Logout",
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "dashboard": {
       "title": "Admin Dashboard",
       "totalMeetups": "Total Meetups",

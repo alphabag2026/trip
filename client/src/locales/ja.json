@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "申込",
     "lookup": "旅程確認",
@@ -51,7 +51,7 @@
     "feat_survey_desc": "ミートアップ後の満足度調査を作成、Telegramで送信、結果分析",
     "feat_baggage": "荷物追跡",
     "feat_baggage_desc": "荷物タグ写真アップロードでAI番号認識、リアルタイムステータス追跡",
-    "footer": "© 2026 Meetup Travel Automation System. All rights reserved.",
+    "footer": "© 2026 Alpha Trip Automation System. All rights reserved.",
     "onboardingBanner": "プロフィール設定を完了すると、すべての機能をご利用いただけます。",
     "completeOnboarding": "プロフィール設定",
     "ctaDesc": "無料でサインアップして、出張管理に関するすべてを自動化します。プロジェクトチーム、代理店、パートナー企業、すべて大歓迎です。",
@@ -721,7 +721,7 @@
       "updateStatus": "ステータスを更新",
       "viewPhoto": "写真を表示"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "すべての参加者",
       "byMeetup": "ミートアップ別",

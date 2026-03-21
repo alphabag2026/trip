@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
@@ -142,12 +143,13 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="dark">
+      <ThemeProvider defaultTheme="light" switchable={true}>
         <TooltipProvider>
           <Toaster />
           <OnboardingGuard>
             <Router />
             <MobileBottomNav />
+            <PWAInstallPrompt />
           </OnboardingGuard>
         </TooltipProvider>
       </ThemeProvider>

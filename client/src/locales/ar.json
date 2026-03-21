@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "التسجيل",
     "lookup": "البحث",
@@ -51,7 +51,7 @@
     "feat_survey_desc": "إنشاء استبيانات ما بعد اللقاء، إرسالها عبر Telegram، تحليل النتائج",
     "feat_baggage": "تتبع الأمتعة",
     "feat_baggage_desc": "تحميل صورة بطاقة الأمتعة للتعرف عليها بالذكاء الاصطناعي، تتبع الحالة في الوقت الفعلي",
-    "footer": "© 2026 نظام أتمتة Meetup Travel. جميع الحقوق محفوظة.",
+    "footer": "© 2026 نظام أتمتة Alpha Trip. جميع الحقوق محفوظة.",
     "onboardingBanner": "أكمل إعداد ملفك الشخصي للوصول إلى جميع الميزات.",
     "completeOnboarding": "إعداد الملف الشخصي",
     "ctaDesc": "سجل مجانًا وأتمت كل ما يتعلق بإدارة رحلات العمل. فرق المشاريع والوكالات والشركات الشريكة كلها مرحب بها.",
@@ -721,7 +721,7 @@
       "updateStatus": "تحديث الحالة",
       "viewPhoto": "عرض الصورة"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "جميع الحضور",
       "byMeetup": "حسب اللقاء",

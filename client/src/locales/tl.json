@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "Mag-apply",
     "lookup": "Hanapin",
@@ -51,7 +51,7 @@
     "feat_survey_desc": "Gumawa ng mga survey pagkatapos ng meetup, ipadala sa pamamagitan ng Telegram, suriin ang mga resulta",
     "feat_baggage": "Pagsubaybay sa Bagahe",
     "feat_baggage_desc": "Mag-upload ng larawan ng tag ng bagahe para sa pagkilala ng AI, pagsubaybay sa katayuan sa real-time",
-    "footer": "© 2026 Meetup Travel Automation System. Lahat ng karapatan ay nakalaan.",
+    "footer": "© 2026 Alpha Trip Automation System. Lahat ng karapatan ay nakalaan.",
     "onboardingBanner": "Kumpletuhin ang pag-setup ng profile para ma-access ang lahat ng feature.",
     "completeOnboarding": "I-setup ang Profile",
     "ctaDesc": "Mag-sign up nang libre at i-automate ang lahat tungkol sa pamamahala sa biyahe ng negosyo. Ang mga project team, ahensya, at mga kasosyong negosyo ay malugod na tinatanggap.",
@@ -721,7 +721,7 @@
       "updateStatus": "Update Status",
       "viewPhoto": "View Photo"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "All Attendees",
       "byMeetup": "By Meetup",

@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "สมัคร",
     "lookup": "ตรวจสอบ",
@@ -51,7 +51,7 @@
     "feat_survey_desc": "สร้างแบบสำรวจหลังมีทอัพ, ส่งทางเทเลแกรม, วิเคราะห์ผลลัพธ์",
     "feat_baggage": "ติดตามกระเป๋าสัมภาระ",
     "feat_baggage_desc": "อัปโหลดรูปแท็กกระเป๋าเพื่อให้ AI จดจำหมายเลข, ติดตามสถานะแบบเรียลไทม์",
-    "footer": "© 2026 Meetup Travel Automation System. สงวนลิขสิทธิ์",
+    "footer": "© 2026 Alpha Trip Automation System. สงวนลิขสิทธิ์",
     "welcomeUser": "ยินดีต้อนรับ, {{name}}",
     "welcomeDesc": "สมัครมีทอัพ, ดูกำหนดการ, จัดการเดินทางธุรกิจได้ในที่เดียว",
     "myPageBtn": "หน้าของฉัน",
@@ -721,7 +721,7 @@
       "updateStatus": "อัพเดตสถานะ",
       "viewPhoto": "ดูรูปถ่าย"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "ผู้เข้าร่วมทั้งหมด",
       "byMeetup": "โดย มีตอัพ",

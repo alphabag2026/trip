@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "报名",
     "lookup": "行程查询",
@@ -51,7 +51,7 @@
     "feat_survey_desc": "创建聚会后满意度调查，通过Telegram发送，分析结果",
     "feat_baggage": "行李追踪",
     "feat_baggage_desc": "上传行李标签照片AI识别号码，实时状态追踪",
-    "footer": "© 2026 Meetup Travel 自动化系统。保留所有权利。",
+    "footer": "© 2026 Alpha Trip 自动化系统。保留所有权利。",
     "onboardingBanner": "完成个人资料设置即可使用所有功能。",
     "completeOnboarding": "设置个人资料",
     "ctaDesc": "免费注册，自动化商务差旅管理的一切。欢迎项目团队、代理机构和合作伙伴企业加入。",
@@ -721,7 +721,7 @@
       "updateStatus": "更新状态",
       "viewPhoto": "查看照片"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "所有与会者",
       "byMeetup": "按聚会",

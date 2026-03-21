@@ -18,6 +18,7 @@ import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "@/components/LanguageSelector";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Home() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -40,8 +41,8 @@ export default function Home() {
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
         <div className="container flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
-            <Plane className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg">{t("brand")}</span>
+            <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-8 w-8 rounded-lg" />
+            <span className="font-bold text-lg" style={{ fontFamily: 'Inter, sans-serif' }}>Alpha Trip</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm">
             {isAuthenticated ? (
@@ -69,6 +70,7 @@ export default function Home() {
             )}
           </nav>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <LanguageSelector />
             {isAuthenticated && (user?.role === "admin" || user?.role === "superadmin") && (
               <Link href="/admin">

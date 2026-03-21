@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "Daftar",
     "lookup": "Cari",
@@ -721,7 +721,7 @@
       "updateStatus": "Perbarui Status",
       "viewPhoto": "Lihat Foto"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "Semua Peserta",
       "byMeetup": "Berdasarkan Meetup",

@@ -1,5 +1,5 @@
 {
-  "brand": "Meetup Travel",
+  "brand": "Alpha Trip",
   "nav": {
     "register": "Регистрация",
     "lookup": "Поиск",
@@ -51,7 +51,7 @@
     "feat_survey_desc": "Создавайте опросы после встреч, отправляйте через Telegram, анализируйте результаты",
     "feat_baggage": "Отслеживание багажа",
     "feat_baggage_desc": "Загрузите фото багажной бирки для распознавания ИИ, отслеживание статуса в реальном времени",
-    "footer": "© 2026 Meetup Travel Automation System. Все права защищены.",
+    "footer": "© 2026 Alpha Trip Automation System. Все права защищены.",
     "onboardingBanner": "Завершите настройку профиля, чтобы получить доступ ко всем функциям.",
     "completeOnboarding": "Настроить профиль",
     "ctaDesc": "Зарегистрируйтесь бесплатно и автоматизируйте все, что связано с управлением деловыми поездками. Проектные команды, агентства и партнерские компании приветствуются.",
@@ -721,7 +721,7 @@
       "updateStatus": "Обновить статус",
       "viewPhoto": "Просмотреть фото"
     },
-    "brandName": "Meetup Travel",
+    "brandName": "Alpha Trip",
     "broadcast": {
       "allAttendees": "Все участники",
       "byMeetup": "По встрече",
