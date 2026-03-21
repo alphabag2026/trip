@@ -1,0 +1,34 @@
+{
+  "query": "SHOW COLUMNS FROM chat_messages WHERE Field IN ('isPinned', 'pinnedAt', 'pinnedBy');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SHOW COLUMNS FROM chat_messages WHERE Field IN ('isPinned', 'pinnedAt', 'pinnedBy');",
+  "rows": [
+    {
+      "Field": "isPinned",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "pinnedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pinnedBy",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nisPinned\ttinyint(1)\tYES\t\t0\t\npinnedAt\ttimestamp\tYES\t\tNULL\t\npinnedBy\tint\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 1624
+}

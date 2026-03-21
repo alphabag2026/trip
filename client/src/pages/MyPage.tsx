@@ -198,24 +198,24 @@ export default function MyPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="profile" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="profile" className="flex items-center gap-1.5">
-              <User className="w-4 h-4" />{t("myPage.tabProfile")}
+          <TabsList className="flex w-full overflow-x-auto no-scrollbar gap-1 h-auto flex-wrap sm:flex-nowrap">
+            <TabsTrigger value="profile" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
+              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabProfile")}</span><span className="sm:hidden">프로필</span>
             </TabsTrigger>
-            <TabsTrigger value="passport" className="flex items-center gap-1.5">
-              <BookOpen className="w-4 h-4" />{t("myPage.tabPassport")}
+            <TabsTrigger value="passport" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
+              <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabPassport")}</span><span className="sm:hidden">여권</span>
             </TabsTrigger>
-            <TabsTrigger value="trips" className="flex items-center gap-1.5">
-              <History className="w-4 h-4" />{t("myPage.tabTrips")}
+            <TabsTrigger value="trips" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
+              <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabTrips")}</span><span className="sm:hidden">이력</span>
             </TabsTrigger>
-            <TabsTrigger value="vouchers" className="flex items-center gap-1.5">
-              <CreditCard className="w-4 h-4" />{t("myPage.tabHotel")}
+            <TabsTrigger value="vouchers" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
+              <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabHotel")}</span><span className="sm:hidden">호텔</span>
             </TabsTrigger>
-            <TabsTrigger value="tickets" className="flex items-center gap-1.5">
-              <Ticket className="w-4 h-4" />{t("myPage.tabFlight")}
+            <TabsTrigger value="tickets" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
+              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabFlight")}</span><span className="sm:hidden">항공</span>
             </TabsTrigger>
-            <TabsTrigger value="checklist" className="flex items-center gap-1.5">
-              <ClipboardCheck className="w-4 h-4" />{t("myPage.tabChecklist")}
+            <TabsTrigger value="checklist" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
+              <ClipboardCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabChecklist")}</span><span className="sm:hidden">체크</span>
             </TabsTrigger>
           </TabsList>
 

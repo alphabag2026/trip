@@ -1735,3 +1735,104 @@ export async function getUnreadCountsForUser(userId: number) {
   }
   return results;
 }
+
+// ── 미디어 갤러리 ──────────────────────────────────────────
+export async function getChatMediaMessages(roomId: number, mediaType?: string, limit: number = 50, offset: number = 0) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [
+    eq(chatMessages.roomId, roomId),
+    eq(chatMessages.isDeleted, false),
+  ];
+  if (mediaType === "image") {
+    conditions.push(eq(chatMessages.messageType, "image"));
+  } else if (mediaType === "video") {
+    conditions.push(eq(chatMessages.messageType, "video"));
+  } else if (mediaType === "file") {
+    conditions.push(inArray(chatMessages.messageType, ["file", "voice"]));
+  } else {
+    // 모든 미디어 (image, video, file, voice)
+    conditions.push(inArray(chatMessages.messageType, ["image", "video", "file", "voice"]));
+  }
+  return db.select().from(chatMessages)
+    .where(and(...conditions))
+    .orderBy(desc(chatMessages.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function getChatMediaCount(roomId: number) {
+  const db = await getDb(); if (!db) return { images: 0, videos: 0, files: 0, total: 0 };
+  const [images] = await db.select({ count: sql<number>`count(*)` }).from(chatMessages)
+    .where(and(eq(chatMessages.roomId, roomId), eq(chatMessages.isDeleted, false), eq(chatMessages.messageType, "image")));
+  const [videos] = await db.select({ count: sql<number>`count(*)` }).from(chatMessages)
+    .where(and(eq(chatMessages.roomId, roomId), eq(chatMessages.isDeleted, false), eq(chatMessages.messageType, "video")));
+  const [files] = await db.select({ count: sql<number>`count(*)` }).from(chatMessages)
+    .where(and(eq(chatMessages.roomId, roomId), eq(chatMessages.isDeleted, false), inArray(chatMessages.messageType, ["file", "voice"])));
+  return {
+    images: images?.count || 0,
+    videos: videos?.count || 0,
+    files: files?.count || 0,
+    total: (images?.count || 0) + (videos?.count || 0) + (files?.count || 0),
+  };
+}
+
+// ── 메시지 고정 (Pin) ──────────────────────────────────────
+export async function pinChatMessage(messageId: number, userId: number) {
+  const db = await getDb(); if (!db) return;
+  await db.update(chatMessages).set({
+    isPinned: true,
+    pinnedAt: new Date(),
+    pinnedBy: userId,
+  }).where(eq(chatMessages.id, messageId));
+}
+
+export async function unpinChatMessage(messageId: number) {
+  const db = await getDb(); if (!db) return;
+  await db.update(chatMessages).set({
+    isPinned: false,
+    pinnedAt: null,
+    pinnedBy: null,
+  }).where(eq(chatMessages.id, messageId));
+}
+
+export async function getPinnedMessages(roomId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(chatMessages)
+    .where(and(
+      eq(chatMessages.roomId, roomId),
+      eq(chatMessages.isPinned, true),
+      eq(chatMessages.isDeleted, false),
+    ))
+    .orderBy(desc(chatMessages.pinnedAt));
+}
+
+// ── 여권 중복 체크 ──────────────────────────────────────
+export async function checkPassportDuplicate(
+  currentUserId: number,
+  passportNumber?: string,
+  fullName?: string,
+  birthDate?: string,
+) {
+  const db = await getDb();
+  if (!db) return { isDuplicate: false, matches: [] };
+
+  const allPassports = await db.select().from(passportInfo);
+  const matches: { userId: number; matchType: string; passportNumber?: string; fullName?: string }[] = [];
+
+  for (const p of allPassports) {
+    if (p.userId === currentUserId) continue;
+
+    // 여권번호 일치
+    if (passportNumber && p.passportNumber && p.passportNumber.toUpperCase() === passportNumber.toUpperCase()) {
+      matches.push({ userId: p.userId, matchType: "passport_number", passportNumber: p.passportNumber, fullName: p.fullName || undefined });
+    }
+    // 이름 + 생년월일 일치
+    else if (fullName && birthDate && p.fullName && p.birthDate) {
+      if (p.fullName.toUpperCase() === fullName.toUpperCase() && p.birthDate === birthDate) {
+        matches.push({ userId: p.userId, matchType: "name_birthdate", passportNumber: p.passportNumber || undefined, fullName: p.fullName });
+      }
+    }
+  }
+
+  return { isDuplicate: matches.length > 0, matches };
+}

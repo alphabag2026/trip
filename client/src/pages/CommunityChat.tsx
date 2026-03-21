@@ -15,8 +15,11 @@ import {
   MessageCircle, Send, Users, ArrowLeft, Plus, Hash, Megaphone, HelpCircle, Smile,
   Image, MoreVertical, LogOut, Trash2, Reply, MapPin, Phone, Video, Globe,
   Paperclip, X, Play, Mic, MicOff, VideoOff, PhoneOff, Languages, Camera,
-  UserPlus, Settings, Volume2, FileText,
+  UserPlus, Settings, Volume2, FileText, Pin, PinOff, GalleryHorizontalEnd, Download,
+  Grid3X3, Film, File,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useParams, useLocation } from "wouter";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
@@ -831,8 +834,8 @@ function RemoteVideo({ stream }: { stream: MediaStream }) {
 }
 
 // ── 메시지 버블 ────────────────────────────────────────────
-function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, myLang }: {
-  msg: any; isMe: boolean; isAdmin: boolean; user: any; onReply: (m: any) => void; onDelete: (id: number) => void; myLang: string;
+function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onUnpin, myLang }: {
+  msg: any; isMe: boolean; isAdmin: boolean; user: any; onReply: (m: any) => void; onDelete: (id: number) => void; onPin?: (id: number) => void; onUnpin?: (id: number) => void; myLang: string;
 }) {
   const [showTranslation, setShowTranslation] = useState(false);
   const translateMutation = trpc.chatMessage.translate.useMutation();
@@ -940,7 +943,13 @@ function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, myLang }: 
         {msg.replyToId && (
           <div className="text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1 mb-1 border-l-2 border-blue-400">답글</div>
         )}
-        <div className={`rounded-2xl px-3 py-2 text-sm ${isMe ? "bg-blue-600 text-white" : "bg-muted"}`}>
+        <div className={`rounded-2xl px-3 py-2 text-sm ${isMe ? "bg-blue-600 text-white" : "bg-muted"} ${msg.isPinned ? "ring-1 ring-amber-400/50" : ""}`}>
+          {msg.isPinned && (
+            <div className="flex items-center gap-1 text-amber-400 text-[10px] mb-1">
+              <Pin className="h-2.5 w-2.5" />
+              <span>고정됨</span>
+            </div>
+          )}
           {renderContent()}
           {msg.isEdited && <span className="text-[10px] opacity-60 ml-1">(수정됨)</span>}
         </div>
@@ -967,6 +976,16 @@ function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, myLang }: 
           <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100" onClick={() => onReply(msg)}>
             <Reply className="h-3 w-3" />
           </Button>
+          {isAdmin && !msg.isPinned && onPin && (
+            <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 text-amber-400" onClick={() => onPin(msg.id)} title="고정">
+              <Pin className="h-3 w-3" />
+            </Button>
+          )}
+          {isAdmin && msg.isPinned && onUnpin && (
+            <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 text-amber-400" onClick={() => onUnpin(msg.id)} title="고정 해제">
+              <PinOff className="h-3 w-3" />
+            </Button>
+          )}
           {(isMe || isAdmin) && (
             <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 text-red-400" onClick={() => onDelete(msg.id)}>
               <Trash2 className="h-3 w-3" />
@@ -986,6 +1005,9 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const [replyTo, setReplyTo] = useState<any>(null);
   const [showTranslator, setShowTranslator] = useState(false);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [showPinnedList, setShowPinnedList] = useState(false);
+  const [mediaFilter, setMediaFilter] = useState<"all" | "image" | "video" | "file">("all");
   const [myLang, setMyLang] = useState("ko");
   const [activeCall, setActiveCall] = useState<{ callId: string; callType: "voice" | "video"; callerName: string; isOutgoing: boolean } | null>(null);
   const [groupCall, setGroupCall] = useState<{ callId: string; callType: "voice" | "video" } | null>(null);
@@ -1024,6 +1046,30 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const initiateCallMutation = trpc.webrtc.initiateCall.useMutation();
   const createGroupCallMutation = trpc.webrtc.createGroupCall.useMutation();
   const joinGroupCallMutation = trpc.webrtc.joinGroupCall.useMutation();
+
+  // 미디어 갤러리
+  const { data: mediaItems, refetch: refetchMedia } = trpc.chatMessage.mediaList.useQuery(
+    { roomId, mediaType: mediaFilter, limit: 100 },
+    { enabled: showMediaGallery }
+  );
+  const { data: mediaCount } = trpc.chatMessage.mediaCount.useQuery(
+    { roomId },
+    { enabled: showMediaGallery }
+  );
+
+  // 고정 메시지
+  const { data: pinnedMessages, refetch: refetchPinned } = trpc.chatMessage.pinnedList.useQuery(
+    { roomId },
+    { refetchInterval: 10000 }
+  );
+  const pinMutation = trpc.chatMessage.pin.useMutation({
+    onSuccess: () => { refetch(); refetchPinned(); toast.success("메시지가 고정되었습니다"); },
+    onError: (e) => toast.error(e.message),
+  });
+  const unpinMutation = trpc.chatMessage.unpin.useMutation({
+    onSuccess: () => { refetch(); refetchPinned(); toast.success("고정이 해제되었습니다"); },
+    onError: (e) => toast.error(e.message),
+  });
 
   // 활성 그룹 통화 조회
   const { data: activeGroupCall } = trpc.webrtc.getActiveGroupCall.useQuery(
@@ -1255,6 +1301,13 @@ function ChatRoomView({ roomId }: { roomId: number }) {
             <Button variant="ghost" size="icon"><MoreVertical className="h-5 w-5" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setShowMediaGallery(true)}>
+              <GalleryHorizontalEnd className="h-4 w-4 mr-2" /> 미디어 갤러리
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowPinnedList(!showPinnedList)}>
+              <Pin className="h-4 w-4 mr-2" /> 고정 메시지 {pinnedMessages?.length ? `(${pinnedMessages.length})` : ""}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setShowTranslator(!showTranslator)}>
               <Languages className="h-4 w-4 mr-2" /> 통번역기
             </DropdownMenuItem>
@@ -1280,6 +1333,15 @@ function ChatRoomView({ roomId }: { roomId: number }) {
         </div>
       )}
 
+      {/* 고정 메시지 배너 */}
+      {pinnedMessages && pinnedMessages.length > 0 && (
+        <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 flex items-center gap-2 cursor-pointer" onClick={() => setShowPinnedList(true)}>
+          <Pin className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+          <span className="text-sm text-amber-200 truncate flex-1">{pinnedMessages[0]?.content || "고정된 메시지"}</span>
+          <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-400 shrink-0">{pinnedMessages.length}</Badge>
+        </div>
+      )}
+
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
         {messages?.map((msg: any) => (
@@ -1291,6 +1353,8 @@ function ChatRoomView({ roomId }: { roomId: number }) {
             user={user}
             onReply={setReplyTo}
             onDelete={(id) => { if (confirm("삭제하시겠습니까?")) deleteMutation.mutate({ id }); }}
+            onPin={(id) => pinMutation.mutate({ messageId: id })}
+            onUnpin={(id) => unpinMutation.mutate({ messageId: id })}
             myLang={myLang}
           />
         ))}
@@ -1301,6 +1365,122 @@ function ChatRoomView({ roomId }: { roomId: number }) {
 
       {/* 위치 공유 다이얼로그 */}
       <LocationShareDialog open={showLocationDialog} onClose={() => setShowLocationDialog(false)} onSend={handleLocationSend} />
+
+      {/* 미디어 갤러리 Sheet */}
+      <Sheet open={showMediaGallery} onOpenChange={setShowMediaGallery}>
+        <SheetContent side="right" className="w-full sm:max-w-md p-0">
+          <SheetHeader className="px-4 pt-4 pb-2">
+            <SheetTitle className="flex items-center gap-2">
+              <GalleryHorizontalEnd className="h-5 w-5" /> 미디어 갤러리
+            </SheetTitle>
+          </SheetHeader>
+          <div className="px-4 pb-2">
+            <div className="flex gap-1 text-xs">
+              <span className="text-muted-foreground">사진 {mediaCount?.images || 0}</span>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-muted-foreground">영상 {mediaCount?.videos || 0}</span>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-muted-foreground">파일 {mediaCount?.files || 0}</span>
+            </div>
+          </div>
+          <Tabs value={mediaFilter} onValueChange={(v) => setMediaFilter(v as any)} className="px-4">
+            <TabsList className="w-full">
+              <TabsTrigger value="all" className="flex-1 text-xs">전체</TabsTrigger>
+              <TabsTrigger value="image" className="flex-1 text-xs">사진</TabsTrigger>
+              <TabsTrigger value="video" className="flex-1 text-xs">영상</TabsTrigger>
+              <TabsTrigger value="file" className="flex-1 text-xs">파일</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <div className="overflow-y-auto flex-1 p-4" style={{ maxHeight: "calc(100vh - 180px)" }}>
+            {(!mediaItems || mediaItems.length === 0) ? (
+              <div className="text-center text-muted-foreground py-12">
+                <GalleryHorizontalEnd className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">공유된 미디어가 없습니다</p>
+              </div>
+            ) : (
+              <div className={mediaFilter === "file" ? "space-y-2" : "grid grid-cols-3 gap-1.5"}>
+                {mediaItems.map((item: any) => {
+                  if (item.messageType === "image") {
+                    return (
+                      <div key={item.id} className="aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.open(item.fileUrl, "_blank")}>
+                        <img src={item.fileUrl} alt={item.fileName || "이미지"} className="w-full h-full object-cover" />
+                      </div>
+                    );
+                  }
+                  if (item.messageType === "video") {
+                    return (
+                      <div key={item.id} className="aspect-square rounded-lg overflow-hidden bg-muted relative cursor-pointer" onClick={() => window.open(item.fileUrl, "_blank")}>
+                        <video src={item.fileUrl} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <Play className="h-8 w-8 text-white" />
+                        </div>
+                      </div>
+                    );
+                  }
+                  // file / voice
+                  return (
+                    <a key={item.id} href={item.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                      <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                        {item.messageType === "voice" ? <Volume2 className="h-5 w-5 text-blue-400" /> : <FileText className="h-5 w-5 text-blue-400" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm truncate">{item.fileName || "파일"}</p>
+                        <p className="text-[10px] text-muted-foreground">{new Date(item.createdAt).toLocaleDateString("ko-KR")} · {item.senderName}</p>
+                      </div>
+                      <Download className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* 고정 메시지 목록 Sheet */}
+      <Sheet open={showPinnedList} onOpenChange={setShowPinnedList}>
+        <SheetContent side="right" className="w-full sm:max-w-md p-0">
+          <SheetHeader className="px-4 pt-4 pb-2">
+            <SheetTitle className="flex items-center gap-2">
+              <Pin className="h-5 w-5 text-amber-400" /> 고정된 메시지
+            </SheetTitle>
+          </SheetHeader>
+          <div className="overflow-y-auto flex-1 p-4 space-y-3" style={{ maxHeight: "calc(100vh - 100px)" }}>
+            {(!pinnedMessages || pinnedMessages.length === 0) ? (
+              <div className="text-center text-muted-foreground py-12">
+                <Pin className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">고정된 메시지가 없습니다</p>
+              </div>
+            ) : (
+              pinnedMessages.map((pm: any) => (
+                <div key={pm.id} className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback className="text-[10px]">{pm.senderName?.charAt(0) || "?"}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs font-medium">{pm.senderName}</span>
+                    <span className="text-[10px] text-muted-foreground ml-auto">
+                      {new Date(pm.createdAt).toLocaleDateString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  {pm.messageType === "image" && pm.fileUrl ? (
+                    <img src={pm.fileUrl} alt="" className="rounded-lg max-h-40 mb-1" />
+                  ) : pm.messageType === "video" && pm.fileUrl ? (
+                    <video src={pm.fileUrl} controls className="rounded-lg max-h-40 mb-1" />
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap">{pm.content}</p>
+                  )}
+                  {isAdmin && (
+                    <Button variant="ghost" size="sm" className="mt-1 text-xs text-amber-400 h-7" onClick={() => { unpinMutation.mutate({ messageId: pm.id }); }}>
+                      <PinOff className="h-3 w-3 mr-1" /> 고정 해제
+                    </Button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Reply indicator */}
       {replyTo && (

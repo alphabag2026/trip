@@ -8,7 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { User, BookOpen, CheckCircle, ArrowRight, ArrowLeft, Upload, Loader2, Shield, Globe, Phone, Building2, Briefcase, Heart, AlertTriangle, LogOut } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  User, BookOpen, CheckCircle, ArrowRight, ArrowLeft, Upload, Loader2, Shield, Globe, Phone, Building2,
+  Briefcase, Heart, AlertTriangle, LogOut, ScanLine, Camera, Sparkles, AlertCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -30,7 +34,11 @@ export default function Onboarding() {
   const [, navigate] = useLocation();
   const [step, setStep] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const passportScanInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [duplicateInfo, setDuplicateInfo] = useState<any>(null);
 
   // Profile form state
   const [profileForm, setProfileForm] = useState({
@@ -49,6 +57,10 @@ export default function Onboarding() {
     passportImageUrl: "", passportImageKey: "",
   });
 
+  // 여권 스캔 OCR 결과
+  const [ocrData, setOcrData] = useState<any>(null);
+  const [scanImagePreview, setScanImagePreview] = useState<string>("");
+
   const profileMut = trpc.userProfile.upsert.useMutation({
     onSuccess: () => { toast.success(t("onboarding.profileSaved")); setStep(2); },
     onError: (e) => toast.error(e.message),
@@ -63,6 +75,16 @@ export default function Onboarding() {
     onSuccess: () => { toast.success(t("onboarding.completed")); navigate("/"); },
     onError: (e) => toast.error(e.message),
   });
+
+  const scanMut = trpc.passport.scan.useMutation();
+  const scanAndRegisterMut = trpc.passport.scanAndRegister.useMutation({
+    onSuccess: () => {
+      toast.success("여권 스캔으로 가입이 완료되었습니다!");
+      navigate("/");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const checkDuplicateMut = trpc.passport.checkDuplicate.useMutation();
 
   const handleProfileSubmit = () => {
     if (!profileForm.phone.trim()) { toast.error(t("onboarding.phoneRequired")); return; }
@@ -115,6 +137,113 @@ export default function Onboarding() {
     }
   };
 
+  // ── 여권 스캔으로 한번에 가입 ──────────────────────────
+  const handlePassportScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { toast.error("파일 크기는 10MB 이하만 가능합니다"); return; }
+
+    setScanning(true);
+    // 미리보기 표시
+    const reader = new FileReader();
+    reader.onload = () => setScanImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+
+    try {
+      // base64 변환
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+
+      // OCR 실행
+      const result = await scanMut.mutateAsync({
+        imageBase64: base64,
+        mimeType: file.type || "image/jpeg",
+      });
+
+      if (result.success && result.ocrData) {
+        setOcrData(result.ocrData);
+        // OCR 결과로 폼 자동 채우기
+        const ocr = result.ocrData;
+        setPassportForm(p => ({
+          ...p,
+          fullName: ocr.fullName || p.fullName,
+          passportNumber: ocr.passportNumber || p.passportNumber,
+          nationality: ocr.nationality || p.nationality,
+          issuingCountry: ocr.issuingCountry || p.issuingCountry,
+          birthDate: ocr.dateOfBirth || p.birthDate,
+          gender: (ocr.gender === "M" || ocr.gender === "F") ? ocr.gender : p.gender,
+          issueDate: ocr.issueDate || p.issueDate,
+          expiryDate: ocr.expiryDate || p.expiryDate,
+          passportImageUrl: result.imageUrl || p.passportImageUrl,
+          passportImageKey: result.imageKey || p.passportImageKey,
+        }));
+        // 프로필도 자동 채우기
+        setProfileForm(p => ({
+          ...p,
+          nationality: ocr.nationality || p.nationality,
+          birthDate: ocr.dateOfBirth || p.birthDate,
+          gender: ocr.gender === "M" ? "male" : ocr.gender === "F" ? "female" : p.gender,
+          phone: ocr.phone || p.phone,
+        }));
+
+        // 중복 체크
+        try {
+          const dupResult = await checkDuplicateMut.mutateAsync({
+            passportNumber: ocr.passportNumber,
+            fullName: ocr.fullName,
+            birthDate: ocr.dateOfBirth,
+          });
+          if (dupResult.isDuplicate) {
+            setDuplicateInfo(dupResult);
+            setShowDuplicateDialog(true);
+          }
+        } catch { /* 중복 체크 실패 무시 */ }
+
+        toast.success("여권 정보가 자동으로 인식되었습니다! 확인 후 저장해주세요.");
+        setStep(0); // 스캔 결과 확인 단계
+      } else {
+        toast.error("여권 인식에 실패했습니다. 사진을 다시 촬영해주세요.");
+      }
+    } catch {
+      toast.error("여권 스캔 중 오류가 발생했습니다.");
+    } finally {
+      setScanning(false);
+      if (e.target) e.target.value = "";
+    }
+  };
+
+  // 스캔 결과로 한번에 가입
+  const handleScanAndRegister = () => {
+    if (!profileForm.phone.trim()) {
+      toast.error("전화번호를 입력해주세요.");
+      return;
+    }
+    scanAndRegisterMut.mutate({
+      phone: profileForm.phone,
+      nationality: profileForm.nationality || undefined,
+      birthDate: profileForm.birthDate || undefined,
+      gender: profileForm.gender as "male" | "female" | "other" || undefined,
+      preferredLanguage: profileForm.preferredLanguage,
+      telegramId: profileForm.telegramId || undefined,
+      passportNumber: passportForm.passportNumber || undefined,
+      issuingCountry: passportForm.issuingCountry || undefined,
+      passportNationality: passportForm.nationality || undefined,
+      fullName: passportForm.fullName || undefined,
+      passportBirthDate: passportForm.birthDate || undefined,
+      passportGender: passportForm.gender as "M" | "F" || undefined,
+      issueDate: passportForm.issueDate || undefined,
+      expiryDate: passportForm.expiryDate || undefined,
+      passportImageUrl: passportForm.passportImageUrl || undefined,
+      passportImageKey: passportForm.passportImageKey || undefined,
+      ocrData: ocrData || undefined,
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -140,30 +269,267 @@ export default function Onboarding() {
       </header>
 
       <div className="container max-w-2xl py-8">
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-8 gap-0">
-          {[
-            { num: 1, label: t("onboarding.stepProfile"), icon: User },
-            { num: 2, label: t("onboarding.stepPassport"), icon: BookOpen },
-            { num: 3, label: t("onboarding.stepComplete"), icon: CheckCircle },
-          ].map((s, i) => (
-            <div key={s.num} className="flex items-center">
-              <div className="flex flex-col items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                  step >= s.num ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                }`}>
-                  {step > s.num ? <CheckCircle className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+        {/* 여권 스캔 자동 가입 버튼 (step 1에서만 표시) */}
+        {step === 1 && (
+          <Card className="mb-6 border-blue-500/30 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 overflow-hidden relative">
+            <CardContent className="pt-6 pb-6">
+              <div className="flex items-start gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-blue-500/20 flex items-center justify-center shrink-0">
+                  <ScanLine className="h-7 w-7 text-blue-400" />
                 </div>
-                <span className={`text-xs mt-1 ${step >= s.num ? "text-primary font-medium" : "text-muted-foreground"}`}>
-                  {s.label}
-                </span>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-blue-300 mb-1 flex items-center gap-2">
+                    여권 스캔으로 한번에 가입
+                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-[10px]">
+                      <Sparkles className="h-3 w-3 mr-0.5" /> AI OCR
+                    </Badge>
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    여권 사진 한 장으로 프로필과 여권 정보를 자동으로 입력합니다. 전화번호만 추가로 입력하면 가입 완료!
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      onClick={() => passportScanInputRef.current?.click()}
+                      disabled={scanning}
+                      className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                    >
+                      {scanning ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          AI가 여권을 분석 중...
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="h-4 w-4" />
+                          여권 사진 촬영/선택
+                        </>
+                      )}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => { /* 일반 가입 진행 */ }}>
+                      직접 입력하기
+                    </Button>
+                  </div>
+                </div>
               </div>
-              {i < 2 && (
-                <div className={`w-16 sm:w-24 h-0.5 mx-2 mb-4 ${step > s.num ? "bg-primary" : "bg-muted"}`} />
-              )}
+              <input
+                ref={passportScanInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handlePassportScan}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 스캔 중 오버레이 */}
+        {scanning && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+            <Card className="max-w-sm mx-4">
+              <CardContent className="pt-8 pb-8 text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto animate-pulse">
+                  <ScanLine className="h-8 w-8 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">여권 분석 중...</h3>
+                  <p className="text-sm text-muted-foreground mt-1">AI가 여권 정보를 읽고 있습니다</p>
+                </div>
+                <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-400" />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* 중복 프로필 경고 다이얼로그 */}
+        <Dialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-amber-400">
+                <AlertCircle className="h-5 w-5" /> 중복 프로필 감지
+              </DialogTitle>
+              <DialogDescription>
+                동일한 여권 정보로 등록된 사용자가 이미 있습니다.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 py-2">
+              {duplicateInfo?.matches?.map((m: any, i: number) => (
+                <div key={i} className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm">
+                  <p className="font-medium text-amber-300">
+                    {m.matchType === "passport_number" ? "여권번호 일치" : "이름+생년월일 일치"}
+                  </p>
+                  {m.fullName && <p className="text-muted-foreground">이름: {m.fullName}</p>}
+                  {m.passportNumber && <p className="text-muted-foreground">여권번호: {m.passportNumber}</p>}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setShowDuplicateDialog(false)}>
+                무시하고 계속
+              </Button>
+              <Button variant="destructive" onClick={() => { setShowDuplicateDialog(false); setStep(1); setOcrData(null); setScanImagePreview(""); }}>
+                취소하고 돌아가기
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Progress Steps (step 0은 스캔 결과 확인) */}
+        {step !== 0 && (
+          <div className="flex items-center justify-center mb-8 gap-0">
+            {[
+              { num: 1, label: t("onboarding.stepProfile"), icon: User },
+              { num: 2, label: t("onboarding.stepPassport"), icon: BookOpen },
+              { num: 3, label: t("onboarding.stepComplete"), icon: CheckCircle },
+            ].map((s, i) => (
+              <div key={s.num} className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                    step >= s.num ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {step > s.num ? <CheckCircle className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+                  </div>
+                  <span className={`text-xs mt-1 ${step >= s.num ? "text-primary font-medium" : "text-muted-foreground"}`}>
+                    {s.label}
+                  </span>
+                </div>
+                {i < 2 && (
+                  <div className={`w-16 sm:w-24 h-0.5 mx-2 mb-4 ${step > s.num ? "bg-primary" : "bg-muted"}`} />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Step 0: 여권 스캔 결과 확인 & 한번에 가입 */}
+        {step === 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-center mb-4 gap-2">
+              <ScanLine className="h-6 w-6 text-blue-400" />
+              <h2 className="text-xl font-bold">여권 스캔 결과 확인</h2>
+            </div>
+
+            {/* 스캔 이미지 미리보기 */}
+            {scanImagePreview && (
+              <Card>
+                <CardContent className="pt-4 pb-4 flex justify-center">
+                  <img src={scanImagePreview} alt="여권 스캔" className="max-h-48 rounded-lg object-contain" />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* OCR 결과 - 여권 정보 */}
+            <Card className="border-blue-500/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <BookOpen className="w-4 h-4 text-blue-400" /> 인식된 여권 정보
+                  <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">자동 입력됨</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">영문 이름</Label>
+                    <Input value={passportForm.fullName} onChange={e => setPassportForm(p => ({ ...p, fullName: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">여권번호</Label>
+                    <Input value={passportForm.passportNumber} onChange={e => setPassportForm(p => ({ ...p, passportNumber: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">국적</Label>
+                    <Input value={passportForm.nationality} onChange={e => setPassportForm(p => ({ ...p, nationality: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">발급국</Label>
+                    <Input value={passportForm.issuingCountry} onChange={e => setPassportForm(p => ({ ...p, issuingCountry: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">생년월일</Label>
+                    <Input type="date" value={passportForm.birthDate} onChange={e => setPassportForm(p => ({ ...p, birthDate: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">성별</Label>
+                    <Select value={passportForm.gender} onValueChange={v => setPassportForm(p => ({ ...p, gender: v as "M" | "F" }))}>
+                      <SelectTrigger><SelectValue placeholder="성별" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="M">남성 (M)</SelectItem>
+                        <SelectItem value="F">여성 (F)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">발급일</Label>
+                    <Input type="date" value={passportForm.issueDate} onChange={e => setPassportForm(p => ({ ...p, issueDate: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">만료일</Label>
+                    <Input type="date" value={passportForm.expiryDate} onChange={e => setPassportForm(p => ({ ...p, expiryDate: e.target.value }))} />
+                  </div>
+                </div>
+
+                {passportForm.expiryDate && new Date(passportForm.expiryDate) < new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000) && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span className="text-sm">여권 만료일이 6개월 이내입니다. 갱신을 권장합니다.</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* 추가 입력 필요 - 전화번호 */}
+            <Card className="border-green-500/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Phone className="w-4 h-4 text-green-400" /> 추가 정보 입력
+                  <Badge variant="outline" className="text-[10px] border-red-500/30 text-red-400">필수</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">전화번호 *</Label>
+                    <Input placeholder="+82-10-1234-5678" value={profileForm.phone} onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">텔레그램 ID</Label>
+                    <Input placeholder="@username" value={profileForm.telegramId} onChange={e => setProfileForm(p => ({ ...p, telegramId: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">선호 언어</Label>
+                    <Select value={profileForm.preferredLanguage} onValueChange={v => setProfileForm(p => ({ ...p, preferredLanguage: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGES_LIST.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 액션 버튼 */}
+            <div className="flex justify-between items-center">
+              <Button variant="outline" onClick={() => { setStep(1); setOcrData(null); setScanImagePreview(""); }}>
+                <ArrowLeft className="w-4 h-4 mr-2" /> 돌아가기
+              </Button>
+              <div className="flex gap-2">
+                <Button variant="ghost" onClick={() => setStep(1)}>
+                  직접 입력하기
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={handleScanAndRegister}
+                  disabled={scanAndRegisterMut.isPending || !profileForm.phone.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 gap-2"
+                >
+                  {scanAndRegisterMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                  한번에 가입 완료
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Step 1: Basic Profile */}
         {step === 1 && (

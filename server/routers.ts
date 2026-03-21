@@ -2032,6 +2032,120 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         return db.upsertPassportInfo(ctx.user.id, input);
       }),
+    // 여권 스캔 OCR - 이미지를 LLM으로 분석하여 여권 정보 추출
+    scan: protectedProcedure
+      .input(z.object({
+        imageBase64: z.string(),
+        mimeType: z.string().default("image/jpeg"),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // 1. 이미지 S3 업로드
+        const buffer = Buffer.from(input.imageBase64, "base64");
+        const key = `passports/scan-${ctx.user.id}-${nanoid(8)}.jpg`;
+        const { url } = await storagePut(key, buffer, input.mimeType);
+        // 2. LLM OCR 실행
+        try {
+          const ocrResponse = await invokeLLM({
+            messages: [
+              { role: "system", content: `You are a passport OCR system. Extract the following fields from the passport image and return ONLY valid JSON:
+- fullName (full name as shown on passport, in ENGLISH/LATIN characters)
+- passportNumber
+- nationality (country name in Korean, e.g. "한국", "미국")
+- issuingCountry (country name in Korean)
+- dateOfBirth (YYYY-MM-DD format)
+- expiryDate (YYYY-MM-DD format)
+- issueDate (YYYY-MM-DD format, if visible)
+- gender (M or F)
+- phone (if visible, otherwise null)
+Return ONLY valid JSON, no markdown or explanation.` },
+              { role: "user", content: [
+                { type: "text", text: "Extract passport information from this image:" },
+                { type: "image_url", image_url: { url, detail: "high" } },
+              ]},
+            ],
+          });
+          const rawOcr = ocrResponse.choices?.[0]?.message?.content;
+          const ocrText = typeof rawOcr === "string" ? rawOcr : "{}";
+          let ocrData: any;
+          try {
+            const jsonMatch = ocrText.match(/\{[\s\S]*\}/);
+            ocrData = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+          } catch {
+            ocrData = { raw: ocrText };
+          }
+          return {
+            success: true,
+            imageUrl: url,
+            imageKey: key,
+            ocrData,
+          };
+        } catch (e) {
+          console.error("[Passport Scan] OCR failed:", e);
+          return { success: false, imageUrl: url, imageKey: key, ocrData: null };
+        }
+      }),
+    // 여권 스캔 결과로 프로필 + 여권 정보 한번에 저장
+    scanAndRegister: protectedProcedure
+      .input(z.object({
+        // 프로필 정보
+        phone: z.string().min(1),
+        nationality: z.string().optional(),
+        birthDate: z.string().optional(),
+        gender: z.enum(["male", "female", "other"]).optional(),
+        preferredLanguage: z.string().default("ko"),
+        telegramId: z.string().optional(),
+        // 여권 정보
+        passportNumber: z.string().optional(),
+        issuingCountry: z.string().optional(),
+        passportNationality: z.string().optional(),
+        fullName: z.string().optional(),
+        passportBirthDate: z.string().optional(),
+        passportGender: z.enum(["M", "F"]).optional(),
+        issueDate: z.string().optional(),
+        expiryDate: z.string().optional(),
+        passportImageUrl: z.string().optional(),
+        passportImageKey: z.string().optional(),
+        ocrData: z.any().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // 프로필 저장
+        await db.upsertUserProfile(ctx.user.id, {
+          phone: input.phone,
+          nationality: input.nationality,
+          birthDate: input.birthDate,
+          gender: input.gender,
+          preferredLanguage: input.preferredLanguage,
+          telegramId: input.telegramId,
+          onboardingCompleted: true,
+        });
+        // 여권 정보 저장
+        if (input.passportNumber || input.fullName) {
+          await db.upsertPassportInfo(ctx.user.id, {
+            passportNumber: input.passportNumber,
+            issuingCountry: input.issuingCountry,
+            nationality: input.passportNationality,
+            fullName: input.fullName,
+            birthDate: input.passportBirthDate,
+            gender: input.passportGender,
+            issueDate: input.issueDate,
+            expiryDate: input.expiryDate,
+            passportImageUrl: input.passportImageUrl,
+            passportImageKey: input.passportImageKey,
+            ocrData: input.ocrData,
+          });
+        }
+        return { success: true };
+      }),
+    // 중복 프로필 감지 - 동일 여권번호 또는 이름+생년월일로 기존 사용자 확인
+    checkDuplicate: protectedProcedure
+      .input(z.object({
+        passportNumber: z.string().optional(),
+        fullName: z.string().optional(),
+        birthDate: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return db.checkPassportDuplicate(ctx.user.id, input.passportNumber, input.fullName, input.birthDate);
+      }),
   }),
 
   tripHistory: router({
@@ -3444,6 +3558,73 @@ export const appRouter = router({
         } catch {
           return { translated: input.text, targetLang: input.targetLang };
         }
+      }),
+
+    // 미디어 갤러리 - 채팅방 내 공유된 미디어 목록
+    mediaList: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        mediaType: z.enum(["all", "image", "video", "file"]).default("all"),
+        limit: z.number().default(50),
+        offset: z.number().default(0),
+      }))
+      .query(async ({ input }) => {
+        const type = input.mediaType === "all" ? undefined : input.mediaType;
+        const items = await db.getChatMediaMessages(input.roomId, type, input.limit, input.offset);
+        return items;
+      }),
+
+    // 미디어 갤러리 - 미디어 수 통계
+    mediaCount: protectedProcedure
+      .input(z.object({ roomId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getChatMediaCount(input.roomId);
+      }),
+
+    // 메시지 고정 (Pin)
+    pin: protectedProcedure
+      .input(z.object({ messageId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const msg = await db.getChatMessageById(input.messageId);
+        if (!msg) throw new TRPCError({ code: "NOT_FOUND" });
+        // 관리자 또는 방 관리자만 고정 가능
+        if (ctx.user.role !== "admin" && ctx.user.role !== "superadmin") {
+          const member = (await db.getChatRoomMembers(msg.roomId)).find(m => m.userId === ctx.user.id);
+          if (!member || (member.memberRole !== "admin" && member.memberRole !== "moderator")) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "관리자 또는 모더레이터만 메시지를 고정할 수 있습니다" });
+          }
+        }
+        await db.pinChatMessage(input.messageId, ctx.user.id);
+        // 채팅방의 pinnedMessageId도 업데이트
+        await db.updateChatRoom(msg.roomId, { pinnedMessageId: input.messageId });
+        return { success: true };
+      }),
+
+    // 메시지 고정 해제
+    unpin: protectedProcedure
+      .input(z.object({ messageId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const msg = await db.getChatMessageById(input.messageId);
+        if (!msg) throw new TRPCError({ code: "NOT_FOUND" });
+        if (ctx.user.role !== "admin" && ctx.user.role !== "superadmin") {
+          const member = (await db.getChatRoomMembers(msg.roomId)).find(m => m.userId === ctx.user.id);
+          if (!member || (member.memberRole !== "admin" && member.memberRole !== "moderator")) {
+            throw new TRPCError({ code: "FORBIDDEN" });
+          }
+        }
+        await db.unpinChatMessage(input.messageId);
+        // 다음 고정 메시지로 업데이트하거나 null
+        const remaining = await db.getPinnedMessages(msg.roomId);
+        const nextPinned = remaining.find(m => m.id !== input.messageId);
+        await db.updateChatRoom(msg.roomId, { pinnedMessageId: nextPinned?.id || null });
+        return { success: true };
+      }),
+
+    // 고정된 메시지 목록
+    pinnedList: protectedProcedure
+      .input(z.object({ roomId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getPinnedMessages(input.roomId);
       }),
   }),
 

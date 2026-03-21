@@ -972,6 +972,9 @@ export const chatMessages = mysqlTable("chat_messages", {
   locationName: varchar("locationName", { length: 500 }),
   // 번역 필드
   originalLang: varchar("originalLang", { length: 10 }),
+  isPinned: boolean("isPinned").default(false),
+  pinnedAt: timestamp("pinnedAt"),
+  pinnedBy: int("pinnedBy"),
   isEdited: boolean("isEdited").default(false),
   isDeleted: boolean("isDeleted").default(false),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
