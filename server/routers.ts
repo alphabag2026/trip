@@ -3050,6 +3050,11 @@ export const appRouter = router({
       return db.getChatRoomsByUser(ctx.user.id);
     }),
 
+    // 읽지 않은 메시지 수 (모든 방)
+    unreadCounts: protectedProcedure.query(async ({ ctx }) => {
+      return db.getUnreadCountsForUser(ctx.user.id);
+    }),
+
     // 채팅방 상세
     getById: protectedProcedure
       .input(z.object({ id: z.number() }))
@@ -3442,8 +3447,64 @@ export const appRouter = router({
       }),
   }),
 
-  // ── WebRTC Signaling (시그널링 서버) ──────────────────────────────
+  //  // ── WebRTC Signaling (시그널링 서버) ──────────────────────────
   webrtc: router({
+    // ICE 서버 설정 조회 (TURN 서버 지원)
+    getIceServers: protectedProcedure.query(async () => {
+      const turnUrl = process.env.TURN_SERVER_URL;
+      const turnUser = process.env.TURN_SERVER_USERNAME;
+      const turnPass = process.env.TURN_SERVER_CREDENTIAL;
+
+      const servers: { urls: string | string[]; username?: string; credential?: string }[] = [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "stun:stun2.l.google.com:19302" },
+        { urls: "stun:stun3.l.google.com:19302" },
+      ];
+
+      // 커스텀 TURN 서버가 설정된 경우 추가
+      if (turnUrl) {
+        servers.push({
+          urls: turnUrl,
+          ...(turnUser && { username: turnUser }),
+          ...(turnPass && { credential: turnPass }),
+        });
+      }
+
+      // 무료 공개 TURN 서버 (폴백)
+      servers.push(
+        { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+        { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+        { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
+      );
+
+      return { iceServers: servers };
+    }),
+
+    // TURN 서버 설정 저장 (관리자용)
+    setTurnConfig: adminProcedure
+      .input(z.object({
+        turnUrl: z.string().optional(),
+        turnUsername: z.string().optional(),
+        turnCredential: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // 환경변수로 저장 (process.env는 런타임에서 변경 가능)
+        if (input.turnUrl !== undefined) process.env.TURN_SERVER_URL = input.turnUrl;
+        if (input.turnUsername !== undefined) process.env.TURN_SERVER_USERNAME = input.turnUsername;
+        if (input.turnCredential !== undefined) process.env.TURN_SERVER_CREDENTIAL = input.turnCredential;
+        return { success: true };
+      }),
+
+    // TURN 서버 설정 조회 (관리자용)
+    getTurnConfig: adminProcedure.query(async () => {
+      return {
+        turnUrl: process.env.TURN_SERVER_URL || "",
+        turnUsername: process.env.TURN_SERVER_USERNAME || "",
+        turnCredential: process.env.TURN_SERVER_CREDENTIAL ? "****" : "",
+      };
+    }),
+
     // 통화 시작 (발신)
     initiateCall: protectedProcedure
       .input(z.object({
@@ -3553,7 +3614,190 @@ export const appRouter = router({
         const signal4 = (globalThis as any).__webrtcSignals?.get(input.callId);
         if (signal4) signal4.status = "ended";
         setTimeout(() => { (globalThis as any).__webrtcSignals?.delete(input.callId); }, 5000);
+        // 그룹 통화에서도 제거
+        const groupStore = (globalThis as any).__groupCalls;
+        if (groupStore) {
+          for (const [, gc] of groupStore) {
+            if (gc.callId === input.callId) {
+              gc.status = "ended";
+              setTimeout(() => { groupStore.delete(gc.callId); }, 5000);
+            }
+          }
+        }
         return { success: true };
+      }),
+
+    // ── 그룹 영상 통화 (Mesh 방식, 3~8명) ──────────────────
+    // 그룹 통화 생성
+    createGroupCall: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        callType: z.enum(["voice", "video"]),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const callId = nanoid(12);
+        if (!(globalThis as any).__groupCalls) (globalThis as any).__groupCalls = new Map();
+        (globalThis as any).__groupCalls.set(callId, {
+          callId,
+          roomId: input.roomId,
+          callType: input.callType,
+          hostId: ctx.user.id,
+          hostName: ctx.user.name || "익명",
+          // 참여자 목록: { userId, name, offers: Map<targetUserId, offer>, answers: Map<fromUserId, answer>, candidates: Map<targetUserId, candidate[]> }
+          participants: [{ userId: ctx.user.id, name: ctx.user.name || "익명", joinedAt: Date.now() }],
+          // Mesh 시그널링: 각 피어 간 offer/answer/ICE 저장
+          peerSignals: new Map<string, any>(), // key: "fromId-toId"
+          maxParticipants: 8,
+          status: "active",
+          createdAt: Date.now(),
+        });
+        // 5분 후 자동 정리
+        setTimeout(() => { (globalThis as any).__groupCalls?.delete(callId); }, 300000);
+        return { callId };
+      }),
+
+    // 그룹 통화 참여
+    joinGroupCall: protectedProcedure
+      .input(z.object({ callId: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        const gc = (globalThis as any).__groupCalls?.get(input.callId);
+        if (!gc) throw new TRPCError({ code: "NOT_FOUND", message: "그룹 통화를 찾을 수 없습니다" });
+        if (gc.status !== "active") throw new TRPCError({ code: "BAD_REQUEST", message: "통화가 종료되었습니다" });
+        if (gc.participants.length >= gc.maxParticipants) throw new TRPCError({ code: "BAD_REQUEST", message: "최대 인원을 초과했습니다" });
+        if (!gc.participants.find((p: any) => p.userId === ctx.user.id)) {
+          gc.participants.push({ userId: ctx.user.id, name: ctx.user.name || "익명", joinedAt: Date.now() });
+        }
+        return {
+          callType: gc.callType,
+          participants: gc.participants.map((p: any) => ({ userId: p.userId, name: p.name })),
+        };
+      }),
+
+    // 그룹 통화 나가기
+    leaveGroupCall: protectedProcedure
+      .input(z.object({ callId: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        const gc = (globalThis as any).__groupCalls?.get(input.callId);
+        if (!gc) return { success: true };
+        gc.participants = gc.participants.filter((p: any) => p.userId !== ctx.user.id);
+        // 모든 참여자가 나가면 통화 종료
+        if (gc.participants.length === 0) {
+          gc.status = "ended";
+          setTimeout(() => { (globalThis as any).__groupCalls?.delete(input.callId); }, 5000);
+        }
+        return { success: true };
+      }),
+
+    // Mesh 시그널링: 피어에게 offer 전송
+    sendGroupOffer: protectedProcedure
+      .input(z.object({
+        callId: z.string(),
+        targetUserId: z.number(),
+        offer: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const gc = (globalThis as any).__groupCalls?.get(input.callId);
+        if (!gc) throw new TRPCError({ code: "NOT_FOUND" });
+        const key = `${ctx.user.id}-${input.targetUserId}`;
+        gc.peerSignals.set(key, {
+          fromUserId: ctx.user.id,
+          toUserId: input.targetUserId,
+          offer: input.offer,
+          answer: null,
+          fromCandidates: [] as string[],
+          toCandidates: [] as string[],
+        });
+        return { success: true };
+      }),
+
+    // Mesh 시그널링: offer에 answer 응답
+    sendGroupAnswer: protectedProcedure
+      .input(z.object({
+        callId: z.string(),
+        fromUserId: z.number(),
+        answer: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const gc = (globalThis as any).__groupCalls?.get(input.callId);
+        if (!gc) throw new TRPCError({ code: "NOT_FOUND" });
+        const key = `${input.fromUserId}-${ctx.user.id}`;
+        const sig = gc.peerSignals.get(key);
+        if (sig) sig.answer = input.answer;
+        return { success: true };
+      }),
+
+    // Mesh 시그널링: ICE candidate 추가
+    addGroupIceCandidate: protectedProcedure
+      .input(z.object({
+        callId: z.string(),
+        targetUserId: z.number(),
+        candidate: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const gc = (globalThis as any).__groupCalls?.get(input.callId);
+        if (!gc) throw new TRPCError({ code: "NOT_FOUND" });
+        // from->to 방향 확인
+        const key1 = `${ctx.user.id}-${input.targetUserId}`;
+        const key2 = `${input.targetUserId}-${ctx.user.id}`;
+        const sig1 = gc.peerSignals.get(key1);
+        const sig2 = gc.peerSignals.get(key2);
+        if (sig1) sig1.fromCandidates.push(input.candidate);
+        else if (sig2) sig2.toCandidates.push(input.candidate);
+        return { success: true };
+      }),
+
+    // Mesh 시그널링: 내게 온 신호 폴링
+    pollGroupSignals: protectedProcedure
+      .input(z.object({ callId: z.string() }))
+      .query(async ({ input, ctx }) => {
+        const gc = (globalThis as any).__groupCalls?.get(input.callId);
+        if (!gc) return { participants: [], offers: [], answers: [], candidates: [], status: "ended" as const };
+        const myOffers: any[] = [];
+        const myAnswers: any[] = [];
+        const myCandidates: any[] = [];
+        for (const [, sig] of gc.peerSignals) {
+          // 내게 온 offer (다른 사람이 나에게 보냈)
+          if (sig.toUserId === ctx.user.id && sig.offer && !sig.answer) {
+            myOffers.push({ fromUserId: sig.fromUserId, offer: sig.offer });
+          }
+          // 내 offer에 대한 answer
+          if (sig.fromUserId === ctx.user.id && sig.answer) {
+            myAnswers.push({ fromUserId: sig.toUserId, answer: sig.answer });
+          }
+          // 내게 온 ICE candidates
+          if (sig.fromUserId === ctx.user.id && sig.toCandidates.length > 0) {
+            myCandidates.push({ fromUserId: sig.toUserId, candidates: sig.toCandidates });
+          }
+          if (sig.toUserId === ctx.user.id && sig.fromCandidates.length > 0) {
+            myCandidates.push({ fromUserId: sig.fromUserId, candidates: sig.fromCandidates });
+          }
+        }
+        return {
+          participants: gc.participants.map((p: any) => ({ userId: p.userId, name: p.name })),
+          offers: myOffers,
+          answers: myAnswers,
+          candidates: myCandidates,
+          status: gc.status as "active" | "ended",
+        };
+      }),
+
+    // 그룹 통화 상태 확인 (방 내 활성 그룹 통화 조회)
+    getActiveGroupCall: protectedProcedure
+      .input(z.object({ roomId: z.number() }))
+      .query(async ({ input }) => {
+        if (!(globalThis as any).__groupCalls) return null;
+        for (const [, gc] of (globalThis as any).__groupCalls) {
+          if (gc.roomId === input.roomId && gc.status === "active") {
+            return {
+              callId: gc.callId,
+              callType: gc.callType,
+              hostName: gc.hostName,
+              participantCount: gc.participants.length,
+              maxParticipants: gc.maxParticipants,
+            };
+          }
+        }
+        return null;
       }),
   }),
 });

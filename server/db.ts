@@ -1716,3 +1716,22 @@ export async function getApiRequestLogsFiltered(apiKeyId: number, filters?: { st
     .orderBy(desc(apiRequestLogs.createdAt))
     .limit(filters?.limit || 100);
 }
+
+// ── Unread counts for all rooms of a user ────────────────
+export async function getUnreadCountsForUser(userId: number) {
+  const db = await getDb(); if (!db) return [];
+  const memberRows = await db.select().from(chatRoomMembers).where(eq(chatRoomMembers.userId, userId));
+  if (memberRows.length === 0) return [];
+  const results: { roomId: number; unreadCount: number }[] = [];
+  for (const m of memberRows) {
+    const conditions = [eq(chatMessages.roomId, m.roomId), eq(chatMessages.isDeleted, false)];
+    if (m.lastReadAt) conditions.push(gte(chatMessages.createdAt, m.lastReadAt));
+    // Exclude own messages
+    conditions.push(sql`${chatMessages.userId} != ${userId}` as any);
+    const [result] = await db.select({ count: sql<number>`count(*)` }).from(chatMessages).where(and(...conditions));
+    if ((result?.count || 0) > 0) {
+      results.push({ roomId: m.roomId, unreadCount: result?.count || 0 });
+    }
+  }
+  return results;
+}

@@ -65,6 +65,17 @@ function RoomList() {
   const [, navigate] = useLocation();
   const { data: rooms, refetch: refetchRooms } = trpc.chatRoom.list.useQuery({});
   const { data: myRooms, refetch: refetchMyRooms } = trpc.chatRoom.myRooms.useQuery();
+  const { data: unreadCounts } = trpc.chatRoom.unreadCounts.useQuery(undefined, { refetchInterval: 5000 });
+  const unreadMap = useMemo(() => {
+    const m = new Map<number, number>();
+    unreadCounts?.forEach((u: any) => m.set(u.roomId, u.unreadCount));
+    return m;
+  }, [unreadCounts]);
+  const totalUnread = useMemo(() => {
+    let t = 0;
+    unreadMap.forEach(v => t += v);
+    return t;
+  }, [unreadMap]);
   const { data: allUsers } = trpc.userSearch.list.useQuery();
   const joinMutation = trpc.chatRoom.join.useMutation({
     onSuccess: (r) => { toast.success("채팅방에 참여했습니다"); navigate(`/community/${r.id}`); },
@@ -113,6 +124,9 @@ function RoomList() {
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <MessageCircle className="h-6 w-6 text-blue-400" />
               커뮤니티
+              {totalUnread > 0 && (
+                <Badge className="bg-red-500 text-white text-xs ml-2">{totalUnread > 99 ? "99+" : totalUnread}</Badge>
+              )}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">여행자 그룹과 담당자가 함께 소통하는 공간</p>
           </div>
@@ -228,6 +242,11 @@ function RoomList() {
                         </div>
                         {room.description && <p className="text-xs text-muted-foreground truncate">{room.description}</p>}
                       </div>
+                      {(unreadMap.get(room.id) || 0) > 0 && (
+                        <Badge className="bg-red-500 text-white text-xs min-w-[20px] h-5 flex items-center justify-center rounded-full">
+                          {unreadMap.get(room.id)! > 99 ? "99+" : unreadMap.get(room.id)}
+                        </Badge>
+                      )}
                     </CardContent>
                   </Card>
                 );
@@ -406,6 +425,9 @@ function CallOverlay({ callId, callType, callerName, isOutgoing, onEnd }: {
   const answerMutation = trpc.webrtc.answerCall.useMutation();
   const addIceMutation = trpc.webrtc.addIceCandidate.useMutation();
 
+  // TURN 서버 포함 ICE 서버 설정 가져오기
+  const { data: iceConfig } = trpc.webrtc.getIceServers.useQuery();
+
   // 발신자: 상태 폴링
   const { data: callStatus } = trpc.webrtc.getCallStatus.useQuery(
     { callId },
@@ -427,8 +449,9 @@ function CallOverlay({ callId, callType, callerName, isOutgoing, onEnd }: {
 
   // P2P 연결 설정
   useEffect(() => {
+    if (!iceConfig) return;
     const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
+      iceServers: iceConfig.iceServers,
     });
     pcRef.current = pc;
 
@@ -465,7 +488,7 @@ function CallOverlay({ callId, callType, callerName, isOutgoing, onEnd }: {
       localStreamRef.current?.getTracks().forEach(t => t.stop());
       pc.close();
     };
-  }, [callId, callType, isOutgoing]);
+  }, [callId, callType, isOutgoing, iceConfig]);
 
   // 발신자: answer 수신 시 처리
   useEffect(() => {
@@ -548,7 +571,266 @@ function CallOverlay({ callId, callType, callerName, isOutgoing, onEnd }: {
   );
 }
 
-// ── 메시지 버블 (번역 포함) ──────────────────────────────
+// ── 그룹 통화 UI (Mesh 방식) ──────────────────────────────
+function GroupCallOverlay({ callId, callType, roomName, onEnd }: {
+  callId: string; callType: "voice" | "video"; roomName: string; onEnd: () => void;
+}) {
+  const { user } = useAuth();
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const peerConnectionsRef = useRef<Map<number, RTCPeerConnection>>(new Map());
+  const remoteStreamsRef = useRef<Map<number, MediaStream>>(new Map());
+  const [remoteParticipants, setRemoteParticipants] = useState<{ userId: number; name: string; stream?: MediaStream }[]>([]);
+  const processedOffersRef = useRef<Set<string>>(new Set());
+  const processedAnswersRef = useRef<Set<string>>(new Set());
+
+  const leaveGroupCallMutation = trpc.webrtc.leaveGroupCall.useMutation();
+  const sendGroupOfferMutation = trpc.webrtc.sendGroupOffer.useMutation();
+  const sendGroupAnswerMutation = trpc.webrtc.sendGroupAnswer.useMutation();
+  const addGroupIceMutation = trpc.webrtc.addGroupIceCandidate.useMutation();
+
+  // 시그널 폴링
+  const { data: groupSignals } = trpc.webrtc.pollGroupSignals.useQuery(
+    { callId },
+    { refetchInterval: 1000 }
+  );
+
+  // TURN 서버 포함 ICE 서버 설정 가져오기
+  const { data: iceConfig } = trpc.webrtc.getIceServers.useQuery();
+  const iceServers = useMemo(() => iceConfig?.iceServers || [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ], [iceConfig]);
+
+  // 타이머
+  useEffect(() => {
+    const t = setInterval(() => setDuration(d => d + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // 미디어 초기화
+  useEffect(() => {
+    const initMedia = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: callType === "video",
+        });
+        localStreamRef.current = stream;
+        if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+      } catch {
+        toast.error("미디어 장치에 접근할 수 없습니다");
+      }
+    };
+    initMedia();
+    return () => {
+      localStreamRef.current?.getTracks().forEach(t => t.stop());
+      peerConnectionsRef.current.forEach(pc => pc.close());
+    };
+  }, [callType]);
+
+  // 새 참여자에게 offer 전송
+  useEffect(() => {
+    if (!groupSignals || !localStreamRef.current || !user) return;
+    const myId = user.id;
+    for (const p of groupSignals.participants) {
+      if (p.userId === myId) continue;
+      if (peerConnectionsRef.current.has(p.userId)) continue;
+      // 새 피어 발견 - offer 전송 (낮은 ID가 offer 전송)
+      if (myId < p.userId) {
+        const pc = new RTCPeerConnection({ iceServers });
+        peerConnectionsRef.current.set(p.userId, pc);
+        localStreamRef.current!.getTracks().forEach(t => pc.addTrack(t, localStreamRef.current!));
+        pc.onicecandidate = (e) => {
+          if (e.candidate) addGroupIceMutation.mutate({ callId, targetUserId: p.userId, candidate: JSON.stringify(e.candidate) });
+        };
+        pc.ontrack = (e) => {
+          if (e.streams[0]) {
+            remoteStreamsRef.current.set(p.userId, e.streams[0]);
+            setRemoteParticipants(prev => {
+              const existing = prev.find(x => x.userId === p.userId);
+              if (existing) return prev.map(x => x.userId === p.userId ? { ...x, stream: e.streams[0] } : x);
+              return [...prev, { userId: p.userId, name: p.name, stream: e.streams[0] }];
+            });
+          }
+        };
+        pc.createOffer().then(offer => {
+          pc.setLocalDescription(offer);
+          sendGroupOfferMutation.mutate({ callId, targetUserId: p.userId, offer: JSON.stringify(offer) });
+        }).catch(console.error);
+      }
+    }
+  }, [groupSignals?.participants, user, callId, iceServers]);
+
+  // 수신된 offer에 answer 응답
+  useEffect(() => {
+    if (!groupSignals || !localStreamRef.current || !user) return;
+    for (const o of groupSignals.offers) {
+      const key = `offer-${o.fromUserId}`;
+      if (processedOffersRef.current.has(key)) continue;
+      processedOffersRef.current.add(key);
+      const pc = new RTCPeerConnection({ iceServers });
+      peerConnectionsRef.current.set(o.fromUserId, pc);
+      localStreamRef.current!.getTracks().forEach(t => pc.addTrack(t, localStreamRef.current!));
+      pc.onicecandidate = (e) => {
+        if (e.candidate) addGroupIceMutation.mutate({ callId, targetUserId: o.fromUserId, candidate: JSON.stringify(e.candidate) });
+      };
+      pc.ontrack = (e) => {
+        if (e.streams[0]) {
+          remoteStreamsRef.current.set(o.fromUserId, e.streams[0]);
+          const pName = groupSignals.participants.find((p: any) => p.userId === o.fromUserId)?.name || "상대방";
+          setRemoteParticipants(prev => {
+            const existing = prev.find(x => x.userId === o.fromUserId);
+            if (existing) return prev.map(x => x.userId === o.fromUserId ? { ...x, stream: e.streams[0] } : x);
+            return [...prev, { userId: o.fromUserId, name: pName, stream: e.streams[0] }];
+          });
+        }
+      };
+      pc.setRemoteDescription(JSON.parse(o.offer)).then(() => pc.createAnswer()).then(answer => {
+        pc.setLocalDescription(answer);
+        sendGroupAnswerMutation.mutate({ callId, fromUserId: o.fromUserId, answer: JSON.stringify(answer) });
+      }).catch(console.error);
+    }
+  }, [groupSignals?.offers, user, callId, iceServers]);
+
+  // answer 수신 처리
+  useEffect(() => {
+    if (!groupSignals) return;
+    for (const a of groupSignals.answers) {
+      const key = `answer-${a.fromUserId}`;
+      if (processedAnswersRef.current.has(key)) continue;
+      processedAnswersRef.current.add(key);
+      const pc = peerConnectionsRef.current.get(a.fromUserId);
+      if (pc && pc.signalingState !== "stable") {
+        pc.setRemoteDescription(JSON.parse(a.answer)).catch(console.error);
+      }
+    }
+  }, [groupSignals?.answers]);
+
+  // ICE candidates 처리
+  useEffect(() => {
+    if (!groupSignals) return;
+    for (const c of groupSignals.candidates) {
+      const pc = peerConnectionsRef.current.get(c.fromUserId);
+      if (pc) {
+        for (const cand of c.candidates) {
+          try { pc.addIceCandidate(JSON.parse(cand)); } catch {}
+        }
+      }
+    }
+  }, [groupSignals?.candidates]);
+
+  const toggleMute = () => {
+    localStreamRef.current?.getAudioTracks().forEach(t => { t.enabled = !t.enabled; });
+    setIsMuted(!isMuted);
+  };
+
+  const toggleVideo = () => {
+    localStreamRef.current?.getVideoTracks().forEach(t => { t.enabled = !t.enabled; });
+    setIsVideoOff(!isVideoOff);
+  };
+
+  const handleEnd = () => {
+    leaveGroupCallMutation.mutate({ callId });
+    localStreamRef.current?.getTracks().forEach(t => t.stop());
+    peerConnectionsRef.current.forEach(pc => pc.close());
+    onEnd();
+  };
+
+  const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
+  const totalParticipants = (groupSignals?.participants?.length || 1);
+
+  // 그리드 레이아웃 계산 (2x2, 2x3 등)
+  const gridCols = totalParticipants <= 2 ? 1 : totalParticipants <= 4 ? 2 : totalParticipants <= 6 ? 3 : 4;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/95 flex flex-col">
+      {/* 상단 정보 */}
+      <div className="px-4 py-3 flex items-center gap-3 text-white">
+        <Users className="h-5 w-5 text-green-400" />
+        <div className="flex-1">
+          <span className="font-medium">{roomName}</span>
+          <span className="text-white/60 text-sm ml-2">{totalParticipants}명 참여 중</span>
+        </div>
+        <span className="text-white/60 text-sm">{formatTime(duration)}</span>
+      </div>
+
+      {/* 비디오 그리드 */}
+      <div className={`flex-1 p-2 grid gap-2`} style={{ gridTemplateColumns: `repeat(${gridCols}, 1fr)` }}>
+        {/* 내 비디오 */}
+        <div className="relative bg-gray-800 rounded-xl overflow-hidden">
+          {callType === "video" ? (
+            <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-blue-600/30 flex items-center justify-center">
+                <Mic className="h-8 w-8 text-blue-400" />
+              </div>
+            </div>
+          )}
+          <div className="absolute bottom-2 left-2 bg-black/60 rounded px-2 py-0.5 text-xs text-white">
+            나 {isMuted && "(음소거)"}
+          </div>
+        </div>
+        {/* 원격 참여자 비디오 */}
+        {remoteParticipants.map(p => (
+          <div key={p.userId} className="relative bg-gray-800 rounded-xl overflow-hidden">
+            {callType === "video" && p.stream ? (
+              <RemoteVideo stream={p.stream} />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-green-600/30 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-green-400">{p.name?.charAt(0) || "?"}</span>
+                </div>
+              </div>
+            )}
+            <div className="absolute bottom-2 left-2 bg-black/60 rounded px-2 py-0.5 text-xs text-white">
+              {p.name}
+            </div>
+          </div>
+        ))}
+        {/* 빈 슬롯 (대기 중) */}
+        {totalParticipants > remoteParticipants.length + 1 && Array.from({ length: totalParticipants - remoteParticipants.length - 1 }).map((_, i) => (
+          <div key={`empty-${i}`} className="bg-gray-800/50 rounded-xl flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-pulse h-3 w-3 rounded-full bg-yellow-500 mx-auto mb-2" />
+              <span className="text-xs text-white/40">연결 중...</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 컨트롤 바 */}
+      <div className="py-6 flex items-center justify-center gap-4">
+        <Button variant="outline" size="icon" className={`rounded-full h-14 w-14 ${isMuted ? "bg-red-600 border-red-600" : "bg-white/10 border-white/20"}`} onClick={toggleMute}>
+          {isMuted ? <MicOff className="h-6 w-6 text-white" /> : <Mic className="h-6 w-6 text-white" />}
+        </Button>
+        {callType === "video" && (
+          <Button variant="outline" size="icon" className={`rounded-full h-14 w-14 ${isVideoOff ? "bg-red-600 border-red-600" : "bg-white/10 border-white/20"}`} onClick={toggleVideo}>
+            {isVideoOff ? <VideoOff className="h-6 w-6 text-white" /> : <Camera className="h-6 w-6 text-white" />}
+          </Button>
+        )}
+        <Button size="icon" className="rounded-full h-16 w-16 bg-red-600 hover:bg-red-700" onClick={handleEnd}>
+          <PhoneOff className="h-7 w-7 text-white" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// 원격 비디오 컴포넌트 (srcObject 설정용)
+function RemoteVideo({ stream }: { stream: MediaStream }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.srcObject = stream;
+  }, [stream]);
+  return <video ref={ref} autoPlay playsInline className="w-full h-full object-cover" />;
+}
+
+// ── 메시지 버블 ────────────────────────────────────────────
 function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, myLang }: {
   msg: any; isMe: boolean; isAdmin: boolean; user: any; onReply: (m: any) => void; onDelete: (id: number) => void; myLang: string;
 }) {
@@ -706,6 +988,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const [showLocationDialog, setShowLocationDialog] = useState(false);
   const [myLang, setMyLang] = useState("ko");
   const [activeCall, setActiveCall] = useState<{ callId: string; callType: "voice" | "video"; callerName: string; isOutgoing: boolean } | null>(null);
+  const [groupCall, setGroupCall] = useState<{ callId: string; callType: "voice" | "video" } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -739,6 +1022,14 @@ function ChatRoomView({ roomId }: { roomId: number }) {
 
   const markReadMutation = trpc.chatMessage.markRead.useMutation();
   const initiateCallMutation = trpc.webrtc.initiateCall.useMutation();
+  const createGroupCallMutation = trpc.webrtc.createGroupCall.useMutation();
+  const joinGroupCallMutation = trpc.webrtc.joinGroupCall.useMutation();
+
+  // 활성 그룹 통화 조회
+  const { data: activeGroupCall } = trpc.webrtc.getActiveGroupCall.useQuery(
+    { roomId },
+    { refetchInterval: groupCall ? false : 3000 }
+  );
 
   // 수신 통화 폴링
   const { data: incomingCall } = trpc.webrtc.pollIncoming.useQuery(
@@ -828,6 +1119,9 @@ function ChatRoomView({ roomId }: { roomId: number }) {
     });
   };
 
+  // ICE 서버 설정 조회
+  const { data: iceConfig } = trpc.webrtc.getIceServers.useQuery();
+
   const startCall = async (type: "voice" | "video") => {
     if (!members || members.length < 2) { toast.error("통화할 상대가 없습니다"); return; }
     const otherMember = members.find((m: any) => m.userId !== user?.id);
@@ -835,7 +1129,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
 
     try {
       const pc = new RTCPeerConnection({
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+        iceServers: iceConfig?.iceServers || [{ urls: "stun:stun.l.google.com:19302" }],
       });
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === "video" });
       stream.getTracks().forEach(t => pc.addTrack(t, stream));
@@ -862,6 +1156,27 @@ function ChatRoomView({ roomId }: { roomId: number }) {
     }
   };
 
+  const startGroupCall = async (type: "voice" | "video") => {
+    try {
+      const result = await createGroupCallMutation.mutateAsync({ roomId, callType: type });
+      setGroupCall({ callId: result.callId, callType: type });
+      toast.success(`그룹 ${type === "video" ? "영상" : "음성"} 통화가 시작되었습니다`);
+    } catch {
+      toast.error("그룹 통화를 시작할 수 없습니다");
+    }
+  };
+
+  const joinExistingGroupCall = async () => {
+    if (!activeGroupCall) return;
+    try {
+      await joinGroupCallMutation.mutateAsync({ callId: activeGroupCall.callId });
+      setGroupCall({ callId: activeGroupCall.callId, callType: activeGroupCall.callType as "voice" | "video" });
+      toast.success("그룹 통화에 참여했습니다");
+    } catch (e: any) {
+      toast.error(e.message || "참여 실패");
+    }
+  };
+
   const isAdmin = user?.role === "admin" || user?.role === "superadmin";
 
   return (
@@ -877,6 +1192,16 @@ function ChatRoomView({ roomId }: { roomId: number }) {
         />
       )}
 
+      {/* 그룹 통화 오버레이 */}
+      {groupCall && (
+        <GroupCallOverlay
+          callId={groupCall.callId}
+          callType={groupCall.callType}
+          roomName={room?.name || "채팅방"}
+          onEnd={() => setGroupCall(null)}
+        />
+      )}
+
       {/* Header */}
       <div className="border-b px-4 py-3 flex items-center gap-3 shrink-0">
         <Button variant="ghost" size="icon" onClick={() => navigate("/community")}>
@@ -886,13 +1211,29 @@ function ChatRoomView({ roomId }: { roomId: number }) {
           <h2 className="font-semibold truncate">{room?.name || "채팅방"}</h2>
           <p className="text-xs text-muted-foreground">{members?.length || 0}명 참여중</p>
         </div>
-        {/* 통화 버튼 */}
-        <Button variant="ghost" size="icon" onClick={() => startCall("voice")} title="음성 통화">
+        {/* 1:1 통화 */}
+        <Button variant="ghost" size="icon" onClick={() => startCall("voice")} title="1:1 음성 통화">
           <Phone className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => startCall("video")} title="영상 통화">
+        <Button variant="ghost" size="icon" onClick={() => startCall("video")} title="1:1 영상 통화">
           <Video className="h-5 w-5" />
         </Button>
+        {/* 그룹 통화 */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" title="그룹 통화">
+              <Users className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => startGroupCall("voice")}>
+              <Phone className="h-4 w-4 mr-2" /> 그룹 음성 통화 시작
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => startGroupCall("video")}>
+              <Video className="h-4 w-4 mr-2" /> 그룹 영상 통화 시작
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         {/* 번역 언어 선택 */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -924,6 +1265,20 @@ function ChatRoomView({ roomId }: { roomId: number }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* 활성 그룹 통화 배너 */}
+      {activeGroupCall && !groupCall && (
+        <div className="px-4 py-2 bg-green-500/10 border-b border-green-500/20 flex items-center gap-3">
+          <div className="animate-pulse h-3 w-3 rounded-full bg-green-500" />
+          <div className="flex-1">
+            <span className="text-sm font-medium text-green-400">그룹 {activeGroupCall.callType === "video" ? "영상" : "음성"} 통화 진행 중</span>
+            <span className="text-xs text-muted-foreground ml-2">{activeGroupCall.participantCount}/{activeGroupCall.maxParticipants}명</span>
+          </div>
+          <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={joinExistingGroupCall}>
+            <Phone className="h-4 w-4 mr-1" /> 참여하기
+          </Button>
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
