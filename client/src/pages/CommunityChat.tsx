@@ -148,6 +148,36 @@ function ChatRoomView({ roomId }: { roomId: number }) {
     onSuccess: () => { setMessage(""); setReplyTo(null); refetch(); },
     onError: (e) => toast.error(e.message),
   });
+
+  // 브라우저 알림 권한 요청
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // 새 메시지 발생 시 브라우저 알림
+  const prevMsgCountRef = useRef(0);
+  useEffect(() => {
+    if (!messages || messages.length === 0) return;
+    const currentCount = messages.length;
+    if (prevMsgCountRef.current > 0 && currentCount > prevMsgCountRef.current) {
+      const latestMsg = messages[messages.length - 1];
+      if (latestMsg && latestMsg.userId !== user?.id && document.hidden) {
+        // 브라우저 알림
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification(`💬 ${room?.name || "채팅방"}`, {
+            body: `${latestMsg.senderName}: ${latestMsg.content?.substring(0, 100)}`,
+            icon: "/favicon.ico",
+            tag: `chat-${roomId}`,
+          });
+        }
+        // 사운드 알림
+        try { new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbsGczIj2LtN/JdkQnN3Oi0+C+bD0jMYC12eSzYjAVJXux4OW/cEMfIHWk1+bGfVQtGSxvn9nixIlgOCQaRYCq2+bQk2xBIBdDdKHY5tKYdEkiGD5pmtfmzZdyTy0YPXOd1+TIlnVPLhk9c53X5MiWdU8uGT1zndfkyJZ1Ty4ZPQ==").play(); } catch {}
+      }
+    }
+    prevMsgCountRef.current = currentCount;
+  }, [messages, user?.id, room?.name, roomId]);
   const deleteMutation = trpc.chatMessage.delete.useMutation({
     onSuccess: () => { refetch(); toast.success("삭제됨"); },
     onError: (e) => toast.error(e.message),

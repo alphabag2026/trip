@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { User, BookOpen, CheckCircle, ArrowRight, ArrowLeft, Upload, Loader2, Shield, Globe, Phone, Building2, Briefcase, Heart, AlertTriangle } from "lucide-react";
+import { User, BookOpen, CheckCircle, ArrowRight, ArrowLeft, Upload, Loader2, Shield, Globe, Phone, Building2, Briefcase, Heart, AlertTriangle, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -25,7 +25,7 @@ const LANGUAGES_LIST = [
 ];
 
 export default function Onboarding() {
-  const { user, loading } = useAuth({ redirectOnUnauthenticated: true });
+  const { user, loading, logout } = useAuth({ redirectOnUnauthenticated: true });
   const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [step, setStep] = useState(1);
@@ -129,7 +129,13 @@ export default function Onboarding() {
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container flex items-center justify-between h-14">
           <a href="/" className="text-lg font-bold text-primary hover:opacity-80 transition-opacity cursor-pointer">Meetup Travel</a>
-          <span className="text-sm text-muted-foreground">{t("onboarding.welcome", { name: user?.name })}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">{t("onboarding.welcome", { name: user?.name })}</span>
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive gap-1" onClick={() => { logout(); window.location.href = "/"; }}>
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("nav.logout", "로그아웃")}</span>
+            </Button>
+          </div>
         </div>
       </header>
 

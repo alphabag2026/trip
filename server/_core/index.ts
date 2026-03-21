@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { createExternalApiRouter } from "../externalApi";
+import { createTelegramWebhookRouter } from "../telegramWebhook";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -38,6 +39,8 @@ async function startServer() {
   registerOAuthRoutes(app);
   // External REST API (v1)
   app.use("/api/v1", createExternalApiRouter());
+  // Telegram Bot Webhook
+  app.use("/api/telegram/webhook", createTelegramWebhookRouter());
   // tRPC API
   app.use(
     "/api/trpc",

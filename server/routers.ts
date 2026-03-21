@@ -640,6 +640,41 @@ export const appRouter = router({
       if (!ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "전송 실패" });
       return { success: true };
     }),
+    // Webhook 설정 (봇 토큰으로 Telegram에 webhook URL 등록)
+    setupWebhook: adminProcedure
+      .input(z.object({ webhookUrl: z.string().url() }))
+      .mutation(async ({ input }) => {
+        const config = await db.getTelegramConfig();
+        if (!config?.botToken) throw new TRPCError({ code: "BAD_REQUEST", message: "봇 토큰이 설정되지 않았습니다" });
+        const response = await fetch(`https://api.telegram.org/bot${config.botToken}/setWebhook`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: input.webhookUrl, allowed_updates: ["message", "edited_message"], drop_pending_updates: false }),
+        });
+        const result = await response.json() as any;
+        if (!result.ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: result.description || "Webhook 설정 실패" });
+        return { success: true, description: result.description };
+      }),
+    // Webhook 해제
+    removeWebhook: adminProcedure.mutation(async () => {
+      const config = await db.getTelegramConfig();
+      if (!config?.botToken) throw new TRPCError({ code: "BAD_REQUEST", message: "봇 토큰이 설정되지 않았습니다" });
+      const response = await fetch(`https://api.telegram.org/bot${config.botToken}/deleteWebhook`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ drop_pending_updates: true }),
+      });
+      const result = await response.json() as any;
+      return { success: result.ok, description: result.description };
+    }),
+    // Webhook 상태 확인
+    webhookInfo: adminProcedure.query(async () => {
+      const config = await db.getTelegramConfig();
+      if (!config?.botToken) return { url: "", has_custom_certificate: false, pending_update_count: 0, last_error_date: null, last_error_message: null };
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${config.botToken}/getWebhookInfo`);
+        const data = await response.json() as any;
+        return data.result || { url: "", pending_update_count: 0 };
+      } catch { return { url: "", pending_update_count: 0 }; }
+    }),
     // 출장자 명단 전송
     sendRoster: adminProcedure
       .input(z.object({ meetupId: z.number() }))
@@ -3177,7 +3212,16 @@ export const appRouter = router({
         });
         // 읽음 처리
         await db.updateChatRoomMember(input.roomId, ctx.user.id, { lastReadAt: new Date() });
-        return { id };
+        // 텔레그램 알림 전송 (공지 메시지인 경우 또는 관리자 메시지인 경우)
+        if (input.messageType === "announcement" || roleLabel === "admin") {
+          try {
+            const room = await db.getChatRoomById(input.roomId);
+            const senderName = ctx.user.name || "관리자";
+            const prefix = input.messageType === "announcement" ? "📢 공지" : "💬 새 메시지";
+            await sendTelegram(`${prefix} [${room?.name || "채팅방"}]\n👤 ${senderName}: ${input.content.substring(0, 200)}`);
+          } catch { /* 텔레그램 알림 실패 무시 */ }
+        }
+        return { id, shouldNotify: true };
       }),
 
     // 메시지 수정

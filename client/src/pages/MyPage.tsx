@@ -13,7 +13,7 @@ import {
   User, BookOpen, History, ArrowLeft, Save, Loader2, Shield, Globe, Phone,
   Building2, Briefcase, Heart, Upload, CheckCircle, MapPin, Calendar, Plane,
   Hotel, AlertTriangle, Edit2, Eye, EyeOff, CreditCard, Ticket, Copy, ExternalLink,
-  ArrowRight, Navigation, ClipboardCheck, FileCheck, FileWarning
+  ArrowRight, Navigation, ClipboardCheck, FileCheck, FileWarning, LogOut
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -32,7 +32,7 @@ const LANGUAGES = [
 ];
 
 export default function MyPage() {
-  const { user, loading } = useAuth({ redirectOnUnauthenticated: true });
+  const { user, loading, logout } = useAuth({ redirectOnUnauthenticated: true });
   const { t } = useTranslation();
   const [editingProfile, setEditingProfile] = useState(false);
   const [editingPassport, setEditingPassport] = useState(false);
@@ -157,7 +157,13 @@ export default function MyPage() {
           <div className="flex items-center gap-3">
             <Link href="/" className="text-lg font-bold text-primary">Meetup Travel</Link>
           </div>
-          <LanguageSelector />
+          <div className="flex items-center gap-3">
+            <LanguageSelector />
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive gap-1" onClick={() => { logout(); window.location.href = "/"; }}>
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("nav.logout", "로그아웃")}</span>
+            </Button>
+          </div>
         </div>
       </header>
 
