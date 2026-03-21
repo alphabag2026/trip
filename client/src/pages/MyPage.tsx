@@ -13,7 +13,7 @@ import {
   User, BookOpen, History, ArrowLeft, Save, Loader2, Shield, Globe, Phone,
   Building2, Briefcase, Heart, Upload, CheckCircle, MapPin, Calendar, Plane,
   Hotel, AlertTriangle, Edit2, Eye, EyeOff, CreditCard, Ticket, Copy, ExternalLink,
-  ArrowRight, Navigation
+  ArrowRight, Navigation, ClipboardCheck, FileCheck, FileWarning
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -47,6 +47,7 @@ export default function MyPage() {
   const onboardingQuery = trpc.userProfile.onboardingStatus.useQuery(undefined, { enabled: !!user });
   const vouchersQuery = trpc.hotelVoucher.listMy.useQuery(undefined, { enabled: !!user });
   const ticketsQuery = trpc.flightTicket.listMy.useQuery(undefined, { enabled: !!user });
+  const immigrationQuery = trpc.immigration.myStatus.useQuery(undefined, { enabled: !!user });
 
   // Profile form
   const [profileForm, setProfileForm] = useState<any>(null);
@@ -191,7 +192,7 @@ export default function MyPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="profile" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="profile" className="flex items-center gap-1.5">
               <User className="w-4 h-4" />{t("myPage.tabProfile")}
             </TabsTrigger>
@@ -206,6 +207,9 @@ export default function MyPage() {
             </TabsTrigger>
             <TabsTrigger value="tickets" className="flex items-center gap-1.5">
               <Ticket className="w-4 h-4" />{t("myPage.tabFlight")}
+            </TabsTrigger>
+            <TabsTrigger value="checklist" className="flex items-center gap-1.5">
+              <ClipboardCheck className="w-4 h-4" />{t("myPage.tabChecklist")}
             </TabsTrigger>
           </TabsList>
 
@@ -753,6 +757,132 @@ export default function MyPage() {
               </Card>
             ))}
           </TabsContent>
+          {/* Immigration Checklist Tab */}
+          <TabsContent value="checklist" className="space-y-4">
+            {immigrationQuery.isLoading ? (
+              <div className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
+            ) : (() => {
+              const imm = immigrationQuery.data;
+              const hasPassport = !!imm?.passport?.passportNumber;
+              const passportExpiry = imm?.passport?.expiryDate;
+              const isPassportValid = passportExpiry ? new Date(passportExpiry) > new Date() : false;
+              const hasVoucher = (imm?.vouchers?.length || 0) > 0;
+              const hasTicket = (imm?.tickets?.length || 0) > 0;
+              const hasReturnTicket = imm?.tickets?.some((t: any) => t.returnFlightNo);
+              const completedCount = [hasPassport, isPassportValid, hasVoucher, hasTicket, hasReturnTicket].filter(Boolean).length;
+              const totalItems = 5;
+              const progressPercent = Math.round((completedCount / totalItems) * 100);
+
+              const checkItems = [
+                {
+                  key: "passport",
+                  label: t("myPage.checkPassport"),
+                  desc: t("myPage.checkPassportDesc"),
+                  done: hasPassport,
+                  icon: BookOpen,
+                },
+                {
+                  key: "passportValid",
+                  label: t("myPage.checkPassportValid"),
+                  desc: hasPassport && passportExpiry ? t("myPage.checkPassportValidDesc", { date: passportExpiry }) : t("myPage.checkPassportValidNone"),
+                  done: isPassportValid,
+                  icon: Shield,
+                },
+                {
+                  key: "voucher",
+                  label: t("myPage.checkVoucher"),
+                  desc: hasVoucher ? t("myPage.checkVoucherDesc", { count: imm?.vouchers?.length }) : t("myPage.checkVoucherNone"),
+                  done: hasVoucher,
+                  icon: Hotel,
+                },
+                {
+                  key: "ticket",
+                  label: t("myPage.checkTicket"),
+                  desc: hasTicket ? t("myPage.checkTicketDesc", { count: imm?.tickets?.length }) : t("myPage.checkTicketNone"),
+                  done: hasTicket,
+                  icon: Plane,
+                },
+                {
+                  key: "returnTicket",
+                  label: t("myPage.checkReturnTicket"),
+                  desc: t("myPage.checkReturnTicketDesc"),
+                  done: !!hasReturnTicket,
+                  icon: Plane,
+                },
+              ];
+
+              return (
+                <>
+                  {/* Progress */}
+                  <Card className="border-primary/20">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-bold text-lg flex items-center gap-2">
+                          <ClipboardCheck className="w-5 h-5 text-primary" />
+                          {t("myPage.checklistTitle")}
+                        </h3>
+                        <Badge variant={completedCount === totalItems ? "default" : "secondary"}>
+                          {completedCount}/{totalItems}
+                        </Badge>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-3 mb-2">
+                        <div
+                          className={`h-3 rounded-full transition-all duration-500 ${completedCount === totalItems ? "bg-green-500" : "bg-primary"}`}
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {completedCount === totalItems ? t("myPage.checklistComplete") : t("myPage.checklistProgress", { count: completedCount, total: totalItems })}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Check Items */}
+                  <div className="space-y-3">
+                    {checkItems.map((item) => (
+                      <Card key={item.key} className={`transition-all ${item.done ? "border-green-500/30 bg-green-500/5" : "border-orange-500/30 bg-orange-500/5"}`}>
+                        <CardContent className="py-4">
+                          <div className="flex items-start gap-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${item.done ? "bg-green-500/20" : "bg-orange-500/20"}`}>
+                              {item.done ? (
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                              ) : (
+                                <AlertTriangle className="w-5 h-5 text-orange-500" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <item.icon className="w-4 h-4 text-muted-foreground" />
+                                <h4 className="font-semibold">{item.label}</h4>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">{item.desc}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {/* Tips */}
+                  <Card className="bg-muted/30">
+                    <CardContent className="pt-6">
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-primary" />
+                        {t("myPage.immigrationTips")}
+                      </h4>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-start gap-2"><span className="text-primary">•</span>{t("myPage.tip1")}</li>
+                        <li className="flex items-start gap-2"><span className="text-primary">•</span>{t("myPage.tip2")}</li>
+                        <li className="flex items-start gap-2"><span className="text-primary">•</span>{t("myPage.tip3")}</li>
+                        <li className="flex items-start gap-2"><span className="text-primary">•</span>{t("myPage.tip4")}</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </>
+              );
+            })()}
+          </TabsContent>
+
         </Tabs>
       </div>
     </div>

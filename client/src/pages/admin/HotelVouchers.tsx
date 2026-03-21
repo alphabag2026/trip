@@ -10,6 +10,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Upload, Eye, Trash2, MapPin, Phone, Calendar, Hotel, Globe, FileText, Image } from "lucide-react";
+import CsvBulkUpload from "@/components/CsvBulkUpload";
+
+const VOUCHER_CSV_COLUMNS = [
+  { key: "hotelName", label: "호텔명 (영문)", required: true },
+  { key: "hotelAddress", label: "호텔 주소 (영문)", required: true },
+  { key: "hotelNameLocal", label: "호텔명 (현지어)" },
+  { key: "hotelAddressLocal", label: "호텔 주소 (현지어)" },
+  { key: "hotelPhone", label: "전화번호" },
+  { key: "hotelLatitude", label: "위도" },
+  { key: "hotelLongitude", label: "경도" },
+  { key: "guestName", label: "투숙객 이름" },
+  { key: "roomType", label: "객실 유형" },
+  { key: "checkInDate", label: "체크인 날짜 (YYYY-MM-DD)" },
+  { key: "checkOutDate", label: "체크아웃 날짜 (YYYY-MM-DD)" },
+  { key: "bookingId", label: "예약 ID" },
+  { key: "specialRequests", label: "특별 요청" },
+  { key: "localLanguage", label: "현지 언어 코드 (vi/th/ja 등)" },
+];
 
 export default function HotelVouchers() {
   const utils = trpc.useUtils();
@@ -21,6 +39,9 @@ export default function HotelVouchers() {
   const deleteMutation = trpc.hotelVoucher.delete.useMutation({
     onSuccess: () => { utils.hotelVoucher.listAll.invalidate(); toast.success("삭제되었습니다"); },
     onError: (e) => toast.error(e.message),
+  });
+  const bulkAssignMutation = trpc.hotelVoucher.bulkAssign.useMutation({
+    onSuccess: () => { utils.hotelVoucher.listAll.invalidate(); },
   });
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -73,6 +94,30 @@ export default function HotelVouchers() {
     }
   };
 
+  const handleCsvBulkUpload = async (rows: Record<string, any>[]) => {
+    const result = await bulkAssignMutation.mutateAsync({
+      rows: rows.map(r => ({
+        hotelName: r.hotelName || "",
+        hotelAddress: r.hotelAddress || "",
+        hotelNameLocal: r.hotelNameLocal || undefined,
+        hotelAddressLocal: r.hotelAddressLocal || undefined,
+        hotelPhone: r.hotelPhone || undefined,
+        hotelLatitude: r.hotelLatitude || undefined,
+        hotelLongitude: r.hotelLongitude || undefined,
+        guestName: r.guestName || undefined,
+        roomType: r.roomType || undefined,
+        checkInDate: r.checkInDate || undefined,
+        checkOutDate: r.checkOutDate || undefined,
+        bookingId: r.bookingId || undefined,
+        specialRequests: r.specialRequests || undefined,
+        localLanguage: r.localLanguage || undefined,
+        userId: r.userId ? Number(r.userId) : undefined,
+        meetupId: r.meetupId ? Number(r.meetupId) : undefined,
+      })),
+    });
+    return result;
+  };
+
   if (isLoading) return <div className="p-6 text-center text-muted-foreground">로딩 중...</div>;
 
   return (
@@ -83,159 +128,168 @@ export default function HotelVouchers() {
           <h1 className="text-2xl font-bold">호텔 바우처 관리</h1>
           <p className="text-muted-foreground">호텔 예약확인서를 업로드하고 참석자에게 배포합니다</p>
         </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" />바우처 생성</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>호텔 바우처 생성</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4">
-              {/* 호텔 기본 정보 */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>호텔명 (영문) *</Label>
-                  <Input value={form.hotelName} onChange={e => setForm(f => ({ ...f, hotelName: e.target.value }))} placeholder="Yen Nam Hotel" />
+        <div className="flex gap-2">
+          <CsvBulkUpload
+            title="호텔 바우처 CSV 일괄 배정"
+            description="CSV 파일을 업로드하여 호텔 바우처를 일괄 생성합니다. 각 행이 하나의 바우처로 생성됩니다."
+            columns={VOUCHER_CSV_COLUMNS}
+            onUpload={handleCsvBulkUpload}
+            templateFileName="hotel_voucher_template.csv"
+          />
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button><Plus className="w-4 h-4 mr-2" />바우처 생성</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>호텔 바우처 생성</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4">
+                {/* 호텔 기본 정보 */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>호텔명 (영문) *</Label>
+                    <Input value={form.hotelName} onChange={e => setForm(f => ({ ...f, hotelName: e.target.value }))} placeholder="Yen Nam Hotel" />
+                  </div>
+                  <div>
+                    <Label>호텔명 (현지어)</Label>
+                    <Input value={form.hotelNameLocal} onChange={e => setForm(f => ({ ...f, hotelNameLocal: e.target.value }))} placeholder="Khách sạn Yên Nam" />
+                  </div>
                 </div>
-                <div>
-                  <Label>호텔명 (현지어)</Label>
-                  <Input value={form.hotelNameLocal} onChange={e => setForm(f => ({ ...f, hotelNameLocal: e.target.value }))} placeholder="Khách sạn Yên Nam" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>주소 (영문) *</Label>
+                    <Input value={form.hotelAddress} onChange={e => setForm(f => ({ ...f, hotelAddress: e.target.value }))} placeholder="219 Nguyen Trong Tuyen..." />
+                  </div>
+                  <div>
+                    <Label>주소 (현지어)</Label>
+                    <Input value={form.hotelAddressLocal} onChange={e => setForm(f => ({ ...f, hotelAddressLocal: e.target.value }))} placeholder="219 Nguyễn Trọng Tuyển..." />
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>주소 (영문) *</Label>
-                  <Input value={form.hotelAddress} onChange={e => setForm(f => ({ ...f, hotelAddress: e.target.value }))} placeholder="219 Nguyen Trong Tuyen..." />
-                </div>
-                <div>
-                  <Label>주소 (현지어)</Label>
-                  <Input value={form.hotelAddressLocal} onChange={e => setForm(f => ({ ...f, hotelAddressLocal: e.target.value }))} placeholder="219 Nguyễn Trọng Tuyển..." />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <Label>전화번호</Label>
-                  <Input value={form.hotelPhone} onChange={e => setForm(f => ({ ...f, hotelPhone: e.target.value }))} placeholder="+84-909036229" />
-                </div>
-                <div>
-                  <Label>위도</Label>
-                  <Input value={form.hotelLatitude} onChange={e => setForm(f => ({ ...f, hotelLatitude: e.target.value }))} placeholder="10.7956" />
-                </div>
-                <div>
-                  <Label>경도</Label>
-                  <Input value={form.hotelLongitude} onChange={e => setForm(f => ({ ...f, hotelLongitude: e.target.value }))} placeholder="106.6722" />
-                </div>
-              </div>
-              {/* 예약 정보 */}
-              <div className="border-t pt-3">
-                <h3 className="font-semibold mb-2">예약 정보</h3>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <Label>예약 ID</Label>
-                    <Input value={form.bookingId} onChange={e => setForm(f => ({ ...f, bookingId: e.target.value }))} placeholder="1339932759" />
+                    <Label>전화번호</Label>
+                    <Input value={form.hotelPhone} onChange={e => setForm(f => ({ ...f, hotelPhone: e.target.value }))} placeholder="+84-909036229" />
                   </div>
                   <div>
-                    <Label>투숙객 이름</Label>
-                    <Input value={form.guestName} onChange={e => setForm(f => ({ ...f, guestName: e.target.value }))} />
+                    <Label>위도</Label>
+                    <Input value={form.hotelLatitude} onChange={e => setForm(f => ({ ...f, hotelLatitude: e.target.value }))} placeholder="10.7956" />
                   </div>
                   <div>
-                    <Label>객실 유형</Label>
-                    <Input value={form.roomType} onChange={e => setForm(f => ({ ...f, roomType: e.target.value }))} placeholder="Deluxe Double Room" />
+                    <Label>경도</Label>
+                    <Input value={form.hotelLongitude} onChange={e => setForm(f => ({ ...f, hotelLongitude: e.target.value }))} placeholder="106.6722" />
                   </div>
                 </div>
-                <div className="grid grid-cols-4 gap-3 mt-3">
-                  <div>
-                    <Label>체크인 날짜</Label>
-                    <Input type="date" value={form.checkInDate} onChange={e => setForm(f => ({ ...f, checkInDate: e.target.value }))} />
+                {/* 예약 정보 */}
+                <div className="border-t pt-3">
+                  <h3 className="font-semibold mb-2">예약 정보</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label>예약 ID</Label>
+                      <Input value={form.bookingId} onChange={e => setForm(f => ({ ...f, bookingId: e.target.value }))} placeholder="1339932759" />
+                    </div>
+                    <div>
+                      <Label>투숙객 이름</Label>
+                      <Input value={form.guestName} onChange={e => setForm(f => ({ ...f, guestName: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>객실 유형</Label>
+                      <Input value={form.roomType} onChange={e => setForm(f => ({ ...f, roomType: e.target.value }))} placeholder="Deluxe Double Room" />
+                    </div>
                   </div>
-                  <div>
-                    <Label>체크인 시간</Label>
-                    <Input type="time" value={form.checkInTime} onChange={e => setForm(f => ({ ...f, checkInTime: e.target.value }))} />
+                  <div className="grid grid-cols-4 gap-3 mt-3">
+                    <div>
+                      <Label>체크인 날짜</Label>
+                      <Input type="date" value={form.checkInDate} onChange={e => setForm(f => ({ ...f, checkInDate: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>체크인 시간</Label>
+                      <Input type="time" value={form.checkInTime} onChange={e => setForm(f => ({ ...f, checkInTime: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>체크아웃 날짜</Label>
+                      <Input type="date" value={form.checkOutDate} onChange={e => setForm(f => ({ ...f, checkOutDate: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>체크아웃 시간</Label>
+                      <Input type="time" value={form.checkOutTime} onChange={e => setForm(f => ({ ...f, checkOutTime: e.target.value }))} />
+                    </div>
                   </div>
-                  <div>
-                    <Label>체크아웃 날짜</Label>
-                    <Input type="date" value={form.checkOutDate} onChange={e => setForm(f => ({ ...f, checkOutDate: e.target.value }))} />
-                  </div>
-                  <div>
-                    <Label>체크아웃 시간</Label>
-                    <Input type="time" value={form.checkOutTime} onChange={e => setForm(f => ({ ...f, checkOutTime: e.target.value }))} />
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div>
+                      <Label>객실 수</Label>
+                      <Input type="number" value={form.roomCount} onChange={e => setForm(f => ({ ...f, roomCount: Number(e.target.value) }))} />
+                    </div>
+                    <div>
+                      <Label>객실당 인원</Label>
+                      <Input type="number" value={form.guestsPerRoom} onChange={e => setForm(f => ({ ...f, guestsPerRoom: Number(e.target.value) }))} />
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 mt-3">
-                  <div>
-                    <Label>객실 수</Label>
-                    <Input type="number" value={form.roomCount} onChange={e => setForm(f => ({ ...f, roomCount: Number(e.target.value) }))} />
+                {/* 추가 정보 */}
+                <div className="border-t pt-3">
+                  <h3 className="font-semibold mb-2">추가 정보</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>포함 사항</Label>
+                      <Input value={form.includes} onChange={e => setForm(f => ({ ...f, includes: e.target.value }))} placeholder="Free WiFi, 조식 포함" />
+                    </div>
+                    <div>
+                      <Label>특별 요청</Label>
+                      <Input value={form.specialRequests} onChange={e => setForm(f => ({ ...f, specialRequests: e.target.value }))} placeholder="1 king + 2 single bed" />
+                    </div>
                   </div>
-                  <div>
-                    <Label>객실당 인원</Label>
-                    <Input type="number" value={form.guestsPerRoom} onChange={e => setForm(f => ({ ...f, guestsPerRoom: Number(e.target.value) }))} />
+                  <div className="mt-3">
+                    <Label>취소 정책</Label>
+                    <Textarea value={form.cancellationPolicy} onChange={e => setForm(f => ({ ...f, cancellationPolicy: e.target.value }))} placeholder="환불 불가 / Non-refundable" rows={2} />
+                  </div>
+                  <div className="mt-3">
+                    <Label>체크인 안내</Label>
+                    <Textarea value={form.checkInInstructions} onChange={e => setForm(f => ({ ...f, checkInInstructions: e.target.value }))} rows={2} />
                   </div>
                 </div>
+                {/* 현지어 & 파일 */}
+                <div className="border-t pt-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>현지 언어 코드</Label>
+                      <Select value={form.localLanguage} onValueChange={v => setForm(f => ({ ...f, localLanguage: v }))}>
+                        <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="vi">베트남어 (vi)</SelectItem>
+                          <SelectItem value="th">태국어 (th)</SelectItem>
+                          <SelectItem value="ja">일본어 (ja)</SelectItem>
+                          <SelectItem value="zh">중국어 (zh)</SelectItem>
+                          <SelectItem value="ko">한국어 (ko)</SelectItem>
+                          <SelectItem value="en">영어 (en)</SelectItem>
+                          <SelectItem value="id">인도네시아어 (id)</SelectItem>
+                          <SelectItem value="ms">말레이어 (ms)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>현지 통화</Label>
+                      <Input value={form.localCurrency} onChange={e => setForm(f => ({ ...f, localCurrency: e.target.value }))} placeholder="VND / THB / JPY" />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <Label>바우처 파일 (이미지/PDF)</Label>
+                    <div className="flex gap-2 mt-1">
+                      <Input value={form.voucherFileUrl} onChange={e => setForm(f => ({ ...f, voucherFileUrl: e.target.value }))} placeholder="URL 직접 입력 또는 파일 업로드" className="flex-1" />
+                      <label className="cursor-pointer">
+                        <input type="file" accept="image/*,.pdf" onChange={handleFileUpload} className="hidden" />
+                        <Button variant="outline" type="button" asChild><span><Upload className="w-4 h-4 mr-1" />업로드</span></Button>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <Button onClick={handleCreate} disabled={createMutation.isPending} className="w-full">
+                  {createMutation.isPending ? "생성 중..." : "바우처 생성"}
+                </Button>
               </div>
-              {/* 추가 정보 */}
-              <div className="border-t pt-3">
-                <h3 className="font-semibold mb-2">추가 정보</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>포함 사항</Label>
-                    <Input value={form.includes} onChange={e => setForm(f => ({ ...f, includes: e.target.value }))} placeholder="Free WiFi, 조식 포함" />
-                  </div>
-                  <div>
-                    <Label>특별 요청</Label>
-                    <Input value={form.specialRequests} onChange={e => setForm(f => ({ ...f, specialRequests: e.target.value }))} placeholder="1 king + 2 single bed" />
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <Label>취소 정책</Label>
-                  <Textarea value={form.cancellationPolicy} onChange={e => setForm(f => ({ ...f, cancellationPolicy: e.target.value }))} placeholder="환불 불가 / Non-refundable" rows={2} />
-                </div>
-                <div className="mt-3">
-                  <Label>체크인 안내</Label>
-                  <Textarea value={form.checkInInstructions} onChange={e => setForm(f => ({ ...f, checkInInstructions: e.target.value }))} rows={2} />
-                </div>
-              </div>
-              {/* 현지어 & 파일 */}
-              <div className="border-t pt-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>현지 언어 코드</Label>
-                    <Select value={form.localLanguage} onValueChange={v => setForm(f => ({ ...f, localLanguage: v }))}>
-                      <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="vi">베트남어 (vi)</SelectItem>
-                        <SelectItem value="th">태국어 (th)</SelectItem>
-                        <SelectItem value="ja">일본어 (ja)</SelectItem>
-                        <SelectItem value="zh">중국어 (zh)</SelectItem>
-                        <SelectItem value="ko">한국어 (ko)</SelectItem>
-                        <SelectItem value="en">영어 (en)</SelectItem>
-                        <SelectItem value="id">인도네시아어 (id)</SelectItem>
-                        <SelectItem value="ms">말레이어 (ms)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>현지 통화</Label>
-                    <Input value={form.localCurrency} onChange={e => setForm(f => ({ ...f, localCurrency: e.target.value }))} placeholder="VND, THB, JPY..." />
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <Label>바우처 파일 (이미지/PDF)</Label>
-                  <div className="flex gap-2 mt-1">
-                    <Input value={form.voucherFileUrl} onChange={e => setForm(f => ({ ...f, voucherFileUrl: e.target.value }))} placeholder="URL 직접 입력 또는 파일 업로드" className="flex-1" />
-                    <label className="cursor-pointer">
-                      <input type="file" accept="image/*,.pdf" onChange={handleFileUpload} className="hidden" />
-                      <Button variant="outline" type="button" asChild><span><Upload className="w-4 h-4 mr-1" />업로드</span></Button>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <Button onClick={handleCreate} disabled={createMutation.isPending} className="w-full">
-                {createMutation.isPending ? "생성 중..." : "바우처 생성"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* 통계 */}

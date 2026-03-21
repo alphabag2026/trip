@@ -8,6 +8,35 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Eye, Trash2, Plane, ArrowRight, Ticket, Wand2 } from "lucide-react";
+import CsvBulkUpload from "@/components/CsvBulkUpload";
+
+const TICKET_CSV_COLUMNS = [
+  { key: "passengerName", label: "승객 이름 (영문)", required: true },
+  { key: "passportNumber", label: "여권번호" },
+  { key: "nationality", label: "국적" },
+  { key: "outboundAirline", label: "출발편 항공사" },
+  { key: "outboundFlightNo", label: "출발편 편명" },
+  { key: "outboundDepartureAirport", label: "출발 공항" },
+  { key: "outboundDepartureCode", label: "출발 공항코드" },
+  { key: "outboundArrivalAirport", label: "도착 공항" },
+  { key: "outboundArrivalCode", label: "도착 공항코드" },
+  { key: "outboundDepartureDate", label: "출발일 (YYYY-MM-DD)" },
+  { key: "outboundDepartureTime", label: "출발시간 (HH:MM)" },
+  { key: "outboundArrivalDate", label: "도착일" },
+  { key: "outboundArrivalTime", label: "도착시간" },
+  { key: "returnAirline", label: "귀국편 항공사" },
+  { key: "returnFlightNo", label: "귀국편 편명" },
+  { key: "returnDepartureAirport", label: "귀국 출발 공항" },
+  { key: "returnDepartureCode", label: "귀국 출발 공항코드" },
+  { key: "returnArrivalAirport", label: "귀국 도착 공항" },
+  { key: "returnArrivalCode", label: "귀국 도착 공항코드" },
+  { key: "returnDepartureDate", label: "귀국 출발일" },
+  { key: "returnDepartureTime", label: "귀국 출발시간" },
+  { key: "returnArrivalDate", label: "귀국 도착일" },
+  { key: "returnArrivalTime", label: "귀국 도착시간" },
+  { key: "bookingReference", label: "예약번호 (PNR)" },
+  { key: "ticketNumber", label: "티켓번호" },
+];
 
 function generateBookingRef() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -27,6 +56,9 @@ export default function FlightTickets() {
   const deleteMutation = trpc.flightTicket.delete.useMutation({
     onSuccess: () => { utils.flightTicket.listAll.invalidate(); toast.success("삭제되었습니다"); },
     onError: (e) => toast.error(e.message),
+  });
+  const bulkAssignMutation = trpc.flightTicket.bulkAssign.useMutation({
+    onSuccess: () => { utils.flightTicket.listAll.invalidate(); },
   });
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -88,6 +120,42 @@ export default function FlightTickets() {
     });
   };
 
+  const handleCsvBulkUpload = async (rows: Record<string, any>[]) => {
+    const result = await bulkAssignMutation.mutateAsync({
+      rows: rows.map(r => ({
+        passengerName: r.passengerName || "",
+        passportNumber: r.passportNumber || undefined,
+        nationality: r.nationality || undefined,
+        outboundAirline: r.outboundAirline || undefined,
+        outboundFlightNo: r.outboundFlightNo || undefined,
+        outboundDepartureAirport: r.outboundDepartureAirport || undefined,
+        outboundDepartureCode: r.outboundDepartureCode || undefined,
+        outboundArrivalAirport: r.outboundArrivalAirport || undefined,
+        outboundArrivalCode: r.outboundArrivalCode || undefined,
+        outboundDepartureDate: r.outboundDepartureDate || undefined,
+        outboundDepartureTime: r.outboundDepartureTime || undefined,
+        outboundArrivalDate: r.outboundArrivalDate || undefined,
+        outboundArrivalTime: r.outboundArrivalTime || undefined,
+        returnAirline: r.returnAirline || undefined,
+        returnFlightNo: r.returnFlightNo || undefined,
+        returnDepartureAirport: r.returnDepartureAirport || undefined,
+        returnDepartureCode: r.returnDepartureCode || undefined,
+        returnArrivalAirport: r.returnArrivalAirport || undefined,
+        returnArrivalCode: r.returnArrivalCode || undefined,
+        returnDepartureDate: r.returnDepartureDate || undefined,
+        returnDepartureTime: r.returnDepartureTime || undefined,
+        returnArrivalDate: r.returnArrivalDate || undefined,
+        returnArrivalTime: r.returnArrivalTime || undefined,
+        bookingReference: r.bookingReference || undefined,
+        ticketNumber: r.ticketNumber || undefined,
+        isGenerated: r.isGenerated === "true" || r.isGenerated === true || undefined,
+        userId: r.userId ? Number(r.userId) : undefined,
+        meetupId: r.meetupId ? Number(r.meetupId) : undefined,
+      })),
+    });
+    return result;
+  };
+
   if (isLoading) return <div className="p-6 text-center text-muted-foreground">로딩 중...</div>;
 
   return (
@@ -97,162 +165,171 @@ export default function FlightTickets() {
           <h1 className="text-2xl font-bold">항공권 관리</h1>
           <p className="text-muted-foreground">왕복 항공권을 등록하거나 임의 티켓을 생성합니다 (이미그레이션 통과용)</p>
         </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" />항공권 생성</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>항공권 생성</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4">
-              {/* 승객 정보 */}
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <Label>승객 이름 (영문) *</Label>
-                  <Input value={form.passengerName} onChange={e => setForm(f => ({ ...f, passengerName: e.target.value }))} placeholder="HONG GILDONG" />
+        <div className="flex gap-2">
+          <CsvBulkUpload
+            title="항공권 CSV 일괄 배정"
+            description="CSV 파일을 업로드하여 항공권을 일괄 생성합니다. 각 행이 하나의 항공권(왕복)으로 생성됩니다."
+            columns={TICKET_CSV_COLUMNS}
+            onUpload={handleCsvBulkUpload}
+            templateFileName="flight_ticket_template.csv"
+          />
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button><Plus className="w-4 h-4 mr-2" />항공권 생성</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>항공권 생성</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4">
+                {/* 승객 정보 */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label>승객 이름 (영문) *</Label>
+                    <Input value={form.passengerName} onChange={e => setForm(f => ({ ...f, passengerName: e.target.value }))} placeholder="HONG GILDONG" />
+                  </div>
+                  <div>
+                    <Label>여권번호</Label>
+                    <Input value={form.passportNumber} onChange={e => setForm(f => ({ ...f, passportNumber: e.target.value }))} placeholder="M12345678" />
+                  </div>
+                  <div>
+                    <Label>국적</Label>
+                    <Input value={form.nationality} onChange={e => setForm(f => ({ ...f, nationality: e.target.value }))} placeholder="KOREAN" />
+                  </div>
                 </div>
-                <div>
-                  <Label>여권번호</Label>
-                  <Input value={form.passportNumber} onChange={e => setForm(f => ({ ...f, passportNumber: e.target.value }))} placeholder="M12345678" />
-                </div>
-                <div>
-                  <Label>국적</Label>
-                  <Input value={form.nationality} onChange={e => setForm(f => ({ ...f, nationality: e.target.value }))} placeholder="KOREAN" />
-                </div>
-              </div>
 
-              {/* 자동 생성 버튼 */}
-              <div className="flex gap-2 items-end">
-                <div className="flex-1">
-                  <Label>예약번호 (PNR)</Label>
-                  <Input value={form.bookingReference} onChange={e => setForm(f => ({ ...f, bookingReference: e.target.value }))} placeholder="ABC123" />
+                {/* 자동 생성 버튼 */}
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <Label>예약번호 (PNR)</Label>
+                    <Input value={form.bookingReference} onChange={e => setForm(f => ({ ...f, bookingReference: e.target.value }))} placeholder="ABC123" />
+                  </div>
+                  <div className="flex-1">
+                    <Label>티켓번호</Label>
+                    <Input value={form.ticketNumber} onChange={e => setForm(f => ({ ...f, ticketNumber: e.target.value }))} placeholder="180-1234567890" />
+                  </div>
+                  <Button variant="outline" onClick={handleAutoGenerate} type="button">
+                    <Wand2 className="w-4 h-4 mr-1" />자동생성
+                  </Button>
                 </div>
-                <div className="flex-1">
-                  <Label>티켓번호</Label>
-                  <Input value={form.ticketNumber} onChange={e => setForm(f => ({ ...f, ticketNumber: e.target.value }))} placeholder="180-1234567890" />
+
+                {/* 출발편 */}
+                <div className="border-t pt-3">
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <Plane className="w-4 h-4" /> 출발편 (Outbound)
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>항공사</Label>
+                      <Input value={form.outboundAirline} onChange={e => setForm(f => ({ ...f, outboundAirline: e.target.value }))} placeholder="Korean Air" />
+                    </div>
+                    <div>
+                      <Label>편명</Label>
+                      <Input value={form.outboundFlightNo} onChange={e => setForm(f => ({ ...f, outboundFlightNo: e.target.value }))} placeholder="KE659" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <div>
+                      <Label>출발 공항</Label>
+                      <Input value={form.outboundDepartureAirport} onChange={e => setForm(f => ({ ...f, outboundDepartureAirport: e.target.value }))} placeholder="Incheon International Airport" />
+                    </div>
+                    <div>
+                      <Label>출발 코드</Label>
+                      <Input value={form.outboundDepartureCode} onChange={e => setForm(f => ({ ...f, outboundDepartureCode: e.target.value }))} placeholder="ICN" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <div>
+                      <Label>도착 공항</Label>
+                      <Input value={form.outboundArrivalAirport} onChange={e => setForm(f => ({ ...f, outboundArrivalAirport: e.target.value }))} placeholder="Tan Son Nhat International" />
+                    </div>
+                    <div>
+                      <Label>도착 코드</Label>
+                      <Input value={form.outboundArrivalCode} onChange={e => setForm(f => ({ ...f, outboundArrivalCode: e.target.value }))} placeholder="SGN" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-3 mt-2">
+                    <div>
+                      <Label>출발일</Label>
+                      <Input type="date" value={form.outboundDepartureDate} onChange={e => setForm(f => ({ ...f, outboundDepartureDate: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>출발시간</Label>
+                      <Input type="time" value={form.outboundDepartureTime} onChange={e => setForm(f => ({ ...f, outboundDepartureTime: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>도착일</Label>
+                      <Input type="date" value={form.outboundArrivalDate} onChange={e => setForm(f => ({ ...f, outboundArrivalDate: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>도착시간</Label>
+                      <Input type="time" value={form.outboundArrivalTime} onChange={e => setForm(f => ({ ...f, outboundArrivalTime: e.target.value }))} />
+                    </div>
+                  </div>
                 </div>
-                <Button variant="outline" onClick={handleAutoGenerate} type="button">
-                  <Wand2 className="w-4 h-4 mr-1" />자동생성
+
+                {/* 귀국편 */}
+                <div className="border-t pt-3">
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <Plane className="w-4 h-4 rotate-180" /> 귀국편 (Return)
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>항공사</Label>
+                      <Input value={form.returnAirline} onChange={e => setForm(f => ({ ...f, returnAirline: e.target.value }))} placeholder="Korean Air" />
+                    </div>
+                    <div>
+                      <Label>편명</Label>
+                      <Input value={form.returnFlightNo} onChange={e => setForm(f => ({ ...f, returnFlightNo: e.target.value }))} placeholder="KE660" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <div>
+                      <Label>출발 공항</Label>
+                      <Input value={form.returnDepartureAirport} onChange={e => setForm(f => ({ ...f, returnDepartureAirport: e.target.value }))} placeholder="Tan Son Nhat International" />
+                    </div>
+                    <div>
+                      <Label>출발 코드</Label>
+                      <Input value={form.returnDepartureCode} onChange={e => setForm(f => ({ ...f, returnDepartureCode: e.target.value }))} placeholder="SGN" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <div>
+                      <Label>도착 공항</Label>
+                      <Input value={form.returnArrivalAirport} onChange={e => setForm(f => ({ ...f, returnArrivalAirport: e.target.value }))} placeholder="Incheon International Airport" />
+                    </div>
+                    <div>
+                      <Label>도착 코드</Label>
+                      <Input value={form.returnArrivalCode} onChange={e => setForm(f => ({ ...f, returnArrivalCode: e.target.value }))} placeholder="ICN" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-3 mt-2">
+                    <div>
+                      <Label>출발일</Label>
+                      <Input type="date" value={form.returnDepartureDate} onChange={e => setForm(f => ({ ...f, returnDepartureDate: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>출발시간</Label>
+                      <Input type="time" value={form.returnDepartureTime} onChange={e => setForm(f => ({ ...f, returnDepartureTime: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>도착일</Label>
+                      <Input type="date" value={form.returnArrivalDate} onChange={e => setForm(f => ({ ...f, returnArrivalDate: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>도착시간</Label>
+                      <Input type="time" value={form.returnArrivalTime} onChange={e => setForm(f => ({ ...f, returnArrivalTime: e.target.value }))} />
+                    </div>
+                  </div>
+                </div>
+
+                <Button onClick={handleCreate} disabled={createMutation.isPending} className="w-full">
+                  {createMutation.isPending ? "생성 중..." : "항공권 생성"}
                 </Button>
               </div>
-
-              {/* 출발편 */}
-              <div className="border-t pt-3">
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <Plane className="w-4 h-4" /> 출발편 (Outbound)
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>항공사</Label>
-                    <Input value={form.outboundAirline} onChange={e => setForm(f => ({ ...f, outboundAirline: e.target.value }))} placeholder="Korean Air" />
-                  </div>
-                  <div>
-                    <Label>편명</Label>
-                    <Input value={form.outboundFlightNo} onChange={e => setForm(f => ({ ...f, outboundFlightNo: e.target.value }))} placeholder="KE659" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  <div>
-                    <Label>출발 공항</Label>
-                    <Input value={form.outboundDepartureAirport} onChange={e => setForm(f => ({ ...f, outboundDepartureAirport: e.target.value }))} placeholder="Incheon International Airport" />
-                  </div>
-                  <div>
-                    <Label>출발 코드</Label>
-                    <Input value={form.outboundDepartureCode} onChange={e => setForm(f => ({ ...f, outboundDepartureCode: e.target.value }))} placeholder="ICN" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  <div>
-                    <Label>도착 공항</Label>
-                    <Input value={form.outboundArrivalAirport} onChange={e => setForm(f => ({ ...f, outboundArrivalAirport: e.target.value }))} placeholder="Tan Son Nhat International" />
-                  </div>
-                  <div>
-                    <Label>도착 코드</Label>
-                    <Input value={form.outboundArrivalCode} onChange={e => setForm(f => ({ ...f, outboundArrivalCode: e.target.value }))} placeholder="SGN" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-4 gap-3 mt-2">
-                  <div>
-                    <Label>출발일</Label>
-                    <Input type="date" value={form.outboundDepartureDate} onChange={e => setForm(f => ({ ...f, outboundDepartureDate: e.target.value }))} />
-                  </div>
-                  <div>
-                    <Label>출발시간</Label>
-                    <Input type="time" value={form.outboundDepartureTime} onChange={e => setForm(f => ({ ...f, outboundDepartureTime: e.target.value }))} />
-                  </div>
-                  <div>
-                    <Label>도착일</Label>
-                    <Input type="date" value={form.outboundArrivalDate} onChange={e => setForm(f => ({ ...f, outboundArrivalDate: e.target.value }))} />
-                  </div>
-                  <div>
-                    <Label>도착시간</Label>
-                    <Input type="time" value={form.outboundArrivalTime} onChange={e => setForm(f => ({ ...f, outboundArrivalTime: e.target.value }))} />
-                  </div>
-                </div>
-              </div>
-
-              {/* 귀국편 */}
-              <div className="border-t pt-3">
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <Plane className="w-4 h-4 rotate-180" /> 귀국편 (Return)
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>항공사</Label>
-                    <Input value={form.returnAirline} onChange={e => setForm(f => ({ ...f, returnAirline: e.target.value }))} placeholder="Korean Air" />
-                  </div>
-                  <div>
-                    <Label>편명</Label>
-                    <Input value={form.returnFlightNo} onChange={e => setForm(f => ({ ...f, returnFlightNo: e.target.value }))} placeholder="KE660" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  <div>
-                    <Label>출발 공항</Label>
-                    <Input value={form.returnDepartureAirport} onChange={e => setForm(f => ({ ...f, returnDepartureAirport: e.target.value }))} placeholder="Tan Son Nhat International" />
-                  </div>
-                  <div>
-                    <Label>출발 코드</Label>
-                    <Input value={form.returnDepartureCode} onChange={e => setForm(f => ({ ...f, returnDepartureCode: e.target.value }))} placeholder="SGN" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  <div>
-                    <Label>도착 공항</Label>
-                    <Input value={form.returnArrivalAirport} onChange={e => setForm(f => ({ ...f, returnArrivalAirport: e.target.value }))} placeholder="Incheon International Airport" />
-                  </div>
-                  <div>
-                    <Label>도착 코드</Label>
-                    <Input value={form.returnArrivalCode} onChange={e => setForm(f => ({ ...f, returnArrivalCode: e.target.value }))} placeholder="ICN" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-4 gap-3 mt-2">
-                  <div>
-                    <Label>출발일</Label>
-                    <Input type="date" value={form.returnDepartureDate} onChange={e => setForm(f => ({ ...f, returnDepartureDate: e.target.value }))} />
-                  </div>
-                  <div>
-                    <Label>출발시간</Label>
-                    <Input type="time" value={form.returnDepartureTime} onChange={e => setForm(f => ({ ...f, returnDepartureTime: e.target.value }))} />
-                  </div>
-                  <div>
-                    <Label>도착일</Label>
-                    <Input type="date" value={form.returnArrivalDate} onChange={e => setForm(f => ({ ...f, returnArrivalDate: e.target.value }))} />
-                  </div>
-                  <div>
-                    <Label>도착시간</Label>
-                    <Input type="time" value={form.returnArrivalTime} onChange={e => setForm(f => ({ ...f, returnArrivalTime: e.target.value }))} />
-                  </div>
-                </div>
-              </div>
-
-              <Button onClick={handleCreate} disabled={createMutation.isPending} className="w-full">
-                {createMutation.isPending ? "생성 중..." : "항공권 생성"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* 통계 */}
