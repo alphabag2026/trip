@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle, Plus, Trash2, ExternalLink, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const CHANNEL_TYPES = [
   { value: "pickup_driver", label: "픽업 기사" },
@@ -20,6 +21,7 @@ const CHANNEL_TYPES = [
 ];
 
 export default function Channels() {
+  const { t } = useTranslation();
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
     channelName: "", channelType: "general" as string,
@@ -75,7 +77,7 @@ export default function Channels() {
             <DialogHeader><DialogTitle>새 소통 채널</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>채널명 *</Label>
+                <Label>{t("admin.channels.channelName")}</Label>
                 <Input value={form.channelName} onChange={(e) => setForm({ ...form, channelName: e.target.value })} placeholder="예: 두바이 밋업 - 공항 픽업" />
               </div>
               <div>

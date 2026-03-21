@@ -5,11 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Users, ClipboardList, MapPin, ArrowLeft, Clock, CheckCircle2 } from "lucide-react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 
 export default function OrganizerDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { data, isLoading } = trpc.roleDashboard.organizer.useQuery();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
@@ -31,6 +33,16 @@ export default function OrganizerDashboard() {
   const pendingRegistrations = data?.pendingRegistrations || 0;
   const activeMeetups = meetups.filter((m: any) => m.status === "active" || m.status === "upcoming").length;
 
+  const statusLabel = (status: string) => {
+    const map: Record<string, string> = {
+      active: t("roleDashboard.organizer.active"),
+      completed: t("roleDashboard.organizer.completed"),
+      upcoming: t("roleDashboard.organizer.upcoming"),
+      cancelled: t("roleDashboard.organizer.cancelled"),
+    };
+    return map[status] || status;
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -38,11 +50,11 @@ export default function OrganizerDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <Button variant="ghost" size="sm" className="mb-2" onClick={() => setLocation("/")}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> 홈으로
+              <ArrowLeft className="h-4 w-4 mr-1" /> {t("roleDashboard.organizer.goHome")}
             </Button>
-            <h1 className="text-2xl font-bold">주최자 대시보드</h1>
+            <h1 className="text-2xl font-bold">{t("roleDashboard.organizer.title")}</h1>
             <p className="text-muted-foreground mt-1">
-              환영합니다, <span className="font-medium text-foreground">{user?.name}</span>님
+              {t("roleDashboard.organizer.welcome", { name: user?.name })}
             </p>
           </div>
         </div>
@@ -53,7 +65,7 @@ export default function OrganizerDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">전체 밋업</p>
+                  <p className="text-sm text-muted-foreground">{t("roleDashboard.organizer.totalMeetups")}</p>
                   <p className="text-2xl font-bold">{meetups.length}</p>
                 </div>
                 <CalendarDays className="h-8 w-8 text-blue-500 opacity-80" />
@@ -64,7 +76,7 @@ export default function OrganizerDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">진행 중</p>
+                  <p className="text-sm text-muted-foreground">{t("roleDashboard.organizer.activeMeetups")}</p>
                   <p className="text-2xl font-bold">{activeMeetups}</p>
                 </div>
                 <Clock className="h-8 w-8 text-green-500 opacity-80" />
@@ -75,7 +87,7 @@ export default function OrganizerDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">총 참석자</p>
+                  <p className="text-sm text-muted-foreground">{t("roleDashboard.organizer.totalAttendees")}</p>
                   <p className="text-2xl font-bold">{totalAttendees}</p>
                 </div>
                 <Users className="h-8 w-8 text-purple-500 opacity-80" />
@@ -86,7 +98,7 @@ export default function OrganizerDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">대기 중 신청</p>
+                  <p className="text-sm text-muted-foreground">{t("roleDashboard.organizer.pendingRegistrations")}</p>
                   <p className="text-2xl font-bold">{pendingRegistrations}</p>
                 </div>
                 <ClipboardList className="h-8 w-8 text-amber-500 opacity-80" />
@@ -98,13 +110,13 @@ export default function OrganizerDashboard() {
         {/* Recent Meetups */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">최근 밋업</CardTitle>
+            <CardTitle className="text-lg">{t("roleDashboard.organizer.recentMeetups")}</CardTitle>
           </CardHeader>
           <CardContent>
             {meetups.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>등록된 밋업이 없습니다</p>
+                <p>{t("roleDashboard.organizer.noMeetups")}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -122,14 +134,14 @@ export default function OrganizerDashboard() {
                           {meetup.scheduleStart && (
                             <>
                               <span className="mx-1">·</span>
-                              <span>{new Date(meetup.scheduleStart).toLocaleDateString("ko-KR")}</span>
+                              <span>{new Date(meetup.scheduleStart).toLocaleDateString()}</span>
                             </>
                           )}
                         </div>
                       </div>
                     </div>
                     <Badge variant={meetup.status === "active" ? "default" : meetup.status === "completed" ? "secondary" : "outline"}>
-                      {meetup.status === "active" ? "진행 중" : meetup.status === "completed" ? "완료" : meetup.status === "upcoming" ? "예정" : meetup.status}
+                      {statusLabel(meetup.status)}
                     </Badge>
                   </div>
                 ))}

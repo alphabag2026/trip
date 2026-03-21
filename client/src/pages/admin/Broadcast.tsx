@@ -11,8 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Switch } from "@/components/ui/switch";
 import { Megaphone, Send, Loader2, Clock, Users, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export default function AdminBroadcast() {
+  const { t } = useTranslation();
   const utils = trpc.useUtils();
   const { data: history, isLoading } = trpc.broadcast.list.useQuery();
   const { data: meetups } = trpc.meetup.list.useQuery();
@@ -102,11 +104,11 @@ export default function AdminBroadcast() {
               </div>
 
               <div>
-                <Label>제목 *</Label>
+                <Label>{t("admin.broadcast.titleField")}</Label>
                 <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="메시지 제목" />
               </div>
               <div>
-                <Label>내용 *</Label>
+                <Label>{t("admin.broadcast.content")}</Label>
                 <Textarea value={content} onChange={e => setContent(e.target.value)} placeholder="메시지 내용을 입력하세요..." rows={6} />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -123,7 +125,7 @@ export default function AdminBroadcast() {
                   </Select>
                 </div>
                 <div>
-                  <Label>발송 대상</Label>
+                  <Label>{t("admin.broadcast.target")}</Label>
                   <Select value={targetType} onValueChange={v => setTargetType(v as any)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>

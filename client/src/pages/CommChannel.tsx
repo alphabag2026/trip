@@ -9,10 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, Send, Image, ArrowLeft, Camera } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: "관리자", manager: "매니저", driver: "기사", participant: "참석자", hotel_staff: "호텔 스태프",
-};
 const ROLE_COLORS: Record<string, string> = {
   admin: "bg-red-500/20 text-red-400", manager: "bg-blue-500/20 text-blue-400",
   driver: "bg-green-500/20 text-green-400", participant: "bg-gray-500/20 text-gray-400",
@@ -28,6 +26,12 @@ export default function CommChannel() {
   const [isJoined, setIsJoined] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
+
+  const ROLE_LABELS: Record<string, string> = {
+    admin: t("commChannel.admin"), manager: t("commChannel.manager"), driver: t("commChannel.driver"),
+    participant: t("commChannel.attendee"), hotel_staff: t("commChannel.hotel"),
+  };
 
   const { data: channel } = trpc.channel.getById.useQuery({ id: channelId }, { enabled: channelId > 0 });
   const { data: messageList, refetch } = trpc.message.list.useQuery(
@@ -39,7 +43,7 @@ export default function CommChannel() {
     onError: (e) => toast.error(e.message),
   });
   const uploadPhotoMutation = trpc.message.uploadPhoto.useMutation({
-    onSuccess: () => { refetch(); toast.success("사진이 전송되었습니다"); },
+    onSuccess: () => { refetch(); },
     onError: (e) => toast.error(e.message),
   });
   const markReadMutation = trpc.message.markRead.useMutation();
@@ -73,7 +77,7 @@ export default function CommChannel() {
       const base64 = (reader.result as string).split(",")[1];
       uploadPhotoMutation.mutate({
         channelId, senderName, senderRole: senderRole as any,
-        imageBase64: base64, mimeType: file.type, caption: `${senderName}님이 사진을 공유했습니다`,
+        imageBase64: base64, mimeType: file.type, caption: "",
       });
     };
     reader.readAsDataURL(file);
@@ -81,7 +85,9 @@ export default function CommChannel() {
   };
 
   const CHANNEL_TYPE_LABELS: Record<string, string> = {
-    pickup_driver: "픽업 기사", manager: "중간 매니저", hotel_checkin: "호텔 체크인", transfer: "이동 매니저", general: "일반",
+    pickup_driver: t("admin.channels.driver"), manager: t("admin.channels.manager"),
+    hotel_checkin: t("admin.channels.hotel"), transfer: t("admin.channels.transport"),
+    general: t("admin.channels.general"),
   };
 
   if (!isJoined) {
@@ -94,7 +100,7 @@ export default function CommChannel() {
                 <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
               </Link>
               <MessageCircle className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">소통 채널 입장</CardTitle>
+              <CardTitle className="text-lg">{t("commChannel.joinChannel")}</CardTitle>
             </div>
             {channel && (
               <div className="space-y-1">
@@ -106,24 +112,24 @@ export default function CommChannel() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">이름</label>
-              <Input placeholder="이름을 입력하세요" value={senderName} onChange={(e) => setSenderName(e.target.value)} />
+              <label className="text-sm font-medium mb-1 block">{t("commChannel.selectRole")}</label>
+              <Input placeholder={t("commChannel.selectRole")} value={senderName} onChange={(e) => setSenderName(e.target.value)} />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">역할</label>
+              <label className="text-sm font-medium mb-1 block">{t("commChannel.selectRole")}</label>
               <Select value={senderRole} onValueChange={setSenderRole}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="participant">참석자</SelectItem>
-                  <SelectItem value="driver">기사</SelectItem>
-                  <SelectItem value="manager">매니저</SelectItem>
-                  <SelectItem value="hotel_staff">호텔 스태프</SelectItem>
-                  <SelectItem value="admin">관리자</SelectItem>
+                  <SelectItem value="participant">{t("commChannel.attendee")}</SelectItem>
+                  <SelectItem value="driver">{t("commChannel.driver")}</SelectItem>
+                  <SelectItem value="manager">{t("commChannel.manager")}</SelectItem>
+                  <SelectItem value="hotel_staff">{t("commChannel.hotel")}</SelectItem>
+                  <SelectItem value="admin">{t("commChannel.admin")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <Button className="w-full" disabled={!senderName.trim()} onClick={() => setIsJoined(true)}>
-              채널 입장
+              {t("commChannel.joinChannel")}
             </Button>
           </CardContent>
         </Card>
@@ -140,9 +146,9 @@ export default function CommChannel() {
         </Link>
         <MessageCircle className="h-5 w-5 text-primary" />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm truncate">{channel?.channelName || "소통 채널"}</p>
+          <p className="font-semibold text-sm truncate">{channel?.channelName || t("commChannel.channelName")}</p>
           <p className="text-xs text-muted-foreground">
-            {channel?.assignedTo && `담당: ${channel.assignedTo}`}
+            {channel?.assignedTo && `${channel.assignedTo}`}
             {channel?.assignedPhone && ` (${channel.assignedPhone})`}
           </p>
         </div>
@@ -155,8 +161,7 @@ export default function CommChannel() {
           {stableMessages.length === 0 && (
             <div className="text-center text-muted-foreground py-10">
               <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p>아직 메시지가 없습니다</p>
-              <p className="text-sm">첫 메시지를 보내보세요</p>
+              <p>{t("commChannel.noMessages")}</p>
             </div>
           )}
           {stableMessages.map((msg) => {
@@ -175,7 +180,7 @@ export default function CommChannel() {
                   )}
                   <p className="text-sm">{msg.content}</p>
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    {new Date(msg.createdAt).toLocaleString("ko-KR")}
+                    {new Date(msg.createdAt).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -192,7 +197,7 @@ export default function CommChannel() {
             <Camera className="h-5 w-5" />
           </Button>
           <Input
-            placeholder="메시지를 입력하세요..."
+            placeholder={t("commChannel.typeMessage")}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}

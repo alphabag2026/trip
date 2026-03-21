@@ -10,8 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Hotel, Search, Users, DoorOpen, Download, Plus, Trash2, Edit, Upload, Send, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export default function HotelRooms() {
+  const { t } = useTranslation();
   const [meetupId, setMeetupId] = useState<number | undefined>(undefined);
   const [search, setSearch] = useState("");
   const [assignDialog, setAssignDialog] = useState<{ open: boolean; regId?: number; name?: string; roomNumber: string; floor: string; notes: string }>({

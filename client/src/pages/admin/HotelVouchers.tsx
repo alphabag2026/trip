@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Upload, Eye, Trash2, MapPin, Phone, Calendar, Hotel, Globe, FileText, Image } from "lucide-react";
 import CsvBulkUpload from "@/components/CsvBulkUpload";
+import { useTranslation } from "react-i18next";
 
 const VOUCHER_CSV_COLUMNS = [
   { key: "hotelName", label: "호텔명 (영문)", required: true },
@@ -30,6 +31,7 @@ const VOUCHER_CSV_COLUMNS = [
 ];
 
 export default function HotelVouchers() {
+  const { t } = useTranslation();
   const utils = trpc.useUtils();
   const { data: vouchers, isLoading } = trpc.hotelVoucher.listAll.useQuery();
   const createMutation = trpc.hotelVoucher.create.useMutation({

@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { CalendarDays, MapPin, Clock, Bell, AlertTriangle, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function ScheduleView() {
+  const { t } = useTranslation();
   const { meetupId } = useParams<{ meetupId: string }>();
   const mid = Number(meetupId);
   const { data: meetup } = trpc.meetup.getById.useQuery({ id: mid }, { enabled: !!mid });
@@ -16,7 +18,6 @@ export default function ScheduleView() {
     { enabled: !!mid, refetchInterval: 5000 }
   );
 
-  // 10분 전 알림 자동 체크 (30초마다 폴링)
   const checkNotify = trpc.schedule.checkAndNotify.useMutation();
   const [lastNotifyCheck, setLastNotifyCheck] = useState<Date | null>(null);
 
@@ -25,16 +26,12 @@ export default function ScheduleView() {
       checkNotify.mutate(undefined, {
         onSuccess: (result) => {
           setLastNotifyCheck(new Date());
-          if (result.triggered > 0) {
-            // 알림이 발송되면 이벤트 목록 갱신
-          }
         },
       });
-    }, 30000); // 30초마다 체크
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // 현재 시간 기준 다음 이벤트 찾기
   const now = Date.now();
   const upcomingEvents = events
     .filter((e: any) => new Date(e.eventTime).getTime() > now)
@@ -46,7 +43,7 @@ export default function ScheduleView() {
 
   if (!meetup) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="animate-pulse text-muted-foreground">로딩 중...</div>
+      <div className="animate-pulse text-muted-foreground">{t("common.loading")}</div>
     </div>
   );
 
@@ -60,17 +57,16 @@ export default function ScheduleView() {
           <div>
             <h1 className="text-xl font-bold text-foreground">{meetup.title}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {meetup.scheduleStart && new Date(meetup.scheduleStart).toLocaleDateString("ko-KR")}
-              {meetup.scheduleEnd && ` ~ ${new Date(meetup.scheduleEnd).toLocaleDateString("ko-KR")}`}
+              {meetup.scheduleStart && new Date(meetup.scheduleStart).toLocaleDateString()}
+              {meetup.scheduleEnd && ` ~ ${new Date(meetup.scheduleEnd).toLocaleDateString()}`}
               {meetup.location && ` | ${meetup.location}`}
             </p>
           </div>
-          <Badge variant="outline" className="ml-auto text-xs">5초마다 자동 갱신</Badge>
+          <Badge variant="outline" className="ml-auto text-xs">{t("schedule.autoRefresh")}</Badge>
         </div>
       </header>
 
       <main className="container py-6 max-w-3xl mx-auto space-y-4">
-        {/* 다음 일정 알림 배너 */}
         {nextEvent && nextEventMinutes !== null && nextEventMinutes <= 15 && (
           <div className={`p-4 rounded-lg border-2 ${
             nextEventMinutes <= 5 ? "border-red-500 bg-red-500/10" :
@@ -91,9 +87,9 @@ export default function ScheduleView() {
               </div>
               <div>
                 <p className="font-bold text-sm">
-                  {nextEventMinutes <= 0 ? "지금 시작!" :
-                   nextEventMinutes <= 5 ? `${nextEventMinutes}분 후 시작!` :
-                   `${nextEventMinutes}분 후 다음 일정`}
+                  {nextEventMinutes <= 0 ? t("schedule.startingNow") :
+                   nextEventMinutes <= 5 ? t("schedule.startingIn", { min: nextEventMinutes }) :
+                   t("schedule.nextIn", { min: nextEventMinutes })}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {nextEvent.title} {nextEvent.location ? `| ${nextEvent.location}` : ""}
@@ -104,11 +100,11 @@ export default function ScheduleView() {
         )}
 
         <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <CalendarDays className="h-5 w-5 text-primary" /> 일정표
+          <CalendarDays className="h-5 w-5 text-primary" /> {t("schedule.scheduleTitle")}
         </h2>
 
         {events.length === 0 ? (
-          <Card><CardContent className="py-8 text-center text-muted-foreground">등록된 일정이 없습니다.</CardContent></Card>
+          <Card><CardContent className="py-8 text-center text-muted-foreground">{t("schedule.empty")}</CardContent></Card>
         ) : (
           <div className="space-y-3">
             {events.map((event: any, idx: number) => {
@@ -140,20 +136,20 @@ export default function ScheduleView() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-foreground">{event.title}</h3>
-                          {isNow && <Badge className="bg-green-500 text-white text-xs">진행중</Badge>}
-                          {isSoon && <Badge className="bg-red-500 text-white text-xs animate-pulse">{minutesUntil}분 후!</Badge>}
-                          {isUpcoming && !isSoon && <Badge variant="outline" className="text-yellow-500 border-yellow-500 text-xs">{minutesUntil}분 후</Badge>}
-                          {isPast && !isNow && <Badge variant="outline" className="text-muted-foreground text-xs">완료</Badge>}
+                          {isNow && <Badge className="bg-green-500 text-white text-xs">{t("schedule.inProgress")}</Badge>}
+                          {isSoon && <Badge className="bg-red-500 text-white text-xs animate-pulse">{t("schedule.minAfter", { min: minutesUntil })}</Badge>}
+                          {isUpcoming && !isSoon && <Badge variant="outline" className="text-yellow-500 border-yellow-500 text-xs">{t("schedule.minAfter", { min: minutesUntil })}</Badge>}
+                          {isPast && !isNow && <Badge variant="outline" className="text-muted-foreground text-xs">{t("schedule.done")}</Badge>}
                           {event.notified && <Bell className="h-3 w-3 text-muted-foreground" />}
                         </div>
                         <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5" />
-                            {eventTime.toLocaleString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            {eventTime.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </span>
                           {event.endTime && (
                             <span className="text-xs">
-                              ~ {new Date(event.endTime).toLocaleString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+                              ~ {new Date(event.endTime).toLocaleString(undefined, { hour: "2-digit", minute: "2-digit" })}
                             </span>
                           )}
                           {event.location && (
@@ -172,15 +168,14 @@ export default function ScheduleView() {
           </div>
         )}
 
-        {/* Quick Actions */}
         <Card>
           <CardContent className="py-4">
             <div className="flex flex-wrap gap-2">
               <Link href="/flight-pickup">
-                <Button variant="outline" size="sm">항공편/픽업 안내</Button>
+                <Button variant="outline" size="sm">{t("schedule.flightPickupGuide")}</Button>
               </Link>
               <Link href="/lookup">
-                <Button variant="outline" size="sm">여정표 조회</Button>
+                <Button variant="outline" size="sm">{t("schedule.itineraryLookup")}</Button>
               </Link>
             </div>
           </CardContent>

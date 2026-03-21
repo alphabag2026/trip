@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Eye, Trash2, Plane, ArrowRight, Ticket, Wand2 } from "lucide-react";
 import CsvBulkUpload from "@/components/CsvBulkUpload";
+import { useTranslation } from "react-i18next";
 
 const TICKET_CSV_COLUMNS = [
   { key: "passengerName", label: "승객 이름 (영문)", required: true },
@@ -47,6 +48,7 @@ function generateTicketNo() {
 }
 
 export default function FlightTickets() {
+  const { t } = useTranslation();
   const utils = trpc.useUtils();
   const { data: tickets, isLoading } = trpc.flightTicket.listAll.useQuery();
   const createMutation = trpc.flightTicket.create.useMutation({

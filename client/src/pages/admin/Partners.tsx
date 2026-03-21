@@ -15,6 +15,7 @@ import {
   Utensils, Hotel, Music, Sparkles, Map, Ship, Car, Languages, Activity, MoreHorizontal,
   Clock, Users, ToggleLeft, ArrowUpDown, ArrowDown, ArrowUp
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const categoryIcons: Record<string, any> = {
   utensils: Utensils, hotel: Hotel, music: Music, spa: Sparkles,
@@ -30,6 +31,7 @@ const emptyForm = {
 };
 
 export default function PartnersPage() {
+  const { t } = useTranslation();
   const [showDialog, setShowDialog] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>("all");
@@ -391,9 +393,9 @@ export default function PartnersPage() {
             <div><Label>주소</Label><Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>담당자명</Label><Input value={form.contactName} onChange={e => setForm({ ...form, contactName: e.target.value })} /></div>
-              <div><Label>연락처</Label><Input value={form.contactPhone} onChange={e => setForm({ ...form, contactPhone: e.target.value })} /></div>
+              <div><Label>{t("admin.partners.contact")}</Label><Input value={form.contactPhone} onChange={e => setForm({ ...form, contactPhone: e.target.value })} /></div>
             </div>
-            <div><Label>이메일</Label><Input value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} /></div>
+            <div><Label>{t("admin.partners.email")}</Label><Input value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} /></div>
             <div><Label>웹사이트</Label><Input value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>수용 인원</Label><Input type="number" value={form.capacity || ""} onChange={e => setForm({ ...form, capacity: Number(e.target.value) })} /></div>
@@ -404,7 +406,7 @@ export default function PartnersPage() {
               <div><Label>지원 언어</Label><Input value={form.languages} onChange={e => setForm({ ...form, languages: e.target.value })} placeholder="예: 한국어, 영어" /></div>
             </div>
             <div><Label>설명</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} /></div>
-            <div><Label>메모</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
+            <div><Label>{t("admin.partners.notes")}</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closeDialog}>취소</Button>

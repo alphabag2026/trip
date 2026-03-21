@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Trash2, Globe, ExternalLink, Sparkles, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const defaultForm = {
   countryCode: "", countryName: "", countryNameKo: "",
@@ -42,6 +43,7 @@ const POPULAR_COUNTRIES = [
 ];
 
 export default function AdminTravelInfo() {
+  const { t } = useTranslation();
   const [showCreate, setShowCreate] = useState(false);
   const [showSend, setShowSend] = useState(false);
   const [sendCountryCode, setSendCountryCode] = useState("");
@@ -53,7 +55,7 @@ export default function AdminTravelInfo() {
     onSuccess: () => { refetch(); setShowCreate(false); toast.success("저장되었습니다."); },
   });
   const deleteMutation = trpc.travelInfo.delete.useMutation({
-    onSuccess: () => { refetch(); toast.success("삭제되었습니다."); },
+    onSuccess: () => { refetch(); toast.success(t("admin.travelInfo.deleted")); },
   });
   const generateMutation = trpc.travelInfo.generateInfo.useMutation({
     onSuccess: () => { refetch(); toast.success("AI가 여행 정보를 자동 생성했습니다!"); },

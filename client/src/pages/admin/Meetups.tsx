@@ -9,14 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Trash2, MapPin, Calendar, Luggage, Edit } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export default function AdminMeetups() {
+  const { t } = useTranslation();
   const [showCreate, setShowCreate] = useState(false);
   const [editBaggageId, setEditBaggageId] = useState<number | null>(null);
   const [editBaggageText, setEditBaggageText] = useState("");
   const { data: meetups, refetch } = trpc.meetup.list.useQuery();
-  const createMutation = trpc.meetup.create.useMutation({ onSuccess: () => { refetch(); setShowCreate(false); toast.success("밋업이 생성되었습니다."); }});
-  const deleteMutation = trpc.meetup.delete.useMutation({ onSuccess: () => { refetch(); toast.success("삭제되었습니다."); }});
+  const createMutation = trpc.meetup.create.useMutation({ onSuccess: () => { refetch(); setShowCreate(false); toast.success(t("admin.meetups.created")); }});
+  const deleteMutation = trpc.meetup.delete.useMutation({ onSuccess: () => { refetch(); toast.success(t("admin.meetups.deleted")); }});
   const updateMutation = trpc.meetup.update.useMutation({ onSuccess: () => { refetch(); toast.success("업데이트되었습니다."); }});
 
   const [form, setForm] = useState({
@@ -33,7 +35,7 @@ export default function AdminMeetups() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">밋업 관리</h1>
+        <h1 className="text-2xl font-bold">{t("admin.meetups.title")}</h1>
         <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />새 밋업</Button>
       </div>
 
@@ -87,7 +89,7 @@ export default function AdminMeetups() {
           </Card>
         ))}
         {(!meetups || meetups.length === 0) && (
-          <div className="text-center py-12 text-muted-foreground">등록된 밋업이 없습니다.</div>
+          <div className="text-center py-12 text-muted-foreground">{t("admin.meetups.empty")}</div>
         )}
       </div>
 
@@ -105,7 +107,7 @@ export default function AdminMeetups() {
             description: form.description || undefined,
             baggageNotice: form.baggageNotice || undefined,
           }); }} className="space-y-4">
-            <div><Label>제목 *</Label><Input value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} required /></div>
+            <div><Label>{t("admin.meetups.meetupTitle")}</Label><Input value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} required /></div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>유형</Label>
@@ -133,10 +135,10 @@ export default function AdminMeetups() {
             </div>
             <div><Label>장소</Label><Input value={form.location} onChange={e => setForm(p => ({...p, location: e.target.value}))} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>시작일</Label><Input type="date" value={form.scheduleStart} onChange={e => setForm(p => ({...p, scheduleStart: e.target.value}))} /></div>
-              <div><Label>종료일</Label><Input type="date" value={form.scheduleEnd} onChange={e => setForm(p => ({...p, scheduleEnd: e.target.value}))} /></div>
+              <div><Label>{t("admin.meetups.startDate")}</Label><Input type="date" value={form.scheduleStart} onChange={e => setForm(p => ({...p, scheduleStart: e.target.value}))} /></div>
+              <div><Label>{t("admin.meetups.endDate")}</Label><Input type="date" value={form.scheduleEnd} onChange={e => setForm(p => ({...p, scheduleEnd: e.target.value}))} /></div>
             </div>
-            <div><Label>설명</Label><Textarea value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))} rows={3} /></div>
+            <div><Label>{t("admin.meetups.description")}</Label><Textarea value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))} rows={3} /></div>
             {/* 수화물 공지 */}
             <div>
               <Label className="flex items-center gap-2"><Luggage className="h-4 w-4 text-amber-500" />수화물 공지</Label>

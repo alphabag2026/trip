@@ -1,21 +1,23 @@
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Plane, Clock, Globe, CheckCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function AdminDashboard() {
   const { data: stats } = trpc.registration.stats.useQuery();
+  const { t } = useTranslation();
 
   const statCards = [
-    { label: "총 신청", value: stats?.total ?? 0, icon: Users, color: "text-blue-400" },
-    { label: "대기중", value: stats?.pending ?? 0, icon: Clock, color: "text-yellow-400" },
-    { label: "승인됨", value: stats?.approved ?? 0, icon: CheckCircle, color: "text-green-400" },
-    { label: "내륙", value: stats?.domestic ?? 0, icon: Plane, color: "text-purple-400" },
-    { label: "해외", value: stats?.overseas ?? 0, icon: Globe, color: "text-cyan-400" },
+    { label: t("admin.dashboard.totalApps"), value: stats?.total ?? 0, icon: Users, color: "text-blue-400" },
+    { label: t("admin.dashboard.pending"), value: stats?.pending ?? 0, icon: Clock, color: "text-yellow-400" },
+    { label: t("admin.dashboard.approved"), value: stats?.approved ?? 0, icon: CheckCircle, color: "text-green-400" },
+    { label: t("admin.dashboard.domestic"), value: stats?.domestic ?? 0, icon: Plane, color: "text-purple-400" },
+    { label: t("admin.dashboard.overseas"), value: stats?.overseas ?? 0, icon: Globe, color: "text-cyan-400" },
   ];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">대시보드</h1>
+      <h1 className="text-2xl font-bold">{t("admin.dashboard.title")}</h1>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {statCards.map((s, i) => (
           <Card key={i} className="bg-card border-border">
@@ -29,7 +31,7 @@ export default function AdminDashboard() {
       </div>
 
       <Card className="bg-card border-border">
-        <CardHeader><CardTitle>최근 신청</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t("admin.dashboard.recentApps")}</CardTitle></CardHeader>
         <RecentRegistrations />
       </Card>
     </div>
@@ -38,10 +40,21 @@ export default function AdminDashboard() {
 
 function RecentRegistrations() {
   const { data: regs } = trpc.registration.list.useQuery({ });
+  const { t } = useTranslation();
 
   if (!regs || regs.length === 0) {
-    return <CardContent className="text-muted-foreground text-sm">아직 신청이 없습니다.</CardContent>;
+    return <CardContent className="text-muted-foreground text-sm">{t("admin.dashboard.noApps")}</CardContent>;
   }
+
+  const statusLabel = (s: string) => {
+    const map: Record<string, string> = {
+      approved: t("admin.dashboard.statusApproved"),
+      pending: t("admin.dashboard.statusPending"),
+      rejected: t("admin.dashboard.statusRejected"),
+      completed: t("admin.dashboard.statusCompleted"),
+    };
+    return map[s] || s;
+  };
 
   return (
     <CardContent>
@@ -49,12 +62,12 @@ function RecentRegistrations() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-muted-foreground">
-              <th className="text-left py-2 px-2">이름</th>
-              <th className="text-left py-2 px-2">구분</th>
-              <th className="text-left py-2 px-2">전화번호</th>
-              <th className="text-left py-2 px-2">메신저</th>
-              <th className="text-left py-2 px-2">상태</th>
-              <th className="text-left py-2 px-2">일시</th>
+              <th className="text-left py-2 px-2">{t("admin.dashboard.colName")}</th>
+              <th className="text-left py-2 px-2">{t("admin.dashboard.colType")}</th>
+              <th className="text-left py-2 px-2">{t("admin.dashboard.colPhone")}</th>
+              <th className="text-left py-2 px-2">{t("admin.dashboard.colMessenger")}</th>
+              <th className="text-left py-2 px-2">{t("admin.dashboard.colStatus")}</th>
+              <th className="text-left py-2 px-2">{t("admin.dashboard.colDate")}</th>
             </tr>
           </thead>
           <tbody>
@@ -63,7 +76,7 @@ function RecentRegistrations() {
                 <td className="py-2 px-2 font-medium">{r.name}</td>
                 <td className="py-2 px-2">
                   <span className={`text-xs px-2 py-0.5 rounded ${r.locationType === "overseas" ? "bg-cyan-500/20 text-cyan-400" : "bg-purple-500/20 text-purple-400"}`}>
-                    {r.locationType === "overseas" ? "해외" : "내륙"}
+                    {r.locationType === "overseas" ? t("admin.dashboard.overseas") : t("admin.dashboard.domestic")}
                   </span>
                 </td>
                 <td className="py-2 px-2">{r.phone}</td>
@@ -75,10 +88,10 @@ function RecentRegistrations() {
                     r.status === "rejected" ? "bg-red-500/20 text-red-400" :
                     "bg-muted text-muted-foreground"
                   }`}>
-                    {r.status === "approved" ? "승인" : r.status === "pending" ? "대기" : r.status === "rejected" ? "거절" : "완료"}
+                    {statusLabel(r.status)}
                   </span>
                 </td>
-                <td className="py-2 px-2 text-muted-foreground">{new Date(r.createdAt).toLocaleDateString("ko-KR")}</td>
+                <td className="py-2 px-2 text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>

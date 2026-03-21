@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileText, Upload, Send, Trash2, Plus, Download } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const VOUCHER_TYPES = [
   { value: "flight", label: "항공권" },
@@ -19,6 +20,7 @@ const VOUCHER_TYPES = [
 ];
 
 export default function Vouchers() {
+  const { t } = useTranslation();
   const [showUpload, setShowUpload] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
   const [filterType, setFilterType] = useState("all");
@@ -105,7 +107,7 @@ export default function Vouchers() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold">바우처 관리</h1>
+          <h1 className="text-2xl font-bold">{t("admin.vouchers.title")}</h1>
           <p className="text-muted-foreground text-sm">항공권, 숙소 바우처 업로드 및 개별 전송</p>
         </div>
         <div className="flex gap-2">
@@ -118,7 +120,7 @@ export default function Vouchers() {
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">파일명 앞에 신청 ID를 붙여주세요 (예: 1_항공권.pdf, 2_호텔바우처.pdf)</p>
                 <div>
-                  <Label>바우처 유형</Label>
+                  <Label>{t("admin.vouchers.voucherType")}</Label>
                   <Select value={bulkType} onValueChange={setBulkType}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -167,7 +169,7 @@ export default function Vouchers() {
                   </Select>
                 </div>
                 <div>
-                  <Label>바우처 유형</Label>
+                  <Label>{t("admin.vouchers.voucherType")}</Label>
                   <Select value={uploadForm.voucherType} onValueChange={(v) => setUploadForm({ ...uploadForm, voucherType: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>

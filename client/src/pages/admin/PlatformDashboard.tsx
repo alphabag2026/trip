@@ -15,6 +15,7 @@ import {
   BarChart3, TrendingUp, Activity, Edit, Trash2,
   Phone, Mail, ExternalLink, Plus
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const orgTypeLabels: Record<string, string> = {
   platform: "클라우드 본사",
@@ -120,6 +121,7 @@ function DonutChart({ data, size = 200, strokeWidth = 32 }: {
 }
 
 export default function PlatformDashboard() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"overview" | "organizations" | "users">("overview");
   const [orgFilter, setOrgFilter] = useState<string>("all");
   const [showOrgDialog, setShowOrgDialog] = useState(false);

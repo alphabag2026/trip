@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { UtensilsCrossed, AlertTriangle, Wine, Cigarette, Users, Search, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 const MEAL_LABELS: Record<string, string> = {
   regular: "일반식", vegetarian: "채식", vegan: "비건", halal: "할랄",
@@ -15,6 +16,7 @@ const DRINK_LABELS: Record<string, string> = { yes: "음주", no: "비음주", s
 const SMOKE_LABELS: Record<string, string> = { yes: "흡연", no: "비흡연" };
 
 export default function MealDashboard() {
+  const { t } = useTranslation();
   const [meetupId, setMeetupId] = useState<number | undefined>(undefined);
   const [allergySearch, setAllergySearch] = useState("");
   const meetups = trpc.meetup.list.useQuery();
@@ -79,7 +81,7 @@ export default function MealDashboard() {
             <div className="flex items-center gap-3">
               <div className="p-2 bg-orange-500/10 rounded-lg"><UtensilsCrossed className="w-5 h-5 text-orange-500" /></div>
               <div>
-                <p className="text-sm text-muted-foreground">식사 유형</p>
+                <p className="text-sm text-muted-foreground">{t("admin.mealDashboard.mealType")}</p>
                 <p className="text-2xl font-bold">{Object.keys(data?.mealPreferences || {}).length}종</p>
               </div>
             </div>

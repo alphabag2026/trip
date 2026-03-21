@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { MessageCircle, Send, Users, Car, Hotel, ArrowRightLeft, Hash, Loader2, RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const channelTypeIcons: Record<string, any> = {
   pickup_driver: Car,
@@ -25,6 +26,7 @@ const channelTypeLabels: Record<string, string> = {
 };
 
 export default function ChatDashboard() {
+  const { t } = useTranslation();
   const [selectedChannelId, setSelectedChannelId] = useState<number | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);

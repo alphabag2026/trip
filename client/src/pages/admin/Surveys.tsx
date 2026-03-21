@@ -14,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ClipboardList, Plus, Send, Trash2, Eye, BarChart3, Star, MessageCircle, Loader2, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
+import { useTranslation } from "react-i18next";
 
 type Question = {
   id: string;
@@ -23,6 +24,7 @@ type Question = {
 };
 
 export default function AdminSurveys() {
+  const { t } = useTranslation();
   const utils = trpc.useUtils();
   const { data: surveys, isLoading } = trpc.survey.list.useQuery();
   const { data: meetups } = trpc.meetup.list.useQuery();
@@ -218,7 +220,7 @@ export default function AdminSurveys() {
                         <p className="text-sm">{q.text}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge variant="outline" className="text-[10px]">
-                            {q.type === "rating" ? "별점" : q.type === "text" ? "서술형" : "객관식"}
+                            {q.type === "rating" ? "별점" : q.type === "text" ? "서술형" : t("admin.surveys.multipleChoice")}
                           </Badge>
                           {q.options && (
                             <span className="text-[10px] text-muted-foreground">
@@ -238,7 +240,7 @@ export default function AdminSurveys() {
               {/* Add question */}
               <Card className="border-dashed">
                 <CardContent className="p-4 space-y-3">
-                  <Label className="text-sm font-medium">질문 추가</Label>
+                  <Label className="text-sm font-medium">{t("admin.surveys.addQuestion")}</Label>
                   <Input value={newQText} onChange={e => setNewQText(e.target.value)} placeholder="질문 내용" />
                   <div className="flex gap-2">
                     <Select value={newQType} onValueChange={v => setNewQType(v as any)}>
@@ -246,7 +248,7 @@ export default function AdminSurveys() {
                       <SelectContent>
                         <SelectItem value="rating">별점 (1-5)</SelectItem>
                         <SelectItem value="text">서술형</SelectItem>
-                        <SelectItem value="choice">객관식</SelectItem>
+                        <SelectItem value="choice">{t("admin.surveys.multipleChoice")}</SelectItem>
                       </SelectContent>
                     </Select>
                     {newQType === "choice" && (
@@ -392,7 +394,7 @@ export default function AdminSurveys() {
                       <span className="text-primary font-bold">Q{idx + 1}.</span>
                       {q.text}
                       <Badge variant="outline" className="text-[10px] ml-auto">
-                        {q.type === "rating" ? "별점" : q.type === "text" ? "서술형" : "객관식"}
+                        {q.type === "rating" ? "별점" : q.type === "text" ? "서술형" : t("admin.surveys.multipleChoice")}
                       </Badge>
                     </CardTitle>
                   </CardHeader>

@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, Download, Eye, ScanLine, Trash2, FileSpreadsheet, CheckCircle2, Clock, Luggage, UtensilsCrossed, Wine, Cigarette } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export default function AdminRegistrations() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -38,10 +40,10 @@ export default function AdminRegistrations() {
 
   const handleExport = () => {
     if (!regs || regs.length === 0) return;
-    const headers = ["ID","이름","전화번호","메신저ID","구분","분류","상태","추천자","팀","지갑","비고","출발희망시간대","식사선호","알레르기","음주","흡연","항공확정","숙소확정","픽업확정","수화물신청","수화물개수","수화물무게","수화물메모","신청일"];
+    const headers = ["ID",t("admin.registrations.name"),t("admin.registrations.phone"),"메신저ID",t("admin.registrations.type"),"분류",t("admin.registrations.status"),"추천자","팀","지갑","비고","출발희망시간대","식사선호","알레르기","음주","흡연","항공확정","숙소확정","픽업확정","수화물신청","수화물개수","수화물무게","수화물메모","신청일"];
     const rows = regs.map((r: any) => [
       r.id, r.name, r.phone, r.messengerId,
-      r.locationType === "overseas" ? "해외" : "내륙",
+      r.locationType === "overseas" ? t("admin.registrations.overseas") : t("admin.registrations.domestic"),
       r.category, r.status, r.referrerName || "", r.teamName || "",
       r.walletAddress || "", r.notes || "",
       r.preferredDepartureTime || "",
@@ -70,7 +72,7 @@ export default function AdminRegistrations() {
 
   const handleExportPassportOcr = () => {
     if (!ocrData || ocrData.length === 0) { toast.error("OCR 데이터가 없습니다."); return; }
-    const headers = ["신청ID","이름","전화번호","메신저","팀","분류","상태","여권이름","여권번호","국적","생년월일","만료일","성별","발급국"];
+    const headers = ["신청ID",t("admin.registrations.name"),t("admin.registrations.phone"),t("admin.registrations.messenger"),"팀","분류",t("admin.registrations.status"),"여권이름","여권번호","국적","생년월일","만료일","성별","발급국"];
     const rows = ocrData.map((r: any) => [
       r.registrationId, r.name, r.phone, r.messengerId, r.teamName,
       r.category, r.status, r.passportFullName, r.passportNumber,
@@ -93,7 +95,7 @@ export default function AdminRegistrations() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">신청 관리</h1>
+        <h1 className="text-2xl font-bold">{t("admin.registrations.title")}</h1>
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={handleExportPassportOcr}>
             <FileSpreadsheet className="h-4 w-4 mr-2" />여권 OCR 엑셀
@@ -122,13 +124,13 @@ export default function AdminRegistrations() {
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="상태" /></SelectTrigger>
+          <SelectTrigger className="w-[140px]"><SelectValue placeholder={t("admin.registrations.status")} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">전체 상태</SelectItem>
-            <SelectItem value="pending">대기</SelectItem>
-            <SelectItem value="approved">승인</SelectItem>
-            <SelectItem value="rejected">거절</SelectItem>
-            <SelectItem value="completed">완료</SelectItem>
+            <SelectItem value="pending">{t("admin.registrations.pending")}</SelectItem>
+            <SelectItem value="approved">{t("admin.registrations.approve")}</SelectItem>
+            <SelectItem value="rejected">{t("admin.registrations.reject")}</SelectItem>
+            <SelectItem value="completed">{t("admin.registrations.completed")}</SelectItem>
           </SelectContent>
         </Select>
         <Input type="date" className="w-[160px]" value={dateFrom} onChange={e => setDateFrom(e.target.value)} placeholder="시작일" />
@@ -142,13 +144,13 @@ export default function AdminRegistrations() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
-                  <th className="text-left py-3 px-4">이름</th>
-                  <th className="text-left py-3 px-4">구분</th>
+                  <th className="text-left py-3 px-4">{t("admin.registrations.name")}</th>
+                  <th className="text-left py-3 px-4">{t("admin.registrations.type")}</th>
                   <th className="text-left py-3 px-4">분류</th>
-                  <th className="text-left py-3 px-4">전화번호</th>
-                  <th className="text-left py-3 px-4">메신저</th>
+                  <th className="text-left py-3 px-4">{t("admin.registrations.phone")}</th>
+                  <th className="text-left py-3 px-4">{t("admin.registrations.messenger")}</th>
                   <th className="text-left py-3 px-4">추천자</th>
-                  <th className="text-left py-3 px-4">상태</th>
+                  <th className="text-left py-3 px-4">{t("admin.registrations.status")}</th>
                   <th className="text-left py-3 px-4">배치확정</th>
                   <th className="text-left py-3 px-4">출발시간</th>
                   <th className="text-left py-3 px-4">수화물</th>
@@ -162,7 +164,7 @@ export default function AdminRegistrations() {
                     <td className="py-3 px-4 font-medium">{r.name}</td>
                     <td className="py-3 px-4">
                       <span className={`text-xs px-2 py-0.5 rounded ${r.locationType === "overseas" ? "bg-cyan-500/20 text-cyan-400" : "bg-purple-500/20 text-purple-400"}`}>
-                        {r.locationType === "overseas" ? "해외" : "내륙"}
+                        {r.locationType === "overseas" ? t("admin.registrations.overseas") : t("admin.registrations.domestic")}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-muted-foreground">{categoryLabels[r.category] || r.category}</td>
@@ -175,10 +177,10 @@ export default function AdminRegistrations() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pending">대기</SelectItem>
-                          <SelectItem value="approved">승인</SelectItem>
-                          <SelectItem value="rejected">거절</SelectItem>
-                          <SelectItem value="completed">완료</SelectItem>
+                          <SelectItem value="pending">{t("admin.registrations.pending")}</SelectItem>
+                          <SelectItem value="approved">{t("admin.registrations.approve")}</SelectItem>
+                          <SelectItem value="rejected">{t("admin.registrations.reject")}</SelectItem>
+                          <SelectItem value="completed">{t("admin.registrations.completed")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </td>

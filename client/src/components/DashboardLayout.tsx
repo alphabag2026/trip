@@ -26,33 +26,34 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import { useTranslation } from "react-i18next";
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "대시보드", path: "/admin" },
-  { icon: ClipboardList, label: "신청 관리", path: "/admin/registrations" },
-  { icon: Plane, label: "밋업 관리", path: "/admin/meetups" },
-  { icon: Plane, label: "항공편 관리", path: "/admin/flights" },
-  { icon: Car, label: "픽업 배치", path: "/admin/pickups" },
-  { icon: Hotel, label: "숙소 배치", path: "/admin/accommodations" },
-  { icon: CalendarDays, label: "스케줄 이벤트", path: "/admin/schedule-events" },
-  { icon: Plane, label: "여정표 관리", path: "/admin/itineraries" },
-  { icon: Edit, label: "수정 요청", path: "/admin/mod-requests" },
-  { icon: Globe, label: "국가별 여행정보", path: "/admin/travel-info" },
-  { icon: Send, label: "텔레그램 설정", path: "/admin/telegram" },
-  { icon: MessageCircle, label: "소통 채널", path: "/admin/channels" },
-  { icon: MessageCircle, label: "실시간 채팅", path: "/admin/chat" },
-  { icon: FileText, label: "바우처 관리", path: "/admin/vouchers" },
-  { icon: ClipboardList, label: "설문조사", path: "/admin/surveys" },
-  { icon: Megaphone, label: "단체 메시지", path: "/admin/broadcast" },
-  { icon: Luggage, label: "수화물&체크인", path: "/admin/baggage-checkin" },
-  { icon: UtensilsCrossed, label: "식사/알레르기", path: "/admin/meal-dashboard" },
-  { icon: DoorOpen, label: "호텔 방 배정", path: "/admin/hotel-rooms" },
-  { icon: Search, label: "검색/연관성", path: "/admin/search" },
-  { icon: Cloud, label: "플랫폼 관리", path: "/admin/platform" },
-  { icon: Handshake, label: "파트너 관리", path: "/admin/partners" },
-  { icon: CreditCard, label: "호텔 바우처", path: "/admin/hotel-vouchers" },
-  { icon: Ticket, label: "항공권 관리", path: "/admin/flight-tickets" },
-  { icon: Home, label: "홈으로", path: "/" },
+const menuItemDefs = [
+  { icon: LayoutDashboard, labelKey: "admin.sidebar.dashboard", path: "/admin" },
+  { icon: ClipboardList, labelKey: "admin.sidebar.registrations", path: "/admin/registrations" },
+  { icon: Plane, labelKey: "admin.sidebar.meetups", path: "/admin/meetups" },
+  { icon: Plane, labelKey: "admin.sidebar.flights", path: "/admin/flights" },
+  { icon: Car, labelKey: "admin.sidebar.pickups", path: "/admin/pickups" },
+  { icon: Hotel, labelKey: "admin.sidebar.accommodations", path: "/admin/accommodations" },
+  { icon: CalendarDays, labelKey: "admin.sidebar.scheduleEvents", path: "/admin/schedule-events" },
+  { icon: Plane, labelKey: "admin.sidebar.itineraries", path: "/admin/itineraries" },
+  { icon: Edit, labelKey: "admin.sidebar.modRequests", path: "/admin/mod-requests" },
+  { icon: Globe, labelKey: "admin.sidebar.travelInfo", path: "/admin/travel-info" },
+  { icon: Send, labelKey: "admin.sidebar.telegram", path: "/admin/telegram" },
+  { icon: MessageCircle, labelKey: "admin.sidebar.channels", path: "/admin/channels" },
+  { icon: MessageCircle, labelKey: "admin.sidebar.chat", path: "/admin/chat" },
+  { icon: FileText, labelKey: "admin.sidebar.vouchers", path: "/admin/vouchers" },
+  { icon: ClipboardList, labelKey: "admin.sidebar.surveys", path: "/admin/surveys" },
+  { icon: Megaphone, labelKey: "admin.sidebar.broadcast", path: "/admin/broadcast" },
+  { icon: Luggage, labelKey: "admin.sidebar.baggageCheckin", path: "/admin/baggage-checkin" },
+  { icon: UtensilsCrossed, labelKey: "admin.sidebar.mealDashboard", path: "/admin/meal-dashboard" },
+  { icon: DoorOpen, labelKey: "admin.sidebar.hotelRooms", path: "/admin/hotel-rooms" },
+  { icon: Search, labelKey: "admin.sidebar.search", path: "/admin/search" },
+  { icon: Cloud, labelKey: "admin.sidebar.platform", path: "/admin/platform" },
+  { icon: Handshake, labelKey: "admin.sidebar.partners", path: "/admin/partners" },
+  { icon: CreditCard, labelKey: "admin.sidebar.hotelVouchers", path: "/admin/hotel-vouchers" },
+  { icon: Ticket, labelKey: "admin.sidebar.flightTickets", path: "/admin/flight-tickets" },
+  { icon: Home, labelKey: "admin.sidebar.goHome", path: "/" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -70,6 +71,7 @@ export default function DashboardLayout({
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
   const { loading, user } = useAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
@@ -85,10 +87,10 @@ export default function DashboardLayout({
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
           <div className="flex flex-col items-center gap-6">
             <h1 className="text-2xl font-semibold tracking-tight text-center">
-              로그인이 필요합니다
+              {t("admin.loginRequired")}
             </h1>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
-              백오피스 접근을 위해 로그인이 필요합니다.
+              {t("admin.loginRequiredDesc")}
             </p>
           </div>
           <Button
@@ -98,7 +100,7 @@ export default function DashboardLayout({
             size="lg"
             className="w-full shadow-lg hover:shadow-xl transition-all"
           >
-            로그인
+            {t("admin.loginBtn")}
           </Button>
         </div>
       </div>
@@ -135,7 +137,8 @@ function DashboardLayoutContent({
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const activeMenuItem = menuItems.find(item => item.path === location);
+  const { t } = useTranslation();
+  const activeMenuItem = menuItemDefs.find(item => item.path === location);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -194,7 +197,7 @@ function DashboardLayoutContent({
               {!isCollapsed ? (
                 <a href="/" className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity">
                   <span className="font-semibold tracking-tight truncate text-primary">
-                    Meetup Travel
+                    {t("admin.brandName")}
                   </span>
                 </a>
               ) : null}
@@ -203,20 +206,21 @@ function DashboardLayoutContent({
 
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
-              {menuItems.map(item => {
+              {menuItemDefs.map(item => {
                 const isActive = location === item.path;
+                const label = t(item.labelKey);
                 return (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       isActive={isActive}
                       onClick={() => setLocation(item.path)}
-                      tooltip={item.label}
+                      tooltip={label}
                       className={`h-10 transition-all font-normal`}
                     >
                       <item.icon
                         className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
                       />
-                      <span>{item.label}</span>
+                      <span>{label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -249,7 +253,7 @@ function DashboardLayoutContent({
                   className="cursor-pointer text-destructive focus:text-destructive"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>로그아웃</span>
+                  <span>{t("admin.logout")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -273,7 +277,7 @@ function DashboardLayoutContent({
               <div className="flex items-center gap-3">
                 <div className="flex flex-col gap-1">
                   <span className="tracking-tight text-foreground">
-                    {activeMenuItem?.label ?? "Menu"}
+                    {activeMenuItem ? t(activeMenuItem.labelKey) : "Menu"}
                   </span>
                 </div>
               </div>

@@ -12,6 +12,7 @@ import {
   Luggage, DoorOpen, Plus, RefreshCw, Trash2, Edit2, Eye, Plane
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const baggageStatusLabels: Record<string, { label: string; color: string }> = {
   checked_in: { label: "체크인", color: "bg-blue-500/20 text-blue-400" },
@@ -32,6 +33,7 @@ const checkinStatusLabels: Record<string, { label: string; color: string }> = {
 };
 
 export default function AdminBaggageCheckin() {
+  const { t } = useTranslation();
   const [selectedMeetup, setSelectedMeetup] = useState<string>("all");
   const [showAddCheckin, setShowAddCheckin] = useState(false);
   const [checkinForm, setCheckinForm] = useState({

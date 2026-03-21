@@ -5,11 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Handshake, CalendarDays, ArrowLeft, MapPin, CheckCircle2, Clock, Star } from "lucide-react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 
 export default function PartnerDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { data, isLoading } = trpc.roleDashboard.partner.useQuery();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
@@ -32,11 +34,11 @@ export default function PartnerDashboard() {
   const totalServices = data?.totalServices || 0;
   const completedServices = data?.completedServices || 0;
 
-  const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
-    pending: { label: "대기", variant: "outline" },
-    confirmed: { label: "확정", variant: "default" },
-    completed: { label: "완료", variant: "secondary" },
-    cancelled: { label: "취소", variant: "destructive" },
+  const statusMap: Record<string, { labelKey: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+    pending: { labelKey: "roleDashboard.partner.pending", variant: "outline" },
+    confirmed: { labelKey: "roleDashboard.partner.confirmed", variant: "default" },
+    completed: { labelKey: "roleDashboard.partner.completed", variant: "secondary" },
+    cancelled: { labelKey: "roleDashboard.partner.cancelled", variant: "destructive" },
   };
 
   return (
@@ -46,14 +48,14 @@ export default function PartnerDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <Button variant="ghost" size="sm" className="mb-2" onClick={() => setLocation("/")}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> 홈으로
+              <ArrowLeft className="h-4 w-4 mr-1" /> {t("roleDashboard.partner.goHome")}
             </Button>
-            <h1 className="text-2xl font-bold">파트너 대시보드</h1>
+            <h1 className="text-2xl font-bold">{t("roleDashboard.partner.title")}</h1>
             <p className="text-muted-foreground mt-1">
               {partner ? (
                 <span><span className="font-medium text-foreground">{partner.name}</span> · {partner.region || "-"}</span>
               ) : (
-                <span>소속 파트너 업체가 없습니다.</span>
+                <span>{t("roleDashboard.partner.noPartner")}</span>
               )}
             </p>
           </div>
@@ -63,9 +65,9 @@ export default function PartnerDashboard() {
           <Card>
             <CardContent className="p-8 text-center">
               <Handshake className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <h2 className="text-lg font-semibold mb-2">소속 파트너 업체가 없습니다</h2>
+              <h2 className="text-lg font-semibold mb-2">{t("roleDashboard.partner.noPartnerDesc")}</h2>
               <p className="text-muted-foreground">
-                에이전시 또는 플랫폼 관리자에게 문의하세요.
+                {t("roleDashboard.partner.noPartnerHint")}
               </p>
             </CardContent>
           </Card>
@@ -77,7 +79,7 @@ export default function PartnerDashboard() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">전체 서비스</p>
+                      <p className="text-sm text-muted-foreground">{t("roleDashboard.partner.totalServices")}</p>
                       <p className="text-2xl font-bold">{totalServices}</p>
                     </div>
                     <CalendarDays className="h-8 w-8 text-blue-500 opacity-80" />
@@ -88,7 +90,7 @@ export default function PartnerDashboard() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">완료 서비스</p>
+                      <p className="text-sm text-muted-foreground">{t("roleDashboard.partner.completedServices")}</p>
                       <p className="text-2xl font-bold">{completedServices}</p>
                     </div>
                     <CheckCircle2 className="h-8 w-8 text-green-500 opacity-80" />
@@ -99,7 +101,7 @@ export default function PartnerDashboard() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">진행 중</p>
+                      <p className="text-sm text-muted-foreground">{t("roleDashboard.partner.activeServices")}</p>
                       <p className="text-2xl font-bold">{totalServices - completedServices}</p>
                     </div>
                     <Clock className="h-8 w-8 text-amber-500 opacity-80" />
@@ -112,7 +114,7 @@ export default function PartnerDashboard() {
             {partners.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">파트너 업체 정보</CardTitle>
+                  <CardTitle className="text-lg">{t("roleDashboard.partner.partnerInfo")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -138,14 +140,14 @@ export default function PartnerDashboard() {
                                 {p.capacity && (
                                   <>
                                     <span>·</span>
-                                    <span>수용 {p.capacity}명</span>
+                                    <span>{t("roleDashboard.partner.capacity", { count: p.capacity })}</span>
                                   </>
                                 )}
                               </div>
                             </div>
                           </div>
                           <Badge variant={p.isActive ? "default" : "secondary"}>
-                            {p.isActive ? "활성" : "비활성"}
+                            {p.isActive ? t("roleDashboard.partner.active") : t("roleDashboard.partner.inactive")}
                           </Badge>
                         </div>
                       </div>
@@ -158,28 +160,28 @@ export default function PartnerDashboard() {
             {/* Meetup Services */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">밋업 서비스 내역</CardTitle>
+                <CardTitle className="text-lg">{t("roleDashboard.partner.serviceHistory")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {meetupPartners.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>참여한 밋업 서비스가 없습니다</p>
+                    <p>{t("roleDashboard.partner.noServices")}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {meetupPartners.map((mp: any) => {
-                      const st = statusMap[mp.status] || { label: mp.status, variant: "outline" as const };
+                      const st = statusMap[mp.status] || { labelKey: mp.status, variant: "outline" as const };
                       return (
                         <div key={mp.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                           <div>
-                            <p className="font-medium">{mp.meetup?.title || "밋업 정보 없음"}</p>
+                            <p className="font-medium">{mp.meetup?.title || "-"}</p>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                               {mp.serviceType && <span>{mp.serviceType}</span>}
                               {mp.serviceDate && (
                                 <>
                                   <span>·</span>
-                                  <span>{new Date(mp.serviceDate).toLocaleDateString("ko-KR")}</span>
+                                  <span>{new Date(mp.serviceDate).toLocaleDateString()}</span>
                                 </>
                               )}
                               {mp.cost && (
@@ -190,7 +192,7 @@ export default function PartnerDashboard() {
                               )}
                             </div>
                           </div>
-                          <Badge variant={st.variant}>{st.label}</Badge>
+                          <Badge variant={st.variant}>{t(st.labelKey)}</Badge>
                         </div>
                       );
                     })}

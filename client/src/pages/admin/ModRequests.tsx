@@ -9,13 +9,15 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Edit, CheckCircle, XCircle, Clock } from "lucide-react";
-
-const typeLabels: Record<string, string> = { flight_change: "항공편 변경", hotel_change: "숙소 변경", schedule_change: "일정 변경", other: "기타" };
-const statusLabels: Record<string, string> = { pending: "처리중", approved: "승인", rejected: "반려", completed: "완료" };
+import { useTranslation } from "react-i18next";
 
 export default function AdminModRequests() {
+  const { t } = useTranslation();
+  const typeLabels: Record<string, string> = { flight_change: t("admin.modRequests.flightChange"), hotel_change: t("admin.modRequests.hotelChange"), schedule_change: t("admin.modRequests.scheduleChange"), other: t("admin.modRequests.other") };
+  const statusLabels: Record<string, string> = { pending: t("admin.modRequests.pending"), approved: t("admin.modRequests.approved"), rejected: t("admin.modRequests.rejected"), completed: t("admin.modRequests.completed") };
+
   const { data: requests = [], refetch } = trpc.modRequest.list.useQuery();
-  const updateMut = trpc.modRequest.process.useMutation({ onSuccess: () => { refetch(); toast.success("처리 완료"); } });
+  const updateMut = trpc.modRequest.process.useMutation({ onSuccess: () => { refetch(); toast.success(t("admin.modRequests.processed")); } });
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
 
@@ -31,13 +33,13 @@ export default function AdminModRequests() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Edit className="h-6 w-6 text-primary" /> 수정 요청 관리
-          {pendingCount > 0 && <Badge variant="destructive" className="ml-2">{pendingCount}건 대기</Badge>}
+          <Edit className="h-6 w-6 text-primary" /> {t("admin.modRequests.title")}
+          {pendingCount > 0 && <Badge variant="destructive" className="ml-2">{t("admin.modRequests.pendingCount", { count: pendingCount })}</Badge>}
         </h1>
       </div>
 
       {requests.length === 0 ? (
-        <Card><CardContent className="py-8 text-center text-muted-foreground">수정 요청이 없습니다.</CardContent></Card>
+        <Card><CardContent className="py-8 text-center text-muted-foreground">{t("admin.modRequests.empty")}</CardContent></Card>
       ) : (
         <div className="space-y-3">
           {requests.map((req: any) => (
@@ -50,37 +52,37 @@ export default function AdminModRequests() {
                       <Badge variant={req.status === "approved" ? "default" : req.status === "rejected" ? "destructive" : "secondary"} className="text-xs">
                         {statusLabels[req.status]}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">신청 ID: {req.registrationId}</span>
+                      <span className="text-xs text-muted-foreground">{t("admin.modRequests.regId")}: {req.registrationId}</span>
                     </div>
                     <p className="text-sm text-foreground mt-2">{req.description}</p>
-                    {req.requestedValue && <p className="text-xs text-muted-foreground mt-1">희망: {req.requestedValue}</p>}
-                    {req.adminNotes && <p className="text-xs text-primary mt-1">관리자 메모: {req.adminNotes}</p>}
-                    <p className="text-xs text-muted-foreground mt-1">{new Date(req.createdAt).toLocaleString("ko-KR")}</p>
+                    {req.requestedValue && <p className="text-xs text-muted-foreground mt-1">{t("admin.modRequests.requested")}: {req.requestedValue}</p>}
+                    {req.adminNotes && <p className="text-xs text-primary mt-1">{t("admin.modRequests.adminNote")}: {req.adminNotes}</p>}
+                    <p className="text-xs text-muted-foreground mt-1">{new Date(req.createdAt).toLocaleString()}</p>
                   </div>
                   {req.status === "pending" && (
                     <div className="flex gap-2 ml-4">
                       <Dialog open={selectedId === req.id} onOpenChange={open => { if (open) setSelectedId(req.id); else { setSelectedId(null); setAdminNotes(""); } }}>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="sm"><Clock className="h-3.5 w-3.5 mr-1" /> 처리</Button>
+                          <Button variant="outline" size="sm"><Clock className="h-3.5 w-3.5 mr-1" /> {t("admin.modRequests.process")}</Button>
                         </DialogTrigger>
                         <DialogContent>
-                          <DialogHeader><DialogTitle>수정 요청 처리</DialogTitle></DialogHeader>
+                          <DialogHeader><DialogTitle>{t("admin.modRequests.processTitle")}</DialogTitle></DialogHeader>
                           <div className="space-y-3">
                             <div className="bg-secondary/50 rounded-lg p-3 text-sm">
                               <p className="font-medium">{typeLabels[req.requestType]}</p>
                               <p className="text-muted-foreground mt-1">{req.description}</p>
-                              {req.requestedValue && <p className="text-muted-foreground mt-1">희망: {req.requestedValue}</p>}
+                              {req.requestedValue && <p className="text-muted-foreground mt-1">{t("admin.modRequests.requested")}: {req.requestedValue}</p>}
                             </div>
                             <div>
-                              <Label>관리자 메모</Label>
-                              <Textarea value={adminNotes} onChange={e => setAdminNotes(e.target.value)} placeholder="처리 결과 메모" rows={3} className="mt-1" />
+                              <Label>{t("admin.modRequests.adminNote")}</Label>
+                              <Textarea value={adminNotes} onChange={e => setAdminNotes(e.target.value)} placeholder={t("admin.modRequests.notePlaceholder")} rows={3} className="mt-1" />
                             </div>
                             <div className="flex gap-2">
                               <Button className="flex-1" onClick={() => handleAction(req.id, "approved")} disabled={updateMut.isPending}>
-                                <CheckCircle className="h-4 w-4 mr-2" /> 승인
+                                <CheckCircle className="h-4 w-4 mr-2" /> {t("admin.modRequests.approve")}
                               </Button>
                               <Button variant="destructive" className="flex-1" onClick={() => handleAction(req.id, "rejected")} disabled={updateMut.isPending}>
-                                <XCircle className="h-4 w-4 mr-2" /> 반려
+                                <XCircle className="h-4 w-4 mr-2" /> {t("admin.modRequests.reject")}
                               </Button>
                             </div>
                           </div>

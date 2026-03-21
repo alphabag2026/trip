@@ -6,6 +6,7 @@ import OrganizerDashboard from "./OrganizerDashboard";
 import AgencyDashboard from "./AgencyDashboard";
 import PartnerDashboard from "./PartnerDashboard";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 
 /**
  * 역할별 대시보드 자동 분기
@@ -18,6 +19,7 @@ import { useLocation } from "wouter";
 export default function RoleDashboard() {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
+  const { t } = useTranslation();
 
   if (loading) {
     return (
@@ -31,10 +33,10 @@ export default function RoleDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">로그인이 필요합니다</h1>
-          <p className="text-muted-foreground">대시보드에 접근하려면 로그인해 주세요.</p>
+          <h1 className="text-2xl font-bold">{t("roleDashboard.loginRequired")}</h1>
+          <p className="text-muted-foreground">{t("roleDashboard.loginRequiredDesc")}</p>
           <Button onClick={() => { window.location.href = getLoginUrl(); }}>
-            로그인
+            {t("roleDashboard.loginBtn")}
           </Button>
         </div>
       </div>

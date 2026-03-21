@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search as SearchIcon, Users, Link2, Network } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function AdminSearch() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [searched, setSearched] = useState(false);
 
@@ -143,7 +145,7 @@ export default function AdminSearch() {
       )}
 
       {searched && (!results || results.length === 0) && (
-        <div className="text-center py-12 text-muted-foreground">검색 결과가 없습니다.</div>
+        <div className="text-center py-12 text-muted-foreground">{t("admin.search.noResults")}</div>
       )}
     </div>
   );
