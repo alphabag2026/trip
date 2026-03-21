@@ -648,3 +648,24 @@
 ### 테스트
 - [x] 여권 수정 API 테스트
 - [x] 빌드 검증 (28파일 419건 전체 통과)
+
+## v5.7 - 입국 심사 체크리스트 기능
+### DB 스키마
+- [x] immigration_checklist_templates 테이블 (국가별 기본 체크리스트 템플릿)
+- [x] user_checklist_items 테이블 (사용자별 체크 상태 저장)
+### 백엔드 API
+- [x] 국가별 기본 체크리스트 데이터 시딩 (주요 국가 입국 서류/준비물: TH, VN, JP, PH, ID, SG, US, CN)
+- [x] checklist.countries + checklist.templates + checklist.myChecklist
+- [x] checklist.toggleItem - 항목 체크/해제
+- [x] checklist.reset - 국가별 초기화
+- [x] checklist.progress - 사용자 진행률 조회
+### 프론트엔드 UI
+- [x] 마이페이지 체크리스트 탭 UI 구현
+- [x] 목적지 국가 선택 드롭다운
+- [x] 카테고리별 체크리스트 (필수 서류, 권장 준비물, 입국 시 주의사항)
+- [x] 체크 진행률 프로그레스 바
+- [x] 체크 항목 토글 애니메이션
+- [x] 커스텀 항목 추가/삭제 기능
+### 테스트
+- [x] 체크리스트 API 테스트 (15건)
+- [x] 빌드 검증 (29파일 434건 전체 통과)

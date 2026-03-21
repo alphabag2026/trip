@@ -14,7 +14,8 @@ import {
   Building2, Briefcase, Heart, Upload, CheckCircle, MapPin, Calendar, Plane,
   Hotel, AlertTriangle, Edit2, Eye, EyeOff, CreditCard, Ticket, Copy, ExternalLink,
   ArrowRight, Navigation, ClipboardCheck, FileCheck, FileWarning, LogOut,
-  ScanLine, RefreshCw, RotateCcw, Camera,
+  ScanLine, RefreshCw, RotateCcw, Camera, Plus, Trash2, RotateCw, ListChecks,
+  FileText, Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -52,6 +53,28 @@ export default function MyPage() {
   const vouchersQuery = trpc.hotelVoucher.listMy.useQuery(undefined, { enabled: !!user });
   const ticketsQuery = trpc.flightTicket.listMy.useQuery(undefined, { enabled: !!user });
   const immigrationQuery = trpc.immigration.myStatus.useQuery(undefined, { enabled: !!user });
+
+  // Checklist state
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const [customItemTitle, setCustomItemTitle] = useState("");
+  const [showAddCustom, setShowAddCustom] = useState(false);
+  const countriesQuery = trpc.checklist.countries.useQuery();
+  const checklistQuery = trpc.checklist.myChecklist.useQuery(
+    { countryCode: selectedCountry },
+    { enabled: !!user && !!selectedCountry }
+  );
+  const toggleItemMut = trpc.checklist.toggleItem.useMutation({
+    onSuccess: () => checklistQuery.refetch(),
+  });
+  const addCustomMut = trpc.checklist.addCustomItem.useMutation({
+    onSuccess: () => { checklistQuery.refetch(); setCustomItemTitle(""); setShowAddCustom(false); toast.success("항목이 추가되었습니다"); },
+  });
+  const deleteCustomMut = trpc.checklist.deleteCustomItem.useMutation({
+    onSuccess: () => { checklistQuery.refetch(); toast.success("항목이 삭제되었습니다"); },
+  });
+  const resetMut = trpc.checklist.reset.useMutation({
+    onSuccess: () => { checklistQuery.refetch(); toast.success("체크리스트가 초기화되었습니다"); },
+  });
 
   // Profile form
   const [profileForm, setProfileForm] = useState<any>(null);
@@ -917,9 +940,8 @@ export default function MyPage() {
           </TabsContent>
           {/* Immigration Checklist Tab */}
           <TabsContent value="checklist" className="space-y-4">
-            {immigrationQuery.isLoading ? (
-              <div className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
-            ) : (() => {
+            {/* 기본 준비 상태 카드 */}
+            {(() => {
               const imm = immigrationQuery.data;
               const hasPassport = !!imm?.passport?.passportNumber;
               const passportExpiry = imm?.passport?.expiryDate;
@@ -927,118 +949,221 @@ export default function MyPage() {
               const hasVoucher = (imm?.vouchers?.length || 0) > 0;
               const hasTicket = (imm?.tickets?.length || 0) > 0;
               const hasReturnTicket = imm?.tickets?.some((t: any) => t.returnFlightNo);
-              const completedCount = [hasPassport, isPassportValid, hasVoucher, hasTicket, hasReturnTicket].filter(Boolean).length;
-              const totalItems = 5;
-              const progressPercent = Math.round((completedCount / totalItems) * 100);
-
-              const checkItems = [
-                {
-                  key: "passport",
-                  label: t("myPage.checkPassport"),
-                  desc: t("myPage.checkPassportDesc"),
-                  done: hasPassport,
-                  icon: BookOpen,
-                },
-                {
-                  key: "passportValid",
-                  label: t("myPage.checkPassportValid"),
-                  desc: hasPassport && passportExpiry ? t("myPage.checkPassportValidDesc", { date: passportExpiry }) : t("myPage.checkPassportValidNone"),
-                  done: isPassportValid,
-                  icon: Shield,
-                },
-                {
-                  key: "voucher",
-                  label: t("myPage.checkVoucher"),
-                  desc: hasVoucher ? t("myPage.checkVoucherDesc", { count: imm?.vouchers?.length }) : t("myPage.checkVoucherNone"),
-                  done: hasVoucher,
-                  icon: Hotel,
-                },
-                {
-                  key: "ticket",
-                  label: t("myPage.checkTicket"),
-                  desc: hasTicket ? t("myPage.checkTicketDesc", { count: imm?.tickets?.length }) : t("myPage.checkTicketNone"),
-                  done: hasTicket,
-                  icon: Plane,
-                },
-                {
-                  key: "returnTicket",
-                  label: t("myPage.checkReturnTicket"),
-                  desc: t("myPage.checkReturnTicketDesc"),
-                  done: !!hasReturnTicket,
-                  icon: Plane,
-                },
+              const basicItems = [
+                { label: "여권 등록", done: hasPassport, icon: BookOpen },
+                { label: "여권 유효", done: isPassportValid, icon: Shield },
+                { label: "호텔 바우처", done: hasVoucher, icon: Hotel },
+                { label: "항공권", done: hasTicket, icon: Plane },
+                { label: "왕복 항공권", done: !!hasReturnTicket, icon: Plane },
               ];
-
+              const doneCount = basicItems.filter(i => i.done).length;
               return (
-                <>
-                  {/* Progress */}
-                  <Card className="border-primary/20">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-bold text-lg flex items-center gap-2">
-                          <ClipboardCheck className="w-5 h-5 text-primary" />
-                          {t("myPage.checklistTitle")}
-                        </h3>
-                        <Badge variant={completedCount === totalItems ? "default" : "secondary"}>
-                          {completedCount}/{totalItems}
-                        </Badge>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-3 mb-2">
-                        <div
-                          className={`h-3 rounded-full transition-all duration-500 ${completedCount === totalItems ? "bg-green-500" : "bg-primary"}`}
-                          style={{ width: `${progressPercent}%` }}
-                        />
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {completedCount === totalItems ? t("myPage.checklistComplete") : t("myPage.checklistProgress", { count: completedCount, total: totalItems })}
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  {/* Check Items */}
-                  <div className="space-y-3">
-                    {checkItems.map((item) => (
-                      <Card key={item.key} className={`transition-all ${item.done ? "border-green-500/30 bg-green-500/5" : "border-orange-500/30 bg-orange-500/5"}`}>
-                        <CardContent className="py-4">
-                          <div className="flex items-start gap-4">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${item.done ? "bg-green-500/20" : "bg-orange-500/20"}`}>
-                              {item.done ? (
-                                <CheckCircle className="w-5 h-5 text-green-500" />
-                              ) : (
-                                <AlertTriangle className="w-5 h-5 text-orange-500" />
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <item.icon className="w-4 h-4 text-muted-foreground" />
-                                <h4 className="font-semibold">{item.label}</h4>
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-1">{item.desc}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
-                  {/* Tips */}
-                  <Card className="bg-muted/30">
-                    <CardContent className="pt-6">
-                      <h4 className="font-semibold mb-3 flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-primary" />
-                        {t("myPage.immigrationTips")}
-                      </h4>
-                      <ul className="space-y-2 text-sm text-muted-foreground">
-                        <li className="flex items-start gap-2"><span className="text-primary">•</span>{t("myPage.tip1")}</li>
-                        <li className="flex items-start gap-2"><span className="text-primary">•</span>{t("myPage.tip2")}</li>
-                        <li className="flex items-start gap-2"><span className="text-primary">•</span>{t("myPage.tip3")}</li>
-                        <li className="flex items-start gap-2"><span className="text-primary">•</span>{t("myPage.tip4")}</li>
-                      </ul>
-                    </CardContent>
-                  </Card>
-                </>
+                <Card className="border-primary/20">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-bold text-lg flex items-center gap-2">
+                        <ClipboardCheck className="w-5 h-5 text-primary" />
+                        기본 준비 상태
+                      </h3>
+                      <Badge variant={doneCount === 5 ? "default" : "secondary"}>{doneCount}/5</Badge>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2.5 mb-3">
+                      <div className={`h-2.5 rounded-full transition-all duration-500 ${doneCount === 5 ? "bg-green-500" : "bg-primary"}`} style={{ width: `${(doneCount / 5) * 100}%` }} />
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {basicItems.map((item, i) => (
+                        <div key={i} className={`flex items-center gap-1.5 text-xs rounded-lg px-2 py-1.5 ${item.done ? "bg-green-500/10 text-green-600" : "bg-orange-500/10 text-orange-600"}`}>
+                          {item.done ? <CheckCircle className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                          {item.label}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               );
             })()}
+
+            {/* 국가별 입국 심사 체크리스트 */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    <ListChecks className="w-5 h-5 text-primary" />
+                    국가별 입국 심사 체크리스트
+                  </h3>
+                </div>
+                <div className="flex gap-2 mb-4">
+                  <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="목적지 국가를 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(countriesQuery.data || []).map((c: any) => (
+                        <SelectItem key={c.countryCode} value={c.countryCode}>
+                          {c.countryName} ({c.countryCode})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedCountry && (
+                    <Button variant="outline" size="icon" onClick={() => resetMut.mutate({ countryCode: selectedCountry })} title="초기화">
+                      <RotateCw className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+
+                {!selectedCountry && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Globe className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    <p>목적지 국가를 선택하면<br />입국 시 필요한 서류와 준비물을 확인할 수 있습니다.</p>
+                  </div>
+                )}
+
+                {selectedCountry && checklistQuery.isLoading && (
+                  <div className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
+                )}
+
+                {selectedCountry && checklistQuery.data && (() => {
+                  const items = checklistQuery.data as any[];
+                  const totalCount = items.length;
+                  const checkedCount = items.filter((i: any) => i.isChecked).length;
+                  const progressPct = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
+
+                  const categoryMap: Record<string, { label: string; icon: any; color: string }> = {
+                    required_docs: { label: "필수 서류", icon: FileText, color: "text-red-500" },
+                    recommended_items: { label: "권장 준비물", icon: ClipboardCheck, color: "text-blue-500" },
+                    tips: { label: "입국 시 주의사항", icon: Info, color: "text-amber-500" },
+                    custom: { label: "내 항목", icon: Edit2, color: "text-purple-500" },
+                  };
+
+                  const grouped = items.reduce((acc: any, item: any) => {
+                    const cat = item.category || "custom";
+                    if (!acc[cat]) acc[cat] = [];
+                    acc[cat].push(item);
+                    return acc;
+                  }, {} as Record<string, any[]>);
+
+                  return (
+                    <div className="space-y-4">
+                      {/* 진행률 */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <div className="w-full bg-muted rounded-full h-2.5">
+                            <div
+                              className={`h-2.5 rounded-full transition-all duration-500 ${progressPct === 100 ? "bg-green-500" : "bg-primary"}`}
+                              style={{ width: `${progressPct}%` }}
+                            />
+                          </div>
+                        </div>
+                        <span className="text-sm font-medium whitespace-nowrap">
+                          {checkedCount}/{totalCount} ({progressPct}%)
+                        </span>
+                      </div>
+
+                      {/* 카테고리별 항목 */}
+                      {["required_docs", "recommended_items", "tips", "custom"].map(cat => {
+                        const catItems = grouped[cat];
+                        if (!catItems || catItems.length === 0) return null;
+                        const meta = categoryMap[cat];
+                        const CatIcon = meta.icon;
+                        return (
+                          <div key={cat}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <CatIcon className={`w-4 h-4 ${meta.color}`} />
+                              <h4 className="font-semibold text-sm">{meta.label}</h4>
+                              <Badge variant="outline" className="text-xs">
+                                {catItems.filter((i: any) => i.isChecked).length}/{catItems.length}
+                              </Badge>
+                            </div>
+                            <div className="space-y-1.5">
+                              {catItems.map((item: any) => (
+                                <div
+                                  key={item.id}
+                                  className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm ${
+                                    item.isChecked
+                                      ? "border-green-500/30 bg-green-500/5"
+                                      : "border-border bg-card hover:border-primary/30"
+                                  }`}
+                                  onClick={() => toggleItemMut.mutate({ itemId: item.id })}
+                                >
+                                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
+                                    item.isChecked ? "border-green-500 bg-green-500" : "border-muted-foreground/30"
+                                  }`}>
+                                    {item.isChecked && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`text-sm font-medium ${item.isChecked ? "line-through text-muted-foreground" : ""}`}>
+                                      {item.title}
+                                    </p>
+                                    {item.description && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                                    )}
+                                  </div>
+                                  {item.category === "custom" && (
+                                    <Button
+                                      variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0"
+                                      onClick={(e) => { e.stopPropagation(); deleteCustomMut.mutate({ itemId: item.id }); }}
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                                    </Button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* 커스텀 항목 추가 */}
+                      {showAddCustom ? (
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="추가할 항목을 입력하세요"
+                            value={customItemTitle}
+                            onChange={(e) => setCustomItemTitle(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && customItemTitle.trim()) {
+                                addCustomMut.mutate({ countryCode: selectedCountry, title: customItemTitle.trim() });
+                              }
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            disabled={!customItemTitle.trim() || addCustomMut.isPending}
+                            onClick={() => addCustomMut.mutate({ countryCode: selectedCountry, title: customItemTitle.trim() })}
+                          >
+                            {addCustomMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "추가"}
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => { setShowAddCustom(false); setCustomItemTitle(""); }}>
+                            취소
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button variant="outline" className="w-full" onClick={() => setShowAddCustom(true)}>
+                          <Plus className="w-4 h-4 mr-2" /> 내 항목 추가
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+
+            {/* 입국 심사 팁 */}
+            <Card className="bg-muted/30">
+              <CardContent className="pt-6">
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  {t("myPage.immigrationTips")}
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2"><span className="text-primary">•</span>{t("myPage.tip1")}</li>
+                  <li className="flex items-start gap-2"><span className="text-primary">•</span>{t("myPage.tip2")}</li>
+                  <li className="flex items-start gap-2"><span className="text-primary">•</span>{t("myPage.tip3")}</li>
+                  <li className="flex items-start gap-2"><span className="text-primary">•</span>{t("myPage.tip4")}</li>
+                </ul>
+              </CardContent>
+            </Card>
           </TabsContent>
 
         </Tabs>

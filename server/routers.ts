@@ -2744,6 +2744,75 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
   }),
 
   // ══════════════════════════════════════════════════════════
+  // v5.7 - Immigration Checklist
+  // ══════════════════════════════════════════════════════════
+  checklist: router({
+    // 지원 국가 목록
+    countries: publicProcedure.query(async () => {
+      return db.getChecklistCountries();
+    }),
+
+    // 국가별 템플릿 조회 (비로그인도 가능)
+    templates: publicProcedure
+      .input(z.object({ countryCode: z.string().min(2).max(10) }))
+      .query(async ({ input }) => {
+        return db.getChecklistTemplates(input.countryCode);
+      }),
+
+    // 내 체크리스트 조회 (없으면 자동 초기화)
+    myChecklist: protectedProcedure
+      .input(z.object({ countryCode: z.string().min(2).max(10) }))
+      .query(async ({ ctx, input }) => {
+        let items = await db.getUserChecklist(ctx.user.id, input.countryCode);
+        if (items.length === 0) {
+          items = await db.initUserChecklist(ctx.user.id, input.countryCode);
+        }
+        return items;
+      }),
+
+    // 항목 체크/해제 토글
+    toggleItem: protectedProcedure
+      .input(z.object({ itemId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return db.toggleChecklistItem(ctx.user.id, input.itemId);
+      }),
+
+    // 커스텀 항목 추가
+    addCustomItem: protectedProcedure
+      .input(z.object({
+        countryCode: z.string().min(2).max(10),
+        title: z.string().min(1).max(200),
+        description: z.string().max(500).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.addCustomChecklistItem(ctx.user.id, input.countryCode, input.title, input.description);
+        return { id };
+      }),
+
+    // 커스텀 항목 삭제
+    deleteCustomItem: protectedProcedure
+      .input(z.object({ itemId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteCustomChecklistItem(ctx.user.id, input.itemId);
+        return { success: true };
+      }),
+
+    // 전체 초기화 (리셋)
+    reset: protectedProcedure
+      .input(z.object({ countryCode: z.string().min(2).max(10) }))
+      .mutation(async ({ ctx, input }) => {
+        return db.resetUserChecklist(ctx.user.id, input.countryCode);
+      }),
+
+    // 진행률 조회
+    progress: protectedProcedure
+      .input(z.object({ countryCode: z.string().min(2).max(10) }))
+      .query(async ({ ctx, input }) => {
+        return db.getChecklistProgress(ctx.user.id, input.countryCode);
+      }),
+  }),
+
+  // ══════════════════════════════════════════════════════════
   // v5.0 - Affiliate Booking System
   // ══════════════════════════════════════════════════════════
   booking: router({

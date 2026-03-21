@@ -1836,3 +1836,110 @@ export async function checkPassportDuplicate(
 
   return { isDuplicate: matches.length > 0, matches };
 }
+
+
+// ══════════════════════════════════════════════════════════
+// v5.7 - Immigration Checklist
+// ══════════════════════════════════════════════════════════
+
+import {
+  immigrationChecklistTemplates, InsertImmigrationChecklistTemplate,
+  userChecklistItems, InsertUserChecklistItem,
+} from "../drizzle/schema";
+
+// 지원 국가 목록 조회
+export async function getChecklistCountries() {
+  const db = await getDb(); if (!db) return [];
+  const rows = await db.selectDistinct({
+    countryCode: immigrationChecklistTemplates.countryCode,
+    countryName: immigrationChecklistTemplates.countryName,
+  }).from(immigrationChecklistTemplates).orderBy(immigrationChecklistTemplates.countryName);
+  return rows;
+}
+
+// 국가별 템플릿 조회
+export async function getChecklistTemplates(countryCode: string) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(immigrationChecklistTemplates)
+    .where(eq(immigrationChecklistTemplates.countryCode, countryCode))
+    .orderBy(immigrationChecklistTemplates.category, immigrationChecklistTemplates.sortOrder);
+}
+
+// 사용자 체크리스트 조회 (특정 국가)
+export async function getUserChecklist(userId: number, countryCode: string) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(userChecklistItems)
+    .where(and(eq(userChecklistItems.userId, userId), eq(userChecklistItems.countryCode, countryCode)))
+    .orderBy(userChecklistItems.category, userChecklistItems.sortOrder);
+}
+
+// 사용자 체크리스트 초기화 (템플릿에서 복사)
+export async function initUserChecklist(userId: number, countryCode: string) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  // 기존 항목 삭제
+  await db.delete(userChecklistItems).where(
+    and(eq(userChecklistItems.userId, userId), eq(userChecklistItems.countryCode, countryCode))
+  );
+  // 템플릿에서 복사
+  const templates = await getChecklistTemplates(countryCode);
+  if (templates.length === 0) return [];
+  const items: InsertUserChecklistItem[] = templates.map(t => ({
+    userId,
+    templateId: t.id,
+    countryCode: t.countryCode,
+    category: t.category,
+    title: t.title,
+    description: t.description,
+    isChecked: false,
+    sortOrder: t.sortOrder ?? 0,
+  }));
+  await db.insert(userChecklistItems).values(items);
+  return getUserChecklist(userId, countryCode);
+}
+
+// 체크 항목 토글
+export async function toggleChecklistItem(userId: number, itemId: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const rows = await db.select().from(userChecklistItems)
+    .where(and(eq(userChecklistItems.id, itemId), eq(userChecklistItems.userId, userId))).limit(1);
+  if (!rows[0]) throw new Error("Item not found");
+  const newChecked = !rows[0].isChecked;
+  await db.update(userChecklistItems).set({ isChecked: newChecked }).where(eq(userChecklistItems.id, itemId));
+  return { ...rows[0], isChecked: newChecked };
+}
+
+// 커스텀 항목 추가
+export async function addCustomChecklistItem(userId: number, countryCode: string, title: string, description?: string) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(userChecklistItems).values({
+    userId,
+    countryCode,
+    category: "custom",
+    title,
+    description: description || null,
+    isChecked: false,
+    sortOrder: 999,
+  });
+  return result[0].insertId;
+}
+
+// 커스텀 항목 삭제
+export async function deleteCustomChecklistItem(userId: number, itemId: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(userChecklistItems).where(
+    and(eq(userChecklistItems.id, itemId), eq(userChecklistItems.userId, userId), eq(userChecklistItems.category, "custom"))
+  );
+}
+
+// 전체 초기화 (리셋)
+export async function resetUserChecklist(userId: number, countryCode: string) {
+  return initUserChecklist(userId, countryCode);
+}
+
+// 사용자 진행률 조회
+export async function getChecklistProgress(userId: number, countryCode: string) {
+  const items = await getUserChecklist(userId, countryCode);
+  const total = items.length;
+  const checked = items.filter(i => i.isChecked).length;
+  return { total, checked, percent: total > 0 ? Math.round((checked / total) * 100) : 0 };
+}

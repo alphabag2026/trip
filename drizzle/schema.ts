@@ -983,3 +983,38 @@ export const chatMessages = mysqlTable("chat_messages", {
 
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+
+// ══════════════════════════════════════════════════════════
+// v5.7 - Immigration Checklist
+// ══════════════════════════════════════════════════════════
+
+export const immigrationChecklistTemplates = mysqlTable("immigration_checklist_templates", {
+  id: int("id").primaryKey().autoincrement(),
+  countryCode: varchar("countryCode", { length: 10 }).notNull(), // e.g. TH, VN, PH
+  countryName: varchar("countryName", { length: 100 }).notNull(), // e.g. 태국
+  category: mysqlEnum("category", ["required_docs", "recommended_items", "tips"]).notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  sortOrder: int("sortOrder").default(0),
+  isDefault: boolean("isDefault").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ImmigrationChecklistTemplate = typeof immigrationChecklistTemplates.$inferSelect;
+export type InsertImmigrationChecklistTemplate = typeof immigrationChecklistTemplates.$inferInsert;
+
+export const userChecklistItems = mysqlTable("user_checklist_items", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  templateId: int("templateId"), // null if custom item
+  countryCode: varchar("countryCode", { length: 10 }).notNull(),
+  category: mysqlEnum("category", ["required_docs", "recommended_items", "tips", "custom"]).notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  isChecked: boolean("isChecked").default(false),
+  sortOrder: int("sortOrder").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type UserChecklistItem = typeof userChecklistItems.$inferSelect;
+export type InsertUserChecklistItem = typeof userChecklistItems.$inferInsert;
