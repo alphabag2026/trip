@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `chat_messages` MODIFY COLUMN `messageType` enum('text','image','file','system','announcement','video','location','voice') NOT NULL DEFAULT 'text';\nALTER TABLE `chat_rooms` MODIFY COLUMN `roomType` enum('general','announcement','support','social','direct','group') NOT NULL DEFAULT 'general';\nALTER TABLE `chat_messages` ADD `latitude` decimal(10,7);\nALTER TABLE `chat_messages` ADD `longitude` decimal(10,7);\nALTER TABLE `chat_messages` ADD `locationName` varchar(500);\nALTER TABLE `chat_messages` ADD `originalLang` varchar(10);\nALTER TABLE `chat_room_members` ADD `preferredLang` varchar(10) DEFAULT 'ko';\nALTER TABLE `chat_rooms` ADD `autoTranslate` boolean DEFAULT true;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute ALTER TABLE `chat_messages` MODIFY COLUMN `messageType` enum('text','image','file','system','announcement','video','location','voice') NOT NULL DEFAULT 'text';\nALTER TABLE `chat_rooms` MODIFY COLUMN `roomType` enum('general','announcement','support','social','direct','group') NOT NULL DEFAULT 'general';\nALTER TABLE `chat_messages` ADD `latitude` decimal(10,7);\nALTER TABLE `chat_messages` ADD `longitude` decimal(10,7);\nALTER TABLE `chat_messages` ADD `locationName` varchar(500);\nALTER TABLE `chat_messages` ADD `originalLang` varchar(10);\nALTER TABLE `chat_room_members` ADD `preferredLang` varchar(10) DEFAULT 'ko';\nALTER TABLE `chat_rooms` ADD `autoTranslate` boolean DEFAULT true;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 8988
+}

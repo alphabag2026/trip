@@ -3024,6 +3024,16 @@ export const appRouter = router({
   }),
 
   // ── Community Chat Rooms (커뮤니티 채팅방) ──────────────────
+  // ── 사용자 검색 (채팅방 초대용) ─────────────────────
+  userSearch: router({
+    list: protectedProcedure
+      .input(z.object({ search: z.string().optional() }).optional())
+      .query(async () => {
+        const allUsers = await db.getAllUsers();
+        return allUsers.map((u: any) => ({ id: u.id, name: u.name, email: u.email, avatarUrl: u.avatarUrl }));
+      }),
+  }),
+
   chatRoom: router({
     // 채팅방 목록 (로그인 사용자)
     list: protectedProcedure
@@ -3047,19 +3057,31 @@ export const appRouter = router({
         return db.getChatRoomById(input.id);
       }),
 
-    // 채팅방 생성 (관리자)
-    create: adminProcedure
+    // 채팅방 생성 (관리자 또는 리더)
+    create: protectedProcedure
       .input(z.object({
         name: z.string().min(1),
         description: z.string().optional(),
         meetupId: z.number().optional(),
-        roomType: z.enum(["general", "announcement", "support", "social"]).default("general"),
+        roomType: z.enum(["general", "announcement", "support", "social", "direct", "group"]).default("general"),
         maxMembers: z.number().default(100),
+        memberUserIds: z.array(z.number()).optional(), // 초대할 사용자 ID 목록
+        autoTranslate: z.boolean().default(true),
       }))
       .mutation(async ({ input, ctx }) => {
+        // 일반 채팅방은 관리자만, direct/group은 누구나
+        const isAdmin = ctx.user.role === "admin" || ctx.user.role === "superadmin";
+        if (!isAdmin && input.roomType !== "direct" && input.roomType !== "group") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "일반/공지/문의 채팅방은 관리자만 생성할 수 있습니다" });
+        }
         const id = await db.createChatRoom({
-          ...input,
+          name: input.name,
+          description: input.description,
+          meetupId: input.meetupId,
+          roomType: input.roomType,
+          maxMembers: input.maxMembers,
           createdBy: ctx.user.id,
+          autoTranslate: input.autoTranslate,
         });
         // 생성자를 admin으로 자동 참여
         await db.addChatRoomMember({
@@ -3068,7 +3090,67 @@ export const appRouter = router({
           nickname: ctx.user.name || "관리자",
           memberRole: "admin",
         });
+        // 초대 멤버 자동 추가
+        if (input.memberUserIds && input.memberUserIds.length > 0) {
+          for (const uid of input.memberUserIds) {
+            if (uid === ctx.user.id) continue; // 생성자 중복 방지
+            try {
+              await db.addChatRoomMember({
+                roomId: id,
+                userId: uid,
+                nickname: "",
+                memberRole: "member",
+              });
+            } catch {} // 이미 존재하는 멤버 무시
+          }
+          // 시스템 메시지
+          await db.createChatMessage({
+            roomId: id,
+            userId: ctx.user.id,
+            senderName: "시스템",
+            content: `${ctx.user.name || "관리자"}님이 ${input.memberUserIds.length}명을 초대했습니다.`,
+            messageType: "system",
+          });
+        }
         return { id };
+      }),
+
+    // 멤버 초대 (기존 방에 추가)
+    inviteMembers: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        userIds: z.array(z.number()).min(1),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const room = await db.getChatRoomById(input.roomId);
+        if (!room) throw new TRPCError({ code: "NOT_FOUND" });
+        // 방 생성자 또는 관리자만 초대 가능
+        const isAdmin = ctx.user.role === "admin" || ctx.user.role === "superadmin";
+        if (room.createdBy !== ctx.user.id && !isAdmin) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "방 생성자 또는 관리자만 초대할 수 있습니다" });
+        }
+        let added = 0;
+        for (const uid of input.userIds) {
+          try {
+            await db.addChatRoomMember({
+              roomId: input.roomId,
+              userId: uid,
+              nickname: "",
+              memberRole: "member",
+            });
+            added++;
+          } catch {}
+        }
+        if (added > 0) {
+          await db.createChatMessage({
+            roomId: input.roomId,
+            userId: ctx.user.id,
+            senderName: "시스템",
+            content: `${added}명이 초대되었습니다.`,
+            messageType: "system",
+          });
+        }
+        return { added };
       }),
 
     // 채팅방 수정
@@ -3188,10 +3270,14 @@ export const appRouter = router({
       .input(z.object({
         roomId: z.number(),
         content: z.string().min(1).max(5000),
-        messageType: z.enum(["text", "image", "file", "announcement"]).default("text"),
+        messageType: z.enum(["text", "image", "file", "announcement", "video", "location", "voice"]).default("text"),
         fileUrl: z.string().optional(),
         fileName: z.string().optional(),
         replyToId: z.number().optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        locationName: z.string().optional(),
+        originalLang: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         // 공지 메시지는 관리자만
@@ -3209,6 +3295,10 @@ export const appRouter = router({
           fileUrl: input.fileUrl,
           fileName: input.fileName,
           replyToId: input.replyToId,
+          latitude: input.latitude?.toString(),
+          longitude: input.longitude?.toString(),
+          locationName: input.locationName,
+          originalLang: input.originalLang,
         });
         // 읽음 처리
         await db.updateChatRoomMember(input.roomId, ctx.user.id, { lastReadAt: new Date() });
@@ -3258,7 +3348,7 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // 파일 업로드
+    // 파일 업로드 (사진/영상/음성/문서)
     uploadFile: protectedProcedure
       .input(z.object({
         roomId: z.number(),
@@ -3270,7 +3360,10 @@ export const appRouter = router({
         const buffer = Buffer.from(input.fileData, "base64");
         const fileKey = `chat/${input.roomId}/${nanoid()}-${input.fileName}`;
         const { url } = await storagePut(fileKey, buffer, input.mimeType);
-        const msgType = input.mimeType.startsWith("image/") ? "image" : "file";
+        let msgType: string = "file";
+        if (input.mimeType.startsWith("image/")) msgType = "image";
+        else if (input.mimeType.startsWith("video/")) msgType = "video";
+        else if (input.mimeType.startsWith("audio/")) msgType = "voice";
         const id = await db.createChatMessage({
           roomId: input.roomId,
           userId: ctx.user.id,
@@ -3282,6 +3375,185 @@ export const appRouter = router({
           fileName: input.fileName,
         });
         return { id, url };
+      }),
+
+    // 메시지 번역 (LLM 기반)
+    translate: protectedProcedure
+      .input(z.object({
+        messageId: z.number(),
+        targetLang: z.string(), // ko, en, ja, zh, th, vi 등
+      }))
+      .mutation(async ({ input }) => {
+        const msg = await db.getChatMessageById(input.messageId);
+        if (!msg || !msg.content) throw new TRPCError({ code: "NOT_FOUND" });
+        try {
+          const langNames: Record<string, string> = {
+            ko: "Korean", en: "English", ja: "Japanese", zh: "Chinese", th: "Thai",
+            vi: "Vietnamese", id: "Indonesian", ms: "Malay", tl: "Filipino",
+            hi: "Hindi", ar: "Arabic", ru: "Russian", es: "Spanish", fr: "French",
+            de: "German", pt: "Portuguese", it: "Italian", tr: "Turkish", pl: "Polish",
+            nl: "Dutch", sv: "Swedish", uk: "Ukrainian", cs: "Czech", ro: "Romanian",
+            mn: "Mongolian",
+          };
+          const targetName = langNames[input.targetLang] || input.targetLang;
+          const response = await invokeLLM({
+            messages: [
+              { role: "system", content: `You are a professional translator. Translate the following message to ${targetName}. Return ONLY the translated text, nothing else.` },
+              { role: "user", content: msg.content },
+            ],
+          });
+          const translated = response.choices[0]?.message?.content || msg.content;
+          return { translated, originalLang: msg.originalLang || "unknown", targetLang: input.targetLang };
+        } catch {
+          return { translated: msg.content, originalLang: "unknown", targetLang: input.targetLang };
+        }
+      }),
+
+    // 텍스트 번역 (직접 입력)
+    translateText: protectedProcedure
+      .input(z.object({
+        text: z.string().min(1).max(5000),
+        targetLang: z.string(),
+        sourceLang: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const langNames: Record<string, string> = {
+            ko: "Korean", en: "English", ja: "Japanese", zh: "Chinese", th: "Thai",
+            vi: "Vietnamese", id: "Indonesian", ms: "Malay", tl: "Filipino",
+            hi: "Hindi", ar: "Arabic", ru: "Russian", es: "Spanish", fr: "French",
+            de: "German", pt: "Portuguese", it: "Italian", tr: "Turkish", pl: "Polish",
+            nl: "Dutch", sv: "Swedish", uk: "Ukrainian", cs: "Czech", ro: "Romanian",
+            mn: "Mongolian",
+          };
+          const targetName = langNames[input.targetLang] || input.targetLang;
+          const sourceHint = input.sourceLang ? ` from ${langNames[input.sourceLang] || input.sourceLang}` : "";
+          const response = await invokeLLM({
+            messages: [
+              { role: "system", content: `You are a professional translator. Translate the following text${sourceHint} to ${targetName}. Return ONLY the translated text, nothing else.` },
+              { role: "user", content: input.text },
+            ],
+          });
+          const translated = response.choices[0]?.message?.content || input.text;
+          return { translated, targetLang: input.targetLang };
+        } catch {
+          return { translated: input.text, targetLang: input.targetLang };
+        }
+      }),
+  }),
+
+  // ── WebRTC Signaling (시그널링 서버) ──────────────────────────────
+  webrtc: router({
+    // 통화 시작 (발신)
+    initiateCall: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        targetUserId: z.number(),
+        callType: z.enum(["voice", "video"]),
+        offer: z.string(), // SDP offer (JSON stringified)
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const callId = nanoid(12);
+        // 메모리 기반 시그널링 저장소 (서버 최소화 방식)
+        if (!(globalThis as any).__webrtcSignals) (globalThis as any).__webrtcSignals = new Map();
+        (globalThis as any).__webrtcSignals.set(callId, {
+          callId,
+          roomId: input.roomId,
+          callerId: ctx.user.id,
+          callerName: ctx.user.name || "익명",
+          targetUserId: input.targetUserId,
+          callType: input.callType,
+          offer: input.offer,
+          answer: null,
+          callerCandidates: [],
+          answerCandidates: [],
+          status: "ringing", // ringing, connected, ended
+          createdAt: Date.now(),
+        });
+        // 30초 후 자동 정리
+        setTimeout(() => { (globalThis as any).__webrtcSignals?.delete(callId); }, 60000);
+        return { callId };
+      }),
+
+    // 통화 응답 (수신)
+    answerCall: protectedProcedure
+      .input(z.object({
+        callId: z.string(),
+        answer: z.string(), // SDP answer
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const signal = (globalThis as any).__webrtcSignals?.get(input.callId);
+        if (!signal) throw new TRPCError({ code: "NOT_FOUND", message: "통화를 찾을 수 없습니다" });
+        if (signal.targetUserId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN" });
+        signal.answer = input.answer;
+        signal.status = "connected";
+        return { success: true };
+      }),
+
+    // ICE candidate 추가
+    addIceCandidate: protectedProcedure
+      .input(z.object({
+        callId: z.string(),
+        candidate: z.string(), // ICE candidate JSON
+        role: z.enum(["caller", "answerer"]),
+      }))
+      .mutation(async ({ input }) => {
+        const signal = (globalThis as any).__webrtcSignals?.get(input.callId);
+        if (!signal) throw new TRPCError({ code: "NOT_FOUND" });
+        if (input.role === "caller") signal.callerCandidates.push(input.candidate);
+        else signal.answerCandidates.push(input.candidate);
+        return { success: true };
+      }),
+
+    // 통화 상태 폴링 (수신자용)
+    pollIncoming: protectedProcedure
+      .input(z.object({ roomId: z.number().optional() }))
+      .query(async ({ ctx }) => {
+        if (!(globalThis as any).__webrtcSignals) return null;
+        for (const [, signal] of (globalThis as any).__webrtcSignals) {
+          if (signal.targetUserId === ctx.user.id && signal.status === "ringing") {
+            return {
+              callId: signal.callId,
+              callerId: signal.callerId,
+              callerName: signal.callerName,
+              callType: signal.callType,
+              offer: signal.offer,
+            };
+          }
+        }
+        return null;
+      }),
+
+    // 통화 상태 확인 (발신자용)
+    getCallStatus: protectedProcedure
+      .input(z.object({ callId: z.string() }))
+      .query(async ({ input }) => {
+        const signal2 = (globalThis as any).__webrtcSignals?.get(input.callId);
+        if (!signal2) return { status: "ended" as const, answer: null, candidates: [] as string[] };
+        return {
+          status: signal2.status as "ringing" | "connected" | "ended",
+          answer: signal2.answer,
+          candidates: signal2.answerCandidates,
+        };
+      }),
+
+    // 발신자 ICE candidates 가져오기 (수신자용)
+    getCallerCandidates: protectedProcedure
+      .input(z.object({ callId: z.string() }))
+      .query(async ({ input }) => {
+        const signal3 = (globalThis as any).__webrtcSignals?.get(input.callId);
+        if (!signal3) return { candidates: [] as string[] };
+        return { candidates: signal3.callerCandidates };
+      }),
+
+    // 통화 종료
+    endCall: protectedProcedure
+      .input(z.object({ callId: z.string() }))
+      .mutation(async ({ input }) => {
+        const signal4 = (globalThis as any).__webrtcSignals?.get(input.callId);
+        if (signal4) signal4.status = "ended";
+        setTimeout(() => { (globalThis as any).__webrtcSignals?.delete(input.callId); }, 5000);
+        return { success: true };
       }),
   }),
 });

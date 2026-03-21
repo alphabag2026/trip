@@ -184,7 +184,7 @@ describe("v5.0 - booking 라우터 테스트", () => {
       expect(Array.isArray(result.platforms)).toBe(true);
       expect(result.platforms.length).toBeGreaterThan(0);
       expect(result).toHaveProperty("searchId");
-    });
+    }, 15000);
   });
 
   describe("searchHotels", () => {

@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, boolean } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, boolean, decimal } from "drizzle-orm/mysql-core";
 
 // ── Users ──────────────────────────────────────────────
 export const users = mysqlTable("users", {
@@ -924,12 +924,13 @@ export const chatRooms = mysqlTable("chat_rooms", {
   meetupId: int("meetupId"),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
-  roomType: mysqlEnum("roomType", ["general", "announcement", "support", "social"]).default("general").notNull(),
+  roomType: mysqlEnum("roomType", ["general", "announcement", "support", "social", "direct", "group"]).default("general").notNull(),
   createdBy: int("createdBy"), // 생성자 ID
   isActive: boolean("isActive").default(true),
   maxMembers: int("maxMembers").default(100),
   avatarUrl: varchar("avatarUrl", { length: 1000 }),
   pinnedMessageId: int("pinnedMessageId"),
+  autoTranslate: boolean("autoTranslate").default(true), // 자동 번역 활성화
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -944,6 +945,7 @@ export const chatRoomMembers = mysqlTable("chat_room_members", {
   userId: int("userId").notNull(),
   nickname: varchar("nickname", { length: 255 }),
   memberRole: mysqlEnum("memberRole", ["admin", "moderator", "member"]).default("member").notNull(),
+  preferredLang: varchar("preferredLang", { length: 10 }).default("ko"), // 선호 번역 언어
   lastReadAt: timestamp("lastReadAt"),
   isMuted: boolean("isMuted").default(false),
   joinedAt: timestamp("joinedAt").defaultNow().notNull(),
@@ -960,10 +962,16 @@ export const chatMessages = mysqlTable("chat_messages", {
   senderName: varchar("senderName", { length: 255 }).notNull(),
   senderRole: varchar("senderRole", { length: 50 }), // admin, organizer, attendee 등
   content: text("content"),
-  messageType: mysqlEnum("messageType", ["text", "image", "file", "system", "announcement"]).default("text").notNull(),
+  messageType: mysqlEnum("messageType", ["text", "image", "file", "system", "announcement", "video", "location", "voice"]).default("text").notNull(),
   fileUrl: varchar("fileUrl", { length: 1000 }),
   fileName: varchar("fileName", { length: 255 }),
   replyToId: int("replyToId"), // 답글 대상 메시지 ID
+  // 위치 공유 필드
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  locationName: varchar("locationName", { length: 500 }),
+  // 번역 필드
+  originalLang: varchar("originalLang", { length: 10 }),
   isEdited: boolean("isEdited").default(false),
   isDeleted: boolean("isDeleted").default(false),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
