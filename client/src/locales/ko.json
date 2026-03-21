@@ -17,7 +17,8 @@
     "dashboard": "대시보드",
     "features": "기능",
     "signup": "회원가입",
-    "bookingCenter": "예약센터"
+    "bookingCenter": "예약센터",
+    "community": "커뮤니티"
   },
   "home": {
     "badge": "글로벌 밋업 & 출장 관리 시스템",
@@ -704,7 +705,9 @@
       "flightTickets": "항공권 관리",
       "goHome": "홈으로",
       "affiliateRevenue": "수익 대시보드",
-      "apiKeys": "API 키 관리"
+      "apiKeys": "API 키 관리",
+      "telegramUploads": "텔레그램 업로드",
+      "apiDocs": "API 문서"
     },
     "loginRequired": "로그인이 필요합니다",
     "loginRequiredDesc": "백오피스 접근을 위해 로그인이 필요합니다.",

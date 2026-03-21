@@ -52,6 +52,9 @@ import InviteAccept from "./pages/InviteAccept";
 import ImmigrationChecklist from "./pages/ImmigrationChecklist";
 import BookingCenter from "./pages/BookingCenter";
 import MobileBottomNav from "./components/MobileBottomNav";
+import CommunityChat from "./pages/CommunityChat";
+import AdminTelegramUploads from "./pages/admin/TelegramUploads";
+import AdminApiDocs from "./pages/admin/ApiDocs";
 
 function PublicRouter() {
   return (
@@ -75,6 +78,8 @@ function PublicRouter() {
       <Route path="/invite/:token" component={InviteAccept} />
       <Route path="/immigration-checklist" component={ImmigrationChecklist} />
       <Route path="/booking" component={BookingCenter} />
+      <Route path="/community" component={CommunityChat} />
+      <Route path="/community/:roomId" component={CommunityChat} />
       <Route path="/404" component={NotFound} />
     </Switch>
   );
@@ -111,6 +116,8 @@ function AdminRouter() {
         <Route path="/admin/booking-search" component={AdminBookingSearch} />
         <Route path="/admin/affiliate-revenue" component={AdminAffiliateRevenue} />
         <Route path="/admin/api-keys" component={AdminApiKeys} />
+        <Route path="/admin/telegram-uploads" component={AdminTelegramUploads} />
+        <Route path="/admin/api-docs" component={AdminApiDocs} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

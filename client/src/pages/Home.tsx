@@ -55,6 +55,10 @@ export default function Home() {
                   {t("nav.bookingCenter", "예약센터")}
                 </Link>
                 <Link href="/chatbot" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.chatbot")}</Link>
+                <Link href="/community" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  {t("nav.community", "커뮤니티")}
+                </Link>
               </>
             ) : (
               <>

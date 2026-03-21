@@ -17,7 +17,8 @@
     "dashboard": "Dashboard",
     "features": "Features",
     "signup": "Sign Up",
-    "bookingCenter": "Booking Center"
+    "bookingCenter": "Booking Center",
+    "community": "Community"
   },
   "home": {
     "badge": "Global Meetup & Business Trip Management",
@@ -704,7 +705,9 @@
       "flightTickets": "Flight Tickets",
       "goHome": "Go Home",
       "affiliateRevenue": "Revenue Dashboard",
-      "apiKeys": "API Keys"
+      "apiKeys": "API Keys",
+      "telegramUploads": "Telegram Uploads",
+      "apiDocs": "API Docs"
     },
     "loginRequired": "Login Required",
     "loginRequiredDesc": "Please log in to access the back office.",

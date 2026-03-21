@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Bot, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Bot, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -56,6 +56,8 @@ const menuItemDefs = [
   { icon: ShoppingCart, labelKey: "admin.sidebar.bookingSearch", path: "/admin/booking-search" },
   { icon: TrendingUp, labelKey: "admin.sidebar.affiliateRevenue", path: "/admin/affiliate-revenue" },
   { icon: Key, labelKey: "admin.sidebar.apiKeys", path: "/admin/api-keys" },
+  { icon: Upload, labelKey: "admin.sidebar.telegramUploads", path: "/admin/telegram-uploads" },
+  { icon: BookOpen, labelKey: "admin.sidebar.apiDocs", path: "/admin/api-docs" },
   { icon: Home, labelKey: "admin.sidebar.goHome", path: "/" },
 ];
 

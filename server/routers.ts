@@ -2783,6 +2783,511 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return db.getApiRequestLogs(input.apiKeyId, input.limit);
       }),
+
+    // API 요청 로그 (기간 필터링)
+    logsFiltered: adminProcedure
+      .input(z.object({
+        apiKeyId: z.number(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        limit: z.number().default(100),
+      }))
+      .query(async ({ input }) => {
+        return db.getApiRequestLogsFiltered(input.apiKeyId, {
+          startDate: input.startDate ? new Date(input.startDate) : undefined,
+          endDate: input.endDate ? new Date(input.endDate) : undefined,
+          limit: input.limit,
+        });
+      }),
+  }),
+
+  // ── Telegram Uploads (텔레그램 여행정보 자동 업로드) ──────────
+  telegramUpload: router({
+    // 목록 조회
+    list: adminProcedure
+      .input(z.object({
+        status: z.string().optional(),
+        parsedType: z.string().optional(),
+        meetupId: z.number().optional(),
+        limit: z.number().default(100),
+      }).optional())
+      .query(async ({ input }) => {
+        return db.getTelegramUploads(input || {});
+      }),
+
+    // 상세 조회
+    getById: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getTelegramUploadById(input.id);
+      }),
+
+    // 통계
+    stats: adminProcedure.query(async () => {
+      return db.getTelegramUploadStats();
+    }),
+
+    // 웹훅 수신 (텔레그램 봇에서 호출)
+    webhook: publicProcedure
+      .input(z.object({
+        message_id: z.string().optional(),
+        chat_id: z.string().optional(),
+        from_user: z.string().optional(),
+        text: z.string().optional(),
+        file_url: z.string().optional(),
+        file_type: z.enum(["text", "image", "document", "photo"]).default("text"),
+        meetup_id: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // 1. 저장
+        const id = await db.createTelegramUpload({
+          meetupId: input.meetup_id,
+          uploadedBy: input.from_user,
+          telegramMessageId: input.message_id,
+          telegramChatId: input.chat_id,
+          rawText: input.text,
+          rawFileUrl: input.file_url,
+          rawFileType: input.file_type,
+          status: "pending",
+        });
+
+        // 2. LLM으로 자동 파싱
+        try {
+          const parseResult = await parseTravelInfoWithLLM(input.text || "", input.file_type);
+          await db.updateTelegramUpload(id, {
+            parsedType: parseResult.type as any,
+            parsedData: parseResult.data,
+            parsedConfidence: parseResult.confidence,
+            parsedSummary: parseResult.summary,
+            status: "parsed",
+          });
+        } catch (e) {
+          console.error("[TelegramUpload] LLM parsing failed:", e);
+        }
+
+        return { id };
+      }),
+
+    // 수동 재파싱
+    reparse: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const upload = await db.getTelegramUploadById(input.id);
+        if (!upload) throw new TRPCError({ code: "NOT_FOUND" });
+        const parseResult = await parseTravelInfoWithLLM(upload.rawText || "", upload.rawFileType || "text");
+        await db.updateTelegramUpload(input.id, {
+          parsedType: parseResult.type as any,
+          parsedData: parseResult.data,
+          parsedConfidence: parseResult.confidence,
+          parsedSummary: parseResult.summary,
+          status: "parsed",
+        });
+        return { success: true, ...parseResult };
+      }),
+
+    // 승인 (백오피스에 적용)
+    approve: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        meetupId: z.number().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const upload = await db.getTelegramUploadById(input.id);
+        if (!upload) throw new TRPCError({ code: "NOT_FOUND" });
+        if (!upload.parsedData) throw new TRPCError({ code: "BAD_REQUEST", message: "파싱 데이터가 없습니다" });
+
+        let appliedToTable = "";
+        let appliedToId = 0;
+        const data = upload.parsedData as any;
+        const meetupId = input.meetupId || upload.meetupId;
+
+        try {
+          switch (upload.parsedType) {
+            case "flight": {
+              appliedToId = await db.createFlightSchedule({
+                meetupId: meetupId || undefined,
+                flightNo: data.flightNo || "TBD",
+                airline: data.airline,
+                departureAirport: data.departureAirport,
+                arrivalAirport: data.arrivalAirport,
+                scheduledDeparture: data.departureTime ? new Date(data.departureTime) : new Date(),
+                scheduledArrival: data.arrivalTime ? new Date(data.arrivalTime) : undefined,
+              });
+              appliedToTable = "flight_schedules";
+              break;
+            }
+            case "hotel": {
+              appliedToId = await db.createAccommodation({
+                meetupId: meetupId || undefined,
+                hotelName: data.hotelName || "미정",
+                roomNumber: data.roomNumber,
+                roomType: data.roomType || "twin",
+                checkIn: data.checkIn ? new Date(data.checkIn) : undefined,
+                checkOut: data.checkOut ? new Date(data.checkOut) : undefined,
+                notes: data.notes || `텔레그램 업로드 #${upload.id}에서 자동 생성`,
+              });
+              appliedToTable = "accommodation_assignments";
+              break;
+            }
+            case "schedule": {
+              appliedToId = await db.createScheduleEvent({
+                meetupId: meetupId || undefined,
+                title: data.title || "일정",
+                location: data.location,
+                eventTime: data.eventTime ? new Date(data.eventTime) : new Date(),
+                endTime: data.endTime ? new Date(data.endTime) : undefined,
+                description: data.description || `텔레그램 업로드 #${upload.id}에서 자동 생성`,
+              });
+              appliedToTable = "schedule_events";
+              break;
+            }
+            default: {
+              // general/transfer/unknown → 승인만 표시
+              appliedToTable = "none";
+              break;
+            }
+          }
+        } catch (e) {
+          console.error("[TelegramUpload] Apply failed:", e);
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "데이터 적용 실패" });
+        }
+
+        await db.updateTelegramUpload(input.id, {
+          status: appliedToTable === "none" ? "approved" : "applied",
+          appliedToTable: appliedToTable || undefined,
+          appliedToId: appliedToId || undefined,
+          reviewedBy: ctx.user.id,
+          reviewedAt: new Date(),
+          reviewNotes: input.notes,
+          meetupId: meetupId || undefined,
+        });
+
+        return { success: true, appliedToTable, appliedToId };
+      }),
+
+    // 거절
+    reject: adminProcedure
+      .input(z.object({ id: z.number(), notes: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.updateTelegramUpload(input.id, {
+          status: "rejected",
+          reviewedBy: ctx.user.id,
+          reviewedAt: new Date(),
+          reviewNotes: input.notes,
+        });
+        return { success: true };
+      }),
+
+    // 삭제
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteTelegramUpload(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ── Community Chat Rooms (커뮤니티 채팅방) ──────────────────
+  chatRoom: router({
+    // 채팅방 목록 (로그인 사용자)
+    list: protectedProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        roomType: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return db.getChatRooms({ ...input, isActive: true });
+      }),
+
+    // 내 채팅방 목록
+    myRooms: protectedProcedure.query(async ({ ctx }) => {
+      return db.getChatRoomsByUser(ctx.user.id);
+    }),
+
+    // 채팅방 상세
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getChatRoomById(input.id);
+      }),
+
+    // 채팅방 생성 (관리자)
+    create: adminProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        description: z.string().optional(),
+        meetupId: z.number().optional(),
+        roomType: z.enum(["general", "announcement", "support", "social"]).default("general"),
+        maxMembers: z.number().default(100),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.createChatRoom({
+          ...input,
+          createdBy: ctx.user.id,
+        });
+        // 생성자를 admin으로 자동 참여
+        await db.addChatRoomMember({
+          roomId: id,
+          userId: ctx.user.id,
+          nickname: ctx.user.name || "관리자",
+          memberRole: "admin",
+        });
+        return { id };
+      }),
+
+    // 채팅방 수정
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        roomType: z.enum(["general", "announcement", "support", "social"]).optional(),
+        isActive: z.boolean().optional(),
+        maxMembers: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateChatRoom(id, data);
+        return { success: true };
+      }),
+
+    // 채팅방 삭제
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteChatRoom(input.id);
+        return { success: true };
+      }),
+
+    // 참여
+    join: protectedProcedure
+      .input(z.object({ roomId: z.number(), nickname: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        const room = await db.getChatRoomById(input.roomId);
+        if (!room) throw new TRPCError({ code: "NOT_FOUND" });
+        if (!room.isActive) throw new TRPCError({ code: "BAD_REQUEST", message: "비활성화된 채팅방입니다" });
+        const members = await db.getChatRoomMembers(input.roomId);
+        if (room.maxMembers && members.length >= room.maxMembers) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "채팅방 정원이 초과되었습니다" });
+        }
+        const isAdmin = ctx.user.role === "admin" || ctx.user.role === "superadmin";
+        const id = await db.addChatRoomMember({
+          roomId: input.roomId,
+          userId: ctx.user.id,
+          nickname: input.nickname || ctx.user.name || "익명",
+          memberRole: isAdmin ? "moderator" : "member",
+        });
+        // 시스템 메시지
+        await db.createChatMessage({
+          roomId: input.roomId,
+          userId: ctx.user.id,
+          senderName: "시스템",
+          content: `${input.nickname || ctx.user.name || "새 멤버"}님이 참여했습니다.`,
+          messageType: "system",
+        });
+        return { id };
+      }),
+
+    // 나가기
+    leave: protectedProcedure
+      .input(z.object({ roomId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.removeChatRoomMember(input.roomId, ctx.user.id);
+        await db.createChatMessage({
+          roomId: input.roomId,
+          userId: ctx.user.id,
+          senderName: "시스템",
+          content: `${ctx.user.name || "멤버"}님이 나갔습니다.`,
+          messageType: "system",
+        });
+        return { success: true };
+      }),
+
+    // 멤버 목록
+    members: protectedProcedure
+      .input(z.object({ roomId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getChatRoomMembers(input.roomId);
+      }),
+
+    // 멤버 관리 (관리자)
+    updateMember: adminProcedure
+      .input(z.object({
+        roomId: z.number(),
+        userId: z.number(),
+        memberRole: z.enum(["admin", "moderator", "member"]).optional(),
+        isMuted: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { roomId, userId, ...data } = input;
+        await db.updateChatRoomMember(roomId, userId, data);
+        return { success: true };
+      }),
+
+    // 멤버 강퇴
+    kickMember: adminProcedure
+      .input(z.object({ roomId: z.number(), userId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.removeChatRoomMember(input.roomId, input.userId);
+        return { success: true };
+      }),
+  }),
+
+  // ── Chat Messages (채팅 메시지) ──────────────────────────────
+  chatMessage: router({
+    // 메시지 목록
+    list: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        limit: z.number().default(50),
+        before: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const messages = await db.getChatMessages(input.roomId, input.limit, input.before);
+        return messages.reverse(); // 오래된 순서로 반환
+      }),
+
+    // 메시지 전송
+    send: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        content: z.string().min(1).max(5000),
+        messageType: z.enum(["text", "image", "file", "announcement"]).default("text"),
+        fileUrl: z.string().optional(),
+        fileName: z.string().optional(),
+        replyToId: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // 공지 메시지는 관리자만
+        if (input.messageType === "announcement" && ctx.user.role !== "admin" && ctx.user.role !== "superadmin") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "공지 메시지는 관리자만 작성할 수 있습니다" });
+        }
+        const roleLabel = (ctx.user.role === "admin" || ctx.user.role === "superadmin") ? "admin" : "attendee";
+        const id = await db.createChatMessage({
+          roomId: input.roomId,
+          userId: ctx.user.id,
+          senderName: ctx.user.name || "익명",
+          senderRole: roleLabel,
+          content: input.content,
+          messageType: input.messageType,
+          fileUrl: input.fileUrl,
+          fileName: input.fileName,
+          replyToId: input.replyToId,
+        });
+        // 읽음 처리
+        await db.updateChatRoomMember(input.roomId, ctx.user.id, { lastReadAt: new Date() });
+        return { id };
+      }),
+
+    // 메시지 수정
+    edit: protectedProcedure
+      .input(z.object({ id: z.number(), content: z.string().min(1) }))
+      .mutation(async ({ input, ctx }) => {
+        const msg = await db.getChatMessageById(input.id);
+        if (!msg) throw new TRPCError({ code: "NOT_FOUND" });
+        if (msg.userId !== ctx.user.id && ctx.user.role !== "admin" && ctx.user.role !== "superadmin") {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        await db.updateChatMessage(input.id, { content: input.content, isEdited: true });
+        return { success: true };
+      }),
+
+    // 메시지 삭제
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const msg = await db.getChatMessageById(input.id);
+        if (!msg) throw new TRPCError({ code: "NOT_FOUND" });
+        if (msg.userId !== ctx.user.id && ctx.user.role !== "admin" && ctx.user.role !== "superadmin") {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        await db.softDeleteChatMessage(input.id);
+        return { success: true };
+      }),
+
+    // 읽음 처리
+    markRead: protectedProcedure
+      .input(z.object({ roomId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.updateChatRoomMember(input.roomId, ctx.user.id, { lastReadAt: new Date() });
+        return { success: true };
+      }),
+
+    // 파일 업로드
+    uploadFile: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        fileName: z.string(),
+        fileData: z.string(), // base64
+        mimeType: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const buffer = Buffer.from(input.fileData, "base64");
+        const fileKey = `chat/${input.roomId}/${nanoid()}-${input.fileName}`;
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        const msgType = input.mimeType.startsWith("image/") ? "image" : "file";
+        const id = await db.createChatMessage({
+          roomId: input.roomId,
+          userId: ctx.user.id,
+          senderName: ctx.user.name || "익명",
+          senderRole: (ctx.user.role === "admin" || ctx.user.role === "superadmin") ? "admin" : "attendee",
+          content: input.fileName,
+          messageType: msgType as any,
+          fileUrl: url,
+          fileName: input.fileName,
+        });
+        return { id, url };
+      }),
   }),
 });
+
+// ── LLM 여행정보 파싱 헬퍼 ──────────────────────────────────
+async function parseTravelInfoWithLLM(text: string, fileType: string) {
+  try {
+    const response = await invokeLLM({
+      messages: [
+        {
+          role: "system",
+          content: `You are a travel information parser. Analyze the given text and extract structured travel data.
+Return JSON with the following structure:
+{
+  "type": "flight" | "hotel" | "schedule" | "transfer" | "general" | "unknown",
+  "confidence": 0-100,
+  "summary": "brief Korean summary of the content",
+  "data": {
+    // For flight: flightNo, airline, departureAirport, arrivalAirport, departureTime (ISO), arrivalTime (ISO), terminal, gate, notes
+    // For hotel: hotelName, address, roomNumber, roomType, checkIn (ISO), checkOut (ISO), notes
+    // For schedule: title, location, eventTime (ISO), endTime (ISO), description
+    // For transfer: vehicleType, pickupLocation, pickupTime (ISO), driverName, driverPhone, notes
+    // For general/unknown: content, notes
+  }
+}
+Always respond in valid JSON only.`,
+        },
+        {
+          role: "user",
+          content: `Parse this travel information (source: ${fileType}):\n\n${text}`,
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (typeof content === "string") {
+      const parsed = JSON.parse(content);
+      return {
+        type: parsed.type || "unknown",
+        confidence: parsed.confidence || 50,
+        summary: parsed.summary || "파싱 완료",
+        data: parsed.data || {},
+      };
+    }
+    return { type: "unknown", confidence: 0, summary: "파싱 실패", data: {} };
+  } catch (e) {
+    console.error("[LLM Parse] Error:", e);
+    return { type: "unknown", confidence: 0, summary: "LLM 파싱 오류", data: {} };
+  }
+}
+
 export type AppRouter = typeof appRouter;

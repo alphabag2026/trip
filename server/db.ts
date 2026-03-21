@@ -1,4 +1,4 @@
-import { eq, like, or, and, desc, sql, gte, lte, between } from "drizzle-orm";
+import { eq, like, or, and, desc, sql, gte, lte, between, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users,
@@ -1528,4 +1528,191 @@ export async function getApiUsageStats(apiKeyId: number) {
   const [hourly] = await db!.select({ count: sql<number>`count(*)` }).from(apiRequestLogs).where(and(eq(apiRequestLogs.apiKeyId, apiKeyId), gte(apiRequestLogs.createdAt, oneHourAgo)));
   const [daily] = await db!.select({ count: sql<number>`count(*)` }).from(apiRequestLogs).where(and(eq(apiRequestLogs.apiKeyId, apiKeyId), gte(apiRequestLogs.createdAt, oneDayAgo)));
   return { hourlyRequests: hourly?.count || 0, dailyRequests: daily?.count || 0 };
+}
+
+
+// ══════════════════════════════════════════════════════════
+// v5.2 - Telegram Uploads & Community Chat
+// ══════════════════════════════════════════════════════════
+
+import {
+  telegramUploads, InsertTelegramUpload,
+  chatRooms, InsertChatRoom,
+  chatRoomMembers, InsertChatRoomMember,
+  chatMessages, InsertChatMessage,
+} from "../drizzle/schema";
+
+// ── Telegram Uploads ─────────────────────────────────────
+export async function createTelegramUpload(data: InsertTelegramUpload) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(telegramUploads).values(data);
+  return result[0].insertId;
+}
+
+export async function getTelegramUploads(filters?: { status?: string; parsedType?: string; meetupId?: number; limit?: number }) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [];
+  if (filters?.status) conditions.push(eq(telegramUploads.status, filters.status as any));
+  if (filters?.parsedType) conditions.push(eq(telegramUploads.parsedType, filters.parsedType as any));
+  if (filters?.meetupId) conditions.push(eq(telegramUploads.meetupId, filters.meetupId));
+  return db.select().from(telegramUploads)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(telegramUploads.createdAt))
+    .limit(filters?.limit || 100);
+}
+
+export async function getTelegramUploadById(id: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(telegramUploads).where(eq(telegramUploads.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateTelegramUpload(id: number, data: Partial<InsertTelegramUpload>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(telegramUploads).set(data).where(eq(telegramUploads.id, id));
+}
+
+export async function deleteTelegramUpload(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(telegramUploads).where(eq(telegramUploads.id, id));
+}
+
+export async function getTelegramUploadStats() {
+  const db = await getDb(); if (!db) return { total: 0, pending: 0, parsed: 0, approved: 0, applied: 0, rejected: 0 };
+  const [total] = await db.select({ count: sql<number>`count(*)` }).from(telegramUploads);
+  const [pending] = await db.select({ count: sql<number>`count(*)` }).from(telegramUploads).where(eq(telegramUploads.status, "pending"));
+  const [parsed] = await db.select({ count: sql<number>`count(*)` }).from(telegramUploads).where(eq(telegramUploads.status, "parsed"));
+  const [approved] = await db.select({ count: sql<number>`count(*)` }).from(telegramUploads).where(eq(telegramUploads.status, "approved"));
+  const [applied] = await db.select({ count: sql<number>`count(*)` }).from(telegramUploads).where(eq(telegramUploads.status, "applied"));
+  const [rejected] = await db.select({ count: sql<number>`count(*)` }).from(telegramUploads).where(eq(telegramUploads.status, "rejected"));
+  return {
+    total: total?.count || 0, pending: pending?.count || 0, parsed: parsed?.count || 0,
+    approved: approved?.count || 0, applied: applied?.count || 0, rejected: rejected?.count || 0,
+  };
+}
+
+// ── Chat Rooms ───────────────────────────────────────────
+export async function createChatRoom(data: InsertChatRoom) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(chatRooms).values(data);
+  return result[0].insertId;
+}
+
+export async function getChatRooms(filters?: { meetupId?: number; roomType?: string; isActive?: boolean }) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [];
+  if (filters?.meetupId) conditions.push(eq(chatRooms.meetupId, filters.meetupId));
+  if (filters?.roomType) conditions.push(eq(chatRooms.roomType, filters.roomType as any));
+  if (filters?.isActive !== undefined) conditions.push(eq(chatRooms.isActive, filters.isActive));
+  return db.select().from(chatRooms)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(chatRooms.updatedAt));
+}
+
+export async function getChatRoomById(id: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(chatRooms).where(eq(chatRooms.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateChatRoom(id: number, data: Partial<InsertChatRoom>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(chatRooms).set(data).where(eq(chatRooms.id, id));
+}
+
+export async function deleteChatRoom(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(chatMessages).where(eq(chatMessages.roomId, id));
+  await db.delete(chatRoomMembers).where(eq(chatRoomMembers.roomId, id));
+  await db.delete(chatRooms).where(eq(chatRooms.id, id));
+}
+
+// ── Chat Room Members ────────────────────────────────────
+export async function addChatRoomMember(data: InsertChatRoomMember) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  // Check if already a member
+  const existing = await db.select().from(chatRoomMembers)
+    .where(and(eq(chatRoomMembers.roomId, data.roomId), eq(chatRoomMembers.userId, data.userId)))
+    .limit(1);
+  if (existing.length > 0) return existing[0].id;
+  const result = await db.insert(chatRoomMembers).values(data);
+  return result[0].insertId;
+}
+
+export async function getChatRoomMembers(roomId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(chatRoomMembers).where(eq(chatRoomMembers.roomId, roomId)).orderBy(chatRoomMembers.joinedAt);
+}
+
+export async function getChatRoomsByUser(userId: number) {
+  const db = await getDb(); if (!db) return [];
+  const memberRows = await db.select().from(chatRoomMembers).where(eq(chatRoomMembers.userId, userId));
+  if (memberRows.length === 0) return [];
+  const roomIds = memberRows.map(m => m.roomId);
+  return db.select().from(chatRooms).where(inArray(chatRooms.id, roomIds)).orderBy(desc(chatRooms.updatedAt));
+}
+
+export async function removeChatRoomMember(roomId: number, userId: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(chatRoomMembers).where(and(eq(chatRoomMembers.roomId, roomId), eq(chatRoomMembers.userId, userId)));
+}
+
+export async function updateChatRoomMember(roomId: number, userId: number, data: Partial<InsertChatRoomMember>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(chatRoomMembers).set(data).where(and(eq(chatRoomMembers.roomId, roomId), eq(chatRoomMembers.userId, userId)));
+}
+
+// ── Chat Messages ────────────────────────────────────────
+export async function createChatMessage(data: InsertChatMessage) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(chatMessages).values(data);
+  // Update room's updatedAt
+  await db.update(chatRooms).set({ updatedAt: new Date() }).where(eq(chatRooms.id, data.roomId));
+  return result[0].insertId;
+}
+
+export async function getChatMessages(roomId: number, limit: number = 100, before?: number) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [eq(chatMessages.roomId, roomId), eq(chatMessages.isDeleted, false)];
+  if (before) conditions.push(sql`${chatMessages.id} < ${before}` as any);
+  return db.select().from(chatMessages)
+    .where(and(...conditions))
+    .orderBy(desc(chatMessages.createdAt))
+    .limit(limit);
+}
+
+export async function getChatMessageById(id: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(chatMessages).where(eq(chatMessages.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateChatMessage(id: number, data: Partial<InsertChatMessage>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(chatMessages).set(data).where(eq(chatMessages.id, id));
+}
+
+export async function softDeleteChatMessage(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(chatMessages).set({ isDeleted: true, content: "[삭제된 메시지]" }).where(eq(chatMessages.id, id));
+}
+
+export async function getUnreadChatCount(roomId: number, lastReadAt: Date | null) {
+  const db = await getDb(); if (!db) return 0;
+  const conditions = [eq(chatMessages.roomId, roomId), eq(chatMessages.isDeleted, false)];
+  if (lastReadAt) conditions.push(gte(chatMessages.createdAt, lastReadAt));
+  const [result] = await db.select({ count: sql<number>`count(*)` }).from(chatMessages).where(and(...conditions));
+  return result?.count || 0;
+}
+
+// ── API Request Logs with date filter ────────────────────
+export async function getApiRequestLogsFiltered(apiKeyId: number, filters?: { startDate?: Date; endDate?: Date; limit?: number }) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [eq(apiRequestLogs.apiKeyId, apiKeyId)];
+  if (filters?.startDate) conditions.push(gte(apiRequestLogs.createdAt, filters.startDate));
+  if (filters?.endDate) conditions.push(sql`${apiRequestLogs.createdAt} <= ${filters.endDate}` as any);
+  return db.select().from(apiRequestLogs)
+    .where(and(...conditions))
+    .orderBy(desc(apiRequestLogs.createdAt))
+    .limit(filters?.limit || 100);
 }

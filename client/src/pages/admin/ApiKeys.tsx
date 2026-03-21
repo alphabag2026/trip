@@ -71,6 +71,9 @@ export default function ApiKeys() {
   const [showKey, setShowKey] = useState(false);
   const [selectedKeyId, setSelectedKeyId] = useState<number | null>(null);
   const [showLogs, setShowLogs] = useState(false);
+  const [logStartDate, setLogStartDate] = useState("");
+  const [logEndDate, setLogEndDate] = useState("");
+  const [useFiltered, setUseFiltered] = useState(false);
 
   const apiKeysQuery = trpc.apiKeys.list.useQuery();
   const createMutation = trpc.apiKeys.create.useMutation({
@@ -96,8 +99,18 @@ export default function ApiKeys() {
 
   const logsQuery = trpc.apiKeys.logs.useQuery(
     { apiKeyId: selectedKeyId!, limit: 50 },
-    { enabled: !!selectedKeyId && showLogs }
+    { enabled: !!selectedKeyId && showLogs && !useFiltered }
   );
+  const filteredLogsQuery = trpc.apiKeys.logsFiltered.useQuery(
+    {
+      apiKeyId: selectedKeyId!,
+      startDate: logStartDate || undefined,
+      endDate: logEndDate || undefined,
+      limit: 100,
+    },
+    { enabled: !!selectedKeyId && showLogs && useFiltered }
+  );
+  const displayLogs = useFiltered ? filteredLogsQuery.data : logsQuery.data;
   const usageQuery = trpc.apiKeys.usage.useQuery(
     { apiKeyId: selectedKeyId! },
     { enabled: !!selectedKeyId && showLogs }
@@ -404,12 +417,32 @@ export default function ApiKeys() {
       </Card>
 
       {/* Usage Logs Dialog */}
-      <Dialog open={showLogs} onOpenChange={setShowLogs}>
+      <Dialog open={showLogs} onOpenChange={(open) => { setShowLogs(open); if (!open) { setUseFiltered(false); setLogStartDate(""); setLogEndDate(""); } }}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>API Usage Logs</DialogTitle>
             <DialogDescription>Recent API requests for this key</DialogDescription>
           </DialogHeader>
+
+          {/* Date Filter */}
+          <div className="flex items-end gap-3 p-3 bg-muted/30 rounded-lg">
+            <div className="flex-1">
+              <label className="text-xs text-muted-foreground mb-1 block">시작일</label>
+              <Input type="date" value={logStartDate} onChange={(e) => setLogStartDate(e.target.value)} className="h-8 text-sm" />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs text-muted-foreground mb-1 block">종료일</label>
+              <Input type="date" value={logEndDate} onChange={(e) => setLogEndDate(e.target.value)} className="h-8 text-sm" />
+            </div>
+            <Button size="sm" variant={useFiltered ? "default" : "outline"} onClick={() => { setUseFiltered(true); filteredLogsQuery.refetch(); }} disabled={!logStartDate && !logEndDate}>
+              필터 적용
+            </Button>
+            {useFiltered && (
+              <Button size="sm" variant="ghost" onClick={() => { setUseFiltered(false); setLogStartDate(""); setLogEndDate(""); }}>
+                초기화
+              </Button>
+            )}
+          </div>
 
           {usageQuery.data && (
             <div className="grid grid-cols-3 gap-3 mb-4">
@@ -439,7 +472,7 @@ export default function ApiKeys() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(logsQuery.data || []).map((log: any) => (
+              {(displayLogs || []).map((log: any) => (
                 <TableRow key={log.id}>
                   <TableCell className="text-xs">
                     {new Date(log.createdAt).toLocaleString()}
@@ -458,7 +491,7 @@ export default function ApiKeys() {
                   <TableCell className="text-xs">{log.responseTimeMs}ms</TableCell>
                 </TableRow>
               ))}
-              {(!logsQuery.data || logsQuery.data.length === 0) && (
+              {(!displayLogs || displayLogs.length === 0) && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     No requests logged yet

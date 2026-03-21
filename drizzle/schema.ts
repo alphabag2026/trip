@@ -883,3 +883,92 @@ export const apiRequestLogs = mysqlTable("api_request_logs", {
 });
 export type ApiRequestLog = typeof apiRequestLogs.$inferSelect;
 export type InsertApiRequestLog = typeof apiRequestLogs.$inferInsert;
+
+// ══════════════════════════════════════════════════════════
+// v5.2 - 텔레그램 자동 업로드 + 커뮤니티 채팅방
+// ══════════════════════════════════════════════════════════
+
+// ── Telegram Uploads (텔레그램 여행정보 자동 업로드) ──────────────
+export const telegramUploads = mysqlTable("telegram_uploads", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId"),
+  uploadedBy: varchar("uploadedBy", { length: 255 }), // 텔레그램 사용자명
+  telegramMessageId: varchar("telegramMessageId", { length: 100 }),
+  telegramChatId: varchar("telegramChatId", { length: 100 }),
+  // 원본 데이터
+  rawText: text("rawText"), // 텔레그램에서 받은 원본 텍스트
+  rawFileUrl: varchar("rawFileUrl", { length: 1000 }), // 첨부 파일 URL
+  rawFileType: mysqlEnum("rawFileType", ["text", "image", "document", "photo"]).default("text"),
+  // LLM 파싱 결과
+  parsedType: mysqlEnum("parsedType", ["flight", "hotel", "schedule", "transfer", "general", "unknown"]).default("unknown"),
+  parsedData: json("parsedData"), // LLM이 추출한 구조화된 데이터
+  parsedConfidence: int("parsedConfidence").default(0), // 파싱 신뢰도 (0-100)
+  parsedSummary: text("parsedSummary"), // 파싱 결과 요약
+  // 처리 상태
+  status: mysqlEnum("status", ["pending", "parsed", "approved", "rejected", "applied"]).default("pending").notNull(),
+  appliedToTable: varchar("appliedToTable", { length: 100 }), // 적용된 테이블명
+  appliedToId: int("appliedToId"), // 적용된 레코드 ID
+  reviewedBy: int("reviewedBy"), // 검토한 관리자 ID
+  reviewedAt: timestamp("reviewedAt"),
+  reviewNotes: text("reviewNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TelegramUpload = typeof telegramUploads.$inferSelect;
+export type InsertTelegramUpload = typeof telegramUploads.$inferInsert;
+
+// ── Community Chat Rooms (커뮤니티 채팅방) ──────────────────────
+export const chatRooms = mysqlTable("chat_rooms", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId"),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  roomType: mysqlEnum("roomType", ["general", "announcement", "support", "social"]).default("general").notNull(),
+  createdBy: int("createdBy"), // 생성자 ID
+  isActive: boolean("isActive").default(true),
+  maxMembers: int("maxMembers").default(100),
+  avatarUrl: varchar("avatarUrl", { length: 1000 }),
+  pinnedMessageId: int("pinnedMessageId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ChatRoom = typeof chatRooms.$inferSelect;
+export type InsertChatRoom = typeof chatRooms.$inferInsert;
+
+// ── Chat Room Members (채팅방 멤버) ──────────────────────────
+export const chatRoomMembers = mysqlTable("chat_room_members", {
+  id: int("id").autoincrement().primaryKey(),
+  roomId: int("roomId").notNull(),
+  userId: int("userId").notNull(),
+  nickname: varchar("nickname", { length: 255 }),
+  memberRole: mysqlEnum("memberRole", ["admin", "moderator", "member"]).default("member").notNull(),
+  lastReadAt: timestamp("lastReadAt"),
+  isMuted: boolean("isMuted").default(false),
+  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+});
+
+export type ChatRoomMember = typeof chatRoomMembers.$inferSelect;
+export type InsertChatRoomMember = typeof chatRoomMembers.$inferInsert;
+
+// ── Chat Messages (채팅 메시지) ──────────────────────────────
+export const chatMessages = mysqlTable("chat_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  roomId: int("roomId").notNull(),
+  userId: int("userId").notNull(),
+  senderName: varchar("senderName", { length: 255 }).notNull(),
+  senderRole: varchar("senderRole", { length: 50 }), // admin, organizer, attendee 등
+  content: text("content"),
+  messageType: mysqlEnum("messageType", ["text", "image", "file", "system", "announcement"]).default("text").notNull(),
+  fileUrl: varchar("fileUrl", { length: 1000 }),
+  fileName: varchar("fileName", { length: 255 }),
+  replyToId: int("replyToId"), // 답글 대상 메시지 ID
+  isEdited: boolean("isEdited").default(false),
+  isDeleted: boolean("isDeleted").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;
