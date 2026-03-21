@@ -1296,3 +1296,171 @@ export async function getUserImmigrationStatus(userId: number) {
     tickets: ticketRows,
   };
 }
+
+// ══════════════════════════════════════════════════════════
+// v5.0 - Affiliate Booking System
+// ══════════════════════════════════════════════════════════
+
+import {
+  bookingSearches, InsertBookingSearch,
+  bookingLinks, InsertBookingLink,
+  affiliateRevenue, InsertAffiliateRevenue,
+  affiliateSettings, InsertAffiliateSetting,
+} from "../drizzle/schema";
+
+// ── Booking Searches ──────────────────────────────────────
+export async function createBookingSearch(data: InsertBookingSearch) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(bookingSearches).values(data);
+  return result[0].insertId;
+}
+
+export async function getBookingSearches(filters?: { meetupId?: number; searchType?: string; source?: string; limit?: number }) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [];
+  if (filters?.meetupId) conditions.push(eq(bookingSearches.meetupId, filters.meetupId));
+  if (filters?.searchType) conditions.push(eq(bookingSearches.searchType, filters.searchType as any));
+  if (filters?.source) conditions.push(eq(bookingSearches.source, filters.source as any));
+  const query = db.select().from(bookingSearches)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(bookingSearches.createdAt));
+  if (filters?.limit) return query.limit(filters.limit);
+  return query;
+}
+
+export async function getBookingSearchById(id: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(bookingSearches).where(eq(bookingSearches.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateBookingSearch(id: number, data: Partial<InsertBookingSearch>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(bookingSearches).set(data).where(eq(bookingSearches.id, id));
+}
+
+// ── Booking Links ──────────────────────────────────────────
+export async function createBookingLink(data: InsertBookingLink) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(bookingLinks).values(data);
+  return result[0].insertId;
+}
+
+export async function getBookingLinks(filters?: { searchId?: number; meetupId?: number; platform?: string }) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [];
+  if (filters?.searchId) conditions.push(eq(bookingLinks.searchId, filters.searchId));
+  if (filters?.meetupId) conditions.push(eq(bookingLinks.meetupId, filters.meetupId));
+  if (filters?.platform) conditions.push(eq(bookingLinks.platform, filters.platform as any));
+  return db.select().from(bookingLinks)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(bookingLinks.createdAt));
+}
+
+export async function incrementBookingLinkClick(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(bookingLinks).set({
+    clickCount: sql`${bookingLinks.clickCount} + 1`,
+    lastClickedAt: new Date(),
+  }).where(eq(bookingLinks.id, id));
+}
+
+export async function updateBookingLink(id: number, data: Partial<InsertBookingLink>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(bookingLinks).set(data).where(eq(bookingLinks.id, id));
+}
+
+// ── Affiliate Revenue ──────────────────────────────────────
+export async function createAffiliateRevenue(data: InsertAffiliateRevenue) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(affiliateRevenue).values(data);
+  return result[0].insertId;
+}
+
+export async function getAffiliateRevenue(filters?: { meetupId?: number; platform?: string; status?: string; revenueMonth?: string }) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [];
+  if (filters?.meetupId) conditions.push(eq(affiliateRevenue.meetupId, filters.meetupId));
+  if (filters?.platform) conditions.push(eq(affiliateRevenue.platform, filters.platform as any));
+  if (filters?.status) conditions.push(eq(affiliateRevenue.status, filters.status as any));
+  if (filters?.revenueMonth) conditions.push(eq(affiliateRevenue.revenueMonth, filters.revenueMonth));
+  return db.select().from(affiliateRevenue)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(affiliateRevenue.createdAt));
+}
+
+export async function getRevenueStats() {
+  const db = await getDb();
+  if (!db) return { totalRevenue: "0", pendingRevenue: "0", confirmedRevenue: "0", paidRevenue: "0", totalBookings: 0, totalClicks: 0 };
+  const [totalRev] = await db.select({ sum: sql<string>`COALESCE(SUM(CAST(commissionAmount AS DECIMAL(10,2))), 0)` }).from(affiliateRevenue);
+  const [pendingRev] = await db.select({ sum: sql<string>`COALESCE(SUM(CAST(commissionAmount AS DECIMAL(10,2))), 0)` }).from(affiliateRevenue).where(eq(affiliateRevenue.status, "pending"));
+  const [confirmedRev] = await db.select({ sum: sql<string>`COALESCE(SUM(CAST(commissionAmount AS DECIMAL(10,2))), 0)` }).from(affiliateRevenue).where(eq(affiliateRevenue.status, "confirmed"));
+  const [paidRev] = await db.select({ sum: sql<string>`COALESCE(SUM(CAST(commissionAmount AS DECIMAL(10,2))), 0)` }).from(affiliateRevenue).where(eq(affiliateRevenue.status, "paid"));
+  const [bookingCount] = await db.select({ count: sql<number>`count(*)` }).from(affiliateRevenue);
+  const [clickCount] = await db.select({ sum: sql<number>`COALESCE(SUM(clickCount), 0)` }).from(bookingLinks);
+  return {
+    totalRevenue: totalRev.sum,
+    pendingRevenue: pendingRev.sum,
+    confirmedRevenue: confirmedRev.sum,
+    paidRevenue: paidRev.sum,
+    totalBookings: bookingCount.count,
+    totalClicks: clickCount.sum,
+  };
+}
+
+export async function getRevenueByCategoryAndPlatform() {
+  const db = await getDb(); if (!db) return [];
+  return db.select({
+    platform: affiliateRevenue.platform,
+    revenueType: affiliateRevenue.revenueType,
+    total: sql<string>`COALESCE(SUM(CAST(commissionAmount AS DECIMAL(10,2))), 0)`,
+    count: sql<number>`count(*)`,
+  }).from(affiliateRevenue).groupBy(affiliateRevenue.platform, affiliateRevenue.revenueType);
+}
+
+export async function getMonthlyRevenue(months: number = 6) {
+  const db = await getDb(); if (!db) return [];
+  return db.select({
+    month: affiliateRevenue.revenueMonth,
+    platform: affiliateRevenue.platform,
+    total: sql<string>`COALESCE(SUM(CAST(commissionAmount AS DECIMAL(10,2))), 0)`,
+    count: sql<number>`count(*)`,
+  }).from(affiliateRevenue)
+    .where(affiliateRevenue.revenueMonth ? gte(affiliateRevenue.revenueMonth, sql`DATE_FORMAT(DATE_SUB(NOW(), INTERVAL ${months} MONTH), '%Y-%m')`) : undefined)
+    .groupBy(affiliateRevenue.revenueMonth, affiliateRevenue.platform)
+    .orderBy(affiliateRevenue.revenueMonth);
+}
+
+export async function updateAffiliateRevenue(id: number, data: Partial<InsertAffiliateRevenue>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(affiliateRevenue).set(data).where(eq(affiliateRevenue.id, id));
+}
+
+// ── Affiliate Settings ──────────────────────────────────────
+export async function getAffiliateSettings() {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(affiliateSettings).orderBy(affiliateSettings.platform);
+}
+
+export async function getAffiliateSettingByPlatform(platform: string) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(affiliateSettings).where(eq(affiliateSettings.platform, platform as any)).limit(1);
+  return result[0];
+}
+
+export async function upsertAffiliateSetting(data: InsertAffiliateSetting) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.insert(affiliateSettings).values(data).onDuplicateKeyUpdate({
+    set: {
+      affiliateId: data.affiliateId,
+      apiKey: data.apiKey,
+      apiSecret: data.apiSecret,
+      marker: data.marker,
+      isActive: data.isActive,
+      commissionRateFlight: data.commissionRateFlight,
+      commissionRateHotel: data.commissionRateHotel,
+      commissionRateTour: data.commissionRateTour,
+      notes: data.notes,
+    },
+  });
+}

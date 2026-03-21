@@ -8,6 +8,15 @@ import * as db from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
 import { nanoid } from "nanoid";
+import {
+  generateFlightSearchLinks,
+  generateHotelSearchLinks,
+  getAirportInfo,
+  AIRPORT_MAP,
+  type AffiliateConfig,
+  type FlightSearchParams,
+  type HotelSearchParams,
+} from "./affiliateHelper";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin" && ctx.user.role !== "superadmin") throw new TRPCError({ code: "FORBIDDEN", message: "관리자 권한이 필요합니다" });
@@ -660,6 +669,103 @@ export const appRouter = router({
         const ok = await sendTelegram(msg);
         if (!ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "전송 실패" });
         return { success: true, count: events.length };
+      }),
+    // 항공편 검색 결과 텔레그램 전송
+    sendFlightSearch: adminProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        origin: z.string(),
+        destination: z.string(),
+        departureDate: z.string(),
+        returnDate: z.string().optional(),
+        passengers: z.number().default(1),
+      }))
+      .mutation(async ({ input }) => {
+        const settings = await db.getAffiliateSettings();
+        const configMap: Record<string, string> = {};
+        settings.forEach(s => {
+          if (s.isActive && s.affiliateId) configMap[s.platform] = s.affiliateId;
+        });
+        const originInfo = getAirportInfo(input.origin);
+        const destInfo = getAirportInfo(input.destination);
+        const links = generateFlightSearchLinks({
+          origin: input.origin,
+          destination: input.destination,
+          departureDate: input.departureDate,
+          returnDate: input.returnDate,
+          passengers: input.passengers,
+        }, {
+          tripComAffId: configMap.trip_com,
+          skyscannerAffId: configMap.skyscanner,
+          travelpayoutsMarker: configMap.travelpayouts,
+        });
+        let meetupTitle = '';
+        if (input.meetupId) {
+          const meetup = await db.getMeetupById(input.meetupId);
+          meetupTitle = meetup ? ` - ${meetup.title}` : '';
+        }
+        let msg = `✈️ <b>항공편 검색 결과${meetupTitle}</b>\n`;
+        msg += `${"─".repeat(20)}\n`;
+        msg += `🛫 ${input.origin}(${originInfo?.cityKo || originInfo?.city || input.origin}) → ${input.destination}(${destInfo?.cityKo || destInfo?.city || input.destination})\n`;
+        msg += `📅 ${input.departureDate}${input.returnDate ? ` ~ ${input.returnDate}` : ' (편도)'}\n`;
+        msg += `👥 ${input.passengers}명\n`;
+        msg += `${"─".repeat(20)}\n\n`;
+        msg += `🔗 <b>예약 링크:</b>\n`;
+        links.forEach(l => {
+          msg += `• <a href="${l.url}">${l.platformName}</a>\n`;
+        });
+        msg += `\n💡 위 링크를 클릭하여 최저가를 비교해 보세요!`;
+        const ok = await sendTelegram(msg);
+        if (!ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "텔레그램 전송 실패" });
+        return { success: true, linksCount: links.length };
+      }),
+    // 호텔 검색 결과 텔레그램 전송
+    sendHotelSearch: adminProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        city: z.string(),
+        checkIn: z.string(),
+        checkOut: z.string(),
+        rooms: z.number().default(1),
+        guests: z.number().default(2),
+      }))
+      .mutation(async ({ input }) => {
+        const settings = await db.getAffiliateSettings();
+        const configMap: Record<string, string> = {};
+        settings.forEach(s => {
+          if (s.isActive && s.affiliateId) configMap[s.platform] = s.affiliateId;
+        });
+        const links = generateHotelSearchLinks({
+          city: input.city,
+          checkIn: input.checkIn,
+          checkOut: input.checkOut,
+          rooms: input.rooms,
+          guests: input.guests,
+        }, {
+          tripComAffId: configMap.trip_com,
+          bookingComAffId: configMap.booking_com,
+          agodaCid: configMap.agoda,
+          travelpayoutsMarker: configMap.travelpayouts,
+        });
+        let meetupTitle = '';
+        if (input.meetupId) {
+          const meetup = await db.getMeetupById(input.meetupId);
+          meetupTitle = meetup ? ` - ${meetup.title}` : '';
+        }
+        let msg = `🏨 <b>호텔 검색 결과${meetupTitle}</b>\n`;
+        msg += `${"─".repeat(20)}\n`;
+        msg += `📍 ${input.city}\n`;
+        msg += `📅 ${input.checkIn} ~ ${input.checkOut}\n`;
+        msg += `🚪 ${input.rooms}실 / 👥 ${input.guests}명\n`;
+        msg += `${"─".repeat(20)}\n\n`;
+        msg += `🔗 <b>예약 링크:</b>\n`;
+        links.forEach(l => {
+          msg += `• <a href="${l.url}">${l.platformName}</a>\n`;
+        });
+        msg += `\n💡 위 링크를 클릭하여 최저가를 비교해 보세요!`;
+        const ok = await sendTelegram(msg);
+        if (!ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "텔레그램 전송 실패" });
+        return { success: true, linksCount: links.length };
       }),
   }),
 
@@ -2294,6 +2400,312 @@ export const appRouter = router({
       .input(z.object({ userId: z.number() }))
       .query(async ({ input }) => {
         return db.getUserImmigrationStatus(input.userId);
+      }),
+  }),
+
+  // ══════════════════════════════════════════════════════════
+  // v5.0 - Affiliate Booking System
+  // ══════════════════════════════════════════════════════════
+  booking: router({
+    // 공항 코드 목록
+    airports: publicProcedure.query(() => {
+      return Object.entries(AIRPORT_MAP).map(([code, info]) => ({
+        code, ...info,
+      }));
+    }),
+
+    // 항공편 검색 + 어필리에이트 링크 생성
+    searchFlights: protectedProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        origin: z.string().min(3).max(4),
+        destination: z.string().min(3).max(4),
+        departureDate: z.string(),
+        returnDate: z.string().optional(),
+        passengers: z.number().default(1),
+        cabinClass: z.enum(["economy", "premium_economy", "business", "first"]).default("economy"),
+        source: z.enum(["backoffice", "mypage", "telegram"]).default("backoffice"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // 어필리에이트 설정 로드
+        const settings = await db.getAffiliateSettings();
+        const config: AffiliateConfig = {};
+        for (const s of settings) {
+          if (!s.isActive) continue;
+          if (s.platform === "trip_com") config.tripComAffId = s.affiliateId || undefined;
+          if (s.platform === "booking_com") config.bookingComAffId = s.affiliateId || undefined;
+          if (s.platform === "skyscanner") config.skyscannerAffId = s.affiliateId || undefined;
+          if (s.platform === "travelpayouts") config.travelpayoutsMarker = s.marker || undefined;
+        }
+
+        const searchParams: FlightSearchParams = {
+          origin: input.origin.toUpperCase(),
+          destination: input.destination.toUpperCase(),
+          departureDate: input.departureDate,
+          returnDate: input.returnDate,
+          passengers: input.passengers,
+          cabinClass: input.cabinClass,
+        };
+
+        const platforms = generateFlightSearchLinks(searchParams, config);
+
+        // 검색 기록 저장
+        const originInfo = getAirportInfo(input.origin);
+        const destInfo = getAirportInfo(input.destination);
+        const searchId = await db.createBookingSearch({
+          meetupId: input.meetupId,
+          userId: ctx.user.id,
+          searchType: "flight",
+          originCode: input.origin.toUpperCase(),
+          originCity: originInfo.city,
+          destinationCode: input.destination.toUpperCase(),
+          destinationCity: destInfo.city,
+          departureDate: input.departureDate,
+          returnDate: input.returnDate,
+          passengers: input.passengers,
+          cabinClass: input.cabinClass,
+          resultCount: platforms.length,
+          searchResults: platforms,
+          source: input.source,
+        });
+
+        // 각 플랫폼별 링크 저장
+        for (const p of platforms) {
+          await db.createBookingLink({
+            searchId,
+            meetupId: input.meetupId,
+            userId: ctx.user.id,
+            platform: p.platform as any,
+            linkType: "flight",
+            affiliateUrl: p.url,
+            productName: `${input.origin} → ${input.destination} (${input.departureDate})`,
+            currency: p.currency,
+          });
+        }
+
+        return { searchId, platforms, origin: originInfo, destination: destInfo };
+      }),
+
+    // 호텔 검색 + 어필리에이트 링크 생성
+    searchHotels: protectedProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        city: z.string().min(1),
+        checkIn: z.string(),
+        checkOut: z.string(),
+        rooms: z.number().default(1),
+        guests: z.number().default(2),
+        source: z.enum(["backoffice", "mypage", "telegram"]).default("backoffice"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const settings = await db.getAffiliateSettings();
+        const config: AffiliateConfig = {};
+        for (const s of settings) {
+          if (!s.isActive) continue;
+          if (s.platform === "trip_com") config.tripComAffId = s.affiliateId || undefined;
+          if (s.platform === "booking_com") config.bookingComAffId = s.affiliateId || undefined;
+          if (s.platform === "agoda") config.agodaCid = s.affiliateId || undefined;
+          if (s.platform === "travelpayouts") config.travelpayoutsMarker = s.marker || undefined;
+        }
+
+        const searchParams: HotelSearchParams = {
+          city: input.city,
+          checkIn: input.checkIn,
+          checkOut: input.checkOut,
+          rooms: input.rooms,
+          guests: input.guests,
+        };
+
+        const platforms = generateHotelSearchLinks(searchParams, config);
+
+        const searchId = await db.createBookingSearch({
+          meetupId: input.meetupId,
+          userId: ctx.user.id,
+          searchType: "hotel",
+          hotelCity: input.city,
+          hotelCheckIn: input.checkIn,
+          hotelCheckOut: input.checkOut,
+          rooms: input.rooms,
+          guests: input.guests,
+          resultCount: platforms.length,
+          searchResults: platforms,
+          source: input.source,
+        });
+
+        for (const p of platforms) {
+          await db.createBookingLink({
+            searchId,
+            meetupId: input.meetupId,
+            userId: ctx.user.id,
+            platform: p.platform as any,
+            linkType: "hotel",
+            affiliateUrl: p.url,
+            productName: `${input.city} (${input.checkIn} ~ ${input.checkOut})`,
+            currency: p.currency,
+          });
+        }
+
+        return { searchId, platforms };
+      }),
+
+    // 링크 클릭 추적
+    trackClick: publicProcedure
+      .input(z.object({ linkId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.incrementBookingLinkClick(input.linkId);
+        return { success: true };
+      }),
+
+    // 검색 기록 목록
+    searchHistory: protectedProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        searchType: z.string().optional(),
+        source: z.string().optional(),
+        limit: z.number().default(50),
+      }).optional())
+      .query(async ({ input }) => {
+        return db.getBookingSearches(input || {});
+      }),
+
+    // 검색 결과 참석자에게 발송 (텔레그램)
+    sendToAttendees: adminProcedure
+      .input(z.object({
+        searchId: z.number(),
+        meetupId: z.number(),
+        message: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const search = await db.getBookingSearchById(input.searchId);
+        if (!search) throw new TRPCError({ code: "NOT_FOUND" });
+
+        const links = await db.getBookingLinks({ searchId: input.searchId });
+        const regs = await db.getRegistrations({ meetupId: input.meetupId, status: "approved" });
+
+        // 텔레그램 메시지 구성
+        let msg = "";
+        if (search.searchType === "flight") {
+          msg = `\u2708\uFE0F <b>항공편 검색 결과</b>\n${search.originCode} → ${search.destinationCode}\n${search.departureDate}${search.returnDate ? " ~ " + search.returnDate : ""}\n\n`;
+        } else {
+          msg = `\uD83C\uDFE8 <b>호텔 검색 결과</b>\n${search.hotelCity}\n${search.hotelCheckIn} ~ ${search.hotelCheckOut}\n\n`;
+        }
+
+        for (const link of links) {
+          msg += `\u2022 <a href="${link.affiliateUrl}">${link.productName || link.platform}</a>\n`;
+        }
+
+        if (input.message) msg += `\n${input.message}`;
+
+        const sent = await sendTelegram(msg);
+
+        await db.updateBookingSearch(input.searchId, {
+          sentToAttendees: true,
+          sentAt: new Date(),
+          sentCount: regs.length,
+        });
+
+        return { success: sent, recipientCount: regs.length };
+      }),
+
+    // 링크 목록
+    links: protectedProcedure
+      .input(z.object({
+        searchId: z.number().optional(),
+        meetupId: z.number().optional(),
+        platform: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return db.getBookingLinks(input || {});
+      }),
+  }),
+
+  // ── Affiliate Settings & Revenue ──────────────────────────
+  affiliate: router({
+    // 설정 목록
+    settings: adminProcedure.query(async () => {
+      return db.getAffiliateSettings();
+    }),
+
+    // 설정 업데이트
+    upsertSetting: adminProcedure
+      .input(z.object({
+        platform: z.enum(["trip_com", "booking_com", "agoda", "skyscanner", "klook", "travelpayouts"]),
+        affiliateId: z.string().optional(),
+        apiKey: z.string().optional(),
+        apiSecret: z.string().optional(),
+        marker: z.string().optional(),
+        isActive: z.boolean().default(false),
+        commissionRateFlight: z.string().optional(),
+        commissionRateHotel: z.string().optional(),
+        commissionRateTour: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.upsertAffiliateSetting(input);
+        return { success: true };
+      }),
+
+    // 수익 목록
+    revenue: adminProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        platform: z.string().optional(),
+        status: z.string().optional(),
+        revenueMonth: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return db.getAffiliateRevenue(input || {});
+      }),
+
+    // 수익 통계
+    stats: adminProcedure.query(async () => {
+      return db.getRevenueStats();
+    }),
+
+    // 카테고리/플랫폼별 수익
+    breakdown: adminProcedure.query(async () => {
+      return db.getRevenueByCategoryAndPlatform();
+    }),
+
+    // 월별 수익
+    monthly: adminProcedure
+      .input(z.object({ months: z.number().default(6) }).optional())
+      .query(async ({ input }) => {
+        return db.getMonthlyRevenue(input?.months || 6);
+      }),
+
+    // 수익 추가 (수동 입력)
+    addRevenue: adminProcedure
+      .input(z.object({
+        bookingLinkId: z.number().optional(),
+        meetupId: z.number().optional(),
+        platform: z.enum(["trip_com", "booking_com", "agoda", "skyscanner", "klook", "travelpayouts"]),
+        revenueType: z.enum(["flight", "hotel", "tour", "transfer"]).default("flight"),
+        bookingAmount: z.string().optional(),
+        commissionRate: z.string().optional(),
+        commissionAmount: z.string(),
+        currency: z.string().default("USD"),
+        status: z.enum(["pending", "confirmed", "paid", "cancelled"]).default("pending"),
+        externalBookingId: z.string().optional(),
+        notes: z.string().optional(),
+        revenueMonth: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createAffiliateRevenue(input);
+        return { id };
+      }),
+
+    // 수익 상태 업데이트
+    updateRevenue: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["pending", "confirmed", "paid", "cancelled"]).optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateAffiliateRevenue(id, data);
+        return { success: true };
       }),
   }),
 });

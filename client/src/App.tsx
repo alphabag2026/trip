@@ -40,6 +40,8 @@ import AdminPlatformDashboard from "./pages/admin/PlatformDashboard";
 import AdminPartners from "./pages/admin/Partners";
 import AdminHotelVouchers from "./pages/admin/HotelVouchers";
 import AdminFlightTickets from "./pages/admin/FlightTickets";
+import AdminBookingSearch from "./pages/admin/BookingSearch";
+import AdminAffiliateRevenue from "./pages/admin/AffiliateRevenue";
 import DashboardLayout from "./components/DashboardLayout";
 import Onboarding from "./pages/Onboarding";
 import MyPage from "./pages/MyPage";
@@ -47,6 +49,7 @@ import { OnboardingGuard } from "./components/OnboardingGuard";
 import RoleDashboard from "./pages/dashboard/RoleDashboard";
 import InviteAccept from "./pages/InviteAccept";
 import ImmigrationChecklist from "./pages/ImmigrationChecklist";
+import BookingCenter from "./pages/BookingCenter";
 import MobileBottomNav from "./components/MobileBottomNav";
 
 function PublicRouter() {
@@ -70,6 +73,7 @@ function PublicRouter() {
       <Route path="/dashboard" component={RoleDashboard} />
       <Route path="/invite/:token" component={InviteAccept} />
       <Route path="/immigration-checklist" component={ImmigrationChecklist} />
+      <Route path="/booking" component={BookingCenter} />
       <Route path="/404" component={NotFound} />
     </Switch>
   );
@@ -103,6 +107,8 @@ function AdminRouter() {
         <Route path="/admin/partners" component={AdminPartners} />
         <Route path="/admin/hotel-vouchers" component={AdminHotelVouchers} />
         <Route path="/admin/flight-tickets" component={AdminFlightTickets} />
+        <Route path="/admin/booking-search" component={AdminBookingSearch} />
+        <Route path="/admin/affiliate-revenue" component={AdminAffiliateRevenue} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

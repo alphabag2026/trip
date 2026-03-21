@@ -734,3 +734,119 @@ export const flightTickets = mysqlTable("flight_tickets", {
 
 export type FlightTicket = typeof flightTickets.$inferSelect;
 export type InsertFlightTicket = typeof flightTickets.$inferInsert;
+
+// ══════════════════════════════════════════════════════════
+// v5.0 - 항공권/호텔 어필리에이트 통합 예약 시스템
+// ══════════════════════════════════════════════════════════
+
+// ── Booking Searches (검색 기록) ──────────────────────────────
+export const bookingSearches = mysqlTable("booking_searches", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId"),
+  userId: int("userId"), // 검색한 사용자
+  searchType: mysqlEnum("searchType", ["flight", "hotel", "tour", "transfer"]).default("flight").notNull(),
+  // 항공편 검색 파라미터
+  originCode: varchar("originCode", { length: 10 }), // 출발 공항 코드
+  originCity: varchar("originCity", { length: 255 }),
+  destinationCode: varchar("destinationCode", { length: 10 }), // 도착 공항 코드
+  destinationCity: varchar("destinationCity", { length: 255 }),
+  departureDate: varchar("departureDate", { length: 20 }),
+  returnDate: varchar("returnDate", { length: 20 }),
+  passengers: int("passengers").default(1),
+  cabinClass: mysqlEnum("cabinClass", ["economy", "premium_economy", "business", "first"]).default("economy"),
+  // 호텔 검색 파라미터
+  hotelCity: varchar("hotelCity", { length: 255 }),
+  hotelCheckIn: varchar("hotelCheckIn", { length: 20 }),
+  hotelCheckOut: varchar("hotelCheckOut", { length: 20 }),
+  rooms: int("rooms").default(1),
+  guests: int("guests").default(2),
+  // 검색 결과 요약
+  resultCount: int("resultCount").default(0),
+  lowestPrice: varchar("lowestPrice", { length: 50 }),
+  lowestPricePlatform: varchar("lowestPricePlatform", { length: 50 }),
+  searchResults: json("searchResults"), // 플랫폼별 검색 결과 캐시
+  // 메타
+  source: mysqlEnum("source", ["backoffice", "mypage", "telegram"]).default("backoffice"),
+  sentToAttendees: boolean("sentToAttendees").default(false),
+  sentAt: timestamp("sentAt"),
+  sentCount: int("sentCount").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BookingSearch = typeof bookingSearches.$inferSelect;
+export type InsertBookingSearch = typeof bookingSearches.$inferInsert;
+
+// ── Booking Links (어필리에이트 예약 링크) ──────────────────────
+export const bookingLinks = mysqlTable("booking_links", {
+  id: int("id").autoincrement().primaryKey(),
+  searchId: int("searchId"), // 관련 검색 ID
+  meetupId: int("meetupId"),
+  userId: int("userId"), // 클릭한 사용자
+  platform: mysqlEnum("platform", ["trip_com", "booking_com", "agoda", "skyscanner", "klook", "travelpayouts"]).notNull(),
+  linkType: mysqlEnum("linkType", ["flight", "hotel", "tour", "transfer"]).default("flight").notNull(),
+  // 링크 정보
+  affiliateUrl: text("affiliateUrl").notNull(), // 어필리에이트 링크 URL
+  originalUrl: text("originalUrl"), // 원본 URL
+  affiliateId: varchar("affiliateId", { length: 255 }), // 어필리에이트 ID
+  // 상품 정보
+  productName: varchar("productName", { length: 500 }),
+  price: varchar("price", { length: 50 }),
+  currency: varchar("currency", { length: 10 }).default("USD"),
+  // 추적
+  clickCount: int("clickCount").default(0),
+  lastClickedAt: timestamp("lastClickedAt"),
+  converted: boolean("converted").default(false), // 실제 예약 전환 여부
+  conversionAmount: varchar("conversionAmount", { length: 50 }),
+  commissionAmount: varchar("commissionAmount", { length: 50 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BookingLink = typeof bookingLinks.$inferSelect;
+export type InsertBookingLink = typeof bookingLinks.$inferInsert;
+
+// ── Affiliate Revenue (어필리에이트 수익 트래킹) ──────────────────
+export const affiliateRevenue = mysqlTable("affiliate_revenue", {
+  id: int("id").autoincrement().primaryKey(),
+  bookingLinkId: int("bookingLinkId"),
+  meetupId: int("meetupId"),
+  platform: mysqlEnum("platform", ["trip_com", "booking_com", "agoda", "skyscanner", "klook", "travelpayouts"]).notNull(),
+  revenueType: mysqlEnum("revenueType", ["flight", "hotel", "tour", "transfer"]).default("flight").notNull(),
+  // 수익 정보
+  bookingAmount: varchar("bookingAmount", { length: 50 }), // 예약 금액
+  commissionRate: varchar("commissionRate", { length: 20 }), // 커미션 비율
+  commissionAmount: varchar("commissionAmount", { length: 50 }).notNull(), // 커미션 금액
+  currency: varchar("currency", { length: 10 }).default("USD"),
+  // 상태
+  status: mysqlEnum("status", ["pending", "confirmed", "paid", "cancelled"]).default("pending").notNull(),
+  paidAt: timestamp("paidAt"),
+  // 참조
+  externalBookingId: varchar("externalBookingId", { length: 255 }), // 외부 예약 ID
+  notes: text("notes"),
+  revenueMonth: varchar("revenueMonth", { length: 7 }), // YYYY-MM
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AffiliateRevenue = typeof affiliateRevenue.$inferSelect;
+export type InsertAffiliateRevenue = typeof affiliateRevenue.$inferInsert;
+
+// ── Affiliate Settings (어필리에이트 설정) ──────────────────────
+export const affiliateSettings = mysqlTable("affiliate_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  platform: mysqlEnum("platform", ["trip_com", "booking_com", "agoda", "skyscanner", "klook", "travelpayouts"]).notNull().unique(),
+  affiliateId: varchar("affiliateId", { length: 255 }), // 어필리에이트 ID
+  apiKey: varchar("apiKey", { length: 500 }), // API 키
+  apiSecret: varchar("apiSecret", { length: 500 }),
+  marker: varchar("marker", { length: 255 }), // Travelpayouts marker
+  isActive: boolean("isActive").default(false),
+  commissionRateFlight: varchar("commissionRateFlight", { length: 20 }),
+  commissionRateHotel: varchar("commissionRateHotel", { length: 20 }),
+  commissionRateTour: varchar("commissionRateTour", { length: 20 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AffiliateSetting = typeof affiliateSettings.$inferSelect;
+export type InsertAffiliateSetting = typeof affiliateSettings.$inferInsert;

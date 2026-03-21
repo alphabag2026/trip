@@ -504,3 +504,15 @@
 - [x] 컴포넌트에서 하드코딩 텍스트를 i18n 키로 교체 (30+ 파일)
 - [x] 빌드 검증 및 테스트 (275건 전체 통과)
 - [x] 23개 언어 병렬 번역 (19/20 성공, hi 제외)
+
+## v5.0 - 항공권/호텔 어필리에이트 통합 예약 시스템
+- [x] DB 스키마: booking_searches, booking_links, affiliate_settings, affiliate_revenue 테이블
+- [x] 어필리에이트 API 연동 서버 헬퍼 (Trip.com/Booking.com/Agoda/Skyscanner/Klook/Travelpayouts)
+- [x] tRPC 라우터: booking.searchFlights, booking.searchHotels, booking.airports, booking.trackClick
+- [x] tRPC 라우터: affiliate.settings, affiliate.upsertSetting, affiliate.stats, affiliate.addRevenue, affiliate.revenue, affiliate.breakdown
+- [x] 백오피스 UI: 항공편/호텔 검색 및 3개 플랫폼 가격 비교 페이지 (BookingSearch)
+- [x] 백오피스 UI: 텔레그램 전송 기능 (항공편/호텔 검색 결과)
+- [x] 참석자 마이페이지: 예약 센터 UI (항공편/호텔/투어/픽업) (BookingCenter)
+- [x] 백오피스 UI: 수익 대시보드 (AffiliateRevenue)
+- [x] 텔레그램 봇: sendFlightSearch, sendHotelSearch 명령어
+- [x] 테스트 작성 및 빌드 검증 (21파일 301건 전체 통과)
