@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   User, BookOpen, CheckCircle, ArrowRight, ArrowLeft, Upload, Loader2, Shield, Globe, Phone, Building2,
-  Briefcase, Heart, AlertTriangle, LogOut, ScanLine, Camera, Sparkles, AlertCircle,
+  Briefcase, Heart, AlertTriangle, LogOut, ScanLine, Camera, Sparkles, AlertCircle, ShieldCheck, ShieldAlert, Info, Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -27,6 +27,26 @@ const LANGUAGES_LIST = [
   { value: "ja", label: "日本語" }, { value: "zh", label: "中文" },
   { value: "th", label: "ไทย" }, { value: "vi", label: "Tiếng Việt" },
 ];
+
+// 신뢰도 돈 표시 컴포넌트
+function ConfidenceDot({ score }: { score: number }) {
+  const color = score >= 0.9 ? 'bg-green-400' : score >= 0.7 ? 'bg-amber-400' : 'bg-red-400';
+  const label = score >= 0.9 ? '높음' : score >= 0.7 ? '보통' : '낮음';
+  return (
+    <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground" title={`신뢰도: ${Math.round(score * 100)}%`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${color}`} />
+      {score < 0.7 && <span className="text-red-400">확인 필요</span>}
+    </span>
+  );
+}
+
+// 신뢰도에 따른 필드 테두리 색상
+function getFieldBorderClass(score?: number): string {
+  if (score == null) return '';
+  if (score < 0.7) return 'border-red-500/50 focus-visible:ring-red-500/30';
+  if (score < 0.9) return 'border-amber-500/50 focus-visible:ring-amber-500/30';
+  return '';
+}
 
 export default function Onboarding() {
   const { user, loading, logout } = useAuth({ redirectOnUnauthenticated: true });
@@ -287,6 +307,18 @@ export default function Onboarding() {
                   <p className="text-sm text-muted-foreground mb-3">
                     여권 사진 한 장으로 프로필과 여권 정보를 자동으로 입력합니다. 전화번호만 추가로 입력하면 가입 완료!
                   </p>
+                  {/* 이미지 품질 가이드 */}
+                  <div className="mb-3 p-3 rounded-lg bg-muted/50 border border-border/50">
+                    <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                      <Info className="h-3 w-3" /> 촬영 팁 (정확도 향상)
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+                      <div className="flex items-center gap-1.5"><Eye className="h-3 w-3 text-green-400 shrink-0" /> 여권 정보 페이지를 평평하게 펼쳐주세요</div>
+                      <div className="flex items-center gap-1.5"><Camera className="h-3 w-3 text-green-400 shrink-0" /> 밝은 곳에서 반사 없이 촬영</div>
+                      <div className="flex items-center gap-1.5"><ScanLine className="h-3 w-3 text-green-400 shrink-0" /> 하단 MRZ 코드가 선명하게 보이도록</div>
+                      <div className="flex items-center gap-1.5"><Shield className="h-3 w-3 text-green-400 shrink-0" /> 손가락으로 정보를 가리지 마세요</div>
+                    </div>
+                  </div>
                   <div className="flex gap-2 flex-wrap">
                     <Button
                       onClick={() => passportScanInputRef.current?.click()}
@@ -418,38 +450,93 @@ export default function Onboarding() {
               </Card>
             )}
 
+            {/* MRZ 검증 상태 배너 */}
+            {ocrData?._mrzValidation && (
+              <Card className={`border ${ocrData._mrzValidation.allChecksValid ? 'border-green-500/30 bg-green-500/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-3">
+                    {ocrData._mrzValidation.allChecksValid ? (
+                      <ShieldCheck className="h-6 w-6 text-green-400 shrink-0" />
+                    ) : (
+                      <ShieldAlert className="h-6 w-6 text-amber-400 shrink-0" />
+                    )}
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${ocrData._mrzValidation.allChecksValid ? 'text-green-400' : 'text-amber-400'}`}>
+                        {ocrData._mrzValidation.allChecksValid
+                          ? 'MRZ 체크디짓 검증 통과 - 높은 신뢰도'
+                          : 'MRZ 일부 검증 실패 - 수동 확인 필요'}
+                      </p>
+                      <div className="flex gap-3 mt-1 text-[11px] text-muted-foreground">
+                        <span className={ocrData._mrzValidation.passportNumberValid ? 'text-green-400' : 'text-red-400'}>
+                          여권번호 {ocrData._mrzValidation.passportNumberValid ? '✓' : '✗'}
+                        </span>
+                        <span className={ocrData._mrzValidation.dobValid ? 'text-green-400' : 'text-red-400'}>
+                          생년월일 {ocrData._mrzValidation.dobValid ? '✓' : '✗'}
+                        </span>
+                        <span className={ocrData._mrzValidation.expiryValid ? 'text-green-400' : 'text-red-400'}>
+                          만료일 {ocrData._mrzValidation.expiryValid ? '✓' : '✗'}
+                        </span>
+                        <span className={ocrData._mrzValidation.overallValid ? 'text-green-400' : 'text-red-400'}>
+                          종합 {ocrData._mrzValidation.overallValid ? '✓' : '✗'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* OCR 결과 - 여권 정보 */}
             <Card className="border-blue-500/20">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <BookOpen className="w-4 h-4 text-blue-400" /> 인식된 여권 정보
-                  <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">자동 입력됨</Badge>
+                  {ocrData?.confidence?.overall != null && (
+                    <Badge variant="outline" className={`text-[10px] ${ocrData.confidence.overall >= 0.9 ? 'border-green-500/30 text-green-400' : ocrData.confidence.overall >= 0.7 ? 'border-amber-500/30 text-amber-400' : 'border-red-500/30 text-red-400'}`}>
+                      신뢰도 {Math.round(ocrData.confidence.overall * 100)}%
+                    </Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs">영문 이름</Label>
-                    <Input value={passportForm.fullName} onChange={e => setPassportForm(p => ({ ...p, fullName: e.target.value }))} />
+                    <Label className="text-xs flex items-center gap-1">
+                      영문 이름
+                      {ocrData?.confidence?.fullName != null && <ConfidenceDot score={ocrData.confidence.fullName} />}
+                    </Label>
+                    <Input value={passportForm.fullName} onChange={e => setPassportForm(p => ({ ...p, fullName: e.target.value }))} className={getFieldBorderClass(ocrData?.confidence?.fullName)} />
                   </div>
                   <div>
-                    <Label className="text-xs">여권번호</Label>
-                    <Input value={passportForm.passportNumber} onChange={e => setPassportForm(p => ({ ...p, passportNumber: e.target.value }))} />
+                    <Label className="text-xs flex items-center gap-1">
+                      여권번호
+                      {ocrData?.confidence?.passportNumber != null && <ConfidenceDot score={ocrData.confidence.passportNumber} />}
+                    </Label>
+                    <Input value={passportForm.passportNumber} onChange={e => setPassportForm(p => ({ ...p, passportNumber: e.target.value }))} className={getFieldBorderClass(ocrData?.confidence?.passportNumber)} />
                   </div>
                   <div>
-                    <Label className="text-xs">국적</Label>
-                    <Input value={passportForm.nationality} onChange={e => setPassportForm(p => ({ ...p, nationality: e.target.value }))} />
+                    <Label className="text-xs flex items-center gap-1">
+                      국적
+                      {ocrData?.confidence?.nationality != null && <ConfidenceDot score={ocrData.confidence.nationality} />}
+                    </Label>
+                    <Input value={passportForm.nationality} onChange={e => setPassportForm(p => ({ ...p, nationality: e.target.value }))} className={getFieldBorderClass(ocrData?.confidence?.nationality)} />
                   </div>
                   <div>
                     <Label className="text-xs">발급국</Label>
                     <Input value={passportForm.issuingCountry} onChange={e => setPassportForm(p => ({ ...p, issuingCountry: e.target.value }))} />
                   </div>
                   <div>
-                    <Label className="text-xs">생년월일</Label>
-                    <Input type="date" value={passportForm.birthDate} onChange={e => setPassportForm(p => ({ ...p, birthDate: e.target.value }))} />
+                    <Label className="text-xs flex items-center gap-1">
+                      생년월일
+                      {ocrData?.confidence?.dateOfBirth != null && <ConfidenceDot score={ocrData.confidence.dateOfBirth} />}
+                    </Label>
+                    <Input type="date" value={passportForm.birthDate} onChange={e => setPassportForm(p => ({ ...p, birthDate: e.target.value }))} className={getFieldBorderClass(ocrData?.confidence?.dateOfBirth)} />
                   </div>
                   <div>
-                    <Label className="text-xs">성별</Label>
+                    <Label className="text-xs flex items-center gap-1">
+                      성별
+                      {ocrData?.confidence?.gender != null && <ConfidenceDot score={ocrData.confidence.gender} />}
+                    </Label>
                     <Select value={passportForm.gender} onValueChange={v => setPassportForm(p => ({ ...p, gender: v as "M" | "F" }))}>
                       <SelectTrigger><SelectValue placeholder="성별" /></SelectTrigger>
                       <SelectContent>
@@ -463,8 +550,11 @@ export default function Onboarding() {
                     <Input type="date" value={passportForm.issueDate} onChange={e => setPassportForm(p => ({ ...p, issueDate: e.target.value }))} />
                   </div>
                   <div>
-                    <Label className="text-xs">만료일</Label>
-                    <Input type="date" value={passportForm.expiryDate} onChange={e => setPassportForm(p => ({ ...p, expiryDate: e.target.value }))} />
+                    <Label className="text-xs flex items-center gap-1">
+                      만료일
+                      {ocrData?.confidence?.expiryDate != null && <ConfidenceDot score={ocrData.confidence.expiryDate} />}
+                    </Label>
+                    <Input type="date" value={passportForm.expiryDate} onChange={e => setPassportForm(p => ({ ...p, expiryDate: e.target.value }))} className={getFieldBorderClass(ocrData?.confidence?.expiryDate)} />
                   </div>
                 </div>
 

@@ -28,6 +28,99 @@ const superadminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+// ── MRZ Parser & Check Digit Validator (ICAO 9303) ──────────────────────────
+function mrzCharValue(ch: string): number {
+  if (ch === '<') return 0;
+  const code = ch.charCodeAt(0);
+  if (code >= 48 && code <= 57) return code - 48; // 0-9
+  if (code >= 65 && code <= 90) return code - 55; // A=10, B=11, ..., Z=35
+  return 0;
+}
+
+function mrzCheckDigit(data: string): number {
+  const weights = [7, 3, 1];
+  let sum = 0;
+  for (let i = 0; i < data.length; i++) {
+    sum += mrzCharValue(data[i]) * weights[i % 3];
+  }
+  return sum % 10;
+}
+
+function mrzDateToISO(yymmdd: string): string | null {
+  if (!yymmdd || yymmdd.length !== 6 || yymmdd.includes('<')) return null;
+  const yy = parseInt(yymmdd.substring(0, 2), 10);
+  const mm = yymmdd.substring(2, 4);
+  const dd = yymmdd.substring(4, 6);
+  const year = yy > 50 ? 1900 + yy : 2000 + yy;
+  return `${year}-${mm}-${dd}`;
+}
+
+function parseMrzLine1(line1: string): { surname: string; givenNames: string; issuingCountry: string } {
+  const docType = line1.substring(0, 2);
+  const issuingCountry = line1.substring(2, 5).replace(/</g, '');
+  const nameField = line1.substring(5).replace(/<+$/, '');
+  const nameParts = nameField.split('<<');
+  const surname = (nameParts[0] || '').replace(/</g, ' ').trim();
+  const givenNames = (nameParts[1] || '').replace(/</g, ' ').trim();
+  return { surname, givenNames, issuingCountry };
+}
+
+function parseMrzLine2(line2: string): {
+  passportNumber: string | null;
+  passportNumberValid: boolean;
+  nationality: string;
+  dateOfBirth: string | null;
+  dobValid: boolean;
+  gender: string;
+  expiryDate: string | null;
+  expiryValid: boolean;
+  overallValid: boolean;
+  allChecksValid: boolean;
+} {
+  // TD3: 44 characters
+  const passportNumRaw = line2.substring(0, 9);
+  const passportCheckDigit = parseInt(line2[9], 10);
+  const nationality = line2.substring(10, 13).replace(/</g, '');
+  const dobRaw = line2.substring(13, 19);
+  const dobCheckDigit = parseInt(line2[19], 10);
+  const gender = line2[20] === '<' ? '' : line2[20];
+  const expiryRaw = line2.substring(21, 27);
+  const expiryCheckDigit = parseInt(line2[27], 10);
+  const personalNum = line2.substring(28, 42);
+  const personalCheckDigit = line2[42];
+  const overallCheckDigit = parseInt(line2[43], 10);
+
+  // Validate check digits
+  const calcPassportCheck = mrzCheckDigit(passportNumRaw);
+  const passportNumberValid = calcPassportCheck === passportCheckDigit;
+  const calcDobCheck = mrzCheckDigit(dobRaw);
+  const dobValid = calcDobCheck === dobCheckDigit;
+  const calcExpiryCheck = mrzCheckDigit(expiryRaw);
+  const expiryValid = calcExpiryCheck === expiryCheckDigit;
+  
+  // Overall check digit: over pos 1-10, 14-20, 22-43 (0-indexed: 0-9, 13-19, 21-42)
+  const overallData = line2.substring(0, 10) + line2.substring(13, 20) + line2.substring(21, 43);
+  const calcOverallCheck = mrzCheckDigit(overallData);
+  const overallValid = calcOverallCheck === overallCheckDigit;
+
+  const passportNumber = passportNumRaw.replace(/</g, '').trim() || null;
+  const dateOfBirth = mrzDateToISO(dobRaw);
+  const expiryDate = mrzDateToISO(expiryRaw);
+
+  return {
+    passportNumber,
+    passportNumberValid,
+    nationality,
+    dateOfBirth,
+    dobValid,
+    gender,
+    expiryDate,
+    expiryValid,
+    overallValid,
+    allChecksValid: passportNumberValid && dobValid && expiryValid && overallValid,
+  };
+}
+
 // Telegram helper
 async function sendTelegram(text: string) {
   const config = await db.getTelegramConfig();
@@ -2047,19 +2140,74 @@ export const appRouter = router({
         try {
           const ocrResponse = await invokeLLM({
             messages: [
-              { role: "system", content: `You are a passport OCR system. Extract the following fields from the passport image and return ONLY valid JSON:
-- fullName (full name as shown on passport, in ENGLISH/LATIN characters)
-- passportNumber
-- nationality (country name in Korean, e.g. "한국", "미국")
-- issuingCountry (country name in Korean)
-- dateOfBirth (YYYY-MM-DD format)
-- expiryDate (YYYY-MM-DD format)
-- issueDate (YYYY-MM-DD format, if visible)
-- gender (M or F)
-- phone (if visible, otherwise null)
-Return ONLY valid JSON, no markdown or explanation.` },
+              { role: "system", content: `You are an expert passport OCR and MRZ (Machine Readable Zone) extraction system. You must extract information from passport images with maximum accuracy.
+
+## EXTRACTION PRIORITY ORDER:
+1. **MRZ Zone (HIGHEST PRIORITY)**: Always look for the Machine Readable Zone at the bottom of the passport identity page. It contains 2 lines of 44 characters each (TD3 format) or 3 lines of 30 characters each (TD1 format). Characters are ONLY: A-Z, 0-9, and < (filler).
+2. **Visual Identity Zone (VIZ)**: The human-readable text printed on the passport page.
+3. **Cross-validate**: Compare MRZ data with VIZ data. If they differ, prefer MRZ data as it is machine-standardized.
+
+## MRZ TD3 FORMAT (Passports - 2 lines x 44 chars):
+Line 1: P<ISSUING_COUNTRY<SURNAME<<GIVEN_NAMES<<<<<<<<<<<<<<<<<<
+Line 2: PASSPORT_NO<CHECK_DIGIT<NATIONALITY<DOB<CHECK<SEX<EXPIRY<CHECK<PERSONAL_NO<<<<<<<<CHECK<OVERALL_CHECK
+
+### Line 2 Field Positions:
+- Pos 1-9: Passport number (may contain < as filler)
+- Pos 10: Check digit for passport number
+- Pos 11-13: Nationality (ISO 3166-1 alpha-3 code, e.g., KOR, USA, JPN, CHN, GBR, DEU, FRA, VNM, THA, PHL, IDN, MYS, IND, RUS, AUS, CAN, SGP)
+- Pos 14-19: Date of birth (YYMMDD)
+- Pos 20: Check digit for DOB
+- Pos 21: Sex (M, F, or <)
+- Pos 22-27: Expiry date (YYMMDD)
+- Pos 28: Check digit for expiry date
+- Pos 29-42: Personal number / optional data
+- Pos 43: Check digit for personal number
+- Pos 44: Overall check digit
+
+## MRZ TD1 FORMAT (ID Cards - 3 lines x 30 chars):
+Line 1: I<ISSUING_COUNTRY<DOCUMENT_NO<CHECK<OPTIONAL
+Line 2: DOB<CHECK<SEX<EXPIRY<CHECK<NATIONALITY<OPTIONAL<OVERALL_CHECK
+Line 3: SURNAME<<GIVEN_NAMES<<<<<<<<<<<<
+
+## COUNTRY CODE TO NAME MAPPING (Korean):
+KOR=한국, USA=미국, JPN=일본, CHN=중국, GBR=영국, DEU=독일, FRA=프랑스, CAN=캐나다, AUS=호주, SGP=싱가포르, THA=태국, VNM=베트남, PHL=필리핀, IDN=인도네시아, MYS=말레이시아, IND=인도, RUS=러시아, TWN=대만, HKG=홍콩, BRA=브라질, MEX=멕시코, ITA=이탈리아, ESP=스페인, NLD=네덜란드, SWE=스웨덴, TUR=터키, POL=폴란드, UKR=우크라이나, MNG=몽골, ARE=아랍에미리트, SAU=사우디아라비아, NZL=뉴질랜드
+
+## IMPORTANT RULES:
+- For names: Extract the LATIN/ENGLISH version. Convert MRZ < separators to spaces. Surname and given names are separated by <<.
+- For dates: Convert YYMMDD to YYYY-MM-DD. If YY > 50, assume 19XX; if YY <= 50, assume 20XX.
+- For passport numbers: Remove filler characters <. Some countries use letters+numbers (e.g., M12345678 for Korea).
+- For non-Latin script passports (Arabic, Chinese, Cyrillic, Thai, etc.): ALWAYS extract the Latin transliteration from MRZ, not the native script.
+- If a field is not visible or unreadable, set it to null.
+- Include a confidence score (0.0-1.0) for each extracted field.
+
+## OUTPUT FORMAT (strict JSON only):
+{
+  "fullName": "SURNAME GIVEN_NAMES",
+  "passportNumber": "...",
+  "nationality": "한국",
+  "issuingCountry": "한국",
+  "dateOfBirth": "YYYY-MM-DD",
+  "expiryDate": "YYYY-MM-DD",
+  "issueDate": "YYYY-MM-DD or null",
+  "gender": "M or F",
+  "phone": null,
+  "rawMrz": "full MRZ text exactly as read, 2 lines separated by \\n",
+  "mrzLine1": "44 chars of line 1",
+  "mrzLine2": "44 chars of line 2",
+  "confidence": {
+    "fullName": 0.95,
+    "passportNumber": 0.98,
+    "nationality": 0.99,
+    "dateOfBirth": 0.97,
+    "expiryDate": 0.96,
+    "gender": 0.99,
+    "overall": 0.95
+  }
+}
+
+Return ONLY valid JSON, no markdown code blocks, no explanation.` },
               { role: "user", content: [
-                { type: "text", text: "Extract passport information from this image:" },
+                { type: "text", text: "Extract all passport information from this image. Focus on reading the MRZ (Machine Readable Zone) at the bottom of the passport page first, then cross-validate with the visual text above. Return the result as JSON." },
                 { type: "image_url", image_url: { url, detail: "high" } },
               ]},
             ],
@@ -2072,6 +2220,49 @@ Return ONLY valid JSON, no markdown or explanation.` },
             ocrData = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
           } catch {
             ocrData = { raw: ocrText };
+          }
+          // MRZ 교차 검증
+          if (ocrData.mrzLine2 && typeof ocrData.mrzLine2 === "string" && ocrData.mrzLine2.length >= 44) {
+            const mrz2 = ocrData.mrzLine2.replace(/[^A-Z0-9<]/g, "");
+            if (mrz2.length >= 44) {
+              const mrzParsed = parseMrzLine2(mrz2);
+              ocrData._mrzValidation = mrzParsed;
+              // 교차 검증: MRZ 파싱 결과와 OCR 결과 비교, MRZ가 체크디짓 통과하면 MRZ 우선
+              if (mrzParsed.passportNumberValid && mrzParsed.passportNumber) {
+                if (ocrData.passportNumber !== mrzParsed.passportNumber) {
+                  ocrData.passportNumber = mrzParsed.passportNumber;
+                  if (ocrData.confidence) ocrData.confidence.passportNumber = 0.99;
+                }
+              }
+              if (mrzParsed.dobValid && mrzParsed.dateOfBirth) {
+                if (ocrData.dateOfBirth !== mrzParsed.dateOfBirth) {
+                  ocrData.dateOfBirth = mrzParsed.dateOfBirth;
+                  if (ocrData.confidence) ocrData.confidence.dateOfBirth = 0.99;
+                }
+              }
+              if (mrzParsed.expiryValid && mrzParsed.expiryDate) {
+                if (ocrData.expiryDate !== mrzParsed.expiryDate) {
+                  ocrData.expiryDate = mrzParsed.expiryDate;
+                  if (ocrData.confidence) ocrData.confidence.expiryDate = 0.99;
+                }
+              }
+              if (mrzParsed.gender) {
+                ocrData.gender = mrzParsed.gender;
+              }
+              if (mrzParsed.nationality) {
+                const countryMap: Record<string, string> = {
+                  KOR: "한국", USA: "미국", JPN: "일본", CHN: "중국", GBR: "영국", DEU: "독일",
+                  FRA: "프랑스", CAN: "캐나다", AUS: "호주", SGP: "싱가포르", THA: "태국",
+                  VNM: "베트남", PHL: "필리핀", IDN: "인도네시아", MYS: "말레이시아", IND: "인도",
+                  RUS: "러시아", TWN: "대만", HKG: "홍콩", BRA: "브라질", MEX: "멕시코",
+                  ITA: "이탈리아", ESP: "스페인", NLD: "네덜란드", SWE: "스웨덴", TUR: "터키",
+                  POL: "폴란드", UKR: "우크라이나", MNG: "몽골", ARE: "아랍에미리트",
+                  SAU: "사우디아라비아", NZL: "뉴질랜드",
+                };
+                const mapped = countryMap[mrzParsed.nationality];
+                if (mapped) ocrData.nationality = mapped;
+              }
+            }
           }
           return {
             success: true,
