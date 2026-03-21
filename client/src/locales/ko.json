@@ -16,7 +16,8 @@
     "logout": "로그아웃",
     "dashboard": "대시보드",
     "features": "기능",
-    "signup": "회원가입"
+    "signup": "회원가입",
+    "bookingCenter": "예약센터"
   },
   "home": {
     "badge": "글로벌 밋업 & 출장 관리 시스템",
@@ -84,7 +85,9 @@
     "navRoles": "사용자 유형",
     "navHow": "이용 방법",
     "onboardingBanner": "프로필 설정을 완료하면 모든 기능을 이용할 수 있습니다.",
-    "completeOnboarding": "프로필 설정하기"
+    "completeOnboarding": "프로필 설정하기",
+    "bookingCenterTitle": "항공권 & 호텔 예약센터",
+    "bookingCenterDesc": "Trip.com, Booking.com, Agoda 최저가 비교 후 바로 예약하세요"
   },
   "register": {
     "title": "밋업 신청",
@@ -700,7 +703,8 @@
       "hotelVouchers": "호텔 바우처",
       "flightTickets": "항공권 관리",
       "goHome": "홈으로",
-      "affiliateRevenue": "수익 대시보드"
+      "affiliateRevenue": "수익 대시보드",
+      "apiKeys": "API 키 관리"
     },
     "loginRequired": "로그인이 필요합니다",
     "loginRequiredDesc": "백오피스 접근을 위해 로그인이 필요합니다.",
@@ -1272,6 +1276,27 @@
       "confirmed": "확인됨",
       "paid": "지급됨",
       "cancelled": "취소됨"
+    },
+    "apiKeys": {
+      "title": "API 키 관리",
+      "description": "외부 시스템 연동을 위한 API 키를 관리합니다",
+      "createKey": "API 키 생성",
+      "createDescription": "외부 연동용 새 API 키를 생성합니다. 키는 한 번만 표시됩니다.",
+      "keyName": "키 이름",
+      "permissions": "권한",
+      "rateLimit": "요청 제한 (건/시간)",
+      "expiry": "만료",
+      "apiEndpoint": "API 엔드포인트",
+      "activeKeys": "활성 키",
+      "keysTotal": "개의 키",
+      "noKeys": "생성된 API 키가 없습니다",
+      "name": "이름",
+      "keyPrefixCol": "키 접두사",
+      "status": "상태",
+      "rateLimitCol": "요청 제한",
+      "lastUsed": "마지막 사용",
+      "created": "생성일",
+      "actions": "작업"
     }
   },
   "roleDashboard": {

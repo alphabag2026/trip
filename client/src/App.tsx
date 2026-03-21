@@ -42,6 +42,7 @@ import AdminHotelVouchers from "./pages/admin/HotelVouchers";
 import AdminFlightTickets from "./pages/admin/FlightTickets";
 import AdminBookingSearch from "./pages/admin/BookingSearch";
 import AdminAffiliateRevenue from "./pages/admin/AffiliateRevenue";
+import AdminApiKeys from "./pages/admin/ApiKeys";
 import DashboardLayout from "./components/DashboardLayout";
 import Onboarding from "./pages/Onboarding";
 import MyPage from "./pages/MyPage";
@@ -109,6 +110,7 @@ function AdminRouter() {
         <Route path="/admin/flight-tickets" component={AdminFlightTickets} />
         <Route path="/admin/booking-search" component={AdminBookingSearch} />
         <Route path="/admin/affiliate-revenue" component={AdminAffiliateRevenue} />
+        <Route path="/admin/api-keys" component={AdminApiKeys} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

@@ -2708,5 +2708,81 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // ── API Keys Management ──────────────────────────────────
+  apiKeys: router({
+    // API 키 목록
+    list: adminProcedure.query(async () => {
+      return db.getAllApiKeys();
+    }),
+
+    // API 키 생성
+    create: adminProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        organizationId: z.number().optional(),
+        permissions: z.array(z.string()).optional(),
+        rateLimit: z.number().default(1000),
+        expiresInDays: z.number().optional(), // null = never expires
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { nanoid } = await import("nanoid");
+        const crypto = await import("crypto");
+        
+        // Generate a secure API key: mt_live_ + 40 random chars
+        const rawKey = `mt_live_${nanoid(40)}`;
+        const keyHash = crypto.createHash("sha256").update(rawKey).digest("hex");
+        const keyPrefix = rawKey.slice(0, 12);
+
+        const expiresAt = input.expiresInDays
+          ? new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000)
+          : undefined;
+
+        const id = await db.createApiKey({
+          name: input.name,
+          keyHash,
+          keyPrefix,
+          organizationId: input.organizationId || undefined,
+          userId: ctx.user.id,
+          permissions: input.permissions ? JSON.stringify(input.permissions) : null,
+          rateLimit: input.rateLimit,
+          expiresAt,
+          isActive: true,
+        });
+
+        // Return the raw key ONLY on creation (never stored)
+        return { id, apiKey: rawKey, keyPrefix };
+      }),
+
+    // API 키 비활성화/활성화
+    toggle: adminProcedure
+      .input(z.object({ id: z.number(), isActive: z.boolean() }))
+      .mutation(async ({ input }) => {
+        await db.updateApiKey(input.id, { isActive: input.isActive });
+        return { success: true };
+      }),
+
+    // API 키 삭제
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteApiKey(input.id);
+        return { success: true };
+      }),
+
+    // API 사용 통계
+    usage: adminProcedure
+      .input(z.object({ apiKeyId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getApiUsageStats(input.apiKeyId);
+      }),
+
+    // API 요청 로그
+    logs: adminProcedure
+      .input(z.object({ apiKeyId: z.number(), limit: z.number().default(50) }))
+      .query(async ({ input }) => {
+        return db.getApiRequestLogs(input.apiKeyId, input.limit);
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

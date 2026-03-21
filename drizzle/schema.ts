@@ -850,3 +850,36 @@ export const affiliateSettings = mysqlTable("affiliate_settings", {
 
 export type AffiliateSetting = typeof affiliateSettings.$inferSelect;
 export type InsertAffiliateSetting = typeof affiliateSettings.$inferInsert;
+
+// ── API Keys (외부 REST API 인증) ──────────────────────────
+export const apiKeys = mysqlTable("api_keys", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(), // 키 이름 (예: "Trip.com Integration")
+  keyHash: varchar("keyHash", { length: 128 }).notNull().unique(), // SHA-256 해시된 API 키
+  keyPrefix: varchar("keyPrefix", { length: 12 }).notNull(), // 키 앞 8자리 (식별용)
+  organizationId: int("organizationId"), // 연결된 조직 (null이면 전체 접근)
+  userId: int("userId").notNull(), // 키 생성자
+  permissions: text("permissions"), // JSON: ["registrations:read", "meetups:read", "bookings:read"]
+  rateLimit: int("rateLimit").default(1000), // 시간당 요청 제한
+  lastUsedAt: timestamp("lastUsedAt"),
+  expiresAt: timestamp("expiresAt"),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type InsertApiKey = typeof apiKeys.$inferInsert;
+
+// ── API Request Logs (API 요청 로그) ──────────────────────
+export const apiRequestLogs = mysqlTable("api_request_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  apiKeyId: int("apiKeyId").notNull(),
+  method: varchar("method", { length: 10 }).notNull(),
+  endpoint: varchar("endpoint", { length: 500 }).notNull(),
+  statusCode: int("statusCode"),
+  responseTimeMs: int("responseTimeMs"),
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ApiRequestLog = typeof apiRequestLogs.$inferSelect;
+export type InsertApiRequestLog = typeof apiRequestLogs.$inferInsert;

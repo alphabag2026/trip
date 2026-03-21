@@ -4,7 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Plane, ClipboardList, Search, Shield, MapPin, Globe,
   MessageCircle, Car, Hotel, Luggage, User, LayoutDashboard,
-  UserPlus, LogIn, ArrowRight, CheckCircle2, Building2, Users, Briefcase, LogOut, AlertCircle
+  UserPlus, LogIn, ArrowRight, CheckCircle2, Building2, Users, Briefcase, LogOut, AlertCircle,
+  Ticket
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import {
@@ -49,6 +50,10 @@ export default function Home() {
                 <Link href="/register" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.register")}</Link>
                 <Link href="/lookup" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.lookup")}</Link>
                 <Link href="/flight-pickup" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.flightPickup")}</Link>
+                <Link href="/booking-center" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <Ticket className="h-3.5 w-3.5" />
+                  {t("nav.bookingCenter", "예약센터")}
+                </Link>
                 <Link href="/chatbot" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.chatbot")}</Link>
               </>
             ) : (
@@ -202,6 +207,26 @@ export default function Home() {
                   <Search className="h-5 w-5" />
                   {t("home.lookupBtn")}
                 </Button>
+              </Link>
+            </div>
+
+            {/* 예약센터 바로가기 배너 */}
+            <div className="mt-10 max-w-2xl mx-auto">
+              <Link href="/booking-center">
+                <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-blue-500/10 border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg hover:shadow-primary/5 cursor-pointer group">
+                  <CardContent className="p-6 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/20">
+                        <Ticket className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="font-semibold text-lg">{t("home.bookingCenterTitle", "항공권 & 호텔 예약센터")}</h3>
+                        <p className="text-sm text-muted-foreground">{t("home.bookingCenterDesc", "Trip.com, Booking.com, Agoda 최저가 비교 후 바로 예약하세요")}</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  </CardContent>
+                </Card>
               </Link>
             </div>
           </div>

@@ -16,7 +16,8 @@
     "logout": "Logout",
     "dashboard": "Dashboard",
     "features": "Features",
-    "signup": "Sign Up"
+    "signup": "Sign Up",
+    "bookingCenter": "Booking Center"
   },
   "home": {
     "badge": "Global Meetup & Business Trip Management",
@@ -84,7 +85,9 @@
     "navRoles": "User Types",
     "navHow": "How It Works",
     "onboardingBanner": "Complete your profile setup to access all features.",
-    "completeOnboarding": "Set Up Profile"
+    "completeOnboarding": "Set Up Profile",
+    "bookingCenterTitle": "Flight & Hotel Booking Center",
+    "bookingCenterDesc": "Compare lowest prices on Trip.com, Booking.com, Agoda and book instantly"
   },
   "register": {
     "title": "Meetup Registration",
@@ -700,7 +703,8 @@
       "hotelVouchers": "Hotel Vouchers",
       "flightTickets": "Flight Tickets",
       "goHome": "Go Home",
-      "affiliateRevenue": "Revenue Dashboard"
+      "affiliateRevenue": "Revenue Dashboard",
+      "apiKeys": "API Keys"
     },
     "loginRequired": "Login Required",
     "loginRequiredDesc": "Please log in to access the back office.",
@@ -1272,6 +1276,27 @@
       "confirmed": "Confirmed",
       "paid": "Paid",
       "cancelled": "Cancelled"
+    },
+    "apiKeys": {
+      "title": "API Key Management",
+      "description": "Manage API keys for external system integrations",
+      "createKey": "Create API Key",
+      "createDescription": "Generate a new API key for external integrations. The key will only be shown once.",
+      "keyName": "Key Name",
+      "permissions": "Permissions",
+      "rateLimit": "Rate Limit (req/hour)",
+      "expiry": "Expiry",
+      "apiEndpoint": "API Endpoint",
+      "activeKeys": "Active Keys",
+      "keysTotal": "keys total",
+      "noKeys": "No API keys created yet",
+      "name": "Name",
+      "keyPrefixCol": "Key Prefix",
+      "status": "Status",
+      "rateLimitCol": "Rate Limit",
+      "lastUsed": "Last Used",
+      "created": "Created",
+      "actions": "Actions"
     }
   },
   "roleDashboard": {

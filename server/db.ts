@@ -32,6 +32,8 @@ import {
   invitations, InsertInvitation,
   hotelVouchers, InsertHotelVoucher,
   flightTickets, InsertFlightTicket,
+  apiKeys, InsertApiKey,
+  apiRequestLogs, InsertApiRequestLog,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1463,4 +1465,67 @@ export async function upsertAffiliateSetting(data: InsertAffiliateSetting) {
       notes: data.notes,
     },
   });
+}
+
+
+// ── API Keys ──────────────────────────────────────────────
+export async function createApiKey(data: InsertApiKey) {
+  const db = await getDb();
+  const result = await db!.insert(apiKeys).values(data);
+  return result[0].insertId;
+}
+
+export async function getApiKeyByHash(keyHash: string) {
+  const db = await getDb();
+  const rows = await db!.select().from(apiKeys).where(eq(apiKeys.keyHash, keyHash)).limit(1);
+  return rows[0] || null;
+}
+
+export async function getApiKeysByUser(userId: number) {
+  const db = await getDb();
+  return db!.select().from(apiKeys).where(eq(apiKeys.userId, userId)).orderBy(desc(apiKeys.createdAt));
+}
+
+export async function getApiKeysByOrg(organizationId: number) {
+  const db = await getDb();
+  return db!.select().from(apiKeys).where(eq(apiKeys.organizationId, organizationId)).orderBy(desc(apiKeys.createdAt));
+}
+
+export async function getAllApiKeys() {
+  const db = await getDb();
+  return db!.select().from(apiKeys).orderBy(desc(apiKeys.createdAt));
+}
+
+export async function updateApiKey(id: number, data: Partial<InsertApiKey>) {
+  const db = await getDb();
+  await db!.update(apiKeys).set(data).where(eq(apiKeys.id, id));
+}
+
+export async function deleteApiKey(id: number) {
+  const db = await getDb();
+  await db!.delete(apiKeys).where(eq(apiKeys.id, id));
+}
+
+export async function updateApiKeyLastUsed(id: number) {
+  const db = await getDb();
+  await db!.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, id));
+}
+
+export async function createApiRequestLog(data: InsertApiRequestLog) {
+  const db = await getDb();
+  await db!.insert(apiRequestLogs).values(data);
+}
+
+export async function getApiRequestLogs(apiKeyId: number, limit: number = 100) {
+  const db = await getDb();
+  return db!.select().from(apiRequestLogs).where(eq(apiRequestLogs.apiKeyId, apiKeyId)).orderBy(desc(apiRequestLogs.createdAt)).limit(limit);
+}
+
+export async function getApiUsageStats(apiKeyId: number) {
+  const db = await getDb();
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [hourly] = await db!.select({ count: sql<number>`count(*)` }).from(apiRequestLogs).where(and(eq(apiRequestLogs.apiKeyId, apiKeyId), gte(apiRequestLogs.createdAt, oneHourAgo)));
+  const [daily] = await db!.select({ count: sql<number>`count(*)` }).from(apiRequestLogs).where(and(eq(apiRequestLogs.apiKeyId, apiKeyId), gte(apiRequestLogs.createdAt, oneDayAgo)));
+  return { hourlyRequests: hourly?.count || 0, dailyRequests: daily?.count || 0 };
 }
