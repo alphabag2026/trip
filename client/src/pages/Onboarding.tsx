@@ -12,7 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import {
   User, BookOpen, CheckCircle, ArrowRight, ArrowLeft, Upload, Loader2, Shield, Globe, Phone, Building2,
   Briefcase, Heart, AlertTriangle, LogOut, ScanLine, Camera, Sparkles, AlertCircle, ShieldCheck, ShieldAlert, Info, Eye,
+  RotateCcw, RefreshCw,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -37,6 +39,21 @@ function ConfidenceDot({ score }: { score: number }) {
       <span className={`w-1.5 h-1.5 rounded-full ${color}`} />
       {score < 0.7 && <span className="text-red-400">확인 필요</span>}
     </span>
+  );
+}
+
+// 필드별 OCR 원래 값 되돌리기 버튼
+function ResetFieldBtn({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.preventDefault(); onClick(); }}
+      className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 transition-colors ml-1"
+      title="OCR 원래 값으로 되돌리기"
+    >
+      <RotateCcw className="h-2.5 w-2.5" />
+      <span>되돌리기</span>
+    </button>
   );
 }
 
@@ -80,6 +97,10 @@ export default function Onboarding() {
   // 여권 스캔 OCR 결과
   const [ocrData, setOcrData] = useState<any>(null);
   const [scanImagePreview, setScanImagePreview] = useState<string>("");
+  // OCR 원본 데이터 (되돌리기용)
+  const [originalOcrPassport, setOriginalOcrPassport] = useState<typeof passportForm | null>(null);
+  const [originalOcrProfile, setOriginalOcrProfile] = useState<typeof profileForm | null>(null);
+  const rescanInputRef = useRef<HTMLInputElement>(null);
 
   const profileMut = trpc.userProfile.upsert.useMutation({
     onSuccess: () => { toast.success(t("onboarding.profileSaved")); setStep(2); },
@@ -189,27 +210,31 @@ export default function Onboarding() {
         setOcrData(result.ocrData);
         // OCR 결과로 폼 자동 채우기
         const ocr = result.ocrData;
-        setPassportForm(p => ({
-          ...p,
-          fullName: ocr.fullName || p.fullName,
-          passportNumber: ocr.passportNumber || p.passportNumber,
-          nationality: ocr.nationality || p.nationality,
-          issuingCountry: ocr.issuingCountry || p.issuingCountry,
-          birthDate: ocr.dateOfBirth || p.birthDate,
-          gender: (ocr.gender === "M" || ocr.gender === "F") ? ocr.gender : p.gender,
-          issueDate: ocr.issueDate || p.issueDate,
-          expiryDate: ocr.expiryDate || p.expiryDate,
-          passportImageUrl: result.imageUrl || p.passportImageUrl,
-          passportImageKey: result.imageKey || p.passportImageKey,
-        }));
-        // 프로필도 자동 채우기
-        setProfileForm(p => ({
-          ...p,
-          nationality: ocr.nationality || p.nationality,
-          birthDate: ocr.dateOfBirth || p.birthDate,
-          gender: ocr.gender === "M" ? "male" : ocr.gender === "F" ? "female" : p.gender,
-          phone: ocr.phone || p.phone,
-        }));
+        const newPassportForm = {
+          ...passportForm,
+          fullName: ocr.fullName || passportForm.fullName,
+          passportNumber: ocr.passportNumber || passportForm.passportNumber,
+          nationality: ocr.nationality || passportForm.nationality,
+          issuingCountry: ocr.issuingCountry || passportForm.issuingCountry,
+          birthDate: ocr.dateOfBirth || passportForm.birthDate,
+          gender: (ocr.gender === "M" || ocr.gender === "F") ? ocr.gender : passportForm.gender,
+          issueDate: ocr.issueDate || passportForm.issueDate,
+          expiryDate: ocr.expiryDate || passportForm.expiryDate,
+          passportImageUrl: result.imageUrl || passportForm.passportImageUrl,
+          passportImageKey: result.imageKey || passportForm.passportImageKey,
+        } as typeof passportForm;
+        setPassportForm(newPassportForm);
+        setOriginalOcrPassport(newPassportForm); // 원본 저장
+
+        const newProfileForm = {
+          ...profileForm,
+          nationality: ocr.nationality || profileForm.nationality,
+          birthDate: ocr.dateOfBirth || profileForm.birthDate,
+          gender: ocr.gender === "M" ? "male" as const : ocr.gender === "F" ? "female" as const : profileForm.gender,
+          phone: ocr.phone || profileForm.phone,
+        };
+        setProfileForm(newProfileForm);
+        setOriginalOcrProfile(newProfileForm); // 원본 저장
 
         // 중복 체크
         try {
@@ -441,11 +466,36 @@ export default function Onboarding() {
               <h2 className="text-xl font-bold">여권 스캔 결과 확인</h2>
             </div>
 
-            {/* 스캔 이미지 미리보기 */}
+            {/* 스캔 이미지 미리보기 + 재스캔 버튼 */}
             {scanImagePreview && (
               <Card>
-                <CardContent className="pt-4 pb-4 flex justify-center">
-                  <img src={scanImagePreview} alt="여권 스캔" className="max-h-48 rounded-lg object-contain" />
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex justify-center mb-3">
+                    <img src={scanImagePreview} alt="여권 스캔" className="max-h-48 rounded-lg object-contain" />
+                  </div>
+                  <div className="flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => rescanInputRef.current?.click()}
+                      disabled={scanning}
+                      className="gap-2 text-blue-400 border-blue-500/30 hover:bg-blue-500/10"
+                    >
+                      {scanning ? (
+                        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> 스캔 중...</>
+                      ) : (
+                        <><RefreshCw className="h-3.5 w-3.5" /> 여권 다시 스캔</>
+                      )}
+                    </Button>
+                    <input
+                      ref={rescanInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={handlePassportScan}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -499,11 +549,31 @@ export default function Onboarding() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                {/* 전체 되돌리기 버튼 */}
+                {originalOcrPassport && (
+                  <div className="flex justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-muted-foreground gap-1 h-7"
+                      onClick={() => {
+                        setPassportForm(originalOcrPassport);
+                        if (originalOcrProfile) setProfileForm(originalOcrProfile);
+                        toast.info("모든 필드가 OCR 원래 값으로 복원되었습니다.");
+                      }}
+                    >
+                      <RotateCcw className="h-3 w-3" /> 전체 원래 값으로 되돌리기
+                    </Button>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs flex items-center gap-1">
                       영문 이름
                       {ocrData?.confidence?.fullName != null && <ConfidenceDot score={ocrData.confidence.fullName} />}
+                      {originalOcrPassport && passportForm.fullName !== originalOcrPassport.fullName && (
+                        <ResetFieldBtn onClick={() => setPassportForm(p => ({ ...p, fullName: originalOcrPassport.fullName }))} />
+                      )}
                     </Label>
                     <Input value={passportForm.fullName} onChange={e => setPassportForm(p => ({ ...p, fullName: e.target.value }))} className={getFieldBorderClass(ocrData?.confidence?.fullName)} />
                   </div>
@@ -511,6 +581,9 @@ export default function Onboarding() {
                     <Label className="text-xs flex items-center gap-1">
                       여권번호
                       {ocrData?.confidence?.passportNumber != null && <ConfidenceDot score={ocrData.confidence.passportNumber} />}
+                      {originalOcrPassport && passportForm.passportNumber !== originalOcrPassport.passportNumber && (
+                        <ResetFieldBtn onClick={() => setPassportForm(p => ({ ...p, passportNumber: originalOcrPassport.passportNumber }))} />
+                      )}
                     </Label>
                     <Input value={passportForm.passportNumber} onChange={e => setPassportForm(p => ({ ...p, passportNumber: e.target.value }))} className={getFieldBorderClass(ocrData?.confidence?.passportNumber)} />
                   </div>
@@ -518,17 +591,28 @@ export default function Onboarding() {
                     <Label className="text-xs flex items-center gap-1">
                       국적
                       {ocrData?.confidence?.nationality != null && <ConfidenceDot score={ocrData.confidence.nationality} />}
+                      {originalOcrPassport && passportForm.nationality !== originalOcrPassport.nationality && (
+                        <ResetFieldBtn onClick={() => setPassportForm(p => ({ ...p, nationality: originalOcrPassport.nationality }))} />
+                      )}
                     </Label>
                     <Input value={passportForm.nationality} onChange={e => setPassportForm(p => ({ ...p, nationality: e.target.value }))} className={getFieldBorderClass(ocrData?.confidence?.nationality)} />
                   </div>
                   <div>
-                    <Label className="text-xs">발급국</Label>
+                    <Label className="text-xs flex items-center gap-1">
+                      발급국
+                      {originalOcrPassport && passportForm.issuingCountry !== originalOcrPassport.issuingCountry && (
+                        <ResetFieldBtn onClick={() => setPassportForm(p => ({ ...p, issuingCountry: originalOcrPassport.issuingCountry }))} />
+                      )}
+                    </Label>
                     <Input value={passportForm.issuingCountry} onChange={e => setPassportForm(p => ({ ...p, issuingCountry: e.target.value }))} />
                   </div>
                   <div>
                     <Label className="text-xs flex items-center gap-1">
                       생년월일
                       {ocrData?.confidence?.dateOfBirth != null && <ConfidenceDot score={ocrData.confidence.dateOfBirth} />}
+                      {originalOcrPassport && passportForm.birthDate !== originalOcrPassport.birthDate && (
+                        <ResetFieldBtn onClick={() => setPassportForm(p => ({ ...p, birthDate: originalOcrPassport.birthDate }))} />
+                      )}
                     </Label>
                     <Input type="date" value={passportForm.birthDate} onChange={e => setPassportForm(p => ({ ...p, birthDate: e.target.value }))} className={getFieldBorderClass(ocrData?.confidence?.dateOfBirth)} />
                   </div>
@@ -536,6 +620,9 @@ export default function Onboarding() {
                     <Label className="text-xs flex items-center gap-1">
                       성별
                       {ocrData?.confidence?.gender != null && <ConfidenceDot score={ocrData.confidence.gender} />}
+                      {originalOcrPassport && passportForm.gender !== originalOcrPassport.gender && (
+                        <ResetFieldBtn onClick={() => setPassportForm(p => ({ ...p, gender: originalOcrPassport.gender }))} />
+                      )}
                     </Label>
                     <Select value={passportForm.gender} onValueChange={v => setPassportForm(p => ({ ...p, gender: v as "M" | "F" }))}>
                       <SelectTrigger><SelectValue placeholder="성별" /></SelectTrigger>
@@ -546,13 +633,21 @@ export default function Onboarding() {
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">발급일</Label>
+                    <Label className="text-xs flex items-center gap-1">
+                      발급일
+                      {originalOcrPassport && passportForm.issueDate !== originalOcrPassport.issueDate && (
+                        <ResetFieldBtn onClick={() => setPassportForm(p => ({ ...p, issueDate: originalOcrPassport.issueDate }))} />
+                      )}
+                    </Label>
                     <Input type="date" value={passportForm.issueDate} onChange={e => setPassportForm(p => ({ ...p, issueDate: e.target.value }))} />
                   </div>
                   <div>
                     <Label className="text-xs flex items-center gap-1">
                       만료일
                       {ocrData?.confidence?.expiryDate != null && <ConfidenceDot score={ocrData.confidence.expiryDate} />}
+                      {originalOcrPassport && passportForm.expiryDate !== originalOcrPassport.expiryDate && (
+                        <ResetFieldBtn onClick={() => setPassportForm(p => ({ ...p, expiryDate: originalOcrPassport.expiryDate }))} />
+                      )}
                     </Label>
                     <Input type="date" value={passportForm.expiryDate} onChange={e => setPassportForm(p => ({ ...p, expiryDate: e.target.value }))} className={getFieldBorderClass(ocrData?.confidence?.expiryDate)} />
                   </div>

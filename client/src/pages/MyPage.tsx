@@ -13,7 +13,8 @@ import {
   User, BookOpen, History, ArrowLeft, Save, Loader2, Shield, Globe, Phone,
   Building2, Briefcase, Heart, Upload, CheckCircle, MapPin, Calendar, Plane,
   Hotel, AlertTriangle, Edit2, Eye, EyeOff, CreditCard, Ticket, Copy, ExternalLink,
-  ArrowRight, Navigation, ClipboardCheck, FileCheck, FileWarning, LogOut
+  ArrowRight, Navigation, ClipboardCheck, FileCheck, FileWarning, LogOut,
+  ScanLine, RefreshCw, RotateCcw, Camera,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -38,7 +39,10 @@ export default function MyPage() {
   const [editingPassport, setEditingPassport] = useState(false);
   const [showPassportNumber, setShowPassportNumber] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scanInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [originalPassportForm, setOriginalPassportForm] = useState<any>(null);
 
   // Queries
   const profileQuery = trpc.userProfile.get.useQuery(undefined, { enabled: !!user });
@@ -134,6 +138,68 @@ export default function MyPage() {
     if (!num) return "-";
     if (showPassportNumber) return num;
     return num.slice(0, 2) + "***" + num.slice(-2);
+  };
+
+  // 여권 스캔 OCR
+  const scanMut = trpc.passport.scan.useMutation();
+  const handlePassportScanInMyPage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { toast.error("파일 크기는 10MB 이하만 가능합니다"); return; }
+    setScanning(true);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+      const result = await scanMut.mutateAsync({
+        imageBase64: base64,
+        mimeType: file.type || "image/jpeg",
+      });
+      if (result.success && result.ocrData) {
+        const ocr = result.ocrData;
+        const newForm = {
+          passportNumber: ocr.passportNumber || passportForm?.passportNumber || "",
+          issuingCountry: ocr.issuingCountry || passportForm?.issuingCountry || "",
+          nationality: ocr.nationality || passportForm?.nationality || "",
+          fullName: ocr.fullName || passportForm?.fullName || "",
+          birthDate: ocr.dateOfBirth || passportForm?.birthDate || "",
+          gender: (ocr.gender === "M" || ocr.gender === "F") ? ocr.gender : (passportForm?.gender || ""),
+          issueDate: ocr.issueDate || passportForm?.issueDate || "",
+          expiryDate: ocr.expiryDate || passportForm?.expiryDate || "",
+          passportImageUrl: result.imageUrl || passportForm?.passportImageUrl || "",
+          passportImageKey: result.imageKey || passportForm?.passportImageKey || "",
+        };
+        setPassportForm(newForm);
+        setOriginalPassportForm(newForm);
+        if (!editingPassport) setEditingPassport(true);
+        toast.success("여권 정보가 자동으로 인식되었습니다! 확인 후 저장해주세요.");
+      } else {
+        toast.error("여권 인식에 실패했습니다. 사진을 다시 촬영해주세요.");
+      }
+    } catch {
+      toast.error("여권 스캔 중 오류가 발생했습니다.");
+    } finally {
+      setScanning(false);
+      if (e.target) e.target.value = "";
+    }
+  };
+
+  // 필드별 되돌리기
+  const resetPassportField = (field: string) => {
+    if (originalPassportForm) {
+      setPassportForm((p: any) => ({ ...p, [field]: originalPassportForm[field] }));
+      toast.info("원래 OCR 값으로 복원되었습니다.");
+    }
+  };
+  const resetAllPassportFields = () => {
+    if (originalPassportForm) {
+      setPassportForm(originalPassportForm);
+      toast.info("모든 필드가 OCR 원래 값으로 복원되었습니다.");
+    }
   };
 
   if (loading) {
@@ -348,9 +414,16 @@ export default function MyPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2"><BookOpen className="w-5 h-5" />{t("myPage.passportInfo")}</CardTitle>
-                  <Button variant="outline" size="sm" onClick={startEditPassport}>
-                    <Edit2 className="w-4 h-4 mr-1" />{passport?.passportNumber ? t("myPage.edit") : t("myPage.register")}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => scanInputRef.current?.click()} disabled={scanning} className="gap-1">
+                      {scanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ScanLine className="w-3.5 h-3.5" />}
+                      {scanning ? "스캔 중..." : "여권 스캔"}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={startEditPassport}>
+                      <Edit2 className="w-4 h-4 mr-1" />{passport?.passportNumber ? t("myPage.edit") : t("myPage.register")}
+                    </Button>
+                    <input ref={scanInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePassportScanInMyPage} />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {passport?.passportNumber ? (
@@ -408,43 +481,106 @@ export default function MyPage() {
                     <CardTitle className="flex items-center gap-2"><BookOpen className="w-5 h-5 text-primary" />{t("myPage.passportInfo")} {passport?.passportNumber ? t("myPage.edit") : t("myPage.register")}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {/* 이미지 업로드 + 스캔 버튼 */}
                     <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-4 text-center">
                       {passportForm.passportImageUrl ? (
                         <div className="space-y-2">
                           <img src={passportForm.passportImageUrl} alt={t("myPage.passportInfo")} className="max-h-36 mx-auto rounded-lg object-contain" />
-                          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>{t("myPage.reupload")}</Button>
+                          <div className="flex justify-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>{t("myPage.reupload")}</Button>
+                            <Button variant="outline" size="sm" onClick={() => scanInputRef.current?.click()} disabled={scanning} className="gap-1 text-blue-400 border-blue-500/30 hover:bg-blue-500/10">
+                              {scanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                              {scanning ? "스캔 중..." : "여권 다시 스캔"}
+                            </Button>
+                          </div>
                         </div>
                       ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
-                          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                            {uploading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Upload className="w-4 h-4 mr-1" />}
-                            {t("myPage.selectImage")}
-                          </Button>
+                          <div className="flex justify-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                              {uploading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Upload className="w-4 h-4 mr-1" />}
+                              {t("myPage.selectImage")}
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => scanInputRef.current?.click()} disabled={scanning} className="gap-1 text-blue-400 border-blue-500/30 hover:bg-blue-500/10">
+                              {scanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ScanLine className="w-3.5 h-3.5" />}
+                              {scanning ? "스캔 중..." : "여권 스캔으로 자동 입력"}
+                            </Button>
+                          </div>
                         </div>
                       )}
                       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePassportImageUpload} />
+                      <input ref={scanInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePassportScanInMyPage} />
                     </div>
+
+                    {/* 전체 되돌리기 버튼 */}
+                    {originalPassportForm && (
+                      <div className="flex justify-end">
+                        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground gap-1 h-7" onClick={resetAllPassportFields}>
+                          <RotateCcw className="h-3 w-3" /> 전체 OCR 원래 값으로 되돌리기
+                        </Button>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div><Label>{t("myPage.passportNumber")}</Label><Input value={passportForm.passportNumber} onChange={e => setPassportForm((p: any) => ({ ...p, passportNumber: e.target.value }))} /></div>
-                      <div><Label>{t("myPage.fullNameEn")}</Label><Input value={passportForm.fullName} onChange={e => setPassportForm((p: any) => ({ ...p, fullName: e.target.value }))} /></div>
                       <div>
-                        <Label>{t("myPage.issuingCountry")}</Label>
+                        <Label className="flex items-center gap-1">
+                          {t("myPage.passportNumber")}
+                          {originalPassportForm && passportForm.passportNumber !== originalPassportForm.passportNumber && (
+                            <button onClick={() => resetPassportField('passportNumber')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                          )}
+                        </Label>
+                        <Input value={passportForm.passportNumber} onChange={e => setPassportForm((p: any) => ({ ...p, passportNumber: e.target.value }))} />
+                      </div>
+                      <div>
+                        <Label className="flex items-center gap-1">
+                          {t("myPage.fullNameEn")}
+                          {originalPassportForm && passportForm.fullName !== originalPassportForm.fullName && (
+                            <button onClick={() => resetPassportField('fullName')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                          )}
+                        </Label>
+                        <Input value={passportForm.fullName} onChange={e => setPassportForm((p: any) => ({ ...p, fullName: e.target.value }))} />
+                      </div>
+                      <div>
+                        <Label className="flex items-center gap-1">
+                          {t("myPage.issuingCountry")}
+                          {originalPassportForm && passportForm.issuingCountry !== originalPassportForm.issuingCountry && (
+                            <button onClick={() => resetPassportField('issuingCountry')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                          )}
+                        </Label>
                         <Select value={passportForm.issuingCountry} onValueChange={v => setPassportForm((p: any) => ({ ...p, issuingCountry: v }))}>
                           <SelectTrigger><SelectValue placeholder={t("myPage.select")} /></SelectTrigger>
                           <SelectContent>{NATIONALITIES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <Label>{t("myPage.nationality")}</Label>
+                        <Label className="flex items-center gap-1">
+                          {t("myPage.nationality")}
+                          {originalPassportForm && passportForm.nationality !== originalPassportForm.nationality && (
+                            <button onClick={() => resetPassportField('nationality')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                          )}
+                        </Label>
                         <Select value={passportForm.nationality} onValueChange={v => setPassportForm((p: any) => ({ ...p, nationality: v }))}>
                           <SelectTrigger><SelectValue placeholder={t("myPage.select")} /></SelectTrigger>
                           <SelectContent>{NATIONALITIES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
-                      <div><Label>{t("myPage.birthDate")}</Label><Input type="date" value={passportForm.birthDate} onChange={e => setPassportForm((p: any) => ({ ...p, birthDate: e.target.value }))} /></div>
                       <div>
-                        <Label>{t("myPage.gender")}</Label>
+                        <Label className="flex items-center gap-1">
+                          {t("myPage.birthDate")}
+                          {originalPassportForm && passportForm.birthDate !== originalPassportForm.birthDate && (
+                            <button onClick={() => resetPassportField('birthDate')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                          )}
+                        </Label>
+                        <Input type="date" value={passportForm.birthDate} onChange={e => setPassportForm((p: any) => ({ ...p, birthDate: e.target.value }))} />
+                      </div>
+                      <div>
+                        <Label className="flex items-center gap-1">
+                          {t("myPage.gender")}
+                          {originalPassportForm && passportForm.gender !== originalPassportForm.gender && (
+                            <button onClick={() => resetPassportField('gender')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                          )}
+                        </Label>
                         <Select value={passportForm.gender} onValueChange={v => setPassportForm((p: any) => ({ ...p, gender: v }))}>
                           <SelectTrigger><SelectValue placeholder={t("myPage.select")} /></SelectTrigger>
                           <SelectContent>
@@ -453,8 +589,24 @@ export default function MyPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div><Label>{t("myPage.issueDate")}</Label><Input type="date" value={passportForm.issueDate} onChange={e => setPassportForm((p: any) => ({ ...p, issueDate: e.target.value }))} /></div>
-                      <div><Label>{t("myPage.expiryDate")}</Label><Input type="date" value={passportForm.expiryDate} onChange={e => setPassportForm((p: any) => ({ ...p, expiryDate: e.target.value }))} /></div>
+                      <div>
+                        <Label className="flex items-center gap-1">
+                          {t("myPage.issueDate")}
+                          {originalPassportForm && passportForm.issueDate !== originalPassportForm.issueDate && (
+                            <button onClick={() => resetPassportField('issueDate')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                          )}
+                        </Label>
+                        <Input type="date" value={passportForm.issueDate} onChange={e => setPassportForm((p: any) => ({ ...p, issueDate: e.target.value }))} />
+                      </div>
+                      <div>
+                        <Label className="flex items-center gap-1">
+                          {t("myPage.expiryDate")}
+                          {originalPassportForm && passportForm.expiryDate !== originalPassportForm.expiryDate && (
+                            <button onClick={() => resetPassportField('expiryDate')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                          )}
+                        </Label>
+                        <Input type="date" value={passportForm.expiryDate} onChange={e => setPassportForm((p: any) => ({ ...p, expiryDate: e.target.value }))} />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
