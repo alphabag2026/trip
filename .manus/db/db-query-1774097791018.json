@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `meetup_expenses` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`meetupId` int NOT NULL,\n\t`category` enum('flight','hotel','transport','meal','venue','gift','visa','insurance','misc') NOT NULL DEFAULT 'misc',\n\t`title` varchar(255) NOT NULL,\n\t`description` text,\n\t`amount` int NOT NULL,\n\t`currency` varchar(10) NOT NULL DEFAULT 'KRW',\n\t`paidBy` varchar(255),\n\t`paidFor` varchar(500),\n\t`receiptUrl` varchar(1000),\n\t`receiptKey` varchar(500),\n\t`expenseDate` varchar(20),\n\t`registeredVia` enum('web','telegram','qr_scan') NOT NULL DEFAULT 'web',\n\t`createdBy` int,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `meetup_expenses_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute CREATE TABLE `meetup_expenses` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`meetupId` int NOT NULL,\n\t`category` enum('flight','hotel','transport','meal','venue','gift','visa','insurance','misc') NOT NULL DEFAULT 'misc',\n\t`title` varchar(255) NOT NULL,\n\t`description` text,\n\t`amount` int NOT NULL,\n\t`currency` varchar(10) NOT NULL DEFAULT 'KRW',\n\t`paidBy` varchar(255),\n\t`paidFor` varchar(500),\n\t`receiptUrl` varchar(1000),\n\t`receiptKey` varchar(500),\n\t`expenseDate` varchar(20),\n\t`registeredVia` enum('web','telegram','qr_scan') NOT NULL DEFAULT 'web',\n\t`createdBy` int,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `meetup_expenses_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1865
+}

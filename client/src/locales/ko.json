@@ -707,7 +707,9 @@
       "affiliateRevenue": "수익 대시보드",
       "apiKeys": "API 키 관리",
       "telegramUploads": "텔레그램 업로드",
-      "apiDocs": "API 문서"
+      "apiDocs": "API 문서",
+      "passportList": "여권 명단",
+      "expenses": "비용 내역"
     },
     "loginRequired": "로그인이 필요합니다",
     "loginRequiredDesc": "백오피스 접근을 위해 로그인이 필요합니다.",

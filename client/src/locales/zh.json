@@ -1169,7 +1169,9 @@
       "surveys": "调查",
       "telegram": "Telegram",
       "travelInfo": "旅游信息",
-      "vouchers": "凭证"
+      "vouchers": "凭证",
+      "passportList": "护照名单",
+      "expenses": "费用明细"
     },
     "surveys": {
       "actions": "操作",

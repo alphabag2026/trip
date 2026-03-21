@@ -155,6 +155,13 @@
       "when": 1774096026498,
       "tag": "0021_soft_mister_fear",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "5",
+      "when": 1774097779095,
+      "tag": "0022_harsh_starbolt",
+      "breakpoints": true
     }
   ]
 }

@@ -1169,7 +1169,9 @@
       "surveys": "Khảo sát",
       "telegram": "Telegram",
       "travelInfo": "Thông tin du lịch",
-      "vouchers": "Voucher"
+      "vouchers": "Voucher",
+      "passportList": "Danh sách hộ chiếu",
+      "expenses": "Chi phí"
     },
     "surveys": {
       "actions": "Hành động",

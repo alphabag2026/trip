@@ -1169,7 +1169,9 @@
       "surveys": "แบบสำรวจ",
       "telegram": "โทรเลข",
       "travelInfo": "ข้อมูลการเดินทาง",
-      "vouchers": "บัตรกำนัล"
+      "vouchers": "บัตรกำนัล",
+      "passportList": "รายชื่อหนังสือเดินทาง",
+      "expenses": "ค่าใช้จ่าย"
     },
     "surveys": {
       "actions": "การดำเนินการ",

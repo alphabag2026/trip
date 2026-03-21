@@ -1169,7 +1169,9 @@
       "surveys": "Survei",
       "telegram": "Telegram",
       "travelInfo": "Info Perjalanan",
-      "vouchers": "Voucher"
+      "vouchers": "Voucher",
+      "passportList": "Daftar Paspor",
+      "expenses": "Pengeluaran"
     },
     "surveys": {
       "actions": "Tindakan",

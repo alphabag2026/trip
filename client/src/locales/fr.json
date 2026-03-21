@@ -1169,7 +1169,9 @@
       "surveys": "Enquêtes",
       "telegram": "Telegram",
       "travelInfo": "Informations de voyage",
-      "vouchers": "Bons"
+      "vouchers": "Bons",
+      "passportList": "Liste des passeports",
+      "expenses": "Dépenses"
     },
     "surveys": {
       "actions": "Actions",

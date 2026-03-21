@@ -4241,9 +4241,84 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         return null;
       }),
   }),
-});
 
-// ── LLM 여행정보 파싱 헬퍼 ──────────────────────────────────
+  // ── 출장자 여권 명단 (admin) ──────────────────────────────────
+  passportList: router({
+    getByMeetup: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }))
+      .query(async ({ input }) => {
+        return db.getMeetupPassportList(input.meetupId);
+      }),
+  }),
+
+  // ── 비용 사용 내역 (admin) ──────────────────────────────────
+  expense: router({
+    list: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getMeetupExpenses(input.meetupId);
+      }),
+
+    listAll: adminProcedure
+      .query(async () => {
+        return db.getAllMeetupExpenses();
+      }),
+
+    create: adminProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        category: z.enum(["flight", "hotel", "transport", "meal", "venue", "gift", "visa", "insurance", "misc"]),
+        title: z.string().min(1),
+        description: z.string().optional(),
+        amount: z.number().min(0),
+        currency: z.string().default("KRW"),
+        paidBy: z.string().optional(),
+        paidFor: z.string().optional(),
+        receiptUrl: z.string().optional(),
+        receiptKey: z.string().optional(),
+        expenseDate: z.string().optional(),
+        registeredVia: z.enum(["web", "telegram", "qr_scan"]).default("web"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.createMeetupExpense({ ...input, createdBy: ctx.user.id });
+        return { id };
+      }),
+
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        category: z.enum(["flight", "hotel", "transport", "meal", "venue", "gift", "visa", "insurance", "misc"]).optional(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        amount: z.number().min(0).optional(),
+        currency: z.string().optional(),
+        paidBy: z.string().optional(),
+        paidFor: z.string().optional(),
+        receiptUrl: z.string().optional(),
+        receiptKey: z.string().optional(),
+        expenseDate: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateMeetupExpense(id, data);
+        return { success: true };
+      }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteMeetupExpense(input.id);
+        return { success: true };
+      }),
+
+    summary: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getMeetupExpenseSummary(input.meetupId);
+      }),
+  }),
+});
+// ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────
 async function parseTravelInfoWithLLM(text: string, fileType: string) {
   try {
     const response = await invokeLLM({

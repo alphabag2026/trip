@@ -34,6 +34,7 @@ import {
   flightTickets, InsertFlightTicket,
   apiKeys, InsertApiKey,
   apiRequestLogs, InsertApiRequestLog,
+  meetupExpenses, InsertMeetupExpense,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1942,4 +1943,97 @@ export async function getChecklistProgress(userId: number, countryCode: string) 
   const total = items.length;
   const checked = items.filter(i => i.isChecked).length;
   return { total, checked, percent: total > 0 ? Math.round((checked / total) * 100) : 0 };
+}
+
+
+// ── Meetup Passport List (밋업별 출장자 여권 명단) ──────────────────────
+export async function getMeetupPassportList(meetupId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // registrations + passportInfo + userProfiles 조인
+  const baseQuery = db.select({
+    regId: registrations.id,
+    regName: registrations.name,
+    regPhone: registrations.phone,
+    regMessengerId: registrations.messengerId,
+    regTeamName: registrations.teamName,
+    regStatus: registrations.status,
+    meetupId: registrations.meetupId,
+    passportNumber: sql<string>`COALESCE(${passportInfo.passportNumber}, JSON_UNQUOTE(JSON_EXTRACT(${registrations.passportOcrData}, '$.passportNumber')))`,
+    passportFullName: sql<string>`COALESCE(${passportInfo.fullName}, JSON_UNQUOTE(JSON_EXTRACT(${registrations.passportOcrData}, '$.fullName')))`,
+    passportNationality: sql<string>`COALESCE(${passportInfo.nationality}, JSON_UNQUOTE(JSON_EXTRACT(${registrations.passportOcrData}, '$.nationality')))`,
+    passportBirthDate: sql<string>`COALESCE(${passportInfo.birthDate}, JSON_UNQUOTE(JSON_EXTRACT(${registrations.passportOcrData}, '$.birthDate')))`,
+    passportGender: sql<string>`COALESCE(${passportInfo.gender}, JSON_UNQUOTE(JSON_EXTRACT(${registrations.passportOcrData}, '$.gender')))`,
+    passportExpiryDate: sql<string>`COALESCE(${passportInfo.expiryDate}, JSON_UNQUOTE(JSON_EXTRACT(${registrations.passportOcrData}, '$.expiryDate')))`,
+    passportIssuingCountry: sql<string>`COALESCE(${passportInfo.issuingCountry}, JSON_UNQUOTE(JSON_EXTRACT(${registrations.passportOcrData}, '$.issuingCountry')))`,
+    passportImageUrl: sql<string>`COALESCE(${passportInfo.passportImageUrl}, ${registrations.passportImageUrl})`,
+    passportVerified: passportInfo.isVerified,
+    profileOrganization: userProfiles.organization,
+    profileTelegramId: userProfiles.telegramId,
+  }).from(registrations)
+    .leftJoin(userProfiles, eq(registrations.phone, userProfiles.phone))
+    .leftJoin(passportInfo, eq(userProfiles.userId, passportInfo.userId));
+
+  if (meetupId) {
+    return baseQuery.where(eq(registrations.meetupId, meetupId)).orderBy(desc(registrations.createdAt));
+  }
+  return baseQuery.orderBy(desc(registrations.createdAt));
+}
+
+// ── Meetup Expenses (밋업별 비용 내역) ──────────────────────
+export async function getMeetupExpenses(meetupId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(meetupExpenses)
+    .where(eq(meetupExpenses.meetupId, meetupId))
+    .orderBy(desc(meetupExpenses.createdAt));
+}
+
+export async function createMeetupExpense(data: InsertMeetupExpense) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [result] = await db.insert(meetupExpenses).values(data);
+  return result.insertId;
+}
+
+export async function updateMeetupExpense(id: number, data: Partial<InsertMeetupExpense>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(meetupExpenses).set(data).where(eq(meetupExpenses.id, id));
+}
+
+export async function deleteMeetupExpense(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(meetupExpenses).where(eq(meetupExpenses.id, id));
+}
+
+export async function getMeetupExpenseSummary(meetupId: number) {
+  const db = await getDb();
+  if (!db) return { total: 0, byCategory: [], perPerson: 0, count: 0 };
+  
+  const expenses = await db.select().from(meetupExpenses)
+    .where(eq(meetupExpenses.meetupId, meetupId));
+  
+  const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+  
+  const categoryMap: Record<string, number> = {};
+  expenses.forEach(e => {
+    categoryMap[e.category] = (categoryMap[e.category] || 0) + e.amount;
+  });
+  const byCategory = Object.entries(categoryMap).map(([category, amount]) => ({ category, amount }));
+  
+  // 승인된 참가자 수로 1인당 비용 계산
+  const regs = await db.select().from(registrations)
+    .where(and(eq(registrations.meetupId, meetupId), eq(registrations.status, "approved")));
+  const perPerson = regs.length > 0 ? Math.round(total / regs.length) : 0;
+  
+  return { total, byCategory, perPerson, count: expenses.length, participantCount: regs.length };
+}
+
+export async function getAllMeetupExpenses() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(meetupExpenses).orderBy(desc(meetupExpenses.createdAt));
 }

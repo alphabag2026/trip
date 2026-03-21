@@ -1169,7 +1169,9 @@
       "surveys": "Опросы",
       "telegram": "Telegram",
       "travelInfo": "Информация о поездке",
-      "vouchers": "Ваучеры"
+      "vouchers": "Ваучеры",
+      "passportList": "Список паспортов",
+      "expenses": "Расходы"
     },
     "surveys": {
       "actions": "Действия",

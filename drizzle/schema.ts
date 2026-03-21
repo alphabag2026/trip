@@ -1018,3 +1018,28 @@ export const userChecklistItems = mysqlTable("user_checklist_items", {
 });
 export type UserChecklistItem = typeof userChecklistItems.$inferSelect;
 export type InsertUserChecklistItem = typeof userChecklistItems.$inferInsert;
+
+
+// ── Meetup Expenses (밋업별 비용 사용 내역) ──────────────────────
+export const meetupExpenses = mysqlTable("meetup_expenses", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  category: mysqlEnum("category", [
+    "flight", "hotel", "transport", "meal", "venue", "gift", "visa", "insurance", "misc"
+  ]).default("misc").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  amount: int("amount").notNull(), // 금액 (원 단위)
+  currency: varchar("currency", { length: 10 }).default("KRW").notNull(),
+  paidBy: varchar("paidBy", { length: 255 }), // 지출자 이름
+  paidFor: varchar("paidFor", { length: 500 }), // 대상 (팀명 또는 개인명, 쉼표 구분)
+  receiptUrl: varchar("receiptUrl", { length: 1000 }), // 영수증 이미지 URL
+  receiptKey: varchar("receiptKey", { length: 500 }),
+  expenseDate: varchar("expenseDate", { length: 20 }), // YYYY-MM-DD
+  registeredVia: mysqlEnum("registeredVia", ["web", "telegram", "qr_scan"]).default("web").notNull(),
+  createdBy: int("createdBy"), // 등록한 관리자 userId
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type MeetupExpense = typeof meetupExpenses.$inferSelect;
+export type InsertMeetupExpense = typeof meetupExpenses.$inferInsert;

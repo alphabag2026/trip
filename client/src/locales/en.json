@@ -707,7 +707,9 @@
       "affiliateRevenue": "Revenue Dashboard",
       "apiKeys": "API Keys",
       "telegramUploads": "Telegram Uploads",
-      "apiDocs": "API Docs"
+      "apiDocs": "API Docs",
+      "passportList": "Passport List",
+      "expenses": "Expenses"
     },
     "loginRequired": "Login Required",
     "loginRequiredDesc": "Please log in to access the back office.",

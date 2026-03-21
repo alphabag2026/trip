@@ -1169,7 +1169,9 @@
       "surveys": "アンケート",
       "telegram": "Telegram",
       "travelInfo": "旅行情報",
-      "vouchers": "バウチャー"
+      "vouchers": "バウチャー",
+      "passportList": "パスポート一覧",
+      "expenses": "費用明細"
     },
     "surveys": {
       "actions": "アクション",

@@ -55,6 +55,8 @@ import MobileBottomNav from "./components/MobileBottomNav";
 import CommunityChat from "./pages/CommunityChat";
 import AdminTelegramUploads from "./pages/admin/TelegramUploads";
 import AdminApiDocs from "./pages/admin/ApiDocs";
+import AdminPassportList from "./pages/admin/PassportList";
+import AdminExpenses from "./pages/admin/Expenses";
 
 function PublicRouter() {
   return (
@@ -118,6 +120,8 @@ function AdminRouter() {
         <Route path="/admin/api-keys" component={AdminApiKeys} />
         <Route path="/admin/telegram-uploads" component={AdminTelegramUploads} />
         <Route path="/admin/api-docs" component={AdminApiDocs} />
+        <Route path="/admin/passport-list" component={AdminPassportList} />
+        <Route path="/admin/expenses" component={AdminExpenses} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>
