@@ -1561,7 +1561,14 @@
     "user": "ユーザー",
     "verified": "認証済み",
     "viewPdf": "PDF表示",
-    "visitedRegions": "訪問地域"
+    "visitedRegions": "訪問地域",
+    "emailVerification": {
+      "verified": "メール認証済み",
+      "unverified": "メール認証が必要です",
+      "sent": "認証メールを送信しました",
+      "sendBtn": "認証メール送信",
+      "resend": "再送信"
+    }
   },
   "nav": {
     "ai": "AI",
@@ -2132,5 +2139,10 @@
     "expiredLinkDesc": "このパスワードリセットリンクは期限切れです。再度リクエストしてください。",
     "requestNewLink": "新しいリンクをリクエスト",
     "validating": "リンク確認中..."
+  },
+  "loginPage": {
+    "kakaoLogin": "カカオでログイン",
+    "kakaoRegister": "カカオで簡単登録",
+    "orDivider": "または"
   }
 }

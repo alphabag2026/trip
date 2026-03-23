@@ -1561,7 +1561,14 @@
     "user": "Pengguna",
     "verified": "Disahkan",
     "viewPdf": "Lihat PDF",
-    "visitedRegions": "Wilayah Dilawati"
+    "visitedRegions": "Wilayah Dilawati",
+    "emailVerification": {
+      "verified": "Email Verified",
+      "unverified": "Email verification required",
+      "sent": "Verification email sent",
+      "sendBtn": "Send Verification",
+      "resend": "Resend"
+    }
   },
   "nav": {
     "ai": "AI",
@@ -2132,5 +2139,10 @@
     "expiredLinkDesc": "This password reset link has expired. Please request a new one.",
     "requestNewLink": "Request New Link",
     "validating": "Validating link..."
+  },
+  "loginPage": {
+    "kakaoLogin": "Login with Kakao",
+    "kakaoRegister": "Sign up with Kakao",
+    "orDivider": "or"
   }
 }

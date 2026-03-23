@@ -9,6 +9,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { createExternalApiRouter } from "../externalApi";
 import { createTelegramWebhookRouter } from "../telegramWebhook";
+import { kakaoRouter } from "../kakaoAuth";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -37,6 +38,8 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+  // Kakao OAuth routes
+  app.use(kakaoRouter);
   // External REST API (v1)
   app.use("/api/v1", createExternalApiRouter());
   // Telegram Bot Webhook

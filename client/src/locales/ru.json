@@ -1561,7 +1561,14 @@
     "user": "Пользователь",
     "verified": "Проверено",
     "viewPdf": "Просмотреть PDF",
-    "visitedRegions": "Посещенные регионы"
+    "visitedRegions": "Посещенные регионы",
+    "emailVerification": {
+      "verified": "Email подтверждён",
+      "unverified": "Требуется подтверждение email",
+      "sent": "Письмо подтверждения отправлено",
+      "sendBtn": "Отправить подтверждение",
+      "resend": "Отправить повторно"
+    }
   },
   "nav": {
     "ai": "AI",
@@ -2132,5 +2139,10 @@
     "expiredLinkDesc": "This password reset link has expired. Please request a new one.",
     "requestNewLink": "Request New Link",
     "validating": "Validating link..."
+  },
+  "loginPage": {
+    "kakaoLogin": "Войти через Kakao",
+    "kakaoRegister": "Зарегистрироваться через Kakao",
+    "orDivider": "или"
   }
 }

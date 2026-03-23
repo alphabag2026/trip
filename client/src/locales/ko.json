@@ -1561,7 +1561,14 @@
     "user": "사용자",
     "verified": "인증됨",
     "viewPdf": "PDF 보기",
-    "visitedRegions": "방문 지역"
+    "visitedRegions": "방문 지역",
+    "emailVerification": {
+      "verified": "이메일 인증 완료",
+      "unverified": "이메일 인증이 필요합니다",
+      "sent": "인증 메일이 발송되었습니다",
+      "sendBtn": "인증 메일 발송",
+      "resend": "재발송"
+    }
   },
   "nav": {
     "ai": "AI",
@@ -2132,5 +2139,10 @@
     "expiredLinkDesc": "이 비밀번호 재설정 링크는 만료되었습니다. 다시 요청해주세요.",
     "requestNewLink": "새 링크 요청하기",
     "validating": "링크 확인 중..."
+  },
+  "loginPage": {
+    "kakaoLogin": "카카오로 로그인",
+    "kakaoRegister": "카카오로 간편 가입",
+    "orDivider": "또는"
   }
 }

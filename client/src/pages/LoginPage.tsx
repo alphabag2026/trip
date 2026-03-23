@@ -265,6 +265,32 @@ export default function LoginPage() {
                 </Link>
               </div>
 
+              {/* Social Login Divider */}
+              <div className="relative my-5">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-600/50" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-slate-800/50 px-3 text-slate-400">또는</span>
+                </div>
+              </div>
+
+              {/* Kakao Login Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const origin = window.location.origin;
+                  window.location.href = `/api/auth/kakao?origin=${encodeURIComponent(origin)}&returnPath=${encodeURIComponent(returnPath)}`;
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all hover:brightness-95"
+                style={{ backgroundColor: '#FEE500', color: '#191919' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M9 1C4.58 1 1 3.79 1 7.21c0 2.17 1.45 4.08 3.63 5.17l-.93 3.42c-.08.3.26.54.52.37l4.07-2.68c.23.02.47.03.71.03 4.42 0 8-2.79 8-6.21S13.42 1 9 1z" fill="#191919"/>
+                </svg>
+                카카오로 로그인
+              </button>
+
               <div className="mt-3 text-center">
                 <p className="text-slate-500 text-sm">
                   계정이 없으신가요?{" "}
@@ -533,6 +559,32 @@ export default function LoginPage() {
                   )}
                 </Button>
               </form>
+
+              {/* Social Login Divider */}
+              <div className="relative my-5">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-600/50" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-slate-800/50 px-3 text-slate-400">또는</span>
+                </div>
+              </div>
+
+              {/* Kakao Register Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const origin = window.location.origin;
+                  window.location.href = `/api/auth/kakao?origin=${encodeURIComponent(origin)}&returnPath=${encodeURIComponent(returnPath)}`;
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all hover:brightness-95"
+                style={{ backgroundColor: '#FEE500', color: '#191919' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M9 1C4.58 1 1 3.79 1 7.21c0 2.17 1.45 4.08 3.63 5.17l-.93 3.42c-.08.3.26.54.52.37l4.07-2.68c.23.02.47.03.71.03 4.42 0 8-2.79 8-6.21S13.42 1 9 1z" fill="#191919"/>
+                </svg>
+                카카오로 간편 가입
+              </button>
 
               <div className="mt-4 text-center">
                 <p className="text-slate-500 text-sm">

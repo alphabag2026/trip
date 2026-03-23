@@ -1561,7 +1561,14 @@
     "user": "用户",
     "verified": "已验证",
     "viewPdf": "查看PDF",
-    "visitedRegions": "访问地区"
+    "visitedRegions": "访问地区",
+    "emailVerification": {
+      "verified": "邮箱已验证",
+      "unverified": "需要邮箱验证",
+      "sent": "验证邮件已发送",
+      "sendBtn": "发送验证邮件",
+      "resend": "重新发送"
+    }
   },
   "nav": {
     "ai": "人工智能",
@@ -2132,5 +2139,10 @@
     "expiredLinkDesc": "此密码重置链接已过期。请重新请求。",
     "requestNewLink": "请求新链接",
     "validating": "验证链接中..."
+  },
+  "loginPage": {
+    "kakaoLogin": "使用Kakao登录",
+    "kakaoRegister": "使用Kakao注册",
+    "orDivider": "或"
   }
 }

@@ -1561,7 +1561,14 @@
     "user": "Utilisateur",
     "verified": "Vérifié",
     "viewPdf": "Voir le PDF",
-    "visitedRegions": "Régions visitées"
+    "visitedRegions": "Régions visitées",
+    "emailVerification": {
+      "verified": "Email vérifié",
+      "unverified": "Vérification d'email requise",
+      "sent": "Email de vérification envoyé",
+      "sendBtn": "Envoyer la vérification",
+      "resend": "Renvoyer"
+    }
   },
   "nav": {
     "ai": "IA",
@@ -2132,5 +2139,10 @@
     "expiredLinkDesc": "This password reset link has expired. Please request a new one.",
     "requestNewLink": "Request New Link",
     "validating": "Validating link..."
+  },
+  "loginPage": {
+    "kakaoLogin": "Se connecter avec Kakao",
+    "kakaoRegister": "S'inscrire avec Kakao",
+    "orDivider": "ou"
   }
 }

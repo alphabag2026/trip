@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -313,6 +313,9 @@ export default function MyPage() {
 
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-4">
+            {/* Email Verification Status Card */}
+            <EmailVerificationCard user={user} />
+
             {!editingProfile ? (
               <>
                 <Card>
@@ -1172,5 +1175,78 @@ export default function MyPage() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+// ── Email Verification Status Card ──
+function EmailVerificationCard({ user }: { user: any }) {
+  const { t } = useTranslation();
+  const [sent, setSent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  const sendVerification = trpc.auth.sendVerificationEmail.useMutation({
+    onSuccess: () => {
+      toast.success(t("myPage.emailVerification.sent"));
+      setSent(true);
+      setCooldown(60);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+  });
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => setCooldown(c => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  if (!user?.email) return null;
+
+  const isVerified = user.emailVerified;
+
+  return (
+    <Card className={isVerified ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"}>
+      <CardContent className="py-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            {isVerified ? (
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/10">
+                <CheckCircle className="w-5 h-5 text-emerald-500" />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-500/10">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+              </div>
+            )}
+            <div>
+              <p className="font-medium text-sm">
+                {isVerified ? t("myPage.emailVerification.verified") : t("myPage.emailVerification.unverified")}
+              </p>
+              <p className="text-xs text-muted-foreground">{user.email}</p>
+            </div>
+          </div>
+          {!isVerified && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={sendVerification.isPending || cooldown > 0}
+              onClick={() => sendVerification.mutate({ origin: window.location.origin })}
+              className="shrink-0"
+            >
+              {sendVerification.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : cooldown > 0 ? (
+                `${cooldown}s`
+              ) : sent ? (
+                <>{t("myPage.emailVerification.resend")}</>
+              ) : (
+                <>{t("myPage.emailVerification.sendBtn")}</>
+              )}
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

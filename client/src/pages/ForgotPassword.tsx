@@ -11,12 +11,9 @@ export default function ForgotPassword() {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
-  const [resetUrl, setResetUrl] = useState("");
-
   const requestReset = trpc.auth.requestPasswordReset.useMutation({
-    onSuccess: (data) => {
+    onSuccess: () => {
       setSent(true);
-      if (data.resetUrl) setResetUrl(data.resetUrl);
     },
   });
 
@@ -41,20 +38,7 @@ export default function ForgotPassword() {
               {t("forgotPassword.sentDesc", { email })}
             </p>
 
-            {/* Show direct reset link for demo/development */}
-            {resetUrl && (
-              <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-xs text-blue-600 dark:text-blue-400 mb-2 font-medium">
-                  {t("forgotPassword.directLink")}
-                </p>
-                <a
-                  href={resetUrl}
-                  className="text-sm text-blue-700 dark:text-blue-300 underline break-all"
-                >
-                  {t("forgotPassword.clickToReset")}
-                </a>
-              </div>
-            )}
+
 
             <div className="space-y-2">
               <Link href="/login">
@@ -68,7 +52,6 @@ export default function ForgotPassword() {
                 onClick={() => {
                   setSent(false);
                   setEmail("");
-                  setResetUrl("");
                 }}
               >
                 {t("forgotPassword.sendAgain")}

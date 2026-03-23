@@ -1561,7 +1561,14 @@
     "user": "ผู้ใช้",
     "verified": "ยืนยันแล้ว",
     "viewPdf": "ดู PDF",
-    "visitedRegions": "ภูมิภาคที่เยี่ยมชม"
+    "visitedRegions": "ภูมิภาคที่เยี่ยมชม",
+    "emailVerification": {
+      "verified": "ยืนยันอีเมลแล้ว",
+      "unverified": "ต้องยืนยันอีเมล",
+      "sent": "ส่งอีเมลยืนยันแล้ว",
+      "sendBtn": "ส่งอีเมลยืนยัน",
+      "resend": "ส่งอีกครั้ง"
+    }
   },
   "nav": {
     "ai": "AI",
@@ -2132,5 +2139,10 @@
     "expiredLinkDesc": "This password reset link has expired. Please request a new one.",
     "requestNewLink": "Request New Link",
     "validating": "Validating link..."
+  },
+  "loginPage": {
+    "kakaoLogin": "เข้าสู่ระบบด้วย Kakao",
+    "kakaoRegister": "สมัครด้วย Kakao",
+    "orDivider": "หรือ"
   }
 }

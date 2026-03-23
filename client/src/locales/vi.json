@@ -1561,7 +1561,14 @@
     "user": "Người dùng",
     "verified": "Đã xác minh",
     "viewPdf": "Xem PDF",
-    "visitedRegions": "Khu vực đã đến"
+    "visitedRegions": "Khu vực đã đến",
+    "emailVerification": {
+      "verified": "Email đã xác minh",
+      "unverified": "Cần xác minh email",
+      "sent": "Đã gửi email xác minh",
+      "sendBtn": "Gửi xác minh",
+      "resend": "Gửi lại"
+    }
   },
   "nav": {
     "ai": "AI",
@@ -2132,5 +2139,10 @@
     "expiredLinkDesc": "This password reset link has expired. Please request a new one.",
     "requestNewLink": "Request New Link",
     "validating": "Validating link..."
+  },
+  "loginPage": {
+    "kakaoLogin": "Đăng nhập bằng Kakao",
+    "kakaoRegister": "Đăng ký bằng Kakao",
+    "orDivider": "hoặc"
   }
 }

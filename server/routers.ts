@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs";
 import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
 import { sdk } from "./_core/sdk";
+import { sendEmail, buildVerificationEmail, buildPasswordResetEmail } from "./email";
 import {
   generateFlightSearchLinks,
   generateHotelSearchLinks,
@@ -327,13 +328,22 @@ export const appRouter = router({
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
         await db.createEmailVerificationToken(user.id, token, expiresAt);
         const verifyUrl = `${input.origin}/verify-email?token=${token}`;
-        // Use notifyOwner to send verification info (since no SMTP available)
-        const { notifyOwner } = await import("./_core/notification");
-        await notifyOwner({
-          title: `이메일 인증 요청 - ${user.email}`,
-          content: `사용자 ${user.name || user.email}님이 이메일 인증을 요청했습니다.\n인증 링크: ${verifyUrl}\n만료: ${expiresAt.toISOString()}`,
+        // Send via Resend
+        const { subject, html } = buildVerificationEmail({
+          userName: user.name || user.email,
+          verifyUrl,
+          expiresIn: "24시간",
         });
-        return { success: true, message: "인증 이메일이 발송되었습니다. 이메일을 확인해주세요.", verifyUrl } as const;
+        const emailResult = await sendEmail({ to: user.email, subject, html });
+        if (!emailResult.success) {
+          console.warn("[Email] Verification email failed, falling back to notifyOwner");
+          const { notifyOwner } = await import("./_core/notification");
+          await notifyOwner({
+            title: `이메일 인증 요청 - ${user.email}`,
+            content: `사용자 ${user.name || user.email}님이 이메일 인증을 요청했습니다.\n인증 링크: ${verifyUrl}\n만료: ${expiresAt.toISOString()}`,
+          });
+        }
+        return { success: true, message: "인증 이메일이 발송되었습니다. 이메일을 확인해주세요." } as const;
       }),
     verifyEmail: publicProcedure
       .input(z.object({ token: z.string() }))
@@ -365,12 +375,22 @@ export const appRouter = router({
         const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1h
         await db.createPasswordResetToken(user.id, token, expiresAt);
         const resetUrl = `${input.origin}/reset-password?token=${token}`;
-        const { notifyOwner } = await import("./_core/notification");
-        await notifyOwner({
-          title: `비밀번호 재설정 요청 - ${user.email}`,
-          content: `사용자 ${user.name || user.email}님이 비밀번호 재설정을 요청했습니다.\n재설정 링크: ${resetUrl}\n만료: ${expiresAt.toISOString()}`,
+        // Send via Resend
+        const { subject, html } = buildPasswordResetEmail({
+          userName: user.name || user.email || "User",
+          resetUrl,
+          expiresIn: "1시간",
         });
-        return { success: true, message: "해당 이메일로 비밀번호 재설정 링크를 발송했습니다", resetUrl } as const;
+        const emailResult = await sendEmail({ to: user.email!, subject, html });
+        if (!emailResult.success) {
+          console.warn("[Email] Password reset email failed, falling back to notifyOwner");
+          const { notifyOwner } = await import("./_core/notification");
+          await notifyOwner({
+            title: `비밀번호 재설정 요청 - ${user.email}`,
+            content: `사용자 ${user.name || user.email}님이 비밀번호 재설정을 요청했습니다.\n재설정 링크: ${resetUrl}\n만료: ${expiresAt.toISOString()}`,
+          });
+        }
+        return { success: true, message: "해당 이메일로 비밀번호 재설정 링크를 발송했습니다" } as const;
       }),
     validateResetToken: publicProcedure
       .input(z.object({ token: z.string() }))
