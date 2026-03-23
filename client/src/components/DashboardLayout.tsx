@@ -29,39 +29,41 @@ import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 import { useTranslation } from "react-i18next";
 
+// Paths are relative to /admin base (wouter nest mode)
+// Use "~/" prefix for absolute paths that escape the nested router
 const menuItemDefs = [
-  { icon: LayoutDashboard, labelKey: "admin.sidebar.dashboard", path: "/admin" },
-  { icon: ClipboardList, labelKey: "admin.sidebar.registrations", path: "/admin/registrations" },
-  { icon: Plane, labelKey: "admin.sidebar.meetups", path: "/admin/meetups" },
-  { icon: Plane, labelKey: "admin.sidebar.flights", path: "/admin/flights" },
-  { icon: Car, labelKey: "admin.sidebar.pickups", path: "/admin/pickups" },
-  { icon: Hotel, labelKey: "admin.sidebar.accommodations", path: "/admin/accommodations" },
-  { icon: CalendarDays, labelKey: "admin.sidebar.scheduleEvents", path: "/admin/schedule-events" },
-  { icon: Plane, labelKey: "admin.sidebar.itineraries", path: "/admin/itineraries" },
-  { icon: Edit, labelKey: "admin.sidebar.modRequests", path: "/admin/mod-requests" },
-  { icon: Globe, labelKey: "admin.sidebar.travelInfo", path: "/admin/travel-info" },
-  { icon: Send, labelKey: "admin.sidebar.telegram", path: "/admin/telegram" },
-  { icon: MessageCircle, labelKey: "admin.sidebar.channels", path: "/admin/channels" },
-  { icon: MessageCircle, labelKey: "admin.sidebar.chat", path: "/admin/chat" },
-  { icon: FileText, labelKey: "admin.sidebar.vouchers", path: "/admin/vouchers" },
-  { icon: ClipboardList, labelKey: "admin.sidebar.surveys", path: "/admin/surveys" },
-  { icon: Megaphone, labelKey: "admin.sidebar.broadcast", path: "/admin/broadcast" },
-  { icon: Luggage, labelKey: "admin.sidebar.baggageCheckin", path: "/admin/baggage-checkin" },
-  { icon: UtensilsCrossed, labelKey: "admin.sidebar.mealDashboard", path: "/admin/meal-dashboard" },
-  { icon: DoorOpen, labelKey: "admin.sidebar.hotelRooms", path: "/admin/hotel-rooms" },
-  { icon: Search, labelKey: "admin.sidebar.search", path: "/admin/search" },
-  { icon: Cloud, labelKey: "admin.sidebar.platform", path: "/admin/platform" },
-  { icon: Handshake, labelKey: "admin.sidebar.partners", path: "/admin/partners" },
-  { icon: CreditCard, labelKey: "admin.sidebar.hotelVouchers", path: "/admin/hotel-vouchers" },
-  { icon: Ticket, labelKey: "admin.sidebar.flightTickets", path: "/admin/flight-tickets" },
-  { icon: ShoppingCart, labelKey: "admin.sidebar.bookingSearch", path: "/admin/booking-search" },
-  { icon: TrendingUp, labelKey: "admin.sidebar.affiliateRevenue", path: "/admin/affiliate-revenue" },
-  { icon: Key, labelKey: "admin.sidebar.apiKeys", path: "/admin/api-keys" },
-  { icon: Upload, labelKey: "admin.sidebar.telegramUploads", path: "/admin/telegram-uploads" },
-  { icon: BookOpen, labelKey: "admin.sidebar.apiDocs", path: "/admin/api-docs" },
-  { icon: ShieldCheck, labelKey: "admin.sidebar.passportList", path: "/admin/passport-list" },
-  { icon: Receipt, labelKey: "admin.sidebar.expenses", path: "/admin/expenses" },
-  { icon: Home, labelKey: "admin.sidebar.goHome", path: "/" },
+  { icon: LayoutDashboard, labelKey: "admin.sidebar.dashboard", path: "/" },
+  { icon: ClipboardList, labelKey: "admin.sidebar.registrations", path: "/registrations" },
+  { icon: Plane, labelKey: "admin.sidebar.meetups", path: "/meetups" },
+  { icon: Plane, labelKey: "admin.sidebar.flights", path: "/flights" },
+  { icon: Car, labelKey: "admin.sidebar.pickups", path: "/pickups" },
+  { icon: Hotel, labelKey: "admin.sidebar.accommodations", path: "/accommodations" },
+  { icon: CalendarDays, labelKey: "admin.sidebar.scheduleEvents", path: "/schedule-events" },
+  { icon: Plane, labelKey: "admin.sidebar.itineraries", path: "/itineraries" },
+  { icon: Edit, labelKey: "admin.sidebar.modRequests", path: "/mod-requests" },
+  { icon: Globe, labelKey: "admin.sidebar.travelInfo", path: "/travel-info" },
+  { icon: Send, labelKey: "admin.sidebar.telegram", path: "/telegram" },
+  { icon: MessageCircle, labelKey: "admin.sidebar.channels", path: "/channels" },
+  { icon: MessageCircle, labelKey: "admin.sidebar.chat", path: "/chat" },
+  { icon: FileText, labelKey: "admin.sidebar.vouchers", path: "/vouchers" },
+  { icon: ClipboardList, labelKey: "admin.sidebar.surveys", path: "/surveys" },
+  { icon: Megaphone, labelKey: "admin.sidebar.broadcast", path: "/broadcast" },
+  { icon: Luggage, labelKey: "admin.sidebar.baggageCheckin", path: "/baggage-checkin" },
+  { icon: UtensilsCrossed, labelKey: "admin.sidebar.mealDashboard", path: "/meal-dashboard" },
+  { icon: DoorOpen, labelKey: "admin.sidebar.hotelRooms", path: "/hotel-rooms" },
+  { icon: Search, labelKey: "admin.sidebar.search", path: "/search" },
+  { icon: Cloud, labelKey: "admin.sidebar.platform", path: "/platform" },
+  { icon: Handshake, labelKey: "admin.sidebar.partners", path: "/partners" },
+  { icon: CreditCard, labelKey: "admin.sidebar.hotelVouchers", path: "/hotel-vouchers" },
+  { icon: Ticket, labelKey: "admin.sidebar.flightTickets", path: "/flight-tickets" },
+  { icon: ShoppingCart, labelKey: "admin.sidebar.bookingSearch", path: "/booking-search" },
+  { icon: TrendingUp, labelKey: "admin.sidebar.affiliateRevenue", path: "/affiliate-revenue" },
+  { icon: Key, labelKey: "admin.sidebar.apiKeys", path: "/api-keys" },
+  { icon: Upload, labelKey: "admin.sidebar.telegramUploads", path: "/telegram-uploads" },
+  { icon: BookOpen, labelKey: "admin.sidebar.apiDocs", path: "/api-docs" },
+  { icon: ShieldCheck, labelKey: "admin.sidebar.passportList", path: "/passport-list" },
+  { icon: Receipt, labelKey: "admin.sidebar.expenses", path: "/expenses" },
+  { icon: Home, labelKey: "admin.sidebar.goHome", path: "~/" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -146,8 +148,14 @@ function DashboardLayoutContent({
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
-  const activeMenuItem = menuItemDefs.find(item => item.path === location);
   const isMobile = useIsMobile();
+
+  // location is relative to /admin base (e.g., "/", "/platform", "/registrations")
+  // For "~/" paths (absolute), we need special handling for isActive
+  const activeMenuItem = menuItemDefs.find(item => {
+    if (item.path.startsWith("~/")) return false; // absolute paths are never "active" in admin context
+    return location === item.path;
+  });
 
   useEffect(() => {
     if (isCollapsed) {
@@ -220,7 +228,8 @@ function DashboardLayoutContent({
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
               {menuItemDefs.map(item => {
-                const isActive = location === item.path;
+                // For absolute paths (~/), never mark as active
+                const isActive = item.path.startsWith("~/") ? false : location === item.path;
                 const label = t(item.labelKey);
                 return (
                   <SidebarMenuItem key={item.path}>

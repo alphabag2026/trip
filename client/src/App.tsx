@@ -92,37 +92,37 @@ function AdminRouter() {
   return (
     <DashboardLayout>
       <Switch>
-        <Route path="/admin" component={AdminDashboard} />
-        <Route path="/admin/registrations" component={AdminRegistrations} />
-        <Route path="/admin/meetups" component={AdminMeetups} />
-        <Route path="/admin/itineraries" component={AdminItineraries} />
-        <Route path="/admin/travel-info" component={AdminTravelInfo} />
-        <Route path="/admin/telegram" component={AdminTelegram} />
-        <Route path="/admin/search" component={AdminSearch} />
-        <Route path="/admin/flights" component={AdminFlights} />
-        <Route path="/admin/pickups" component={AdminPickups} />
-        <Route path="/admin/accommodations" component={AdminAccommodations} />
-        <Route path="/admin/schedule-events" component={AdminScheduleEvents} />
-        <Route path="/admin/mod-requests" component={AdminModRequests} />
-        <Route path="/admin/channels" component={AdminChannels} />
-        <Route path="/admin/vouchers" component={AdminVouchers} />
-        <Route path="/admin/chat" component={AdminChatDashboard} />
-        <Route path="/admin/surveys" component={AdminSurveys} />
-        <Route path="/admin/broadcast" component={AdminBroadcast} />
-        <Route path="/admin/baggage-checkin" component={AdminBaggageCheckin} />
-        <Route path="/admin/meal-dashboard" component={AdminMealDashboard} />
-        <Route path="/admin/hotel-rooms" component={AdminHotelRooms} />
-        <Route path="/admin/platform" component={AdminPlatformDashboard} />
-        <Route path="/admin/partners" component={AdminPartners} />
-        <Route path="/admin/hotel-vouchers" component={AdminHotelVouchers} />
-        <Route path="/admin/flight-tickets" component={AdminFlightTickets} />
-        <Route path="/admin/booking-search" component={AdminBookingSearch} />
-        <Route path="/admin/affiliate-revenue" component={AdminAffiliateRevenue} />
-        <Route path="/admin/api-keys" component={AdminApiKeys} />
-        <Route path="/admin/telegram-uploads" component={AdminTelegramUploads} />
-        <Route path="/admin/api-docs" component={AdminApiDocs} />
-        <Route path="/admin/passport-list" component={AdminPassportList} />
-        <Route path="/admin/expenses" component={AdminExpenses} />
+        <Route path="/" component={AdminDashboard} />
+        <Route path="/registrations" component={AdminRegistrations} />
+        <Route path="/meetups" component={AdminMeetups} />
+        <Route path="/itineraries" component={AdminItineraries} />
+        <Route path="/travel-info" component={AdminTravelInfo} />
+        <Route path="/telegram" component={AdminTelegram} />
+        <Route path="/search" component={AdminSearch} />
+        <Route path="/flights" component={AdminFlights} />
+        <Route path="/pickups" component={AdminPickups} />
+        <Route path="/accommodations" component={AdminAccommodations} />
+        <Route path="/schedule-events" component={AdminScheduleEvents} />
+        <Route path="/mod-requests" component={AdminModRequests} />
+        <Route path="/channels" component={AdminChannels} />
+        <Route path="/vouchers" component={AdminVouchers} />
+        <Route path="/chat" component={AdminChatDashboard} />
+        <Route path="/surveys" component={AdminSurveys} />
+        <Route path="/broadcast" component={AdminBroadcast} />
+        <Route path="/baggage-checkin" component={AdminBaggageCheckin} />
+        <Route path="/meal-dashboard" component={AdminMealDashboard} />
+        <Route path="/hotel-rooms" component={AdminHotelRooms} />
+        <Route path="/platform" component={AdminPlatformDashboard} />
+        <Route path="/partners" component={AdminPartners} />
+        <Route path="/hotel-vouchers" component={AdminHotelVouchers} />
+        <Route path="/flight-tickets" component={AdminFlightTickets} />
+        <Route path="/booking-search" component={AdminBookingSearch} />
+        <Route path="/affiliate-revenue" component={AdminAffiliateRevenue} />
+        <Route path="/api-keys" component={AdminApiKeys} />
+        <Route path="/telegram-uploads" component={AdminTelegramUploads} />
+        <Route path="/api-docs" component={AdminApiDocs} />
+        <Route path="/passport-list" component={AdminPassportList} />
+        <Route path="/expenses" component={AdminExpenses} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>
@@ -132,7 +132,7 @@ function AdminRouter() {
 function Router() {
   return (
     <Switch>
-      <Route path="/admin/:rest*" component={AdminRouter} />
+      <Route path="/admin" nest component={AdminRouter} />
       <Route>
         <PublicRouter />
       </Route>
