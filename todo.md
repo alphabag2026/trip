@@ -871,3 +871,10 @@
 - [x] PWA 설치 팝업 타이밍 조정 (3회 방문 후, 14일 재표시)
 - [x] 번역 키 추가 (ko/en 모두 적용)
 - [x] MyPage 중복 ThemeToggle 수정
+
+## 버그 수정 (v4.4)
+- [x] 비로그인 상태에서 로그인 페이지 반복 리다이렉트 수정
+- [x] main.tsx 글로벌 리다이렉트 로직에서 공개 페이지 제외
+- [x] Home.tsx protectedProcedure 쿼리 enabled 조건 강화 (이미 적용됨)
+- [x] CommunityChat 비로그인 가드 + 쿼리 enabled 조건 추가
+- [x] ChatRoomView 쿼리 enabled 조건 추가

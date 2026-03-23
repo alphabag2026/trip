@@ -11,14 +11,34 @@ import "./lib/i18n";
 
 const queryClient = new QueryClient();
 
+// Public pages where UNAUTHORIZED errors should NOT trigger a redirect
+const PUBLIC_PATHS = [
+  "/", "/register", "/lookup", "/chatbot", "/flight-tracker",
+  "/flight-pickup", "/booking", "/community", "/schedule",
+  "/pickup", "/channel", "/immigration-checklist", "/survey",
+  "/login", "/forgot-password", "/reset-password", "/verify-email",
+  "/welcome", "/invite",
+];
+
+const isPublicPage = () => {
+  const path = window.location.pathname;
+  return PUBLIC_PATHS.some(p => path === p || path.startsWith(p + "/"));
+};
+
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
 
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
-
   if (!isUnauthorized) return;
 
+  // Don't redirect if already on login page (prevent infinite loop)
+  if (window.location.pathname === "/login") return;
+
+  // Don't redirect on public pages - these pages handle auth state gracefully
+  if (isPublicPage()) return;
+
+  // Only redirect for admin/protected-only pages
   window.location.href = "/login";
 };
 

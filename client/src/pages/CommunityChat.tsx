@@ -64,11 +64,11 @@ const LANGUAGES = [
 
 // ── 채팅방 목록 ──────────────────────────────────────────
 function RoomList() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
-  const { data: rooms, refetch: refetchRooms } = trpc.chatRoom.list.useQuery({});
-  const { data: myRooms, refetch: refetchMyRooms } = trpc.chatRoom.myRooms.useQuery();
-  const { data: unreadCounts } = trpc.chatRoom.unreadCounts.useQuery(undefined, { refetchInterval: 5000 });
+  const { data: rooms, refetch: refetchRooms } = trpc.chatRoom.list.useQuery({}, { enabled: isAuthenticated });
+  const { data: myRooms, refetch: refetchMyRooms } = trpc.chatRoom.myRooms.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: unreadCounts } = trpc.chatRoom.unreadCounts.useQuery(undefined, { enabled: isAuthenticated, refetchInterval: 5000 });
   const unreadMap = useMemo(() => {
     const m = new Map<number, number>();
     unreadCounts?.forEach((u: any) => m.set(u.roomId, u.unreadCount));
@@ -79,7 +79,7 @@ function RoomList() {
     unreadMap.forEach(v => t += v);
     return t;
   }, [unreadMap]);
-  const { data: allUsers } = trpc.userSearch.list.useQuery();
+  const { data: allUsers } = trpc.userSearch.list.useQuery(undefined, { enabled: isAuthenticated });
   const joinMutation = trpc.chatRoom.join.useMutation({
     onSuccess: (r) => { toast.success("채팅방에 참여했습니다"); navigate(`/community/${r.id}`); },
     onError: (e) => toast.error(e.message),
@@ -118,6 +118,32 @@ function RoomList() {
       memberUserIds: selectedUsers.length > 0 ? selectedUsers : undefined,
     });
   };
+
+  // 비로그인 시 로그인 안내
+  if (!loading && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-sm mx-auto px-4">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <MessageCircle className="h-8 w-8 text-blue-500" />
+          </div>
+          <h2 className="text-xl font-bold mb-2">커뮤니티</h2>
+          <p className="text-muted-foreground mb-6">여행자 그룹과 담당자가 함께 소통하는 공간입니다. 참여하려면 로그인이 필요합니다.</p>
+          <div className="flex gap-3 justify-center">
+            <Link href="/login?returnPath=/community">
+              <Button>로그인</Button>
+            </Link>
+            <Link href="/login?tab=register">
+              <Button variant="outline">회원가입</Button>
+            </Link>
+          </div>
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="mt-4"><ArrowLeft className="h-4 w-4 mr-1" /> 홈으로</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -1012,7 +1038,7 @@ function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onU
 
 // ── 채팅방 뷰 ──────────────────────────────────────────
 function ChatRoomView({ roomId }: { roomId: number }) {
-  const { user } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
   const [message, setMessage] = useState("");
   const [replyTo, setReplyTo] = useState<any>(null);
@@ -1028,11 +1054,11 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: room } = trpc.chatRoom.getById.useQuery({ id: roomId });
-  const { data: members } = trpc.chatRoom.members.useQuery({ roomId });
+  const { data: room } = trpc.chatRoom.getById.useQuery({ id: roomId }, { enabled: isAuthenticated });
+  const { data: members } = trpc.chatRoom.members.useQuery({ roomId }, { enabled: isAuthenticated });
   const { data: messages, refetch } = trpc.chatMessage.list.useQuery(
     { roomId, limit: 100 },
-    { refetchInterval: 3000 }
+    { enabled: isAuthenticated, refetchInterval: 3000 }
   );
 
   const sendMutation = trpc.chatMessage.send.useMutation({
@@ -1063,17 +1089,17 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   // 미디어 갤러리
   const { data: mediaItems, refetch: refetchMedia } = trpc.chatMessage.mediaList.useQuery(
     { roomId, mediaType: mediaFilter, limit: 100 },
-    { enabled: showMediaGallery }
+    { enabled: isAuthenticated && showMediaGallery }
   );
   const { data: mediaCount } = trpc.chatMessage.mediaCount.useQuery(
     { roomId },
-    { enabled: showMediaGallery }
+    { enabled: isAuthenticated && showMediaGallery }
   );
 
   // 고정 메시지
   const { data: pinnedMessages, refetch: refetchPinned } = trpc.chatMessage.pinnedList.useQuery(
     { roomId },
-    { refetchInterval: 10000 }
+    { enabled: isAuthenticated, refetchInterval: 10000 }
   );
   const pinMutation = trpc.chatMessage.pin.useMutation({
     onSuccess: () => { refetch(); refetchPinned(); toast.success("메시지가 고정되었습니다"); },
@@ -1085,15 +1111,14 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   });
 
   // 활성 그룹 통화 조회
-  const { data: activeGroupCall } = trpc.webrtc.getActiveGroupCall.useQuery(
+   const { data: activeGroupCall } = trpc.webrtc.getActiveGroupCall.useQuery(
     { roomId },
-    { refetchInterval: groupCall ? false : 3000 }
+    { enabled: isAuthenticated, refetchInterval: groupCall ? false : 3000 }
   );
-
   // 수신 통화 폴링
   const { data: incomingCall } = trpc.webrtc.pollIncoming.useQuery(
     { roomId },
-    { refetchInterval: activeCall ? false : 2000 }
+    { enabled: isAuthenticated, refetchInterval: activeCall ? false : 2000 }
   );
 
   // 브라우저 알림
