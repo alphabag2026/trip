@@ -821,3 +821,9 @@
 - [x] server/_core/index.ts에서 OAuth 라우트 등록 코드 제거
 - [x] 남은 Manus OAuth 관련 코드 모두 정리
 - [x] 테스트 및 검증 - /api/oauth/callback 엔드포인트 제거 확인
+
+## v6.7 - Manus OAuth 완전 무력화 (배포 사이트 manus.im 리다이렉트 근본 해결)
+- [x] oauth.ts registerOAuthRoutes 함수 내용을 빈 함수로 교체
+- [x] /api/oauth/callback 경로를 /login으로 리다이렉트하는 안전장치 추가 (302 → /login 확인)
+- [x] sdk.ts에서 Manus OAuth 서버 동기화 코드 제거 (authenticateRequest에서 getUserInfoWithJwt 호출 제거)
+- [x] 테스트 및 검증 - TypeScript 에러 없음, /api/oauth/callback → /login 리다이렉트 확인

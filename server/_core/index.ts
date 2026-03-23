@@ -35,6 +35,10 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Safety redirect: any attempt to access old Manus OAuth callback → redirect to /login
+  app.get("/api/oauth/callback", (_req, res) => {
+    res.redirect(302, "/login");
+  });
   // Kakao OAuth routes
   app.use(kakaoRouter);
   // External REST API (v1)
