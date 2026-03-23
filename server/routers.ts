@@ -1,4 +1,4 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
@@ -8,6 +8,10 @@ import * as db from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
 import { nanoid } from "nanoid";
+import bcrypt from "bcryptjs";
+import * as OTPAuth from "otpauth";
+import QRCode from "qrcode";
+import { sdk } from "./_core/sdk";
 import {
   generateFlightSearchLinks,
   generateHotelSearchLinks,
@@ -138,12 +142,116 @@ async function sendTelegram(text: string) {
 export const appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: publicProcedure.query(opts => {
+      if (!opts.ctx.user) return null;
+      const { passwordHash, totpSecret, ...safeUser } = opts.ctx.user;
+      return safeUser;
+    }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    // ── Email/Password Login ──
+    emailLogin: publicProcedure
+      .input(z.object({ email: z.string().email(), password: z.string().min(1) }))
+      .mutation(async ({ input, ctx }) => {
+        const user = await db.getUserByEmail(input.email);
+        if (!user || !user.passwordHash) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "이메일 또는 비밀번호가 올바르지 않습니다" });
+        }
+        const valid = await bcrypt.compare(input.password, user.passwordHash);
+        if (!valid) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "이메일 또는 비밀번호가 올바르지 않습니다" });
+        }
+        // Check if 2FA is enabled
+        if (user.totpEnabled && user.totpSecret) {
+          return { requires2FA: true, userId: user.id } as const;
+        }
+        // No 2FA - create session directly
+        const sessionToken = await sdk.createSessionToken(user.openId, { name: user.name || "", expiresInMs: ONE_YEAR_MS });
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+        await db.upsertUser({ openId: user.openId, lastSignedIn: new Date() });
+        return { requires2FA: false, success: true } as const;
+      }),
+    // ── 2FA Verify (after email login) ──
+    verify2FA: publicProcedure
+      .input(z.object({ userId: z.number(), token: z.string().length(6) }))
+      .mutation(async ({ input, ctx }) => {
+        const user = await db.getUserById(input.userId);
+        if (!user || !user.totpSecret) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "사용자를 찾을 수 없습니다" });
+        }
+        const totp = new OTPAuth.TOTP({ issuer: "AlphaTrip", label: user.email || "user", algorithm: "SHA1", digits: 6, period: 30, secret: OTPAuth.Secret.fromBase32(user.totpSecret) });
+        const delta = totp.validate({ token: input.token, window: 1 });
+        if (delta === null) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "인증 코드가 올바르지 않습니다" });
+        }
+        const sessionToken = await sdk.createSessionToken(user.openId, { name: user.name || "", expiresInMs: ONE_YEAR_MS });
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+        await db.upsertUser({ openId: user.openId, lastSignedIn: new Date() });
+        return { success: true } as const;
+      }),
+    // ── Setup 2FA (generate secret + QR) ──
+    setup2FA: protectedProcedure.mutation(async ({ ctx }) => {
+      const secret = new OTPAuth.Secret({ size: 20 });
+      const totp = new OTPAuth.TOTP({ issuer: "AlphaTrip", label: ctx.user.email || ctx.user.name || "user", algorithm: "SHA1", digits: 6, period: 30, secret });
+      const uri = totp.toString();
+      const qrDataUrl = await QRCode.toDataURL(uri);
+      // Save secret temporarily (not enabled yet until confirmed)
+      await db.updateUserTotp(ctx.user.id, secret.base32, false);
+      return { secret: secret.base32, qrDataUrl, uri } as const;
+    }),
+    // ── Confirm 2FA (verify first code to enable) ──
+    confirm2FA: protectedProcedure
+      .input(z.object({ token: z.string().length(6) }))
+      .mutation(async ({ input, ctx }) => {
+        const user = await db.getUserById(ctx.user.id);
+        if (!user || !user.totpSecret) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "2FA 설정이 시작되지 않았습니다" });
+        }
+        const totp = new OTPAuth.TOTP({ issuer: "AlphaTrip", label: user.email || "user", algorithm: "SHA1", digits: 6, period: 30, secret: OTPAuth.Secret.fromBase32(user.totpSecret) });
+        const delta = totp.validate({ token: input.token, window: 1 });
+        if (delta === null) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "인증 코드가 올바르지 않습니다. 다시 시도해주세요." });
+        }
+        await db.updateUserTotp(ctx.user.id, user.totpSecret, true);
+        return { success: true } as const;
+      }),
+    // ── Disable 2FA ──
+    disable2FA: protectedProcedure
+      .input(z.object({ token: z.string().length(6) }))
+      .mutation(async ({ input, ctx }) => {
+        const user = await db.getUserById(ctx.user.id);
+        if (!user || !user.totpSecret || !user.totpEnabled) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "2FA가 활성화되어 있지 않습니다" });
+        }
+        const totp = new OTPAuth.TOTP({ issuer: "AlphaTrip", label: user.email || "user", algorithm: "SHA1", digits: 6, period: 30, secret: OTPAuth.Secret.fromBase32(user.totpSecret) });
+        const delta = totp.validate({ token: input.token, window: 1 });
+        if (delta === null) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "인증 코드가 올바르지 않습니다" });
+        }
+        await db.updateUserTotp(ctx.user.id, null, false);
+        return { success: true } as const;
+      }),
+    // ── Change Password ──
+    changePassword: protectedProcedure
+      .input(z.object({ currentPassword: z.string().min(1), newPassword: z.string().min(8) }))
+      .mutation(async ({ input, ctx }) => {
+        const user = await db.getUserById(ctx.user.id);
+        if (!user || !user.passwordHash) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "비밀번호 로그인 사용자가 아닙니다" });
+        }
+        const valid = await bcrypt.compare(input.currentPassword, user.passwordHash);
+        if (!valid) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "현재 비밀번호가 올바르지 않습니다" });
+        }
+        const hash = await bcrypt.hash(input.newPassword, 12);
+        await db.updateUserPassword(ctx.user.id, hash);
+        return { success: true } as const;
+      }),
   }),
 
   // ── Meetups ──────────────────────────────────────
@@ -1953,8 +2061,19 @@ export const appRouter = router({
         role: z.enum(["user", "admin", "superadmin", "organizer", "agency", "partner"]),
         organizationId: z.number().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        const targetUser = (await db.getAllUsers()).find((u: any) => u.id === input.userId);
+        const oldRole = targetUser?.role || "unknown";
         await db.updateUserRole(input.userId, input.role, input.organizationId);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          userName: ctx.user.name || "Unknown",
+          action: "role_change",
+          targetType: "user",
+          targetId: input.userId,
+          targetName: targetUser?.name || "Unknown",
+          details: { oldRole, newRole: input.role, organizationId: input.organizationId },
+        });
         return { success: true };
       }),
     seedCategories: superadminProcedure.mutation(async () => {
@@ -1975,6 +2094,115 @@ export const appRouter = router({
       }
       return { success: true, count: defaults.length };
     }),
+    // ── Enhanced Users with Org Info ──
+    usersWithOrgs: superadminProcedure.query(async () => {
+      return db.getAllUsersWithOrgs();
+    }),
+    // ── Assign User to Organization ──
+    assignUserOrg: superadminProcedure
+      .input(z.object({
+        userId: z.number(),
+        organizationId: z.number().nullable(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const targetUser = (await db.getAllUsers()).find((u: any) => u.id === input.userId);
+        const org = input.organizationId ? await db.getOrganizationById(input.organizationId) : null;
+        await db.assignUserToOrganization(input.userId, input.organizationId);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          userName: ctx.user.name || "Unknown",
+          action: "settings_change",
+          targetType: "user",
+          targetId: input.userId,
+          targetName: targetUser?.name || "Unknown",
+          details: { type: "org_assignment", organizationId: input.organizationId, orgName: org?.name || null },
+        });
+        return { success: true };
+      }),
+    // ── Toggle Organization Active ──
+    toggleOrgActive: superadminProcedure
+      .input(z.object({
+        id: z.number(),
+        isActive: z.boolean(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const org = await db.getOrganizationById(input.id);
+        await db.toggleOrganizationActive(input.id, input.isActive);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          userName: ctx.user.name || "Unknown",
+          action: "org_toggle_active",
+          targetType: "organization",
+          targetId: input.id,
+          targetName: org?.name || "Unknown",
+          details: { isActive: input.isActive },
+        });
+        return { success: true };
+      }),
+    // ── Org Members with User Info ──
+    orgMembers: superadminProcedure
+      .input(z.object({ organizationId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getOrganizationMembersWithUsers(input.organizationId);
+      }),
+    // ── Update Org Member Role ──
+    updateOrgMemberRole: superadminProcedure
+      .input(z.object({
+        id: z.number(),
+        memberRole: z.enum(["owner", "manager", "staff", "viewer"]),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateOrganizationMemberRole(input.id, input.memberRole);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          userName: ctx.user.name || "Unknown",
+          action: "member_role_change",
+          targetType: "member",
+          targetId: input.id,
+          details: { newRole: input.memberRole },
+        });
+        return { success: true };
+      }),
+    // ── Transfer Ownership ──
+    transferOwnership: superadminProcedure
+      .input(z.object({
+        organizationId: z.number(),
+        fromUserId: z.number(),
+        toUserId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const org = await db.getOrganizationById(input.organizationId);
+        const fromUser = (await db.getAllUsers()).find((u: any) => u.id === input.fromUserId);
+        const toUser = (await db.getAllUsers()).find((u: any) => u.id === input.toUserId);
+        await db.transferOrganizationOwnership(input.organizationId, input.fromUserId, input.toUserId);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          userName: ctx.user.name || "Unknown",
+          action: "ownership_transfer",
+          targetType: "organization",
+          targetId: input.organizationId,
+          targetName: org?.name || "Unknown",
+          details: {
+            fromUserId: input.fromUserId,
+            fromUserName: fromUser?.name || "Unknown",
+            toUserId: input.toUserId,
+            toUserName: toUser?.name || "Unknown",
+          },
+        });
+        return { success: true };
+      }),
+    // ── Audit Logs ──
+    auditLogs: superadminProcedure
+      .input(z.object({
+        action: z.string().optional(),
+        targetType: z.string().optional(),
+        userId: z.number().optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return db.getAuditLogs(input);
+      }),
   }),
 
   // ── Hotel Room Telegram Notification ────────────────────

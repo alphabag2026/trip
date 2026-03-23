@@ -35,6 +35,7 @@ import {
   apiKeys, InsertApiKey,
   apiRequestLogs, InsertApiRequestLog,
   meetupExpenses, InsertMeetupExpense,
+  auditLogs, InsertAuditLog,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -2036,4 +2037,198 @@ export async function getAllMeetupExpenses() {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(meetupExpenses).orderBy(desc(meetupExpenses.createdAt));
+}
+
+
+// ══════════════════════════════════════════════════════════
+// v6.1 - 슈퍼 관리자: 감사 로그 + 조직 관리 강화
+// ══════════════════════════════════════════════════════════
+
+// ── Audit Logs ──────────────────────────────────────────
+export async function createAuditLog(data: InsertAuditLog) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(auditLogs).values(data);
+}
+
+export async function getAuditLogs(opts?: {
+  action?: string;
+  targetType?: string;
+  userId?: number;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) return { logs: [], total: 0 };
+  
+  const conditions = [];
+  if (opts?.action) conditions.push(eq(auditLogs.action, opts.action as any));
+  if (opts?.targetType) conditions.push(eq(auditLogs.targetType, opts.targetType as any));
+  if (opts?.userId) conditions.push(eq(auditLogs.userId, opts.userId));
+  
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  
+  const [countResult] = await db.select({ count: sql<number>`count(*)` })
+    .from(auditLogs)
+    .where(where);
+  
+  const logs = await db.select()
+    .from(auditLogs)
+    .where(where)
+    .orderBy(desc(auditLogs.createdAt))
+    .limit(opts?.limit || 50)
+    .offset(opts?.offset || 0);
+  
+  return { logs, total: countResult?.count || 0 };
+}
+
+// ── Organization Active Toggle ──────────────────────────
+export async function toggleOrganizationActive(id: number, isActive: boolean) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(organizations).set({ isActive }).where(eq(organizations.id, id));
+}
+
+// ── Organization Members Enhanced ───────────────────────
+export async function getOrganizationMembersWithUsers(organizationId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const members = await db.select({
+    id: organizationMembers.id,
+    organizationId: organizationMembers.organizationId,
+    userId: organizationMembers.userId,
+    memberRole: organizationMembers.memberRole,
+    isActive: organizationMembers.isActive,
+    joinedAt: organizationMembers.joinedAt,
+    userName: users.name,
+    userEmail: users.email,
+    userRole: users.role,
+  })
+  .from(organizationMembers)
+  .leftJoin(users, eq(organizationMembers.userId, users.id))
+  .where(eq(organizationMembers.organizationId, organizationId));
+  
+  return members;
+}
+
+export async function updateOrganizationMemberRole(id: number, memberRole: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(organizationMembers).set({ memberRole: memberRole as any }).where(eq(organizationMembers.id, id));
+}
+
+// ── Ownership Transfer ──────────────────────────────────
+export async function transferOrganizationOwnership(organizationId: number, fromUserId: number, toUserId: number) {
+  const db = await getDb();
+  if (!db) return;
+  
+  // 현재 owner를 manager로 변경
+  await db.update(organizationMembers)
+    .set({ memberRole: "manager" })
+    .where(and(
+      eq(organizationMembers.organizationId, organizationId),
+      eq(organizationMembers.userId, fromUserId),
+      eq(organizationMembers.memberRole, "owner")
+    ));
+  
+  // 새 owner 설정 - 이미 멤버인 경우 역할 변경, 아닌 경우 추가
+  const existing = await db.select()
+    .from(organizationMembers)
+    .where(and(
+      eq(organizationMembers.organizationId, organizationId),
+      eq(organizationMembers.userId, toUserId)
+    ));
+  
+  if (existing.length > 0) {
+    await db.update(organizationMembers)
+      .set({ memberRole: "owner" })
+      .where(eq(organizationMembers.id, existing[0].id));
+  } else {
+    await db.insert(organizationMembers).values({
+      organizationId,
+      userId: toUserId,
+      memberRole: "owner",
+    });
+  }
+}
+
+// ── User with Organization Info ─────────────────────────
+export async function getAllUsersWithOrgs() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select({
+    id: users.id,
+    openId: users.openId,
+    name: users.name,
+    email: users.email,
+    role: users.role,
+    organizationId: users.organizationId,
+    createdAt: users.createdAt,
+    lastSignedIn: users.lastSignedIn,
+    orgName: organizations.name,
+    orgType: organizations.type,
+  })
+  .from(users)
+  .leftJoin(organizations, eq(users.organizationId, organizations.id))
+  .orderBy(desc(users.createdAt));
+  
+  return result;
+}
+
+// ── Assign User to Organization ─────────────────────────
+export async function assignUserToOrganization(userId: number, organizationId: number | null) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ organizationId }).where(eq(users.id, userId));
+}
+
+
+// ── Email/Password Auth & 2FA ──────────────────────────
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createUserWithPassword(data: {
+  email: string;
+  name: string;
+  passwordHash: string;
+  role?: "user" | "admin" | "superadmin" | "organizer" | "agency" | "partner";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const openId = `local_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+  await db.insert(users).values({
+    openId,
+    email: data.email,
+    name: data.name,
+    passwordHash: data.passwordHash,
+    loginMethod: "email",
+    role: data.role || "user",
+    lastSignedIn: new Date(),
+  });
+  return getUserByEmail(data.email);
+}
+
+export async function updateUserPassword(userId: number, passwordHash: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+}
+
+export async function updateUserTotp(userId: number, totpSecret: string | null, totpEnabled: boolean) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ totpSecret, totpEnabled }).where(eq(users.id, userId));
+}
+
+export async function getUserById(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
 }

@@ -58,6 +58,8 @@ import AdminTelegramUploads from "./pages/admin/TelegramUploads";
 import AdminApiDocs from "./pages/admin/ApiDocs";
 import AdminPassportList from "./pages/admin/PassportList";
 import AdminExpenses from "./pages/admin/Expenses";
+import LoginPage from "./pages/LoginPage";
+import TwoFactorSettings from "./pages/admin/TwoFactorSettings";
 
 function PublicRouter() {
   return (
@@ -123,6 +125,7 @@ function AdminRouter() {
         <Route path="/api-docs" component={AdminApiDocs} />
         <Route path="/passport-list" component={AdminPassportList} />
         <Route path="/expenses" component={AdminExpenses} />
+        <Route path="/2fa-settings" component={TwoFactorSettings} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>
@@ -133,6 +136,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/admin" nest component={AdminRouter} />
+      <Route path="/login" component={LoginPage} />
       <Route>
         <PublicRouter />
       </Route>

@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `audit_logs` (`id` int AUTO_INCREMENT NOT NULL, `userId` int, `action` varchar(100) NOT NULL, `targetType` varchar(50), `targetId` varchar(100), `details` text, `ipAddress` varchar(45), `createdAt` timestamp NOT NULL DEFAULT (now()), CONSTRAINT `audit_logs_id` PRIMARY KEY(`id`));",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute CREATE TABLE IF NOT EXISTS `audit_logs` (`id` int AUTO_INCREMENT NOT NULL, `userId` int, `action` varchar(100) NOT NULL, `targetType` varchar(50), `targetId` varchar(100), `details` text, `ipAddress` varchar(45), `createdAt` timestamp NOT NULL DEFAULT (now()), CONSTRAINT `audit_logs_id` PRIMARY KEY(`id`));",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1540
+}

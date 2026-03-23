@@ -8,12 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   Building2, Users, Globe, MapPin, Handshake,
   CalendarDays, UserPlus, Shield, AlertTriangle,
   BarChart3, TrendingUp, Activity, Edit, Trash2,
-  Phone, Mail, ExternalLink, Plus
+  Phone, Mail, ExternalLink, Plus, ScrollText,
+  ArrowRightLeft, UserCog, Power, ChevronDown, ChevronUp
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -45,6 +47,30 @@ const roleLabels: Record<string, string> = {
   organizer: "주최자",
   agency: "에이전시",
   partner: "파트너",
+};
+
+const memberRoleLabels: Record<string, string> = {
+  owner: "소유자",
+  manager: "관리자",
+  staff: "스태프",
+  viewer: "열람자",
+};
+
+const auditActionLabels: Record<string, string> = {
+  role_change: "역할 변경",
+  org_create: "조직 생성",
+  org_update: "조직 수정",
+  org_delete: "조직 삭제",
+  org_toggle_active: "조직 활성화 변경",
+  member_add: "멤버 추가",
+  member_remove: "멤버 제거",
+  member_role_change: "멤버 역할 변경",
+  ownership_transfer: "소유권 이전",
+  user_ban: "사용자 차단",
+  user_unban: "사용자 차단 해제",
+  settings_change: "설정 변경",
+  data_export: "데이터 내보내기",
+  data_delete: "데이터 삭제",
 };
 
 const emptyOrg = {
@@ -81,9 +107,7 @@ function DonutChart({ data, size = 200, strokeWidth = 32 }: {
     <div className="flex flex-col items-center gap-4">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-          {/* Background circle */}
           <circle cx={center} cy={center} r={radius} fill="none" stroke="currentColor" strokeWidth={strokeWidth} className="text-muted/20" />
-          {/* Segments */}
           {segments.map((seg, i) => (
             <circle
               key={i}
@@ -99,13 +123,11 @@ function DonutChart({ data, size = 200, strokeWidth = 32 }: {
             />
           ))}
         </svg>
-        {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-3xl font-bold">{total}</span>
           <span className="text-xs text-muted-foreground">전체</span>
         </div>
       </div>
-      {/* Legend */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
         {segments.map((seg, i) => (
           <div key={i} className="flex items-center gap-2 text-sm">
@@ -122,12 +144,13 @@ function DonutChart({ data, size = 200, strokeWidth = 32 }: {
 
 export default function PlatformDashboard() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<"overview" | "organizations" | "users">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "organizations" | "users" | "audit">("overview");
   const [orgFilter, setOrgFilter] = useState<string>("all");
   const [showOrgDialog, setShowOrgDialog] = useState(false);
   const [editingOrgId, setEditingOrgId] = useState<number | null>(null);
   const [orgForm, setOrgForm] = useState(emptyOrg);
   const [userSearch, setUserSearch] = useState("");
+  const [expandedOrgId, setExpandedOrgId] = useState<number | null>(null);
 
   // 역할 변경 확인 모달 상태
   const [roleChangeConfirm, setRoleChangeConfirm] = useState<{
@@ -138,11 +161,42 @@ export default function PlatformDashboard() {
     newRole: string;
   }>({ open: false, userId: 0, userName: "", currentRole: "", newRole: "" });
 
+  // 소유권 이전 모달
+  const [transferDialog, setTransferDialog] = useState<{
+    open: boolean;
+    organizationId: number;
+    orgName: string;
+    currentOwnerId: number;
+    currentOwnerName: string;
+  }>({ open: false, organizationId: 0, orgName: "", currentOwnerId: 0, currentOwnerName: "" });
+  const [transferToUserId, setTransferToUserId] = useState<string>("");
+
+  // 멤버 추가 모달
+  const [addMemberDialog, setAddMemberDialog] = useState<{
+    open: boolean;
+    organizationId: number;
+    orgName: string;
+  }>({ open: false, organizationId: 0, orgName: "" });
+  const [newMemberUserId, setNewMemberUserId] = useState("");
+  const [newMemberRole, setNewMemberRole] = useState<"owner" | "manager" | "staff" | "viewer">("staff");
+
+  // 감사 로그 필터
+  const [auditFilter, setAuditFilter] = useState<string>("all");
+  const [auditPage, setAuditPage] = useState(0);
+
   const utils = trpc.useUtils();
   const statsQuery = trpc.platform.stats.useQuery();
   const orgsQuery = trpc.organization.list.useQuery({ type: orgFilter === "all" ? undefined : orgFilter });
-  const usersQuery = trpc.platform.users.useQuery();
+  const usersQuery = trpc.platform.usersWithOrgs.useQuery();
   const categoriesQuery = trpc.partnerCategory.list.useQuery();
+  const allOrgsQuery = trpc.organization.list.useQuery({});
+
+  // 감사 로그 쿼리
+  const auditLogsQuery = trpc.platform.auditLogs.useQuery({
+    action: auditFilter === "all" ? undefined : auditFilter,
+    limit: 20,
+    offset: auditPage * 20,
+  });
 
   const createOrgMutation = trpc.organization.create.useMutation({
     onSuccess: () => {
@@ -167,7 +221,8 @@ export default function PlatformDashboard() {
   const updateRoleMutation = trpc.platform.updateUserRole.useMutation({
     onSuccess: () => {
       toast.success("역할이 변경되었습니다");
-      utils.platform.users.invalidate();
+      utils.platform.usersWithOrgs.invalidate();
+      utils.platform.auditLogs.invalidate();
       setRoleChangeConfirm({ open: false, userId: 0, userName: "", currentRole: "", newRole: "" });
     },
     onError: (e) => toast.error(e.message),
@@ -186,6 +241,63 @@ export default function PlatformDashboard() {
       toast.success("조직이 삭제되었습니다");
       utils.organization.list.invalidate();
       utils.platform.stats.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const toggleOrgActiveMutation = trpc.platform.toggleOrgActive.useMutation({
+    onSuccess: () => {
+      toast.success("조직 상태가 변경되었습니다");
+      utils.organization.list.invalidate();
+      utils.platform.auditLogs.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const assignUserOrgMutation = trpc.platform.assignUserOrg.useMutation({
+    onSuccess: () => {
+      toast.success("조직이 배정되었습니다");
+      utils.platform.usersWithOrgs.invalidate();
+      utils.platform.auditLogs.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const addOrgMemberMutation = trpc.orgMember.add.useMutation({
+    onSuccess: () => {
+      toast.success("멤버가 추가되었습니다");
+      utils.platform.orgMembers.invalidate();
+      setAddMemberDialog({ open: false, organizationId: 0, orgName: "" });
+      setNewMemberUserId("");
+      setNewMemberRole("staff");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const removeOrgMemberMutation = trpc.orgMember.remove.useMutation({
+    onSuccess: () => {
+      toast.success("멤버가 제거되었습니다");
+      utils.platform.orgMembers.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const updateOrgMemberRoleMutation = trpc.platform.updateOrgMemberRole.useMutation({
+    onSuccess: () => {
+      toast.success("멤버 역할이 변경되었습니다");
+      utils.platform.orgMembers.invalidate();
+      utils.platform.auditLogs.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const transferOwnershipMutation = trpc.platform.transferOwnership.useMutation({
+    onSuccess: () => {
+      toast.success("소유권이 이전되었습니다");
+      utils.platform.orgMembers.invalidate();
+      utils.platform.auditLogs.invalidate();
+      setTransferDialog({ open: false, organizationId: 0, orgName: "", currentOwnerId: 0, currentOwnerName: "" });
+      setTransferToUserId("");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -271,18 +383,19 @@ export default function PlatformDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b pb-2">
+      <div className="flex gap-2 border-b pb-2 overflow-x-auto">
         {[
           { key: "overview", label: "대시보드", icon: BarChart3 },
           { key: "organizations", label: "조직 관리", icon: Building2 },
           { key: "users", label: "사용자 관리", icon: Users },
+          { key: "audit", label: "감사 로그", icon: ScrollText },
         ].map(tab => (
           <Button
             key={tab.key}
             variant={activeTab === tab.key ? "default" : "ghost"}
             size="sm"
             onClick={() => setActiveTab(tab.key as any)}
-            className="gap-1"
+            className="gap-1 shrink-0"
           >
             <tab.icon className="h-4 w-4" />
             {tab.label}
@@ -453,63 +566,28 @@ export default function PlatformDashboard() {
           <div className="space-y-3">
             {orgsQuery.data && orgsQuery.data.length > 0 ? (
               orgsQuery.data.map((org: any) => (
-                <Card key={org.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="pt-4 pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-lg bg-muted mt-0.5">
-                          <Building2 className="h-5 w-5" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold">{org.name}</span>
-                            <Badge className={orgTypeBadgeColors[org.type] || ""} variant="secondary">
-                              {orgTypeLabels[org.type] || org.type}
-                            </Badge>
-                            {!org.isActive && <Badge variant="destructive">비활성</Badge>}
-                          </div>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-                            {(org.region || org.country) && (
-                              <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{[org.region, org.country].filter(Boolean).join(", ")}</span>
-                            )}
-                            {org.contactName && (
-                              <span className="flex items-center gap-1"><Users className="h-3 w-3" />{org.contactName}</span>
-                            )}
-                            {org.contactPhone && (
-                              <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{org.contactPhone}</span>
-                            )}
-                            {org.contactEmail && (
-                              <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{org.contactEmail}</span>
-                            )}
-                          </div>
-                          {org.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-1">{org.description}</p>
-                          )}
-                          {org.website && (
-                            <a href={org.website} target="_blank" rel="noopener" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
-                              <ExternalLink className="h-3 w-3" />{org.website}
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditOrg(org)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost" size="icon" className="h-8 w-8 text-destructive"
-                          onClick={() => {
-                            if (confirm(`"${org.name}" 조직을 삭제하시겠습니까?`)) {
-                              deleteOrgMutation.mutate({ id: org.id });
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <OrgCard
+                  key={org.id}
+                  org={org}
+                  expanded={expandedOrgId === org.id}
+                  onToggleExpand={() => setExpandedOrgId(expandedOrgId === org.id ? null : org.id)}
+                  onEdit={() => openEditOrg(org)}
+                  onDelete={() => {
+                    if (confirm(`"${org.name}" 조직을 삭제하시겠습니까?`)) {
+                      deleteOrgMutation.mutate({ id: org.id });
+                    }
+                  }}
+                  onToggleActive={(isActive) => toggleOrgActiveMutation.mutate({ id: org.id, isActive })}
+                  onAddMember={() => setAddMemberDialog({ open: true, organizationId: org.id, orgName: org.name })}
+                  onTransferOwnership={(ownerId, ownerName) => setTransferDialog({
+                    open: true, organizationId: org.id, orgName: org.name,
+                    currentOwnerId: ownerId, currentOwnerName: ownerName,
+                  })}
+                  onRemoveMember={(id) => {
+                    if (confirm("이 멤버를 제거하시겠습니까?")) removeOrgMemberMutation.mutate({ id });
+                  }}
+                  onUpdateMemberRole={(id, role) => updateOrgMemberRoleMutation.mutate({ id, memberRole: role as "owner" | "manager" | "staff" | "viewer" })}
+                />
               ))
             ) : (
               <Card>
@@ -546,7 +624,9 @@ export default function PlatformDashboard() {
                     <tr className="border-b">
                       <th className="text-left py-2 px-3">사용자</th>
                       <th className="text-left py-2 px-3">현재 역할</th>
+                      <th className="text-left py-2 px-3">소속 조직</th>
                       <th className="text-left py-2 px-3">역할 변경</th>
+                      <th className="text-left py-2 px-3">조직 배정</th>
                       <th className="text-left py-2 px-3">가입일</th>
                     </tr>
                   </thead>
@@ -563,11 +643,20 @@ export default function PlatformDashboard() {
                           <Badge variant="outline">{roleLabels[user.role] || user.role}</Badge>
                         </td>
                         <td className="py-2 px-3">
+                          {user.orgName ? (
+                            <Badge className={orgTypeBadgeColors[user.orgType] || ""} variant="secondary">
+                              {user.orgName}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">미배정</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
                           <Select
                             value={user.role}
                             onValueChange={(role: any) => handleRoleChangeRequest(user, role)}
                           >
-                            <SelectTrigger className="w-[140px] h-8">
+                            <SelectTrigger className="w-[130px] h-8">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -577,6 +666,29 @@ export default function PlatformDashboard() {
                               <SelectItem value="organizer">주최자</SelectItem>
                               <SelectItem value="agency">에이전시</SelectItem>
                               <SelectItem value="partner">파트너</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="py-2 px-3">
+                          <Select
+                            value={user.organizationId?.toString() || "none"}
+                            onValueChange={(val) => {
+                              assignUserOrgMutation.mutate({
+                                userId: user.id,
+                                organizationId: val === "none" ? null : Number(val),
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="w-[150px] h-8">
+                              <SelectValue placeholder="조직 선택" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">미배정</SelectItem>
+                              {allOrgsQuery.data?.map((org: any) => (
+                                <SelectItem key={org.id} value={org.id.toString()}>
+                                  {org.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </td>
@@ -593,6 +705,87 @@ export default function PlatformDashboard() {
                   </p>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ════════════════════ Audit Log Tab ════════════════════ */}
+      {activeTab === "audit" && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Select value={auditFilter} onValueChange={(v) => { setAuditFilter(v); setAuditPage(0); }}>
+              <SelectTrigger className="w-[200px]"><SelectValue placeholder="전체 작업" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체 작업</SelectItem>
+                <SelectItem value="role_change">역할 변경</SelectItem>
+                <SelectItem value="org_toggle_active">조직 활성화 변경</SelectItem>
+                <SelectItem value="member_role_change">멤버 역할 변경</SelectItem>
+                <SelectItem value="ownership_transfer">소유권 이전</SelectItem>
+                <SelectItem value="settings_change">설정 변경</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-muted-foreground">
+              총 {auditLogsQuery.data?.total || 0}건
+            </span>
+          </div>
+
+          <Card>
+            <CardContent className="pt-4">
+              <div className="space-y-3">
+                {auditLogsQuery.data?.logs && auditLogsQuery.data.logs.length > 0 ? (
+                  auditLogsQuery.data.logs.map((log: any) => (
+                    <div key={log.id} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                      <div className="p-1.5 rounded-md bg-muted shrink-0 mt-0.5">
+                        <ScrollText className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-xs">
+                            {auditActionLabels[log.action] || log.action}
+                          </Badge>
+                          <span className="text-sm font-medium">{log.userName || "시스템"}</span>
+                          <span className="text-xs text-muted-foreground">→</span>
+                          <span className="text-sm">{log.targetName || `ID: ${log.targetId}`}</span>
+                        </div>
+                        {log.details && (
+                          <p className="text-xs text-muted-foreground mt-1 truncate">
+                            {typeof log.details === "string" ? log.details : JSON.stringify(log.details)}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(log.createdAt).toLocaleString("ko-KR")}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center py-8 text-muted-foreground">감사 로그가 없습니다</p>
+                )}
+              </div>
+
+              {/* Pagination */}
+              {(auditLogsQuery.data?.total || 0) > 20 && (
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <Button
+                    variant="outline" size="sm"
+                    disabled={auditPage === 0}
+                    onClick={() => setAuditPage(p => p - 1)}
+                  >
+                    이전
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    {auditPage + 1} / {Math.ceil((auditLogsQuery.data?.total || 0) / 20)}
+                  </span>
+                  <Button
+                    variant="outline" size="sm"
+                    disabled={(auditPage + 1) * 20 >= (auditLogsQuery.data?.total || 0)}
+                    onClick={() => setAuditPage(p => p + 1)}
+                  >
+                    다음
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -657,9 +850,7 @@ export default function PlatformDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground">
-              다음 사용자의 역할을 변경하시겠습니까?
-            </p>
+            <p className="text-sm text-muted-foreground">다음 사용자의 역할을 변경하시겠습니까?</p>
             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">사용자</span>
@@ -669,9 +860,7 @@ export default function PlatformDashboard() {
                 <span className="text-sm text-muted-foreground">현재 역할</span>
                 <Badge variant="outline">{roleLabels[roleChangeConfirm.currentRole] || roleChangeConfirm.currentRole}</Badge>
               </div>
-              <div className="flex items-center justify-center">
-                <span className="text-lg text-muted-foreground">↓</span>
-              </div>
+              <div className="flex items-center justify-center"><span className="text-lg text-muted-foreground">↓</span></div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">변경 역할</span>
                 <Badge>{roleLabels[roleChangeConfirm.newRole] || roleChangeConfirm.newRole}</Badge>
@@ -681,24 +870,272 @@ export default function PlatformDashboard() {
               <div className="flex items-start gap-2 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
                 <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
                 <p className="text-xs text-amber-700 dark:text-amber-300">
-                  관리자 이상의 권한을 부여하면 해당 사용자가 플랫폼의 주요 설정을 변경할 수 있습니다. 신중하게 결정해 주세요.
+                  관리자 이상의 권한을 부여하면 해당 사용자가 플랫폼의 주요 설정을 변경할 수 있습니다.
                 </p>
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRoleChangeConfirm({ open: false, userId: 0, userName: "", currentRole: "", newRole: "" })}>
-              취소
-            </Button>
-            <Button
-              onClick={confirmRoleChange}
-              disabled={updateRoleMutation.isPending}
-            >
+            <Button variant="outline" onClick={() => setRoleChangeConfirm({ open: false, userId: 0, userName: "", currentRole: "", newRole: "" })}>취소</Button>
+            <Button onClick={confirmRoleChange} disabled={updateRoleMutation.isPending}>
               {updateRoleMutation.isPending ? "변경 중..." : "역할 변경"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ════════════════════ Add Member Dialog ════════════════════ */}
+      <Dialog open={addMemberDialog.open} onOpenChange={(open) => { if (!open) setAddMemberDialog({ open: false, organizationId: 0, orgName: "" }); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>멤버 추가 - {addMemberDialog.orgName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>사용자 선택</Label>
+              <Select value={newMemberUserId} onValueChange={setNewMemberUserId}>
+                <SelectTrigger><SelectValue placeholder="사용자를 선택하세요" /></SelectTrigger>
+                <SelectContent>
+                  {usersQuery.data?.map((u: any) => (
+                    <SelectItem key={u.id} value={u.id.toString()}>
+                      {u.name || "이름 없음"} ({u.email || u.id})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>역할</Label>
+              <Select value={newMemberRole} onValueChange={(v: any) => setNewMemberRole(v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="owner">소유자</SelectItem>
+                  <SelectItem value="manager">관리자</SelectItem>
+                  <SelectItem value="staff">스태프</SelectItem>
+                  <SelectItem value="viewer">열람자</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddMemberDialog({ open: false, organizationId: 0, orgName: "" })}>취소</Button>
+            <Button
+              disabled={!newMemberUserId || addOrgMemberMutation.isPending}
+              onClick={() => addOrgMemberMutation.mutate({
+                organizationId: addMemberDialog.organizationId,
+                userId: Number(newMemberUserId),
+                memberRole: newMemberRole,
+              })}
+            >
+              {addOrgMemberMutation.isPending ? "추가 중..." : "멤버 추가"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ════════════════════ Transfer Ownership Dialog ════════════════════ */}
+      <Dialog open={transferDialog.open} onOpenChange={(open) => { if (!open) setTransferDialog({ open: false, organizationId: 0, orgName: "", currentOwnerId: 0, currentOwnerName: "" }); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="h-5 w-5 text-amber-500" />
+              소유권 이전 - {transferDialog.orgName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">현재 소유자</span>
+                <span className="font-semibold">{transferDialog.currentOwnerName}</span>
+              </div>
+            </div>
+            <div>
+              <Label>새 소유자 선택</Label>
+              <Select value={transferToUserId} onValueChange={setTransferToUserId}>
+                <SelectTrigger><SelectValue placeholder="사용자를 선택하세요" /></SelectTrigger>
+                <SelectContent>
+                  {usersQuery.data?.filter((u: any) => u.id !== transferDialog.currentOwnerId).map((u: any) => (
+                    <SelectItem key={u.id} value={u.id.toString()}>
+                      {u.name || "이름 없음"} ({u.email || u.id})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-start gap-2 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+              <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                소유권을 이전하면 현재 소유자는 관리자 역할로 변경됩니다. 이 작업은 되돌릴 수 없습니다.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTransferDialog({ open: false, organizationId: 0, orgName: "", currentOwnerId: 0, currentOwnerName: "" })}>취소</Button>
+            <Button
+              variant="destructive"
+              disabled={!transferToUserId || transferOwnershipMutation.isPending}
+              onClick={() => transferOwnershipMutation.mutate({
+                organizationId: transferDialog.organizationId,
+                fromUserId: transferDialog.currentOwnerId,
+                toUserId: Number(transferToUserId),
+              })}
+            >
+              {transferOwnershipMutation.isPending ? "이전 중..." : "소유권 이전"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// OrgCard - 조직 카드 (멤버 관리 확장 포함)
+// ═══════════════════════════════════════════════════════════════
+function OrgCard({
+  org, expanded, onToggleExpand, onEdit, onDelete, onToggleActive,
+  onAddMember, onTransferOwnership, onRemoveMember, onUpdateMemberRole,
+}: {
+  org: any;
+  expanded: boolean;
+  onToggleExpand: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onToggleActive: (isActive: boolean) => void;
+  onAddMember: () => void;
+  onTransferOwnership: (ownerId: number, ownerName: string) => void;
+  onRemoveMember: (id: number) => void;
+  onUpdateMemberRole: (id: number, role: string) => void;
+}) {
+  const membersQuery = trpc.platform.orgMembers.useQuery(
+    { organizationId: org.id },
+    { enabled: expanded }
+  );
+
+  const owner = membersQuery.data?.find((m: any) => m.memberRole === "owner");
+
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent className="pt-4 pb-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <div className="p-2 rounded-lg bg-muted mt-0.5">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div className="space-y-1 flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold">{org.name}</span>
+                <Badge className={orgTypeBadgeColors[org.type] || ""} variant="secondary">
+                  {orgTypeLabels[org.type] || org.type}
+                </Badge>
+                {!org.isActive && <Badge variant="destructive">비활성</Badge>}
+              </div>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                {(org.region || org.country) && (
+                  <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{[org.region, org.country].filter(Boolean).join(", ")}</span>
+                )}
+                {org.contactName && (
+                  <span className="flex items-center gap-1"><Users className="h-3 w-3" />{org.contactName}</span>
+                )}
+                {org.contactPhone && (
+                  <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{org.contactPhone}</span>
+                )}
+                {org.contactEmail && (
+                  <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{org.contactEmail}</span>
+                )}
+              </div>
+              {org.description && (
+                <p className="text-xs text-muted-foreground line-clamp-1">{org.description}</p>
+              )}
+              {org.website && (
+                <a href={org.website} target="_blank" rel="noopener" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
+                  <ExternalLink className="h-3 w-3" />{org.website}
+                </a>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-2 mr-2">
+              <Switch
+                checked={org.isActive}
+                onCheckedChange={(checked) => onToggleActive(checked)}
+              />
+              <Power className={`h-4 w-4 ${org.isActive ? "text-green-500" : "text-muted-foreground"}`} />
+            </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={onDelete}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleExpand}>
+              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          </div>
+        </div>
+
+        {/* Expanded: Members */}
+        {expanded && (
+          <div className="mt-4 pt-4 border-t space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-semibold flex items-center gap-1">
+                <UserCog className="h-4 w-4" /> 조직 멤버
+              </h4>
+              <div className="flex gap-2">
+                {owner && (
+                  <Button variant="outline" size="sm" className="gap-1" onClick={() => onTransferOwnership(owner.userId, owner.userName || "Unknown")}>
+                    <ArrowRightLeft className="h-3 w-3" /> 소유권 이전
+                  </Button>
+                )}
+                <Button size="sm" className="gap-1" onClick={onAddMember}>
+                  <UserPlus className="h-3 w-3" /> 멤버 추가
+                </Button>
+              </div>
+            </div>
+
+            {membersQuery.isLoading ? (
+              <p className="text-sm text-muted-foreground text-center py-4">로딩 중...</p>
+            ) : membersQuery.data && membersQuery.data.length > 0 ? (
+              <div className="space-y-2">
+                {membersQuery.data.map((member: any) => (
+                  <div key={member.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
+                        {(member.userName || "?")[0]?.toUpperCase()}
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium">{member.userName || "이름 없음"}</span>
+                        {member.userEmail && <span className="text-xs text-muted-foreground ml-2">{member.userEmail}</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={member.memberRole}
+                        onValueChange={(role) => onUpdateMemberRole(member.id, role)}
+                      >
+                        <SelectTrigger className="w-[100px] h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="owner">소유자</SelectItem>
+                          <SelectItem value="manager">관리자</SelectItem>
+                          <SelectItem value="staff">스태프</SelectItem>
+                          <SelectItem value="viewer">열람자</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemoveMember(member.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">등록된 멤버가 없습니다</p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

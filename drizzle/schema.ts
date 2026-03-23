@@ -6,9 +6,12 @@ export const users = mysqlTable("users", {
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
+  passwordHash: varchar("passwordHash", { length: 255 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin", "superadmin", "organizer", "agency", "partner"]).default("user").notNull(),
   organizationId: int("organizationId"),
+  totpSecret: varchar("totpSecret", { length: 255 }),
+  totpEnabled: boolean("totpEnabled").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -1043,3 +1046,27 @@ export const meetupExpenses = mysqlTable("meetup_expenses", {
 });
 export type MeetupExpense = typeof meetupExpenses.$inferSelect;
 export type InsertMeetupExpense = typeof meetupExpenses.$inferInsert;
+
+
+// ══════════════════════════════════════════════════════════
+// v6.1 - 슈퍼 관리자 감사 로그
+// ══════════════════════════════════════════════════════════
+
+export const auditLogs = mysqlTable("audit_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // 작업 수행자
+  userName: varchar("userName", { length: 255 }), // 수행자 이름 (비정규화)
+  action: mysqlEnum("action", [
+    "role_change", "org_create", "org_update", "org_delete", "org_toggle_active",
+    "member_add", "member_remove", "member_role_change", "ownership_transfer",
+    "user_ban", "user_unban", "settings_change", "data_export", "data_delete"
+  ]).notNull(),
+  targetType: mysqlEnum("targetType", ["user", "organization", "member", "partner", "meetup", "system"]).notNull(),
+  targetId: int("targetId"), // 대상 ID
+  targetName: varchar("targetName", { length: 255 }), // 대상 이름 (비정규화)
+  details: json("details"), // 변경 전/후 데이터 JSON
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;

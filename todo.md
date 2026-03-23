@@ -749,3 +749,33 @@
 - [x] const.ts: VITE_OAUTH_PORTAL_URL 미설정 시 방어 코드 추가
 - [x] docker-compose.yml: dist 볼륨 마운트 추가 (핫 업데이트 가능)
 - [x] VPS에서 모든 백오피스 라우팅 정상 동작 확인
+
+## v6.1.0 - 번역 키 추가, 슈퍼 관리자 기능, VPS 인증 활성화
+### 번역 키 한국어 추가
+- [x] 백오피스 대시보드 모든 번역 키 한국어 추가
+- [x] 누락된 번역 키 전체 스캔 및 추가 (869개 키 중 누락 0개, 23개 언어 동기화 완료)
+### 슈퍼 관리자 기능
+- [x] 감사 로그(audit_logs) 테이블 추가 및 기록 시스템
+- [x] 조직 활성화/비활성화 토글
+- [x] 조직별 멤버 관리 UI
+- [x] 권한 위임 (조직 소유권 이전)
+- [x] 사용자 조직 배정 기능 강화
+- [x] 슈퍼 관리자 전용 감사 로그 뷰어
+- [x] DB 스키마 업데이트 (audit_logs 테이블)
+- [x] 서버 프로시저 (슈퍼 관리자 전용 API - 조직 토글/소유권 이전/감사로그/멤버관리)
+- [x] 프론트엔드 UI (PlatformDashboard 강화 - 4개 탭: 통계/조직관리/사용자관리/감사로그)
+### VPS 인증 시스템
+- [x] 이메일/비밀번호 로그인 시스템 (VPS 전용)
+- [x] 비밀번호 해싱 (bcrypt)
+- [x] JWT 토큰 기반 세션 관리
+- [x] Google Authenticator 2FA (TOTP)
+- [x] 2FA 설정 페이지 (QR 코드 표시)
+- [x] 2FA 검증 로직
+- [x] 슈퍼관리자 초기 계정 생성 (bro202411@gmail.com)
+- [x] VPS 로그인 페이지 UI
+- [x] VPS 환경 변수 설정 및 배포
+- [x] VPS DB 마이그레이션 (passwordHash, totpSecret, totpEnabled, audit_logs)
+- [x] VPS Docker 이미지 재빌드 및 배포
+- [x] VPS 로그인 테스트 성공
+- [x] Manus DB 마이그레이션 적용
+- [x] vitest 17개 테스트 모두 통과

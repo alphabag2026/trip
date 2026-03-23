@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE `users` ADD `passwordHash` varchar(255); ALTER TABLE `users` ADD `totpSecret` varchar(255); ALTER TABLE `users` ADD `totpEnabled` boolean DEFAULT false NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute ALTER TABLE `users` ADD `passwordHash` varchar(255); ALTER TABLE `users` ADD `totpSecret` varchar(255); ALTER TABLE `users` ADD `totpEnabled` boolean DEFAULT false NOT NULL;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 8027 (HY000) at line 1: Information schema is out of date: schema failed to update in 1 lease, please make sure TiDB can connect to TiKV"
+  ]
+}

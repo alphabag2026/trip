@@ -5,10 +5,9 @@ export const getLoginUrl = (returnPath?: string) => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;
 
-  // If OAuth portal URL is not configured, return a fallback
+  // If OAuth portal URL is not configured, fallback to local login page
   if (!oauthPortalUrl) {
-    console.warn("VITE_OAUTH_PORTAL_URL is not configured");
-    return "#";
+    return "/login";
   }
 
   const redirectUri = `${window.location.origin}/api/oauth/callback`;
