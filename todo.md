@@ -728,7 +728,13 @@
 - [ ] 전체 조직 관리 페이지
 - [ ] 슈퍼 관리자 전용 로그인 경로
 ### VPS 배포
-- [ ] VPS 재배포 및 테스트
+- [x] VPS 재배포 및 테스트
+- [x] nginx upstream 설정 수정 (127.0.0.1:1 down → alpha-trip:3000)
+- [x] Dockerfile 수정: pnpm-lock.yaml 포함, 전체 의존성 설치
+- [x] vite.ts: dynamic import로 변경하여 production에서 vite 의존성 문제 해결
+- [x] const.ts: VITE_OAUTH_PORTAL_URL 미설정 시 방어 코드 추가
+- [x] docker-compose.yml: dist 볼륨 마운트 추가 (핫 업데이트 가능)
+- [x] VPS에서 모든 백오피스 라우팅 정상 동작 확인
 
 ## v6.0.1 - 백오피스 라우팅 버그 수정
 - [x] wouter v3 nest 모드에서 DashboardLayout 이중 /admin 경로 버그 수정
@@ -736,4 +742,10 @@
 - [x] DashboardLayout: menuItemDefs 경로를 상대 경로로 변경 (/admin/platform → /platform)
 - [x] 홈으로 이동은 ~/ (절대 경로 이스케이프) 사용
 - [x] 로컬 dev 서버에서 모든 사이드바 네비게이션 정상 동작 확인
-- [ ] VPS 재배포 및 테스트
+- [x] VPS 재배포 및 테스트
+- [x] nginx upstream 설정 수정 (127.0.0.1:1 down → alpha-trip:3000)
+- [x] Dockerfile 수정: pnpm-lock.yaml 포함, 전체 의존성 설치
+- [x] vite.ts: dynamic import로 변경하여 production에서 vite 의존성 문제 해결
+- [x] const.ts: VITE_OAUTH_PORTAL_URL 미설정 시 방어 코드 추가
+- [x] docker-compose.yml: dist 볼륨 마운트 추가 (핫 업데이트 가능)
+- [x] VPS에서 모든 백오피스 라우팅 정상 동작 확인

@@ -4,6 +4,13 @@ export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 export const getLoginUrl = (returnPath?: string) => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;
+
+  // If OAuth portal URL is not configured, return a fallback
+  if (!oauthPortalUrl) {
+    console.warn("VITE_OAUTH_PORTAL_URL is not configured");
+    return "#";
+  }
+
   const redirectUri = `${window.location.origin}/api/oauth/callback`;
   const statePayload = returnPath
     ? JSON.stringify({ redirectUri, returnPath })
