@@ -815,3 +815,9 @@
 - [x] 마이페이지 인증 메일 재발송 버튼 (60초 쿨다운 포함)
 - [x] 다국어 번역 키 추가 (23개 언어)
 - [x] vitest 테스트 작성 (15개 테스트 통과)
+
+## v6.6 - Manus OAuth 서버 라우트 완전 제거
+- [x] server/_core/oauth.ts의 registerOAuthRoutes 제거 (manus.im 리다이렉트 원인)
+- [x] server/_core/index.ts에서 OAuth 라우트 등록 코드 제거
+- [x] 남은 Manus OAuth 관련 코드 모두 정리
+- [x] 테스트 및 검증 - /api/oauth/callback 엔드포인트 제거 확인
