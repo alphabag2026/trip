@@ -236,6 +236,69 @@ export const appRouter = router({
         await db.updateUserTotp(ctx.user.id, null, false);
         return { success: true } as const;
       }),
+    // ── Email Register ──
+    emailRegister: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(8),
+        name: z.string().min(1),
+        accountType: z.enum(["personal", "organizer", "agency", "partner"]).default("personal"),
+        organizationName: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Check if email already exists
+        const existing = await db.getUserByEmail(input.email);
+        if (existing) {
+          throw new TRPCError({ code: "CONFLICT", message: "이미 등록된 이메일입니다" });
+        }
+        const hash = await bcrypt.hash(input.password, 12);
+        // Map accountType to role
+        const roleMap: Record<string, "user" | "organizer" | "agency" | "partner"> = {
+          personal: "user",
+          organizer: "organizer",
+          agency: "agency",
+          partner: "partner",
+        };
+        const role = roleMap[input.accountType] || "user";
+        const user = await db.createUserWithPassword({
+          email: input.email,
+          name: input.name,
+          passwordHash: hash,
+          role,
+        });
+        if (!user) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "회원가입에 실패했습니다" });
+        }
+        // If organizer/agency/partner, create organization
+        if (input.accountType !== "personal" && input.organizationName) {
+          try {
+            const orgType = input.accountType === "organizer" ? "organizer" as const :
+                            input.accountType === "agency" ? "agency" as const : "partner" as const;
+            const orgResult = await db.createOrganization({
+              name: input.organizationName,
+              type: orgType,
+              contactEmail: input.email,
+            });
+            if (orgResult && orgResult.id) {
+              await db.addOrganizationMember({ organizationId: orgResult.id, userId: user.id, memberRole: "owner" });
+              // Update user's organizationId
+              const dbInstance = await db.getDb();
+              if (dbInstance) {
+                const { users: usersTable } = await import("../drizzle/schema");
+                const { eq: eqOp } = await import("drizzle-orm");
+                await dbInstance.update(usersTable).set({ organizationId: orgResult.id }).where(eqOp(usersTable.id, user.id));
+              }
+            }
+          } catch (orgErr) {
+            console.error("[Register] Failed to create organization:", orgErr);
+          }
+        }
+        // Auto-login after registration
+        const sessionToken = await sdk.createSessionToken(user.openId, { name: user.name || "", expiresInMs: ONE_YEAR_MS });
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+        return { success: true, role } as const;
+      }),
     // ── Change Password ──
     changePassword: protectedProcedure
       .input(z.object({ currentPassword: z.string().min(1), newPassword: z.string().min(8) }))

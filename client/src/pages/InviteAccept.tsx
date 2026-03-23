@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Users, CheckCircle2, XCircle, Clock, Loader2, ArrowLeft } from "lucide-react";
 import { useLocation, useParams } from "wouter";
-import { getLoginUrl } from "@/const";
+
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
@@ -53,7 +53,7 @@ export default function InviteAccept() {
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-muted-foreground">{t("invite.loginRequired")}</p>
-            <Button className="w-full" onClick={() => { window.location.href = getLoginUrl(`/invite/${token}`); }}>
+            <Button className="w-full" onClick={() => { window.location.href = `/login?returnPath=${encodeURIComponent(`/invite/${token}`)}`; }}>
               {t("invite.loginAndAccept")}
             </Button>
           </CardContent>

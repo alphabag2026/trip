@@ -1,5 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
+
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import OrganizerDashboard from "./OrganizerDashboard";
@@ -35,7 +35,7 @@ export default function RoleDashboard() {
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold">{t("roleDashboard.loginRequired")}</h1>
           <p className="text-muted-foreground">{t("roleDashboard.loginRequiredDesc")}</p>
-          <Button onClick={() => { window.location.href = getLoginUrl(); }}>
+          <Button onClick={() => { window.location.href = "/login"; }}>
             {t("roleDashboard.loginBtn")}
           </Button>
         </div>

@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "wouter";
-import { getLoginUrl } from "@/const";
+
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "@/components/LanguageSelector";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -111,18 +111,18 @@ export default function Home() {
               </DropdownMenu>
             ) : (
               <div className="flex items-center gap-2">
-                <a href={getLoginUrl()}>
+                <Link href="/login">
                   <Button variant="ghost" size="sm" className="gap-1">
                     <LogIn className="h-4 w-4" />
                     {t("home.loginBtn")}
                   </Button>
-                </a>
-                <a href={getLoginUrl("/onboarding")}>
+                </Link>
+                <Link href="/login?tab=register">
                   <Button size="sm" className="gap-1">
                     <UserPlus className="h-4 w-4" />
                     {t("nav.signup")}
                   </Button>
-                </a>
+                </Link>
               </div>
             )}
           </div>
@@ -146,19 +146,19 @@ export default function Home() {
               {t("home.desc")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <a href={getLoginUrl("/onboarding")}>
+              <Link href="/login?tab=register">
                 <Button size="lg" className="text-base px-8 gap-2 h-12">
                   <UserPlus className="h-5 w-5" />
                   {t("home.signupFree")}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
-              </a>
-              <a href={getLoginUrl()}>
+              </Link>
+              <Link href="/login">
                 <Button size="lg" variant="outline" className="text-base px-8 gap-2 h-12">
                   <LogIn className="h-5 w-5" />
                   {t("home.loginBtn")}
                 </Button>
-              </a>
+              </Link>
             </div>
             <p className="text-sm text-muted-foreground">
               {t("home.signupHint")}
@@ -335,13 +335,13 @@ export default function Home() {
               ))}
             </div>
             <div className="text-center mt-12">
-              <a href={getLoginUrl("/onboarding")}>
+              <Link href="/login?tab=register">
                 <Button size="lg" className="text-base px-8 gap-2 h-12">
                   <UserPlus className="h-5 w-5" />
                   {t("home.startFree")}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
         </section>
@@ -388,18 +388,18 @@ export default function Home() {
                 {t("home.ctaDesc")}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href={getLoginUrl("/onboarding")}>
+                <Link href="/login?tab=register">
                   <Button size="lg" className="text-base px-8 gap-2 h-12">
                     <UserPlus className="h-5 w-5" />
                     {t("home.signupFree")}
                   </Button>
-                </a>
-                <a href={getLoginUrl()}>
+                </Link>
+                <Link href="/login">
                   <Button size="lg" variant="outline" className="text-base px-8 gap-2 h-12">
                     <LogIn className="h-5 w-5" />
                     {t("home.ctaLogin")}
                   </Button>
-                </a>
+                </Link>
               </div>
             </div>
           </div>

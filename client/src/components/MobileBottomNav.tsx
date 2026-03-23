@@ -1,5 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
+
 import {
   Globe, ClipboardList, Search, LayoutDashboard, User,
   UserPlus, LogIn
@@ -59,12 +59,12 @@ export default function MobileBottomNav() {
             <a href="#features" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
               <Search className="h-5 w-5" /><span>{t("nav.features")}</span>
             </a>
-            <a href={getLoginUrl("/onboarding")} className="flex flex-col items-center gap-1 p-2 text-xs text-primary font-semibold">
+            <Link href="/login?tab=register" className="flex flex-col items-center gap-1 p-2 text-xs text-primary font-semibold">
               <UserPlus className="h-5 w-5" /><span>{t("nav.signup")}</span>
-            </a>
-            <a href={getLoginUrl()} className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
+            </Link>
+            <Link href="/login" className="flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary">
               <LogIn className="h-5 w-5" /><span>{t("nav.login")}</span>
-            </a>
+            </Link>
           </>
         )}
       </div>
