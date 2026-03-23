@@ -249,8 +249,7 @@ export default function MyPage() {
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <ThemeToggle />
-          <LanguageSelector />
+            <LanguageSelector />
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive gap-1" onClick={() => { logout(); window.location.href = "/"; }}>
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">{t("nav.logout", "로그아웃")}</span>
@@ -264,17 +263,17 @@ export default function MyPage() {
           <ArrowLeft className="w-4 h-4" />{t("myPage.backHome")}
         </Link>
 
-        {/* User Summary Card */}
+        {/* User Summary Card with Profile Completion Gauge */}
         <Card className="border-primary/20">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <User className="w-8 h-8 text-primary" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <h1 className="text-xl font-bold">{user?.name || t("myPage.user")}</h1>
                 <p className="text-sm text-muted-foreground">{user?.email || ""}</p>
-                <div className="flex gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   <Badge variant={onboarding?.onboardingCompleted ? "default" : "secondary"}>
                     {onboarding?.onboardingCompleted ? t("myPage.onboardingDone") : t("myPage.onboardingPending")}
                   </Badge>
@@ -285,6 +284,37 @@ export default function MyPage() {
                 </div>
               </div>
             </div>
+            {/* Profile Completion Gauge */}
+            {(() => {
+              let total = 0, filled = 0;
+              total += 1; filled += 1; // account
+              const fields = ['phone', 'nationality', 'birthDate', 'gender', 'organization', 'position'];
+              fields.forEach(f => { total += 1; if (profile && (profile as any)[f]) filled += 1; });
+              total += 1; if (passport?.passportNumber) filled += 1;
+              total += 1; if (onboarding?.onboardingCompleted) filled += 1;
+              const pct = Math.round((filled / total) * 100);
+              const nextAction = !profile?.phone ? t("myPage.nextPhone", "전화번호를 입력해주세요")
+                : !profile?.nationality ? t("myPage.nextNationality", "국적을 선택해주세요")
+                : !passport?.passportNumber ? t("myPage.nextPassport", "여권 정보를 등록해주세요")
+                : pct < 100 ? t("myPage.nextComplete", "나머지 정보를 채워주세요") : null;
+              return (
+                <div className="mt-4 pt-4 border-t border-border/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">{t("myPage.profileCompletion", "프로필 완성도")}</span>
+                    <span className={`text-sm font-bold ${pct === 100 ? 'text-green-500' : 'text-primary'}`}>{pct}%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-700 ${pct === 100 ? 'bg-green-500' : 'bg-primary'}`} style={{ width: `${pct}%` }} />
+                  </div>
+                  {nextAction && (
+                    <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                      <ArrowRight className="h-3 w-3 text-primary" />
+                      {t("myPage.nextStep", "다음 단계")}: {nextAction}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
 

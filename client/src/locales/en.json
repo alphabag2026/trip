@@ -1252,7 +1252,10 @@
     "title2": "To Pickup",
     "title3": "All-in-One",
     "welcomeDesc": "Manage meetup applications, itineraries, and business trips all in one place.",
-    "welcomeUser": "Welcome, {{name}}"
+    "welcomeUser": "Welcome, {{name}}",
+    "profileCompletion": "Profile Completion",
+    "completeProfile": "Complete Profile",
+    "goNow": "Go Now"
   },
   "immigration": {
     "allReady": "All required documents are ready for immigration.",
@@ -1568,7 +1571,13 @@
       "sent": "Verification email sent",
       "sendBtn": "Send Verification",
       "resend": "Resend"
-    }
+    },
+    "profileCompletion": "Profile Completion",
+    "nextStep": "Next Step",
+    "nextPhone": "Please enter your phone number",
+    "nextNationality": "Please select your nationality",
+    "nextPassport": "Please register your passport",
+    "nextComplete": "Please fill in remaining information"
   },
   "nav": {
     "ai": "AI",
@@ -1588,7 +1597,9 @@
     "myProfile": "My Page",
     "register": "Apply",
     "search": "Search",
-    "signup": "Sign Up"
+    "signup": "Sign Up",
+    "more": "More",
+    "immigrationChecklist": "Immigration Checklist"
   },
   "notFound": {
     "desc": "Sorry, the page you are looking for doesn't exist.",
@@ -1856,7 +1867,11 @@
     "transport_ktx": "High-speed Rail",
     "transport_none": "None",
     "transport_other": "Other",
-    "wallet": "Wallet Address"
+    "wallet": "Wallet Address",
+    "stepTransport": "Transport",
+    "stepRequired": "Required",
+    "stepMeal": "Meal/Life",
+    "stepAdditional": "Additional"
   },
   "roleDashboard": {
     "agency": {

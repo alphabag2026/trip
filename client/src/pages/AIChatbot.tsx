@@ -1,28 +1,37 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Plane, ArrowLeft, Bot, Send, User, Loader2, Sparkles, MessageCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Bot, Send, User, Loader2, Sparkles, MessageCircle, CalendarDays } from "lucide-react";
 import { Link } from "wouter";
 import { nanoid } from "nanoid";
 import LanguageSelector from "@/components/LanguageSelector";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function AIChatbot() {
   const { t } = useTranslation();
+  const { user, isAuthenticated } = useAuth();
   const [sessionId] = useState(() => nanoid());
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Array<{ role: "user" | "bot"; content: string; time: Date }>>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data: meetups } = trpc.meetup.list.useQuery();
-  const [selectedMeetupId, setSelectedMeetupId] = useState<number | undefined>();
+  // Only fetch open/draft meetups with a limit
+  const { data: meetups } = trpc.meetup.list.useQuery(
+    { status: "open" },
+    { refetchOnWindowFocus: false, staleTime: 60000 }
+  );
+  const [selectedMeetupId, setSelectedMeetupId] = useState<string>("all");
 
+  // Filter and limit meetups for display
   const activeMeetups = useMemo(() => {
-    return meetups?.filter(m => m.status === "open" || m.status === "draft") || [];
+    if (!meetups) return [];
+    return meetups.slice(0, 20);
   }, [meetups]);
 
   const askMutation = trpc.chatbot.ask.useMutation({
@@ -45,7 +54,8 @@ export default function AIChatbot() {
     if (!trimmed || askMutation.isPending) return;
     setMessages(prev => [...prev, { role: "user", content: trimmed, time: new Date() }]);
     setMessage("");
-    askMutation.mutate({ sessionId, message: trimmed, meetupId: selectedMeetupId });
+    const meetupId = selectedMeetupId !== "all" ? Number(selectedMeetupId) : undefined;
+    askMutation.mutate({ sessionId, message: trimmed, meetupId });
     inputRef.current?.focus();
   };
 
@@ -66,75 +76,71 @@ export default function AIChatbot() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
-        <div className="container flex items-center justify-between h-16">
+        <div className="container flex items-center justify-between h-14">
           <Link href="/" className="flex items-center gap-2">
             <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-7 w-7 rounded-md" />
-            <span className="font-bold text-lg">Alpha Trip</span>
+            <span className="font-bold text-lg" style={{ fontFamily: 'Inter, sans-serif' }}>Alpha Trip</span>
           </Link>
-          <div className="flex items-center gap-4">
-            <nav className="hidden md:flex items-center gap-6 text-sm">
-              <Link href="/register" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.register")}</Link>
-              <Link href="/lookup" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.lookup")}</Link>
-              <Link href="/flight-pickup" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.flightPickup")}</Link>
-              <Link href="/chatbot" className="text-foreground font-medium">{t("nav.chatbot")}</Link>
-            </nav>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
             <LanguageSelector />
           </div>
         </div>
       </header>
 
-      <div className="container py-6 max-w-3xl mx-auto">
-        <Link href="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
-          <ArrowLeft className="h-4 w-4" /> {t("common.back")}
-        </Link>
-
-        <div className="flex items-center gap-3 mb-6">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <Bot className="h-6 w-6 text-primary" />
+      <div className="container py-4 max-w-3xl mx-auto flex-1 flex flex-col pb-20 md:pb-4">
+        {/* Back + Title */}
+        <div className="flex items-center gap-3 mb-4">
+          <Link href="/" className="text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <Bot className="h-5 w-5 text-primary" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold">{t("chatbot.title")}</h1>
-            <p className="text-sm text-muted-foreground">{t("chatbot.desc")}</p>
+          <div className="flex-1">
+            <h1 className="text-lg font-bold">{t("chatbot.title")}</h1>
+            <p className="text-xs text-muted-foreground">{t("chatbot.desc")}</p>
           </div>
         </div>
 
+        {/* Meetup selector - using shadcn Select */}
         {activeMeetups.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs text-muted-foreground mb-2">{t("chatbot.selectMeetup")}</p>
-            <div className="flex flex-wrap gap-2">
-              <Badge
-                variant={!selectedMeetupId ? "default" : "outline"}
-                className="cursor-pointer"
-                onClick={() => setSelectedMeetupId(undefined)}
-              >
-                {t("chatbot.all")}
-              </Badge>
-              {activeMeetups.map(m => (
-                <Badge
-                  key={m.id}
-                  variant={selectedMeetupId === m.id ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedMeetupId(m.id)}
-                >
-                  {m.title}
-                </Badge>
-              ))}
-            </div>
+          <div className="mb-3">
+            <Select value={selectedMeetupId} onValueChange={setSelectedMeetupId}>
+              <SelectTrigger className="w-full h-9 text-sm">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                  <SelectValue placeholder={t("chatbot.selectMeetup")} />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t("chatbot.all")} ({activeMeetups.length})
+                </SelectItem>
+                {activeMeetups.map(m => (
+                  <SelectItem key={m.id} value={String(m.id)}>
+                    {m.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
-        <Card className="border-border/50">
-          <CardContent className="p-0">
-            <div ref={scrollRef} className="h-[500px] overflow-y-auto p-4 space-y-4">
+        {/* Chat area */}
+        <Card className="border-border/50 flex-1 flex flex-col min-h-0">
+          <CardContent className="p-0 flex-1 flex flex-col min-h-0">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4" style={{ minHeight: '300px', maxHeight: 'calc(100vh - 320px)' }}>
               {messages.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Sparkles className="h-8 w-8 text-primary" />
+                <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-8">
+                  <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="h-7 w-7 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg mb-1">{t("chatbot.welcome")}</h3>
+                    <h3 className="font-semibold text-base mb-1">{t("chatbot.welcome")}</h3>
                     <p className="text-sm text-muted-foreground max-w-md">{t("chatbot.welcomeDesc")}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 max-w-md w-full">
@@ -142,12 +148,9 @@ export default function AIChatbot() {
                       <button
                         key={i}
                         onClick={() => {
-                          setMessage(q);
-                          setTimeout(() => {
-                            setMessages(prev => [...prev, { role: "user", content: q, time: new Date() }]);
-                            setMessage("");
-                            askMutation.mutate({ sessionId, message: q, meetupId: selectedMeetupId });
-                          }, 0);
+                          setMessages(prev => [...prev, { role: "user", content: q, time: new Date() }]);
+                          const meetupId = selectedMeetupId !== "all" ? Number(selectedMeetupId) : undefined;
+                          askMutation.mutate({ sessionId, message: q, meetupId });
                         }}
                         className="text-left text-xs p-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors text-muted-foreground hover:text-foreground"
                       >
@@ -197,7 +200,8 @@ export default function AIChatbot() {
               )}
             </div>
 
-            <div className="border-t border-border/50 p-4">
+            {/* Input */}
+            <div className="border-t border-border/50 p-3">
               <div className="flex gap-2">
                 <Input
                   ref={inputRef}
@@ -212,7 +216,7 @@ export default function AIChatbot() {
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-2 text-center">{t("chatbot.disclaimer")}</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5 text-center">{t("chatbot.disclaimer")}</p>
             </div>
           </CardContent>
         </Card>

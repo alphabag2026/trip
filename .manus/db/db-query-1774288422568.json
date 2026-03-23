@@ -1,0 +1,22 @@
+{
+  "query": "SELECT title, COUNT(*) as cnt FROM meetups GROUP BY title ORDER BY cnt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT title, COUNT(*) as cnt FROM meetups GROUP BY title ORDER BY cnt DESC LIMIT 10;",
+  "rows": [
+    {
+      "title": "수화물 테스트 밋업",
+      "cnt": "35"
+    },
+    {
+      "title": "커스텀 수화물 밋업",
+      "cnt": "35"
+    },
+    {
+      "title": "수정 테스트 밋업",
+      "cnt": "35"
+    }
+  ],
+  "messages": [],
+  "stdout": "title\tcnt\n수화물 테스트 밋업\t35\n커스텀 수화물 밋업\t35\n수정 테스트 밋업\t35\n",
+  "stderr": "",
+  "execution_time_ms": 1529
+}

@@ -1252,7 +1252,10 @@
     "title2": "픽업까지",
     "title3": "한번에",
     "welcomeDesc": "밋업 신청, 여정표 조회, 출장 관리를 한곳에서 처리하세요.",
-    "welcomeUser": "환영합니다, {{name}}님"
+    "welcomeUser": "환영합니다, {{name}}님",
+    "profileCompletion": "프로필 완성도",
+    "completeProfile": "프로필 완성하기",
+    "goNow": "바로 가기"
   },
   "immigration": {
     "allReady": "출입국에 필요한 모든 서류가 준비되었습니다.",
@@ -1568,7 +1571,13 @@
       "sent": "인증 메일이 발송되었습니다",
       "sendBtn": "인증 메일 발송",
       "resend": "재발송"
-    }
+    },
+    "profileCompletion": "프로필 완성도",
+    "nextStep": "다음 단계",
+    "nextPhone": "전화번호를 입력해주세요",
+    "nextNationality": "국적을 선택해주세요",
+    "nextPassport": "여권 정보를 등록해주세요",
+    "nextComplete": "나머지 정보를 채워주세요"
   },
   "nav": {
     "ai": "AI",
@@ -1588,7 +1597,9 @@
     "myProfile": "마이페이지",
     "register": "밋업 신청",
     "search": "조회",
-    "signup": "회원가입"
+    "signup": "회원가입",
+    "more": "더보기",
+    "immigrationChecklist": "입국 체크리스트"
   },
   "notFound": {
     "desc": "죄송합니다, 찾으시는 페이지가 존재하지 않습니다.",
@@ -1856,7 +1867,11 @@
     "transport_ktx": "고속철도",
     "transport_none": "없음",
     "transport_other": "기타",
-    "wallet": "지갑 주소"
+    "wallet": "지갑 주소",
+    "stepTransport": "교통수단",
+    "stepRequired": "필수 정보",
+    "stepMeal": "식사/생활",
+    "stepAdditional": "추가 정보"
   },
   "roleDashboard": {
     "agency": {

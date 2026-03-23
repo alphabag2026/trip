@@ -261,13 +261,26 @@ function RoomList() {
         {/* 전체 채팅방 */}
         <div>
           <h2 className="text-sm font-medium text-muted-foreground mb-3">전체 채팅방</h2>
-          {rooms?.length === 0 && (
-            <Card className="bg-card/50">
-              <CardContent className="p-8 text-center text-muted-foreground">
-                <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>아직 개설된 채팅방이 없습니다</p>
+          {rooms?.length === 0 && (!myRooms || myRooms.length === 0) && (
+            <Card className="bg-gradient-to-br from-blue-500/5 to-purple-500/5 border-dashed border-2 border-border/50">
+              <CardContent className="p-10 text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/10 mb-4">
+                  <MessageCircle className="h-8 w-8 text-blue-400" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">아직 대화방이 없습니다</h3>
+                <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
+                  첫 번째 대화방을 만들어 여행자들과 소통을 시작해 보세요!<br/>
+                  그룹 대화, 1:1 대화, 공지 채널 등 다양한 유형을 지원합니다.
+                </p>
+                <Button onClick={() => setShowCreate(true)} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  첫 대화방 만들기
+                </Button>
               </CardContent>
             </Card>
+          )}
+          {rooms?.length === 0 && myRooms && myRooms.length > 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">참여하지 않은 다른 채팅방이 없습니다</p>
           )}
           <div className="space-y-2">
             {rooms?.map((room: any) => {

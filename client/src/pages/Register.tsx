@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,14 +7,23 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle, Clock, UtensilsCrossed, Wine, Cigarette, Train, Car } from "lucide-react";
+import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle, Clock, UtensilsCrossed, Wine, Cigarette, Train, Car, Check } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "@/components/LanguageSelector";
 
+const FORM_STEPS = [
+  { id: 1, labelKey: "register.stepTransport", label: "교통수단" },
+  { id: 2, labelKey: "register.stepRequired", label: "필수 정보" },
+  { id: 3, labelKey: "register.stepMeal", label: "식사/생활" },
+  { id: 4, labelKey: "register.stepAdditional", label: "추가 정보" },
+];
+
 export default function Register() {
   const { t } = useTranslation();
+  const { user, isAuthenticated } = useAuth();
   const params = useParams<{ meetupId?: string }>();
   const meetupId = params.meetupId ? parseInt(params.meetupId) : undefined;
 
@@ -22,6 +31,7 @@ export default function Register() {
   const [submitted, setSubmitted] = useState(false);
   const [passportFile, setPassportFile] = useState<File | null>(null);
   const [checkedBagRequest, setCheckedBagRequest] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const [form, setForm] = useState({
     name: "", phone: "", messengerId: "",
     scheduleStart: "", scheduleEnd: "",
@@ -45,6 +55,24 @@ export default function Register() {
     { id: meetupId! },
     { enabled: !!meetupId }
   );
+
+  // Auto-fill from user profile
+  const { data: profileData } = trpc.userProfile.get.useQuery(undefined, {
+    enabled: isAuthenticated,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (profileData && !form.name && !form.phone) {
+      setForm(prev => ({
+        ...prev,
+        name: prev.name || user?.name || "",
+        phone: prev.phone || profileData.phone || "",
+        messengerId: prev.messengerId || profileData.telegramId || "",
+      }));
+    }
+  }, [profileData, user]);
 
   const createMutation = trpc.registration.create.useMutation();
   const uploadPassportMutation = trpc.registration.uploadPassport.useMutation();
@@ -140,6 +168,33 @@ export default function Register() {
       </header>
 
       <div className="container max-w-2xl py-8">
+        {/* Step Indicator */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            {FORM_STEPS.map((step, i) => (
+              <div key={step.id} className="flex items-center flex-1">
+                <div className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+                    currentStep > step.id ? 'bg-green-500 text-white' :
+                    currentStep === step.id ? 'bg-primary text-primary-foreground' :
+                    'bg-muted text-muted-foreground'
+                  }`}>
+                    {currentStep > step.id ? <Check className="h-4 w-4" /> : step.id}
+                  </div>
+                  <span className={`text-[10px] mt-1 whitespace-nowrap ${
+                    currentStep >= step.id ? 'text-foreground font-medium' : 'text-muted-foreground'
+                  }`}>{t(step.labelKey, step.label)}</span>
+                </div>
+                {i < FORM_STEPS.length - 1 && (
+                  <div className={`flex-1 h-0.5 mx-2 mt-[-16px] transition-colors ${
+                    currentStep > step.id ? 'bg-green-500' : 'bg-muted'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Location Type Toggle */}
         <div className="flex gap-3 mb-6">
           <Button variant={locationType === "domestic" ? "default" : "outline"} className="flex-1" onClick={() => setLocationType("domestic")}>{t("register.domestic")}</Button>
@@ -223,7 +278,7 @@ export default function Register() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 필수 입력 */}
-          <Card className="bg-card border-border">
+          <Card className="bg-card border-border" onFocus={() => setCurrentStep(2)}>
             <CardHeader><CardTitle className="text-lg">{t("register.required")}</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -272,7 +327,7 @@ export default function Register() {
           </Card>
 
           {/* 식사 / 알레르기 / 음주 / 흡연 */}
-          <Card className="bg-card border-border">
+          <Card className="bg-card border-border" onFocus={() => setCurrentStep(3)}>
             <CardHeader><CardTitle className="text-lg flex items-center gap-2"><UtensilsCrossed className="h-5 w-5 text-primary" />{t("register.mealLife")}</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -394,7 +449,7 @@ export default function Register() {
           </Card>
 
           {/* 선택 입력 */}
-          <Card className="bg-card border-border">
+          <Card className="bg-card border-border" onFocus={() => setCurrentStep(4)}>
             <CardHeader><CardTitle className="text-lg">{t("register.additional")}</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div>

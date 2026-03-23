@@ -1,0 +1,14 @@
+{
+  "query": "SELECT status, COUNT(*) as cnt FROM meetups GROUP BY status ORDER BY cnt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT status, COUNT(*) as cnt FROM meetups GROUP BY status ORDER BY cnt DESC;",
+  "rows": [
+    {
+      "status": "open",
+      "cnt": "105"
+    }
+  ],
+  "messages": [],
+  "stdout": "status\tcnt\nopen\t105\n",
+  "stderr": "",
+  "execution_time_ms": 1641
+}

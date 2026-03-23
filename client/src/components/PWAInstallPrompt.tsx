@@ -24,14 +24,19 @@ export default function PWAInstallPrompt() {
     if (dismissed) {
       const dismissedAt = parseInt(dismissed, 10);
       const daysSince = (Date.now() - dismissedAt) / (1000 * 60 * 60 * 24);
-      if (daysSince < 7) return; // Don't show for 7 days after dismiss
+      if (daysSince < 14) return; // Don't show for 14 days after dismiss
     }
+
+    // Track visit count - only show after 3+ visits
+    const visitCount = parseInt(localStorage.getItem("pwa-visit-count") || "0", 10) + 1;
+    localStorage.setItem("pwa-visit-count", visitCount.toString());
+    if (visitCount < 3) return; // Don't show until 3rd visit
 
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // Show banner after 3 seconds
-      setTimeout(() => setShowBanner(true), 3000);
+      // Show banner after 5 seconds (less intrusive)
+      setTimeout(() => setShowBanner(true), 5000);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
