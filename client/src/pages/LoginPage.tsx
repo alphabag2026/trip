@@ -257,7 +257,15 @@ export default function LoginPage() {
                 </Button>
               </form>
 
-              <div className="mt-4 text-center">
+              <div className="mt-3 text-center">
+                <Link href="/forgot-password">
+                  <button className="text-slate-400 hover:text-blue-400 text-xs transition-colors">
+                    비밀번호를 잊으셨나요?
+                  </button>
+                </Link>
+              </div>
+
+              <div className="mt-3 text-center">
                 <p className="text-slate-500 text-sm">
                   계정이 없으신가요?{" "}
                   <button onClick={switchToRegister} className="text-blue-400 hover:text-blue-300 font-medium">

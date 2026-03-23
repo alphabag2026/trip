@@ -315,6 +315,124 @@ export const appRouter = router({
         await db.updateUserPassword(ctx.user.id, hash);
         return { success: true } as const;
       }),
+    // ── Email Verification ──
+    sendVerificationEmail: protectedProcedure
+      .input(z.object({ origin: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        const user = await db.getUserById(ctx.user.id);
+        if (!user || !user.email) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "이메일이 등록되지 않았습니다" });
+        }
+        const token = nanoid(48);
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+        await db.createEmailVerificationToken(user.id, token, expiresAt);
+        const verifyUrl = `${input.origin}/verify-email?token=${token}`;
+        // Use notifyOwner to send verification info (since no SMTP available)
+        const { notifyOwner } = await import("./_core/notification");
+        await notifyOwner({
+          title: `이메일 인증 요청 - ${user.email}`,
+          content: `사용자 ${user.name || user.email}님이 이메일 인증을 요청했습니다.\n인증 링크: ${verifyUrl}\n만료: ${expiresAt.toISOString()}`,
+        });
+        return { success: true, message: "인증 이메일이 발송되었습니다. 이메일을 확인해주세요.", verifyUrl } as const;
+      }),
+    verifyEmail: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .mutation(async ({ input }) => {
+        const tokenRecord = await db.getEmailVerificationToken(input.token);
+        if (!tokenRecord) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "유효하지 않은 인증 링크입니다" });
+        }
+        if (tokenRecord.usedAt) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "이미 사용된 인증 링크입니다" });
+        }
+        if (new Date() > tokenRecord.expiresAt) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "만료된 인증 링크입니다. 다시 요청해주세요." });
+        }
+        await db.markEmailVerificationUsed(tokenRecord.id);
+        await db.updateOnboardingStep(tokenRecord.userId, "emailVerified", true);
+        return { success: true, message: "이메일이 성공적으로 인증되었습니다" } as const;
+      }),
+    // ── Password Reset ──
+    requestPasswordReset: publicProcedure
+      .input(z.object({ email: z.string().email(), origin: z.string() }))
+      .mutation(async ({ input }) => {
+        const user = await db.getUserByEmail(input.email);
+        if (!user) {
+          // Don't reveal if email exists or not
+          return { success: true, message: "해당 이메일로 비밀번호 재설정 링크를 발송했습니다" } as const;
+        }
+        const token = nanoid(48);
+        const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1h
+        await db.createPasswordResetToken(user.id, token, expiresAt);
+        const resetUrl = `${input.origin}/reset-password?token=${token}`;
+        const { notifyOwner } = await import("./_core/notification");
+        await notifyOwner({
+          title: `비밀번호 재설정 요청 - ${user.email}`,
+          content: `사용자 ${user.name || user.email}님이 비밀번호 재설정을 요청했습니다.\n재설정 링크: ${resetUrl}\n만료: ${expiresAt.toISOString()}`,
+        });
+        return { success: true, message: "해당 이메일로 비밀번호 재설정 링크를 발송했습니다", resetUrl } as const;
+      }),
+    validateResetToken: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const tokenRecord = await db.getPasswordResetToken(input.token);
+        if (!tokenRecord || tokenRecord.usedAt || new Date() > tokenRecord.expiresAt) {
+          return { valid: false } as const;
+        }
+        const user = await db.getUserById(tokenRecord.userId);
+        return { valid: true, email: user?.email || "" } as const;
+      }),
+    resetPassword: publicProcedure
+      .input(z.object({ token: z.string(), newPassword: z.string().min(8) }))
+      .mutation(async ({ input }) => {
+        const tokenRecord = await db.getPasswordResetToken(input.token);
+        if (!tokenRecord) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "유효하지 않은 재설정 링크입니다" });
+        }
+        if (tokenRecord.usedAt) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "이미 사용된 재설정 링크입니다" });
+        }
+        if (new Date() > tokenRecord.expiresAt) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "만료된 재설정 링크입니다. 다시 요청해주세요." });
+        }
+        const hash = await bcrypt.hash(input.newPassword, 12);
+        await db.updateUserPassword(tokenRecord.userId, hash);
+        await db.markPasswordResetUsed(tokenRecord.id);
+        return { success: true, message: "비밀번호가 성공적으로 변경되었습니다" } as const;
+      }),
+    // ── Onboarding Progress ──
+    getOnboardingProgress: protectedProcedure
+      .query(async ({ ctx }) => {
+        const progress = await db.getOnboardingProgress(ctx.user.id);
+        if (!progress) {
+          // Auto-create progress record
+          await db.createOrUpdateOnboardingProgress(ctx.user.id, {});
+          return {
+            emailVerified: false,
+            profileCompleted: false,
+            firstMeetupJoined: false,
+            passportRegistered: false,
+            firstBooking: false,
+            orgSetupCompleted: false,
+            firstMeetupCreated: false,
+          };
+        }
+        return {
+          emailVerified: progress.emailVerified,
+          profileCompleted: progress.profileCompleted,
+          firstMeetupJoined: progress.firstMeetupJoined,
+          passportRegistered: progress.passportRegistered,
+          firstBooking: progress.firstBooking,
+          orgSetupCompleted: progress.orgSetupCompleted,
+          firstMeetupCreated: progress.firstMeetupCreated,
+        };
+      }),
+    updateOnboardingStep: protectedProcedure
+      .input(z.object({ step: z.string(), value: z.boolean() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.updateOnboardingStep(ctx.user.id, input.step, input.value);
+        return { success: true } as const;
+      }),
   }),
 
   // ── Meetups ──────────────────────────────────────

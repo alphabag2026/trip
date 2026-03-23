@@ -1070,3 +1070,43 @@ export const auditLogs = mysqlTable("audit_logs", {
 });
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = typeof auditLogs.$inferInsert;
+
+
+// ── Email Verification Tokens (이메일 인증 토큰) ──────────────
+export const emailVerificationTokens = mysqlTable("email_verification_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type EmailVerificationToken = typeof emailVerificationTokens.$inferSelect;
+
+// ── Password Reset Tokens (비밀번호 재설정 토큰) ──────────────
+export const passwordResetTokens = mysqlTable("password_reset_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+
+// ── Onboarding Progress (온보딩 진행률) ──────────────────────
+export const onboardingProgress = mysqlTable("onboarding_progress", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  emailVerified: boolean("emailVerified").default(false).notNull(),
+  profileCompleted: boolean("profileCompleted").default(false).notNull(),
+  firstMeetupJoined: boolean("firstMeetupJoined").default(false).notNull(),
+  passportRegistered: boolean("passportRegistered").default(false).notNull(),
+  firstBooking: boolean("firstBooking").default(false).notNull(),
+  // 주최자/파트너 전용
+  orgSetupCompleted: boolean("orgSetupCompleted").default(false).notNull(),
+  firstMeetupCreated: boolean("firstMeetupCreated").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type OnboardingProgress = typeof onboardingProgress.$inferSelect;

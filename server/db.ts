@@ -36,6 +36,9 @@ import {
   apiRequestLogs, InsertApiRequestLog,
   meetupExpenses, InsertMeetupExpense,
   auditLogs, InsertAuditLog,
+  emailVerificationTokens, EmailVerificationToken,
+  passwordResetTokens, PasswordResetToken,
+  onboardingProgress, OnboardingProgress,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -2231,4 +2234,81 @@ export async function getUserById(userId: number) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+
+// ── Email Verification Tokens ──────────────────────────
+export async function createEmailVerificationToken(userId: number, token: string, expiresAt: Date) {
+  const db = await getDb();
+  if (!db) return undefined;
+  // Invalidate previous tokens for this user
+  await db.delete(emailVerificationTokens).where(and(eq(emailVerificationTokens.userId, userId), sql`usedAt IS NULL`));
+  await db.insert(emailVerificationTokens).values({ userId, token, expiresAt });
+  return { userId, token, expiresAt };
+}
+
+export async function getEmailVerificationToken(token: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(emailVerificationTokens).where(eq(emailVerificationTokens.token, token)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function markEmailVerificationUsed(tokenId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(emailVerificationTokens).set({ usedAt: new Date() }).where(eq(emailVerificationTokens.id, tokenId));
+}
+
+// ── Password Reset Tokens ──────────────────────────
+export async function createPasswordResetToken(userId: number, token: string, expiresAt: Date) {
+  const db = await getDb();
+  if (!db) return undefined;
+  // Invalidate previous tokens for this user
+  await db.delete(passwordResetTokens).where(and(eq(passwordResetTokens.userId, userId), sql`usedAt IS NULL`));
+  await db.insert(passwordResetTokens).values({ userId, token, expiresAt });
+  return { userId, token, expiresAt };
+}
+
+export async function getPasswordResetToken(token: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(passwordResetTokens).where(eq(passwordResetTokens.token, token)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function markPasswordResetUsed(tokenId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(passwordResetTokens).set({ usedAt: new Date() }).where(eq(passwordResetTokens.id, tokenId));
+}
+
+// ── Onboarding Progress ──────────────────────────
+export async function getOnboardingProgress(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(onboardingProgress).where(eq(onboardingProgress.userId, userId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createOrUpdateOnboardingProgress(userId: number, data: Partial<OnboardingProgress>) {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await getOnboardingProgress(userId);
+  if (existing) {
+    await db.update(onboardingProgress).set({ ...data, updatedAt: new Date() }).where(eq(onboardingProgress.userId, userId));
+  } else {
+    await db.insert(onboardingProgress).values({ userId, ...data } as any);
+  }
+}
+
+export async function updateOnboardingStep(userId: number, step: string, value: boolean) {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await getOnboardingProgress(userId);
+  if (existing) {
+    await db.update(onboardingProgress).set({ [step]: value, updatedAt: new Date() }).where(eq(onboardingProgress.userId, userId));
+  } else {
+    await db.insert(onboardingProgress).values({ userId, [step]: value } as any);
+  }
 }

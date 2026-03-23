@@ -61,6 +61,9 @@ import AdminExpenses from "./pages/admin/Expenses";
 import LoginPage from "./pages/LoginPage";
 import Welcome from "./pages/Welcome";
 import TwoFactorSettings from "./pages/admin/TwoFactorSettings";
+import VerifyEmail from "./pages/VerifyEmail";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function PublicRouter() {
   return (
@@ -139,6 +142,9 @@ function Router() {
     <Switch>
       <Route path="/admin" nest component={AdminRouter} />
       <Route path="/login" component={LoginPage} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/verify-email" component={VerifyEmail} />
       <Route>
         <PublicRouter />
       </Route>

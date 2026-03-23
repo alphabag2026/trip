@@ -176,6 +176,13 @@
       "when": 1774249375348,
       "tag": "0024_silent_living_mummy",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1774275039691,
+      "tag": "0025_glossy_kulan_gath",
+      "breakpoints": true
     }
   ]
 }

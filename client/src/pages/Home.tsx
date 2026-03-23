@@ -51,7 +51,7 @@ export default function Home() {
                 <Link href="/register" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.register")}</Link>
                 <Link href="/lookup" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.lookup")}</Link>
                 <Link href="/flight-pickup" className="text-muted-foreground hover:text-foreground transition-colors">{t("nav.flightPickup")}</Link>
-                <Link href="/booking-center" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                <Link href="/booking" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Ticket className="h-3.5 w-3.5" />
                   {t("nav.bookingCenter", "예약센터")}
                 </Link>
@@ -218,7 +218,7 @@ export default function Home() {
 
             {/* 예약센터 바로가기 배너 */}
             <div className="mt-10 max-w-2xl mx-auto">
-              <Link href="/booking-center">
+              <Link href="/booking">
                 <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-blue-500/10 border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg hover:shadow-primary/5 cursor-pointer group">
                   <CardContent className="p-6 flex items-center justify-between">
                     <div className="flex items-center gap-4">
