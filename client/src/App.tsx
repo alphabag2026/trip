@@ -59,6 +59,7 @@ import AdminApiDocs from "./pages/admin/ApiDocs";
 import AdminPassportList from "./pages/admin/PassportList";
 import AdminExpenses from "./pages/admin/Expenses";
 import LoginPage from "./pages/LoginPage";
+import Welcome from "./pages/Welcome";
 import TwoFactorSettings from "./pages/admin/TwoFactorSettings";
 
 function PublicRouter() {
@@ -85,6 +86,7 @@ function PublicRouter() {
       <Route path="/booking" component={BookingCenter} />
       <Route path="/community" component={CommunityChat} />
       <Route path="/community/:roomId" component={CommunityChat} />
+      <Route path="/welcome" component={Welcome} />
       <Route path="/404" component={NotFound} />
     </Switch>
   );

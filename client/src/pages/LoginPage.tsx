@@ -57,7 +57,7 @@ export default function LoginPage() {
 
   const emailRegister = trpc.auth.emailRegister.useMutation({
     onSuccess: () => {
-      window.location.href = returnPath === "/" ? "/onboarding" : returnPath;
+      window.location.href = `/welcome?type=${accountType}&name=${encodeURIComponent(regName)}`;
     },
     onError: (err) => setError(err.message),
   });
