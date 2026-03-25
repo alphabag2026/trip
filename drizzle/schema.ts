@@ -1110,3 +1110,167 @@ export const onboardingProgress = mysqlTable("onboarding_progress", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type OnboardingProgress = typeof onboardingProgress.$inferSelect;
+
+
+// ══════════════════════════════════════════════════════════
+// v6.7 - 주최자/파트너 온보딩, 밋업 초청, 교통편 연동
+// ══════════════════════════════════════════════════════════
+
+// ── Company Info (회사 정보) ──────────────────────────────
+export const companyInfo = mysqlTable("company_info", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull().unique(),
+  companyName: varchar("companyName", { length: 255 }).notNull(),
+  companyLogoUrl: varchar("companyLogoUrl", { length: 1000 }),
+  businessRegistration: varchar("businessRegistration", { length: 50 }),
+  businessType: varchar("businessType", { length: 100 }),
+  address: varchar("address", { length: 500 }),
+  contactPerson: varchar("contactPerson", { length: 255 }),
+  contactPhone: varchar("contactPhone", { length: 50 }),
+  contactEmail: varchar("contactEmail", { length: 320 }),
+  website: varchar("website", { length: 500 }),
+  description: text("description"),
+  industryCategory: varchar("industryCategory", { length: 100 }),
+  employeeCount: int("employeeCount"),
+  foundedYear: int("foundedYear"),
+  emailVerified: boolean("emailVerified").default(false).notNull(),
+  emailVerificationToken: varchar("emailVerificationToken", { length: 255 }),
+  emailVerificationExpiresAt: timestamp("emailVerificationExpiresAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CompanyInfo = typeof companyInfo.$inferSelect;
+export type InsertCompanyInfo = typeof companyInfo.$inferInsert;
+
+// ── Organizer Roles (주최자 역할 관리) ──────────────────────
+export const organizerRoles = mysqlTable("organizer_roles", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["owner", "admin", "manager", "staff"]).default("staff").notNull(),
+  permissions: json("permissions"), // 권한 배열 JSON
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type OrganizerRole = typeof organizerRoles.$inferSelect;
+export type InsertOrganizerRole = typeof organizerRoles.$inferInsert;
+
+// ── Meetup Invitations (밋업 초청) ──────────────────────────
+export const meetupInvitations = mysqlTable("meetup_invitations", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  invitationType: mysqlEnum("invitationType", ["email", "sms", "link", "csv"]).notNull(),
+  recipientEmail: varchar("recipientEmail", { length: 320 }),
+  recipientPhone: varchar("recipientPhone", { length: 50 }),
+  recipientName: varchar("recipientName", { length: 255 }),
+  invitationToken: varchar("invitationToken", { length: 255 }).unique(),
+  status: mysqlEnum("status", ["sent", "opened", "accepted", "rejected", "expired"]).default("sent").notNull(),
+  templateId: int("templateId"),
+  region: varchar("region", { length: 100 }), // 지역: domestic, overseas, china_mainland 등
+  customMessage: text("customMessage"),
+  sentAt: timestamp("sentAt"),
+  respondedAt: timestamp("respondedAt"),
+  expiresAt: timestamp("expiresAt"),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type MeetupInvitation = typeof meetupInvitations.$inferSelect;
+export type InsertMeetupInvitation = typeof meetupInvitations.$inferInsert;
+
+// ── Invitation Templates (초청 템플릿) ──────────────────────
+export const invitationTemplates = mysqlTable("invitation_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  templateName: varchar("templateName", { length: 255 }).notNull(),
+  templateType: mysqlEnum("templateType", ["email", "sms"]).notNull(),
+  subject: varchar("subject", { length: 255 }),
+  body: text("body").notNull(),
+  variables: json("variables"), // 템플릿 변수 배열 (예: [name, meetupTitle, date])
+  isDefault: boolean("isDefault").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type InvitationTemplate = typeof invitationTemplates.$inferSelect;
+export type InsertInvitationTemplate = typeof invitationTemplates.$inferInsert;
+
+// ── Transportation Options (교통편 옵션) ──────────────────────
+export const transportationOptions = mysqlTable("transportation_options", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  transportationType: mysqlEnum("transportationType", ["flight", "train", "bus", "car", "ship"]).notNull(),
+  departureCity: varchar("departureCity", { length: 100 }).notNull(),
+  departureCountry: varchar("departureCountry", { length: 100 }).notNull(),
+  arrivalCity: varchar("arrivalCity", { length: 100 }).notNull(),
+  arrivalCountry: varchar("arrivalCountry", { length: 100 }).notNull(),
+  departureDate: timestamp("departureDate"),
+  arrivalDate: timestamp("arrivalDate"),
+  carrier: varchar("carrier", { length: 255 }),
+  flightNumber: varchar("flightNumber", { length: 50 }),
+  trainNumber: varchar("trainNumber", { length: 50 }),
+  busNumber: varchar("busNumber", { length: 50 }),
+  departureTime: varchar("departureTime", { length: 50 }),
+  arrivalTime: varchar("arrivalTime", { length: 50 }),
+  duration: varchar("duration", { length: 50 }),
+  price: decimal("price", { precision: 10, scale: 2 }),
+  currency: varchar("currency", { length: 10 }).default("USD"),
+  bookingUrl: varchar("bookingUrl", { length: 1000 }),
+  apiProvider: varchar("apiProvider", { length: 100 }), // skyscanner, amadeus, 12306, etc
+  externalId: varchar("externalId", { length: 255 }),
+  seats: int("seats"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type TransportationOption = typeof transportationOptions.$inferSelect;
+export type InsertTransportationOption = typeof transportationOptions.$inferInsert;
+
+// ── Participant Transportation (참가자 교통편 예약) ──────────
+export const participantTransportation = mysqlTable("participant_transportation", {
+  id: int("id").autoincrement().primaryKey(),
+  registrationId: int("registrationId").notNull(),
+  transportationOptionId: int("transportationOptionId").notNull(),
+  bookingStatus: mysqlEnum("bookingStatus", ["pending", "confirmed", "cancelled", "completed"]).default("pending").notNull(),
+  bookingReference: varchar("bookingReference", { length: 255 }),
+  seatNumber: varchar("seatNumber", { length: 50 }),
+  specialRequests: text("specialRequests"),
+  cost: decimal("cost", { precision: 10, scale: 2 }),
+  paidAt: timestamp("paidAt"),
+  confirmationUrl: varchar("confirmationUrl", { length: 1000 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ParticipantTransportation = typeof participantTransportation.$inferSelect;
+export type InsertParticipantTransportation = typeof participantTransportation.$inferInsert;
+
+// ── Transportation APIs (교통편 API 설정) ──────────────────
+export const transportationApis = mysqlTable("transportation_apis", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  apiProvider: varchar("apiProvider", { length: 100 }).notNull(), // skyscanner, amadeus, 12306, etc
+  apiKey: varchar("apiKey", { length: 500 }).notNull(),
+  apiSecret: varchar("apiSecret", { length: 500 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  rateLimitPerMinute: int("rateLimitPerMinute").default(100),
+  lastUsedAt: timestamp("lastUsedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type TransportationApi = typeof transportationApis.$inferSelect;
+export type InsertTransportationApi = typeof transportationApis.$inferInsert;
+
+// ── Invitation Statistics (초청 통계) ──────────────────────
+export const invitationStatistics = mysqlTable("invitation_statistics", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  totalSent: int("totalSent").default(0),
+  totalOpened: int("totalOpened").default(0),
+  totalAccepted: int("totalAccepted").default(0),
+  totalRejected: int("totalRejected").default(0),
+  acceptanceRate: decimal("acceptanceRate", { precision: 5, scale: 2 }).default("0"),
+  openRate: decimal("openRate", { precision: 5, scale: 2 }).default("0"),
+  lastUpdatedAt: timestamp("lastUpdatedAt").defaultNow().onUpdateNow(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type InvitationStatistics = typeof invitationStatistics.$inferSelect;
+export type InsertInvitationStatistics = typeof invitationStatistics.$inferInsert;

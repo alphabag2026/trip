@@ -305,7 +305,7 @@ export default function Onboarding() {
           <a href="/" className="flex items-center gap-2 text-lg font-bold text-primary hover:opacity-80 transition-opacity cursor-pointer"><img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-7 w-7 rounded-md" />Alpha Trip</a>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">{t("onboarding.welcome", { name: user?.name })}</span>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive gap-1" onClick={() => { logout(); window.location.href = "/"; }}>
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive gap-1" onClick={async () => { await logout(); window.location.href = "/"; }}>
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">{t("nav.logout", "로그아웃")}</span>
             </Button>

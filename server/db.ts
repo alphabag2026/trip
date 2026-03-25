@@ -1,4 +1,4 @@
-import { eq, like, or, and, desc, sql, gte, lte, between, inArray } from "drizzle-orm";
+import { eq, like, or, and, desc, sql, gte, lte, between, inArray, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users,
@@ -2242,7 +2242,7 @@ export async function createEmailVerificationToken(userId: number, token: string
   const db = await getDb();
   if (!db) return undefined;
   // Invalidate previous tokens for this user
-  await db.delete(emailVerificationTokens).where(and(eq(emailVerificationTokens.userId, userId), sql`usedAt IS NULL`));
+  await db.delete(emailVerificationTokens).where(and(eq(emailVerificationTokens.userId, userId), isNull(emailVerificationTokens.usedAt)));
   await db.insert(emailVerificationTokens).values({ userId, token, expiresAt });
   return { userId, token, expiresAt };
 }
@@ -2265,7 +2265,7 @@ export async function createPasswordResetToken(userId: number, token: string, ex
   const db = await getDb();
   if (!db) return undefined;
   // Invalidate previous tokens for this user
-  await db.delete(passwordResetTokens).where(and(eq(passwordResetTokens.userId, userId), sql`usedAt IS NULL`));
+  await db.delete(passwordResetTokens).where(and(eq(passwordResetTokens.userId, userId), isNull(passwordResetTokens.usedAt)));
   await db.insert(passwordResetTokens).values({ userId, token, expiresAt });
   return { userId, token, expiresAt };
 }
@@ -2312,3 +2312,12 @@ export async function updateOnboardingStep(userId: number, step: string, value: 
     await db.insert(onboardingProgress).values({ userId, [step]: value } as any);
   }
 }
+
+
+// ── Drizzle Query Builder Export (v6.7) ──────────────────────────
+export async function getDbInstance() {
+  return await getDb();
+}
+
+export { eq, desc, asc, and, gt, isNull } from "drizzle-orm";
+export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation } from "../drizzle/schema";

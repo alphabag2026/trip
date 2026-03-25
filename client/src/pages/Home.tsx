@@ -198,7 +198,7 @@ export default function Home() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="cursor-pointer text-destructive focus:text-destructive"
-                    onClick={() => { logout(); window.location.href = "/"; }}
+                    onClick={async () => { await logout(); window.location.href = "/"; }}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     {t("nav.logout")}

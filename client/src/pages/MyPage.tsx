@@ -250,7 +250,7 @@ export default function MyPage() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <LanguageSelector />
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive gap-1" onClick={() => { logout(); window.location.href = "/"; }}>
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive gap-1" onClick={async () => { await logout(); window.location.href = "/"; }}>
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">{t("nav.logout", "로그아웃")}</span>
             </Button>

@@ -1,0 +1,2 @@
+ALTER TABLE `invitation_statistics` MODIFY COLUMN `acceptanceRate` decimal(5,2) DEFAULT '0';--> statement-breakpoint
+ALTER TABLE `invitation_statistics` MODIFY COLUMN `openRate` decimal(5,2) DEFAULT '0';
