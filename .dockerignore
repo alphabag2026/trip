@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+.manus
+.manus-logs
+.webdev
+.env
+.env.local
+.DS_Store
+*.md
+debug-login-issue.md
+notes-*.md

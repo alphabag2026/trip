@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  meetup-mysql:
+    image: mysql:8.0
+    container_name: meetup-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: meetup2024
+      MYSQL_DATABASE: meetup_db
+      MYSQL_USER: meetup_user
+      MYSQL_PASSWORD: meetup2024
+    ports:
+      - "3310:3306"
+    volumes:
+      - meetup_mysql_data:/var/lib/mysql
+    networks:
+      - meetup-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  meetup-app:
+    build: .
+    container_name: meetup-app
+    restart: unless-stopped
+    ports:
+      - "3010:3000"
+    environment:
+      DATABASE_URL: "mysql://meetup_user:meetup2024@meetup-mysql:3306/meetup_db"
+      JWT_SECRET: "meetup-secret-key-2024-production"
+      NODE_ENV: "production"
+      PORT: "3000"
+      VITE_APP_ID: "meetup-travel"
+      VITE_APP_TITLE: "Meetup & Travel"
+      OAUTH_SERVER_URL: "https://api.manus.im"
+      VITE_OAUTH_PORTAL_URL: "https://manus.im"
+      BUILT_IN_FORGE_API_URL: "https://api.manus.im"
+      BUILT_IN_FORGE_API_KEY: "your-api-key"
+    depends_on:
+      meetup-mysql:
+        condition: service_healthy
+    networks:
+      - meetup-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  meetup_mysql_data:
+    driver: local
+
+networks:
+  meetup-network:
+    driver: bridge
