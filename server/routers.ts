@@ -245,6 +245,20 @@ export const appRouter = router({
         name: z.string().min(1),
         accountType: z.enum(["personal", "organizer", "agency", "partner"]).default("personal"),
         organizationName: z.string().optional(),
+        // Organizer-specific fields
+        contactPhone: z.string().optional(),
+        businessRegistration: z.string().optional(),
+        businessType: z.string().optional(),
+        companyAddress: z.string().optional(),
+        companyWebsite: z.string().optional(),
+        companyDescription: z.string().optional(),
+        industryCategory: z.string().optional(),
+        employeeCount: z.number().optional(),
+        foundedYear: z.number().optional(),
+        eventExperience: z.string().optional(),
+        expectedEventsPerYear: z.number().optional(),
+        targetRegions: z.string().optional(),
+        teamSize: z.number().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         // Check if email already exists
@@ -270,7 +284,7 @@ export const appRouter = router({
         if (!user) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "회원가입에 실패했습니다" });
         }
-        // If organizer/agency/partner, create organization
+        // If organizer/agency/partner, create organization + company info
         if (input.accountType !== "personal" && input.organizationName) {
           try {
             const orgType = input.accountType === "organizer" ? "organizer" as const :
@@ -279,15 +293,35 @@ export const appRouter = router({
               name: input.organizationName,
               type: orgType,
               contactEmail: input.email,
+              contactName: input.name,
+              contactPhone: input.contactPhone || undefined,
+              description: input.companyDescription || undefined,
+              website: input.companyWebsite || undefined,
             });
             if (orgResult && orgResult.id) {
               await db.addOrganizationMember({ organizationId: orgResult.id, userId: user.id, memberRole: "owner" });
               // Update user's organizationId
               const dbInstance = await db.getDb();
               if (dbInstance) {
-                const { users: usersTable } = await import("../drizzle/schema");
+                const { users: usersTable, companyInfo: companyInfoTable } = await import("../drizzle/schema");
                 const { eq: eqOp } = await import("drizzle-orm");
                 await dbInstance.update(usersTable).set({ organizationId: orgResult.id }).where(eqOp(usersTable.id, user.id));
+                // Save company info
+                await dbInstance.insert(companyInfoTable).values({
+                  organizationId: orgResult.id,
+                  companyName: input.organizationName,
+                  businessRegistration: input.businessRegistration || null,
+                  businessType: input.businessType || null,
+                  address: input.companyAddress || null,
+                  contactPerson: input.name,
+                  contactPhone: input.contactPhone || null,
+                  contactEmail: input.email,
+                  website: input.companyWebsite || null,
+                  description: input.companyDescription || null,
+                  industryCategory: input.industryCategory || null,
+                  employeeCount: input.employeeCount || null,
+                  foundedYear: input.foundedYear || null,
+                }).onDuplicateKeyUpdate({ set: { companyName: input.organizationName } });
               }
             }
           } catch (orgErr) {
@@ -360,6 +394,8 @@ export const appRouter = router({
         }
         await db.markEmailVerificationUsed(tokenRecord.id);
         await db.updateOnboardingStep(tokenRecord.userId, "emailVerified", true);
+        // Also update users table emailVerified flag
+        await db.setUserEmailVerified(tokenRecord.userId, true);
         return { success: true, message: "이메일이 성공적으로 인증되었습니다" } as const;
       }),
     // ── Password Reset ──

@@ -2319,5 +2319,12 @@ export async function getDbInstance() {
   return await getDb();
 }
 
+// ── Set User Email Verified ──────────────────────────
+export async function setUserEmailVerified(userId: number, verified: boolean) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ emailVerified: verified }).where(eq(users.id, userId));
+}
+
 export { eq, desc, asc, and, gt, isNull } from "drizzle-orm";
 export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation } from "../drizzle/schema";

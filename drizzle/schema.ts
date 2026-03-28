@@ -12,6 +12,7 @@ export const users = mysqlTable("users", {
   organizationId: int("organizationId"),
   totpSecret: varchar("totpSecret", { length: 255 }),
   totpEnabled: boolean("totpEnabled").default(false).notNull(),
+  emailVerified: boolean("emailVerified").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
