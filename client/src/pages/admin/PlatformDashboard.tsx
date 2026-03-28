@@ -144,7 +144,7 @@ function DonutChart({ data, size = 200, strokeWidth = 32 }: {
 
 export default function PlatformDashboard() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<"overview" | "organizations" | "users" | "audit">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "organizations" | "users" | "accounts" | "audit">("overview");
   const [orgFilter, setOrgFilter] = useState<string>("all");
   const [showOrgDialog, setShowOrgDialog] = useState(false);
   const [editingOrgId, setEditingOrgId] = useState<number | null>(null);
@@ -184,12 +184,54 @@ export default function PlatformDashboard() {
   const [auditFilter, setAuditFilter] = useState<string>("all");
   const [auditPage, setAuditPage] = useState(0);
 
+  // 계정 생성 폼
+  const [showCreateAccount, setShowCreateAccount] = useState(false);
+  const [accountForm, setAccountForm] = useState({
+    email: "", name: "", password: "", role: "organizer" as "organizer" | "agency" | "partner",
+    organizationName: "", organizationType: "organizer" as "organizer" | "agency" | "partner",
+    contactEmail: "", contactPhone: "", description: "", website: "",
+  });
+  // 비밀번호 초기화 모달
+  const [resetPwDialog, setResetPwDialog] = useState<{ open: boolean; userId: number; userName: string }>({ open: false, userId: 0, userName: "" });
+  const [newPassword, setNewPassword] = useState("");
+
   const utils = trpc.useUtils();
   const statsQuery = trpc.platform.stats.useQuery();
   const orgsQuery = trpc.organization.list.useQuery({ type: orgFilter === "all" ? undefined : orgFilter });
   const usersQuery = trpc.platform.usersWithOrgs.useQuery();
   const categoriesQuery = trpc.partnerCategory.list.useQuery();
   const allOrgsQuery = trpc.organization.list.useQuery({});
+
+  // 계정 생성 mutation
+  const createAccountMutation = trpc.superAdmin.createOrganizerAccount.useMutation({
+    onSuccess: () => {
+      toast.success("계정이 성공적으로 생성되었습니다");
+      utils.platform.usersWithOrgs.invalidate();
+      utils.platform.stats.invalidate();
+      utils.organization.list.invalidate();
+      utils.platform.auditLogs.invalidate();
+      setShowCreateAccount(false);
+      setAccountForm({ email: "", name: "", password: "", role: "organizer", organizationName: "", organizationType: "organizer", contactEmail: "", contactPhone: "", description: "", website: "" });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const delegateRoleMutation = trpc.superAdmin.delegateRole.useMutation({
+    onSuccess: () => {
+      toast.success("권한이 위임되었습니다");
+      utils.platform.usersWithOrgs.invalidate();
+      utils.platform.auditLogs.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const resetPasswordMutation = trpc.superAdmin.resetPassword.useMutation({
+    onSuccess: () => {
+      toast.success("비밀번호가 초기화되었습니다");
+      setResetPwDialog({ open: false, userId: 0, userName: "" });
+      setNewPassword("");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const delegationHistoryQuery = trpc.superAdmin.delegationHistory.useQuery({ limit: 50 });
 
   // 감사 로그 쿼리
   const auditLogsQuery = trpc.platform.auditLogs.useQuery({
@@ -388,6 +430,7 @@ export default function PlatformDashboard() {
           { key: "overview", label: "대시보드", icon: BarChart3 },
           { key: "organizations", label: "조직 관리", icon: Building2 },
           { key: "users", label: "사용자 관리", icon: Users },
+          { key: "accounts", label: "계정 생성/위임", icon: UserPlus },
           { key: "audit", label: "감사 로그", icon: ScrollText },
         ].map(tab => (
           <Button
@@ -604,6 +647,108 @@ export default function PlatformDashboard() {
         </div>
       )}
 
+      {/* ════════════════════ Accounts Tab ════════════════════ */}
+      {activeTab === "accounts" && (
+        <div className="space-y-6">
+          {/* Create Account Section */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <UserPlus className="h-5 w-5 text-blue-500" />
+                  주최자/에이전시/파트너 계정 생성
+                </CardTitle>
+                <Button size="sm" onClick={() => setShowCreateAccount(!showCreateAccount)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  {!showCreateAccount ? "새 계정 생성" : "닫기"}
+                </Button>
+              </div>
+            </CardHeader>
+            {showCreateAccount && (
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-sm text-muted-foreground">계정 정보</h4>
+                    <div><Label>이름 *</Label><Input value={accountForm.name} onChange={e => setAccountForm({...accountForm, name: e.target.value})} placeholder="담당자 이름" /></div>
+                    <div><Label>이메일 *</Label><Input type="email" value={accountForm.email} onChange={e => setAccountForm({...accountForm, email: e.target.value})} placeholder="로그인용 이메일" /></div>
+                    <div><Label>비밀번호 *</Label><Input type="password" value={accountForm.password} onChange={e => setAccountForm({...accountForm, password: e.target.value})} placeholder="최소 6자" /></div>
+                    <div>
+                      <Label>역할 *</Label>
+                      <Select value={accountForm.role} onValueChange={(v: any) => setAccountForm({...accountForm, role: v, organizationType: v})}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="organizer">행사/여행 주최자</SelectItem>
+                          <SelectItem value="agency">지역 에이전시</SelectItem>
+                          <SelectItem value="partner">파트너 업체</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-sm text-muted-foreground">조직 정보</h4>
+                    <div><Label>조직명 *</Label><Input value={accountForm.organizationName} onChange={e => setAccountForm({...accountForm, organizationName: e.target.value})} placeholder="회사/단체명" /></div>
+                    <div><Label>연락처 이메일</Label><Input type="email" value={accountForm.contactEmail} onChange={e => setAccountForm({...accountForm, contactEmail: e.target.value})} /></div>
+                    <div><Label>연락처 전화</Label><Input value={accountForm.contactPhone} onChange={e => setAccountForm({...accountForm, contactPhone: e.target.value})} /></div>
+                    <div><Label>웹사이트</Label><Input value={accountForm.website} onChange={e => setAccountForm({...accountForm, website: e.target.value})} /></div>
+                    <div><Label>설명</Label><Textarea value={accountForm.description} onChange={e => setAccountForm({...accountForm, description: e.target.value})} rows={2} /></div>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setShowCreateAccount(false)}>취소</Button>
+                  <Button
+                    disabled={!accountForm.email || !accountForm.name || !accountForm.password || !accountForm.organizationName || createAccountMutation.isPending}
+                    onClick={() => createAccountMutation.mutate(accountForm)}
+                  >
+                    {createAccountMutation.isPending ? "생성 중..." : "계정 생성"}
+                  </Button>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+
+          {/* Delegation History */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Shield className="h-5 w-5 text-amber-500" />
+                권한 위임 이력
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {delegationHistoryQuery.data && delegationHistoryQuery.data.length > 0 ? (
+                  delegationHistoryQuery.data.map((d: any) => (
+                    <div key={d.id} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                      <div className="p-1.5 rounded-md bg-muted shrink-0 mt-0.5">
+                        <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-xs">
+                            {d.delegationType === "admin_grant" ? "계정 생성" : d.delegationType === "role_change" ? "역할 변경" : d.delegationType}
+                          </Badge>
+                          {d.fromRole && d.toRole && (
+                            <span className="text-xs text-muted-foreground">
+                              {roleLabels[d.fromRole] || d.fromRole} → {roleLabels[d.toRole] || d.toRole}
+                            </span>
+                          )}
+                        </div>
+                        {d.notes && <p className="text-sm mt-1">{d.notes}</p>}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {d.createdAt ? new Date(d.createdAt).toLocaleString("ko-KR") : ""}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-6">권한 위임 이력이 없습니다</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* ════════════════════ Users Tab ════════════════════ */}
       {activeTab === "users" && (
         <div className="space-y-4">
@@ -627,6 +772,7 @@ export default function PlatformDashboard() {
                       <th className="text-left py-2 px-3">소속 조직</th>
                       <th className="text-left py-2 px-3">역할 변경</th>
                       <th className="text-left py-2 px-3">조직 배정</th>
+                      <th className="text-left py-2 px-3">액션</th>
                       <th className="text-left py-2 px-3">가입일</th>
                     </tr>
                   </thead>
@@ -691,6 +837,11 @@ export default function PlatformDashboard() {
                               ))}
                             </SelectContent>
                           </Select>
+                        </td>
+                        <td className="py-2 px-3">
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setResetPwDialog({ open: true, userId: user.id, userName: user.name || "이름 없음" }); setNewPassword(""); }}>
+                            PW 초기화
+                          </Button>
                         </td>
                         <td className="py-2 px-3 text-muted-foreground">
                           {user.createdAt ? new Date(user.createdAt).toLocaleDateString("ko-KR") : "-"}
@@ -928,6 +1079,30 @@ export default function PlatformDashboard() {
               })}
             >
               {addOrgMemberMutation.isPending ? "추가 중..." : "멤버 추가"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ════════════════════ Reset Password Dialog ════════════════════ */}
+      <Dialog open={resetPwDialog.open} onOpenChange={(open) => { if (!open) setResetPwDialog({ open: false, userId: 0, userName: "" }); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>비밀번호 초기화 - {resetPwDialog.userName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>새 비밀번호</Label>
+              <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="최소 6자" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetPwDialog({ open: false, userId: 0, userName: "" })}>취소</Button>
+            <Button
+              disabled={newPassword.length < 6 || resetPasswordMutation.isPending}
+              onClick={() => resetPasswordMutation.mutate({ userId: resetPwDialog.userId, newPassword })}
+            >
+              {resetPasswordMutation.isPending ? "초기화 중..." : "비밀번호 초기화"}
             </Button>
           </DialogFooter>
         </DialogContent>

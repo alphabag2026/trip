@@ -1,4 +1,4 @@
-import { eq, like, or, and, desc, sql, gte, lte, between, inArray, isNull } from "drizzle-orm";
+import { eq, like, or, and, desc, asc, sql, gte, lte, between, inArray, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users,
@@ -39,6 +39,8 @@ import {
   emailVerificationTokens, EmailVerificationToken,
   passwordResetTokens, PasswordResetToken,
   onboardingProgress, OnboardingProgress,
+  roleDelegations, InsertRoleDelegation,
+  adBanners, InsertAdBanner,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -2326,5 +2328,114 @@ export async function setUserEmailVerified(userId: number, verified: boolean) {
   await db.update(users).set({ emailVerified: verified }).where(eq(users.id, userId));
 }
 
+// ── Role Delegations (권한 위임) ──────────────────────────────
+export async function createRoleDelegation(data: InsertRoleDelegation) {
+  const db = await getDb();
+  if (!db) return;
+  const result = await db.insert(roleDelegations).values(data);
+  return { id: Number(result[0].insertId) };
+}
+export async function getRoleDelegations(opts?: { organizationId?: number; limit?: number; offset?: number }) {
+  const db = await getDb();
+  if (!db) return [];
+  let results = await db.select().from(roleDelegations).orderBy(desc(roleDelegations.createdAt));
+  if (opts?.organizationId) results = results.filter((r: any) => r.organizationId === opts.organizationId);
+  if (opts?.offset) results = results.slice(opts.offset);
+  if (opts?.limit) results = results.slice(0, opts.limit);
+  return results;
+}
+
+// ── Create Organizer Account (슈퍼관리자 전용) ──────────────────
+export async function createOrganizerAccount(data: {
+  email: string;
+  name: string;
+  passwordHash: string;
+  role: "organizer" | "agency" | "partner";
+  organizationName: string;
+  organizationType: "organizer" | "agency" | "partner";
+  contactEmail?: string;
+  contactPhone?: string;
+  description?: string;
+  website?: string;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  const openId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const userResult = await db.insert(users).values({
+    openId,
+    email: data.email,
+    name: data.name,
+    passwordHash: data.passwordHash,
+    loginMethod: "email",
+    role: data.role,
+  });
+  const userId = Number(userResult[0].insertId);
+  const orgResult = await db.insert(organizations).values({
+    name: data.organizationName,
+    type: data.organizationType,
+    contactEmail: data.contactEmail || data.email,
+    contactName: data.name,
+    contactPhone: data.contactPhone || null,
+    description: data.description || null,
+    website: data.website || null,
+  });
+  const orgId = Number(orgResult[0].insertId);
+  await db.update(users).set({ organizationId: orgId }).where(eq(users.id, userId));
+  await db.insert(organizationMembers).values({
+    organizationId: orgId,
+    userId,
+    memberRole: "owner",
+  });
+  return { userId, organizationId: orgId, openId };
+}
+
+// ── Ad Banners (광고 배너) ──────────────────────────────
+export async function getAdBanners(opts?: { position?: string; activeOnly?: boolean }) {
+  const db = await getDb();
+  if (!db) return [];
+  let results = await db.select().from(adBanners).orderBy(asc(adBanners.sortOrder), desc(adBanners.createdAt));
+  if (opts?.position) results = results.filter((b: any) => b.position === opts.position);
+  if (opts?.activeOnly) {
+    const now = new Date();
+    results = results.filter((b: any) => {
+      if (!b.isActive) return false;
+      if (b.startDate && new Date(b.startDate) > now) return false;
+      if (b.endDate && new Date(b.endDate) < now) return false;
+      return true;
+    });
+  }
+  return results;
+}
+export async function getAdBannerById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(adBanners).where(eq(adBanners.id, id));
+  return rows[0] || null;
+}
+export async function createAdBanner(data: InsertAdBanner) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(adBanners).values(data);
+  return { id: Number(result[0].insertId) };
+}
+export async function updateAdBanner(id: number, data: Partial<InsertAdBanner>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(adBanners).set(data).where(eq(adBanners.id, id));
+}
+export async function deleteAdBanner(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(adBanners).where(eq(adBanners.id, id));
+}
+export async function incrementAdBannerClick(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  const banner = await getAdBannerById(id);
+  if (banner) {
+    await db.update(adBanners).set({ clickCount: banner.clickCount + 1 }).where(eq(adBanners.id, id));
+  }
+}
+
 export { eq, desc, asc, and, gt, isNull } from "drizzle-orm";
-export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation } from "../drizzle/schema";
+export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners } from "../drizzle/schema";

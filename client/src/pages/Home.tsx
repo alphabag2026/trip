@@ -40,6 +40,14 @@ export default function Home() {
   const { user, isAuthenticated, logout } = useAuth();
   const { t } = useTranslation();
 
+  // DB에서 활성 광고 배너 불러오기
+  const { data: adBanners } = trpc.adBanner.list.useQuery(
+    { activeOnly: true },
+    { refetchOnWindowFocus: false }
+  );
+  const trackClick = trpc.adBanner.trackClick.useMutation();
+  const getAdByPosition = (pos: string) => (adBanners || []).find((b: any) => b.position === pos);
+
   const { data: onboardingStatus } = trpc.userProfile.onboardingStatus.useQuery(
     undefined,
     { enabled: isAuthenticated, retry: false, refetchOnWindowFocus: false }
@@ -258,21 +266,30 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Ad Banner 1 - Travel Destination */}
-          <section className="py-4 bg-muted/30">
-            <div className="container">
-              <a href="https://www.trip.com" target="_blank" rel="noopener noreferrer" className="block relative rounded-xl overflow-hidden group cursor-pointer">
-                <img src={IMAGES.adTravel} alt="Travel destinations" className="w-full h-32 md:h-48 object-cover transition-transform duration-500 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center">
-                  <div className="px-8">
-                    <Badge className="bg-amber-500 text-white mb-2 text-xs">AD</Badge>
-                    <h3 className="text-white text-lg md:text-2xl font-bold mb-1">{t("home.ad_travel_title", "꿈의 여행지를 찾아보세요")}</h3>
-                    <p className="text-white/80 text-sm hidden md:block">{t("home.ad_travel_desc", "전 세계 최저가 항공권 & 호텔 예약")}</p>
-                  </div>
+          {/* Ad Banner 1 - Dynamic from DB (hero_top) */}
+          {(() => {
+            const ad1 = getAdByPosition("hero_top");
+            const imgSrc = ad1?.imageUrl || IMAGES.adTravel;
+            const linkUrl = ad1?.linkUrl || "https://www.trip.com";
+            const title = ad1?.title || t("home.ad_travel_title", "꾿의 여행지를 찾아보세요");
+            const desc = ad1?.description || t("home.ad_travel_desc", "전 세계 최저가 항공권 & 호텔 예약");
+            return (
+              <section className="py-4 bg-muted/30">
+                <div className="container">
+                  <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="block relative rounded-xl overflow-hidden group cursor-pointer" onClick={() => ad1 && trackClick.mutate({ id: ad1.id })}>
+                    <img src={imgSrc} alt={title} className="w-full h-32 md:h-48 object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center">
+                      <div className="px-8">
+                        <Badge className="bg-amber-500 text-white mb-2 text-xs">AD</Badge>
+                        <h3 className="text-white text-lg md:text-2xl font-bold mb-1">{title}</h3>
+                        <p className="text-white/80 text-sm hidden md:block">{desc}</p>
+                      </div>
+                    </div>
+                  </a>
                 </div>
-              </a>
-            </div>
-          </section>
+              </section>
+            );
+          })()}
 
           {/* Feature Showcase - Image + Text Alternating */}
           <section id="features" className="py-20">
@@ -359,32 +376,45 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Ad Banner 2 - Hotel (Side by Side with Cruise) */}
-          <section className="py-4 bg-muted/30">
-            <div className="container">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <a href="https://www.booking.com" target="_blank" rel="noopener noreferrer" className="md:col-span-2 block relative rounded-xl overflow-hidden group cursor-pointer">
-                  <img src={IMAGES.adHotel} alt="Luxury hotel" className="w-full h-40 md:h-52 object-cover transition-transform duration-500 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                    <div className="p-6">
-                      <Badge className="bg-amber-500 text-white mb-2 text-xs">AD</Badge>
-                      <h3 className="text-white text-lg md:text-xl font-bold mb-1">{t("home.ad_hotel_title", "특급 호텔 최대 40% 할인")}</h3>
-                      <p className="text-white/80 text-sm">{t("home.ad_hotel_desc", "전 세계 프리미엄 호텔을 특별 가격에 만나보세요")}</p>
-                    </div>
+          {/* Ad Banner 2 - Dynamic from DB (middle_left + middle_right) */}
+          {(() => {
+            const adLeft = getAdByPosition("middle_left");
+            const adRight = getAdByPosition("middle_right");
+            const leftImg = adLeft?.imageUrl || IMAGES.adHotel;
+            const leftLink = adLeft?.linkUrl || "https://www.booking.com";
+            const leftTitle = adLeft?.title || t("home.ad_hotel_title", "특급 호텔 최대 40% 할인");
+            const leftDesc = adLeft?.description || t("home.ad_hotel_desc", "전 세계 프리미엄 호텔을 특별 가격에 만나보세요");
+            const rightImg = adRight?.imageUrl || IMAGES.adCruise;
+            const rightLink = adRight?.linkUrl || "https://www.klook.com";
+            const rightTitle = adRight?.title || t("home.ad_cruise_title", "크루즈 여행");
+            return (
+              <section className="py-4 bg-muted/30">
+                <div className="container">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <a href={leftLink} target="_blank" rel="noopener noreferrer" className="md:col-span-2 block relative rounded-xl overflow-hidden group cursor-pointer" onClick={() => adLeft && trackClick.mutate({ id: adLeft.id })}>
+                      <img src={leftImg} alt={leftTitle} className="w-full h-40 md:h-52 object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+                        <div className="p-6">
+                          <Badge className="bg-amber-500 text-white mb-2 text-xs">AD</Badge>
+                          <h3 className="text-white text-lg md:text-xl font-bold mb-1">{leftTitle}</h3>
+                          <p className="text-white/80 text-sm">{leftDesc}</p>
+                        </div>
+                      </div>
+                    </a>
+                    <a href={rightLink} target="_blank" rel="noopener noreferrer" className="block relative rounded-xl overflow-hidden group cursor-pointer" onClick={() => adRight && trackClick.mutate({ id: adRight.id })}>
+                      <img src={rightImg} alt={rightTitle} className="w-full h-40 md:h-52 object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+                        <div className="p-4">
+                          <Badge className="bg-amber-500 text-white mb-2 text-xs">AD</Badge>
+                          <h3 className="text-white text-base font-bold">{rightTitle}</h3>
+                        </div>
+                      </div>
+                    </a>
                   </div>
-                </a>
-                <a href="https://www.klook.com" target="_blank" rel="noopener noreferrer" className="block relative rounded-xl overflow-hidden group cursor-pointer">
-                  <img src={IMAGES.adCruise} alt="Cruise trip" className="w-full h-40 md:h-52 object-cover transition-transform duration-500 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                    <div className="p-4">
-                      <Badge className="bg-amber-500 text-white mb-2 text-xs">AD</Badge>
-                      <h3 className="text-white text-base font-bold">{t("home.ad_cruise_title", "크루즈 여행")}</h3>
-                    </div>
-                  </div>
-                </a>
-              </div>
-            </div>
-          </section>
+                </div>
+              </section>
+            );
+          })()}
 
           {/* Roles Section with Images */}
           <section id="roles" className="py-20">
@@ -611,16 +641,24 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Ad Banner for authenticated users */}
-                <a href="https://www.trip.com" target="_blank" rel="noopener noreferrer" className="block relative rounded-xl overflow-hidden group cursor-pointer mb-6">
-                  <img src={IMAGES.adTravel} alt="Travel destinations" className="w-full h-28 md:h-36 object-cover transition-transform duration-500 group-hover:scale-105" />
+                {/* Ad Banner for authenticated users - Dynamic from DB (bottom) */}
+                {(() => {
+                  const adBottom = getAdByPosition("bottom");
+                  const bImg = adBottom?.imageUrl || IMAGES.adTravel;
+                  const bLink = adBottom?.linkUrl || "https://www.trip.com";
+                  const bTitle = adBottom?.title || t("home.ad_travel_title", "꾿의 여행지를 찾아보세요");
+                  return (
+                <a href={bLink} target="_blank" rel="noopener noreferrer" className="block relative rounded-xl overflow-hidden group cursor-pointer mb-6" onClick={() => adBottom && trackClick.mutate({ id: adBottom.id })}>
+                  <img src={bImg} alt={bTitle} className="w-full h-28 md:h-36 object-cover transition-transform duration-500 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center">
                     <div className="px-6">
                       <Badge className="bg-amber-500 text-white mb-1 text-xs">AD</Badge>
-                      <h3 className="text-white text-base md:text-lg font-bold">{t("home.ad_travel_title", "꿈의 여행지를 찾아보세요")}</h3>
+                      <h3 className="text-white text-base md:text-lg font-bold">{bTitle}</h3>
                     </div>
                   </div>
                 </a>
+                  );
+                })()}
               </div>
             </div>
           </section>

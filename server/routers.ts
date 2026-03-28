@@ -4782,6 +4782,220 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         return db.getMeetupExpenseSummary(input.meetupId);
       }),
   }),
+  // ── Super Admin: Account Creation & Delegation ──────────────────
+  superAdmin: router({
+    createOrganizerAccount: superadminProcedure
+      .input(z.object({
+        email: z.string().email(),
+        name: z.string().min(1),
+        password: z.string().min(6),
+        role: z.enum(["organizer", "agency", "partner"]),
+        organizationName: z.string().min(1),
+        organizationType: z.enum(["organizer", "agency", "partner"]),
+        contactEmail: z.string().optional(),
+        contactPhone: z.string().optional(),
+        description: z.string().optional(),
+        website: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const allUsers = await db.getAllUsers();
+        const existing = allUsers.find((u: any) => u.email === input.email);
+        if (existing) throw new TRPCError({ code: "CONFLICT", message: "이미 사용 중인 이메일입니다" });
+        const hash = await bcrypt.hash(input.password, 12);
+        const result = await db.createOrganizerAccount({
+          email: input.email,
+          name: input.name,
+          passwordHash: hash,
+          role: input.role,
+          organizationName: input.organizationName,
+          organizationType: input.organizationType,
+          contactEmail: input.contactEmail,
+          contactPhone: input.contactPhone,
+          description: input.description,
+          website: input.website,
+        });
+        if (!result) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "계정 생성 실패" });
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          userName: ctx.user.name || "Unknown",
+          action: "account_create",
+          targetType: "user",
+          targetId: result.userId,
+          targetName: input.name,
+          details: { email: input.email, role: input.role, organizationName: input.organizationName },
+        });
+        await db.createRoleDelegation({
+          fromUserId: ctx.user.id,
+          toUserId: result.userId,
+          organizationId: result.organizationId,
+          delegationType: "admin_grant",
+          fromRole: "superadmin",
+          toRole: input.role,
+          notes: `슈퍼관리자가 ${input.role} 계정 생성: ${input.name} (${input.email})`,
+          delegatedBy: ctx.user.id,
+        });
+        return { success: true, userId: result.userId, organizationId: result.organizationId };
+      }),
+    delegateRole: superadminProcedure
+      .input(z.object({
+        userId: z.number(),
+        newRole: z.enum(["user", "admin", "superadmin", "organizer", "agency", "partner"]),
+        organizationId: z.number().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const allUsers = await db.getAllUsers();
+        const targetUser = allUsers.find((u: any) => u.id === input.userId);
+        if (!targetUser) throw new TRPCError({ code: "NOT_FOUND", message: "사용자를 찾을 수 없습니다" });
+        const oldRole = targetUser.role;
+        await db.updateUserRole(input.userId, input.newRole, input.organizationId);
+        await db.createRoleDelegation({
+          fromUserId: ctx.user.id,
+          toUserId: input.userId,
+          organizationId: input.organizationId || null,
+          delegationType: "role_change",
+          fromRole: oldRole,
+          toRole: input.newRole,
+          notes: input.notes || `역할 변경: ${oldRole} → ${input.newRole}`,
+          delegatedBy: ctx.user.id,
+        });
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          userName: ctx.user.name || "Unknown",
+          action: "role_change",
+          targetType: "user",
+          targetId: input.userId,
+          targetName: targetUser.name || "Unknown",
+          details: { oldRole, newRole: input.newRole, organizationId: input.organizationId },
+        });
+        return { success: true };
+      }),
+    delegationHistory: superadminProcedure
+      .input(z.object({
+        organizationId: z.number().optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return db.getRoleDelegations(input);
+      }),
+    resetPassword: superadminProcedure
+      .input(z.object({
+        userId: z.number(),
+        newPassword: z.string().min(6),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const allUsers = await db.getAllUsers();
+        const targetUser = allUsers.find((u: any) => u.id === input.userId);
+        if (!targetUser) throw new TRPCError({ code: "NOT_FOUND", message: "사용자를 찾을 수 없습니다" });
+        const hash = await bcrypt.hash(input.newPassword, 12);
+        const dbInst = await db.getDbInstance();
+        if (dbInst) {
+          const { users: usersTable } = await import("../drizzle/schema");
+          const { eq } = await import("drizzle-orm");
+          await dbInst.update(usersTable).set({ passwordHash: hash }).where(eq(usersTable.id, input.userId));
+        }
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          userName: ctx.user.name || "Unknown",
+          action: "password_reset",
+          targetType: "user",
+          targetId: input.userId,
+          targetName: targetUser.name || "Unknown",
+          details: { resetBy: "superadmin" },
+        });
+        return { success: true };
+      }),
+  }),
+  // ── Ad Banner Management ──────────────────────────────────────
+  adBanner: router({
+    list: publicProcedure
+      .input(z.object({
+        position: z.string().optional(),
+        activeOnly: z.boolean().optional(),
+      }))
+      .query(async ({ input }) => {
+        return db.getAdBanners(input);
+      }),
+    get: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getAdBannerById(input.id);
+      }),
+    create: adminProcedure
+      .input(z.object({
+        position: z.enum(["hero_top", "middle_left", "middle_right", "bottom", "sidebar"]),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        imageUrl: z.string(),
+        linkUrl: z.string().optional(),
+        linkText: z.string().optional(),
+        isActive: z.boolean().optional(),
+        sortOrder: z.number().optional(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await db.createAdBanner({ ...input, createdBy: ctx.user.id } as any);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          userName: ctx.user.name || "Unknown",
+          action: "banner_create",
+          targetType: "ad_banner",
+          targetId: result?.id || 0,
+          targetName: input.title || "Untitled",
+          details: { position: input.position },
+        });
+        return result;
+      }),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        position: z.enum(["hero_top", "middle_left", "middle_right", "bottom", "sidebar"]).optional(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        imageUrl: z.string().optional(),
+        linkUrl: z.string().optional(),
+        linkText: z.string().optional(),
+        isActive: z.boolean().optional(),
+        sortOrder: z.number().optional(),
+        startDate: z.date().nullable().optional(),
+        endDate: z.date().nullable().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        await db.updateAdBanner(id, data as any);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          userName: ctx.user.name || "Unknown",
+          action: "banner_update",
+          targetType: "ad_banner",
+          targetId: id,
+          details: data,
+        });
+        return { success: true };
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteAdBanner(input.id);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          userName: ctx.user.name || "Unknown",
+          action: "banner_delete",
+          targetType: "ad_banner",
+          targetId: input.id,
+          details: {},
+        });
+        return { success: true };
+      }),
+    trackClick: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.incrementAdBannerClick(input.id);
+        return { success: true };
+      }),
+  }),
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────
 async function parseTravelInfoWithLLM(text: string, fileType: string) {

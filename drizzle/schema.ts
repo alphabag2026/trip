@@ -1060,9 +1060,10 @@ export const auditLogs = mysqlTable("audit_logs", {
   action: mysqlEnum("action", [
     "role_change", "org_create", "org_update", "org_delete", "org_toggle_active",
     "member_add", "member_remove", "member_role_change", "ownership_transfer",
-    "user_ban", "user_unban", "settings_change", "data_export", "data_delete"
+    "user_ban", "user_unban", "settings_change", "data_export", "data_delete",
+    "account_create", "password_reset", "banner_create", "banner_update", "banner_delete"
   ]).notNull(),
-  targetType: mysqlEnum("targetType", ["user", "organization", "member", "partner", "meetup", "system"]).notNull(),
+  targetType: mysqlEnum("targetType", ["user", "organization", "member", "partner", "meetup", "system", "ad_banner"]).notNull(),
   targetId: int("targetId"), // 대상 ID
   targetName: varchar("targetName", { length: 255 }), // 대상 이름 (비정규화)
   details: json("details"), // 변경 전/후 데이터 JSON
@@ -1275,3 +1276,41 @@ export const invitationStatistics = mysqlTable("invitation_statistics", {
 });
 export type InvitationStatistics = typeof invitationStatistics.$inferSelect;
 export type InsertInvitationStatistics = typeof invitationStatistics.$inferInsert;
+
+// ── Role Delegations (권한 위임 이력) ──────────────────────
+export const roleDelegations = mysqlTable("role_delegations", {
+  id: int("id").autoincrement().primaryKey(),
+  fromUserId: int("fromUserId").notNull(),
+  toUserId: int("toUserId").notNull(),
+  organizationId: int("organizationId"),
+  delegationType: mysqlEnum("delegationType", ["ownership_transfer", "admin_grant", "admin_revoke", "role_change"]).notNull(),
+  fromRole: varchar("fromRole", { length: 50 }),
+  toRole: varchar("toRole", { length: 50 }),
+  notes: text("notes"),
+  delegatedBy: int("delegatedBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type RoleDelegation = typeof roleDelegations.$inferSelect;
+export type InsertRoleDelegation = typeof roleDelegations.$inferInsert;
+
+// ── Ad Banners (광고 배너 관리) ──────────────────────
+export const adBanners = mysqlTable("ad_banners", {
+  id: int("id").autoincrement().primaryKey(),
+  position: mysqlEnum("position", ["hero_top", "middle_left", "middle_right", "bottom", "sidebar"]).notNull(),
+  title: varchar("title", { length: 200 }),
+  description: text("description"),
+  imageUrl: text("imageUrl").notNull(),
+  linkUrl: text("linkUrl"),
+  linkText: varchar("linkText", { length: 100 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  startDate: timestamp("startDate"),
+  endDate: timestamp("endDate"),
+  clickCount: int("clickCount").default(0).notNull(),
+  impressionCount: int("impressionCount").default(0).notNull(),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AdBanner = typeof adBanners.$inferSelect;
+export type InsertAdBanner = typeof adBanners.$inferInsert;
