@@ -15,7 +15,8 @@ import {
   CalendarDays, UserPlus, Shield, AlertTriangle,
   BarChart3, TrendingUp, Activity, Edit, Trash2,
   Phone, Mail, ExternalLink, Plus, ScrollText,
-  ArrowRightLeft, UserCog, Power, ChevronDown, ChevronUp
+  ArrowRightLeft, UserCog, Power, ChevronDown, ChevronUp,
+  ClipboardCheck, CheckCircle2, XCircle, Clock, PieChart, MousePointerClick
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -144,7 +145,7 @@ function DonutChart({ data, size = 200, strokeWidth = 32 }: {
 
 export default function PlatformDashboard() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<"overview" | "organizations" | "users" | "accounts" | "audit">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "organizations" | "users" | "accounts" | "audit" | "approvals" | "analytics">("overview");
   const [orgFilter, setOrgFilter] = useState<string>("all");
   const [showOrgDialog, setShowOrgDialog] = useState(false);
   const [editingOrgId, setEditingOrgId] = useState<number | null>(null);
@@ -431,6 +432,8 @@ export default function PlatformDashboard() {
           { key: "organizations", label: "조직 관리", icon: Building2 },
           { key: "users", label: "사용자 관리", icon: Users },
           { key: "accounts", label: "계정 생성/위임", icon: UserPlus },
+          { key: "approvals", label: "주최자 승인", icon: ClipboardCheck },
+          { key: "analytics", label: "통계/분석", icon: PieChart },
           { key: "audit", label: "감사 로그", icon: ScrollText },
         ].map(tab => (
           <Button
@@ -860,6 +863,12 @@ export default function PlatformDashboard() {
           </Card>
         </div>
       )}
+
+      {/* ════════════════════ Organizer Approvals Tab ════════════════════ */}
+      {activeTab === "approvals" && <OrganizerApprovalsTab />}
+
+      {/* ════════════════════ Analytics Tab ════════════════════ */}
+      {activeTab === "analytics" && <AnalyticsTab />}
 
       {/* ════════════════════ Audit Log Tab ════════════════════ */}
       {activeTab === "audit" && (
@@ -1312,5 +1321,361 @@ function OrgCard({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+// ════════════════════ Organizer Approvals Tab Component ════════════════════
+function OrganizerApprovalsTab() {
+  const [filter, setFilter] = useState<string>("pending");
+  const [rejectNote, setRejectNote] = useState("");
+  const [rejectingId, setRejectingId] = useState<number | null>(null);
+  const [reviewNote, setReviewNote] = useState("");
+
+  const approvalsQuery = trpc.organizerApproval.list.useQuery(
+    filter === "all" ? undefined : { status: filter as any }
+  );
+  const utils = trpc.useUtils();
+
+  const approveMutation = trpc.organizerApproval.approve.useMutation({
+    onSuccess: () => {
+      toast.success("주최자 승인이 완료되었습니다");
+      utils.organizerApproval.list.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const rejectMutation = trpc.organizerApproval.reject.useMutation({
+    onSuccess: () => {
+      toast.success("주최자 신청이 거절되었습니다");
+      setRejectingId(null);
+      setRejectNote("");
+      utils.organizerApproval.list.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const statusBadge = (status: string) => {
+    switch (status) {
+      case "pending": return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300"><Clock className="h-3 w-3 mr-1" />대기중</Badge>;
+      case "approved": return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"><CheckCircle2 className="h-3 w-3 mr-1" />승인됨</Badge>;
+      case "rejected": return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"><XCircle className="h-3 w-3 mr-1" />거절됨</Badge>;
+      default: return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const roleLabel = (role: string) => {
+    switch (role) {
+      case "organizer": return "주최자";
+      case "agency": return "여행사";
+      case "partner": return "파트너";
+      default: return role;
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <Select value={filter} onValueChange={setFilter}>
+          <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pending">대기중</SelectItem>
+            <SelectItem value="approved">승인됨</SelectItem>
+            <SelectItem value="rejected">거절됨</SelectItem>
+            <SelectItem value="all">전체</SelectItem>
+          </SelectContent>
+        </Select>
+        <span className="text-sm text-muted-foreground">
+          총 {approvalsQuery.data?.length || 0}건
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        {approvalsQuery.isLoading ? (
+          <Card><CardContent className="py-8 text-center text-muted-foreground">로딩 중...</CardContent></Card>
+        ) : approvalsQuery.data && approvalsQuery.data.length > 0 ? (
+          approvalsQuery.data.map((approval: any) => (
+            <Card key={approval.id} className="overflow-hidden">
+              <CardContent className="pt-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                      {statusBadge(approval.status)}
+                      <Badge variant="outline">{roleLabel(approval.userRole)}</Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(approval.createdAt).toLocaleString("ko-KR")}
+                      </span>
+                    </div>
+                    <h4 className="font-semibold text-sm">{approval.userName}</h4>
+                    <p className="text-xs text-muted-foreground">{approval.userEmail}</p>
+                    {approval.organizationName && (
+                      <p className="text-xs mt-1"><Building2 className="h-3 w-3 inline mr-1" />{approval.organizationName}</p>
+                    )}
+                    <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
+                      {approval.businessNumber && <span>사업자번호: {approval.businessNumber}</span>}
+                      {approval.businessType && <span>업종: {approval.businessType}</span>}
+                      {approval.experience && <span>경험: {approval.experience}</span>}
+                      {approval.teamSize && <span>팀 규모: {approval.teamSize}명</span>}
+                    </div>
+                    {approval.reviewNote && (
+                      <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
+                        <span className="font-medium">검토 메모:</span> {approval.reviewNote}
+                      </div>
+                    )}
+                  </div>
+                  {approval.status === "pending" && (
+                    <div className="flex flex-col gap-2 shrink-0">
+                      <div className="space-y-1">
+                        <Input
+                          placeholder="승인 메모 (선택)"
+                          value={reviewNote}
+                          onChange={(e) => setReviewNote(e.target.value)}
+                          className="h-7 text-xs w-48"
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        className="gap-1 bg-green-600 hover:bg-green-700"
+                        onClick={() => approveMutation.mutate({ id: approval.id, reviewNote: reviewNote || undefined })}
+                        disabled={approveMutation.isPending}
+                      >
+                        <CheckCircle2 className="h-3 w-3" />승인
+                      </Button>
+                      {rejectingId === approval.id ? (
+                        <div className="space-y-1">
+                          <Input
+                            placeholder="거절 사유 (필수)"
+                            value={rejectNote}
+                            onChange={(e) => setRejectNote(e.target.value)}
+                            className="h-7 text-xs w-48"
+                          />
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm" variant="destructive" className="gap-1 flex-1 text-xs h-7"
+                              onClick={() => rejectMutation.mutate({ id: approval.id, reviewNote: rejectNote })}
+                              disabled={!rejectNote.trim() || rejectMutation.isPending}
+                            >
+                              확인
+                            </Button>
+                            <Button
+                              size="sm" variant="ghost" className="text-xs h-7"
+                              onClick={() => { setRejectingId(null); setRejectNote(""); }}
+                            >
+                              취소
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button
+                          size="sm" variant="outline" className="gap-1 text-destructive border-destructive/30"
+                          onClick={() => setRejectingId(approval.id)}
+                        >
+                          <XCircle className="h-3 w-3" />거절
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Card><CardContent className="py-8 text-center text-muted-foreground">승인 요청이 없습니다</CardContent></Card>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════ Analytics Tab Component ════════════════════
+function AnalyticsTab() {
+  const kpisQuery = trpc.dashboardStats.kpis.useQuery();
+  const registrationQuery = trpc.dashboardStats.registrationTrend.useQuery();
+  const roleQuery = trpc.dashboardStats.roleDistribution.useQuery();
+  const adStatsQuery = trpc.dashboardStats.adBannerStats.useQuery();
+
+  const positionLabel = (pos: string) => {
+    switch (pos) {
+      case "hero_top": return "히어로 상단";
+      case "middle_left": return "중간 좌측";
+      case "middle_right": return "중간 우측";
+      case "bottom": return "하단";
+      case "sidebar": return "사이드바";
+      default: return pos;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/40">
+                <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">전체 사용자</p>
+                <p className="text-xl font-bold">{kpisQuery.data?.totalUsers || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/40">
+                <Activity className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">활성 밋업</p>
+                <p className="text-xl font-bold">{kpisQuery.data?.activeMeetups || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/40">
+                <TrendingUp className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">신규 가입 (7일)</p>
+                <p className="text-xl font-bold">{kpisQuery.data?.newSignups || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/40">
+                <ClipboardCheck className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">승인 대기</p>
+                <p className="text-xl font-bold">{kpisQuery.data?.pendingApprovals || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Registration Trend */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            최근 30일 가입 추이
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {registrationQuery.data && registrationQuery.data.length > 0 ? (
+            <div className="space-y-2">
+              <div className="flex items-end gap-1 h-32">
+                {registrationQuery.data.map((item: any, idx: number) => {
+                  const maxCount = Math.max(...registrationQuery.data!.map((d: any) => Number(d.count)));
+                  const height = maxCount > 0 ? (Number(item.count) / maxCount) * 100 : 0;
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-1" title={`${item.date}: ${item.count}명`}>
+                      <span className="text-[10px] text-muted-foreground">{Number(item.count)}</span>
+                      <div
+                        className="w-full bg-blue-500 dark:bg-blue-400 rounded-t-sm min-h-[2px] transition-all"
+                        style={{ height: `${Math.max(height, 2)}%` }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-between text-[10px] text-muted-foreground">
+                <span>{registrationQuery.data[0]?.date}</span>
+                <span>{registrationQuery.data[registrationQuery.data.length - 1]?.date}</span>
+              </div>
+            </div>
+          ) : (
+            <p className="text-center py-8 text-muted-foreground text-sm">데이터가 없습니다</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Role Distribution + Ad Banner Stats */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Role Distribution */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <PieChart className="h-4 w-4" />
+              사용자 역할 분포
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {roleQuery.data && roleQuery.data.length > 0 ? (
+              <div className="space-y-2">
+                {roleQuery.data.map((item: any, idx: number) => {
+                  const total = roleQuery.data!.reduce((sum: number, d: any) => sum + Number(d.count), 0);
+                  const pct = total > 0 ? ((Number(item.count) / total) * 100).toFixed(1) : "0";
+                  const colors = ["bg-blue-500", "bg-green-500", "bg-amber-500", "bg-purple-500", "bg-red-500", "bg-cyan-500"];
+                  const roleLabels: Record<string, string> = {
+                    user: "일반 사용자", admin: "관리자", superadmin: "슈퍼관리자",
+                    organizer: "주최자", agency: "여행사", partner: "파트너",
+                  };
+                  return (
+                    <div key={idx} className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${colors[idx % colors.length]}`} />
+                      <span className="text-sm flex-1">{roleLabels[item.role] || item.role}</span>
+                      <span className="text-sm font-medium">{Number(item.count)}명</span>
+                      <span className="text-xs text-muted-foreground w-12 text-right">{pct}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-center py-8 text-muted-foreground text-sm">데이터가 없습니다</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Ad Banner Click Stats */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <MousePointerClick className="h-4 w-4" />
+              광고 배너 클릭 통계
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {adStatsQuery.data && adStatsQuery.data.length > 0 ? (
+              <div className="space-y-3">
+                {adStatsQuery.data.map((ad: any) => (
+                  <div key={ad.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{ad.title || "제목 없음"}</p>
+                      <p className="text-xs text-muted-foreground">{positionLabel(ad.position)}</p>
+                    </div>
+                    <div className="flex items-center gap-4 text-right shrink-0">
+                      <div>
+                        <p className="text-sm font-bold">{Number(ad.clickCount).toLocaleString()}</p>
+                        <p className="text-[10px] text-muted-foreground">클릭</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold">{Number(ad.impressionCount).toLocaleString()}</p>
+                        <p className="text-[10px] text-muted-foreground">노출</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-blue-600 dark:text-blue-400">{ad.ctr}%</p>
+                        <p className="text-[10px] text-muted-foreground">CTR</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center py-8 text-muted-foreground text-sm">광고 데이터가 없습니다</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

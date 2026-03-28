@@ -328,6 +328,25 @@ export const appRouter = router({
             console.error("[Register] Failed to create organization:", orgErr);
           }
         }
+        // If organizer/agency/partner, create approval request (pending)
+        if (input.accountType !== "personal") {
+          try {
+            await db.createOrganizerApproval({
+              userId: user.id,
+              userName: input.name,
+              userEmail: input.email,
+              userRole: input.accountType as "organizer" | "agency" | "partner",
+              organizationName: input.organizationName || null,
+              businessNumber: input.businessRegistration || null,
+              businessType: input.businessType || null,
+              experience: input.eventExperience || null,
+              teamSize: input.teamSize ? String(input.teamSize) : null,
+              status: "pending",
+            });
+          } catch (approvalErr) {
+            console.error("[Register] Failed to create approval:", approvalErr);
+          }
+        }
         // Auto-login after registration
         const sessionToken = await sdk.createSessionToken(user.openId, { name: user.name || "", expiresInMs: ONE_YEAR_MS });
         const cookieOptions = getSessionCookieOptions(ctx.req);
@@ -4995,6 +5014,75 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         await db.incrementAdBannerClick(input.id);
         return { success: true };
       }),
+  }),
+
+  // ── Organizer Approval Workflow ──
+  organizerApproval: router({
+    // Get all approvals (admin only)
+    list: superadminProcedure
+      .input(z.object({ status: z.enum(["pending", "approved", "rejected"]).optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getOrganizerApprovals(input?.status);
+      }),
+    // Get my approval status (for organizer users)
+    myStatus: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getOrganizerApprovalByUserId(ctx.user.id);
+    }),
+    // Approve organizer
+    approve: superadminProcedure
+      .input(z.object({ id: z.number(), reviewNote: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        const approval = await db.getOrganizerApprovals();
+        const target = approval.find(a => a.id === input.id);
+        if (!target) throw new TRPCError({ code: "NOT_FOUND", message: "승인 요청을 찾을 수 없습니다" });
+        if (target.status !== "pending") throw new TRPCError({ code: "BAD_REQUEST", message: "이미 처리된 요청입니다" });
+        await db.updateOrganizerApproval(input.id, {
+          status: "approved",
+          reviewNote: input.reviewNote || null,
+          reviewedBy: ctx.user.id,
+          reviewedAt: new Date(),
+        });
+        // Update user's isApproved status
+        const dbInstance = await db.getDb();
+        if (dbInstance && target.userId) {
+          const { users: usersTable } = await import("../drizzle/schema");
+          const { eq: eqOp } = await import("drizzle-orm");
+          await dbInstance.update(usersTable).set({ isApproved: true }).where(eqOp(usersTable.id, target.userId));
+        }
+        return { success: true };
+      }),
+    // Reject organizer
+    reject: superadminProcedure
+      .input(z.object({ id: z.number(), reviewNote: z.string().min(1, "거절 사유를 입력해주세요") }))
+      .mutation(async ({ input, ctx }) => {
+        const approval = await db.getOrganizerApprovals();
+        const target = approval.find(a => a.id === input.id);
+        if (!target) throw new TRPCError({ code: "NOT_FOUND", message: "승인 요청을 찾을 수 없습니다" });
+        if (target.status !== "pending") throw new TRPCError({ code: "BAD_REQUEST", message: "이미 처리된 요청입니다" });
+        await db.updateOrganizerApproval(input.id, {
+          status: "rejected",
+          reviewNote: input.reviewNote,
+          reviewedBy: ctx.user.id,
+          reviewedAt: new Date(),
+        });
+        return { success: true };
+      }),
+  }),
+
+  // ── Dashboard Statistics ──
+  dashboardStats: router({
+    kpis: superadminProcedure.query(async () => {
+      return await db.getDashboardKPIs();
+    }),
+    registrationTrend: superadminProcedure.query(async () => {
+      return await db.getUserRegistrationStats();
+    }),
+    roleDistribution: superadminProcedure.query(async () => {
+      return await db.getUserRoleDistribution();
+    }),
+    adBannerStats: superadminProcedure.query(async () => {
+      return await db.getAdBannerClickStats();
+    }),
   }),
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────

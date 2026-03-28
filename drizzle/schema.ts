@@ -13,6 +13,7 @@ export const users = mysqlTable("users", {
   totpSecret: varchar("totpSecret", { length: 255 }),
   totpEnabled: boolean("totpEnabled").default(false).notNull(),
   emailVerified: boolean("emailVerified").default(false).notNull(),
+  isApproved: boolean("isApproved").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -1314,3 +1315,26 @@ export const adBanners = mysqlTable("ad_banners", {
 });
 export type AdBanner = typeof adBanners.$inferSelect;
 export type InsertAdBanner = typeof adBanners.$inferInsert;
+
+// ── Organizer Approvals (주최자 승인 워크플로우) ──────────────────────
+export const organizerApprovals = mysqlTable("organizer_approvals", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  userName: varchar("userName", { length: 255 }),
+  userEmail: varchar("userEmail", { length: 255 }),
+  userRole: mysqlEnum("userRole", ["organizer", "agency", "partner"]).notNull(),
+  organizationId: int("organizationId"),
+  organizationName: varchar("organizationName", { length: 255 }),
+  businessNumber: varchar("businessNumber", { length: 50 }),
+  businessType: varchar("businessType", { length: 100 }),
+  experience: varchar("experience", { length: 50 }),
+  teamSize: varchar("teamSize", { length: 50 }),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  reviewNote: text("reviewNote"),
+  reviewedBy: int("reviewedBy"),
+  reviewedAt: timestamp("reviewedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type OrganizerApproval = typeof organizerApprovals.$inferSelect;
+export type InsertOrganizerApproval = typeof organizerApprovals.$inferInsert;

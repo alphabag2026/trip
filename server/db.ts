@@ -41,6 +41,7 @@ import {
   onboardingProgress, OnboardingProgress,
   roleDelegations, InsertRoleDelegation,
   adBanners, InsertAdBanner,
+  organizerApprovals, InsertOrganizerApproval,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -2437,5 +2438,84 @@ export async function incrementAdBannerClick(id: number) {
   }
 }
 
-export { eq, desc, asc, and, gt, isNull } from "drizzle-orm";
-export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners } from "../drizzle/schema";
+// ── Organizer Approvals ──────────────────────
+export async function createOrganizerApproval(data: InsertOrganizerApproval) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(organizerApprovals).values(data);
+  return result[0].insertId;
+}
+export async function getOrganizerApprovals(status?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(organizerApprovals).orderBy(desc(organizerApprovals.createdAt));
+  if (status) {
+    return await db.select().from(organizerApprovals).where(eq(organizerApprovals.status, status as any)).orderBy(desc(organizerApprovals.createdAt));
+  }
+  return await query;
+}
+export async function getOrganizerApprovalByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(organizerApprovals).where(eq(organizerApprovals.userId, userId));
+  return rows[0] || null;
+}
+export async function updateOrganizerApproval(id: number, data: Partial<InsertOrganizerApproval>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(organizerApprovals).set(data).where(eq(organizerApprovals.id, id));
+}
+
+// ── Dashboard Statistics ──────────────────────
+export async function getUserRegistrationStats() {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.execute(sql`
+    SELECT DATE(createdAt) as date, COUNT(*) as count 
+    FROM users 
+    WHERE createdAt >= DATE_SUB(NOW(), INTERVAL 30 DAY) 
+    GROUP BY DATE(createdAt) 
+    ORDER BY date ASC
+  `);
+  return (result[0] as unknown as any[]) || [];
+}
+export async function getUserRoleDistribution() {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.execute(sql`
+    SELECT role, COUNT(*) as count 
+    FROM users 
+    GROUP BY role 
+    ORDER BY count DESC
+  `);
+  return (result[0] as unknown as any[]) || [];
+}
+export async function getAdBannerClickStats() {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.execute(sql`
+    SELECT id, title, position, clickCount, impressionCount,
+      CASE WHEN impressionCount > 0 THEN ROUND(clickCount * 100.0 / impressionCount, 2) ELSE 0 END as ctr
+    FROM ad_banners 
+    WHERE isActive = 1 
+    ORDER BY clickCount DESC
+  `);
+  return (result[0] as unknown as any[]) || [];
+}
+export async function getDashboardKPIs() {
+  const db = await getDb();
+  if (!db) return { totalUsers: 0, activeMeetups: 0, newSignups: 0, pendingApprovals: 0 };
+  const usersResult = await db.execute(sql`SELECT COUNT(*) as count FROM users`);
+  const meetupsResult = await db.execute(sql`SELECT COUNT(*) as count FROM meetups WHERE status = 'active'`);
+  const newResult = await db.execute(sql`SELECT COUNT(*) as count FROM users WHERE createdAt >= DATE_SUB(NOW(), INTERVAL 7 DAY)`);
+  const pendingResult = await db.execute(sql`SELECT COUNT(*) as count FROM organizer_approvals WHERE status = 'pending'`);
+  return {
+    totalUsers: (usersResult[0] as unknown as any[])[0]?.count || 0,
+    activeMeetups: (meetupsResult[0] as unknown as any[])[0]?.count || 0,
+    newSignups: (newResult[0] as unknown as any[])[0]?.count || 0,
+    pendingApprovals: (pendingResult[0] as unknown as any[])[0]?.count || 0,
+  };
+}
+
+export { eq, desc, asc, and, gt, isNull, sql } from "drizzle-orm";
+export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners, organizerApprovals } from "../drizzle/schema";
