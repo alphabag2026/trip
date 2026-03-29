@@ -45,6 +45,10 @@ import {
   vatRates, InsertVatRate,
   travelSearches, InsertTravelSearch,
   travelBookings, InsertTravelBooking,
+  paymentTransactions, InsertPaymentTransaction,
+  platformWallets, InsertPlatformWallet,
+  walletTransactions, InsertWalletTransaction,
+  paymentGatewayConfig, InsertPaymentGatewayConfig,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -2583,5 +2587,85 @@ export async function getTravelBookingStats() {
   };
 }
 
+// ══════════════════════════════════════════════════════════
+// v9.0 - Payment & Wallet Helpers
+// ══════════════════════════════════════════════════════════
+
+// ── Payment Gateway Config ──
+export async function getPaymentGateways() {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(paymentGatewayConfig).orderBy(asc(paymentGatewayConfig.sortOrder));
+}
+export async function getEnabledPaymentGateways() {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(paymentGatewayConfig).where(eq(paymentGatewayConfig.isEnabled, true)).orderBy(asc(paymentGatewayConfig.sortOrder));
+}
+export async function updatePaymentGateway(id: number, data: Partial<InsertPaymentGatewayConfig>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(paymentGatewayConfig).set(data).where(eq(paymentGatewayConfig.id, id));
+}
+
+// ── Payment Transactions ──
+export async function createPaymentTransaction(data: InsertPaymentTransaction) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(paymentTransactions).values(data);
+  return result[0].insertId;
+}
+export async function getPaymentTransaction(id: number) {
+  const db = await getDb(); if (!db) return null;
+  const result = await db.select().from(paymentTransactions).where(eq(paymentTransactions.id, id));
+  return result[0] || null;
+}
+export async function getPaymentTransactionByGatewayId(gatewayPaymentId: string) {
+  const db = await getDb(); if (!db) return null;
+  const result = await db.select().from(paymentTransactions).where(eq(paymentTransactions.gatewayPaymentId, gatewayPaymentId));
+  return result[0] || null;
+}
+export async function getPaymentTransactionByInvoiceId(gatewayInvoiceId: string) {
+  const db = await getDb(); if (!db) return null;
+  const result = await db.select().from(paymentTransactions).where(eq(paymentTransactions.gatewayInvoiceId, gatewayInvoiceId));
+  return result[0] || null;
+}
+export async function updatePaymentTransaction(id: number, data: Partial<InsertPaymentTransaction>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(paymentTransactions).set(data).where(eq(paymentTransactions.id, id));
+}
+export async function getUserPaymentTransactions(userId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(paymentTransactions).where(eq(paymentTransactions.userId, userId)).orderBy(desc(paymentTransactions.createdAt));
+}
+export async function getAllPaymentTransactions(filters?: { status?: string; method?: string }) {
+  const db = await getDb(); if (!db) return [];
+  const conditions: any[] = [];
+  if (filters?.status) conditions.push(eq(paymentTransactions.status, filters.status as any));
+  if (filters?.method) conditions.push(eq(paymentTransactions.method, filters.method as any));
+  return db.select().from(paymentTransactions).where(conditions.length ? and(...conditions) : undefined).orderBy(desc(paymentTransactions.createdAt));
+}
+
+// ── Platform Wallets ──
+export async function getOrCreateWallet(userId: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const existing = await db.select().from(platformWallets).where(eq(platformWallets.userId, userId));
+  if (existing[0]) return existing[0];
+  await db.insert(platformWallets).values({ userId, balance: "0", frozenBalance: "0", totalDeposited: "0", totalSpent: "0" });
+  const created = await db.select().from(platformWallets).where(eq(platformWallets.userId, userId));
+  return created[0];
+}
+export async function updateWalletBalance(walletId: number, data: Partial<InsertPlatformWallet>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(platformWallets).set(data).where(eq(platformWallets.id, walletId));
+}
+
+// ── Wallet Transactions ──
+export async function createWalletTransaction(data: InsertWalletTransaction) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(walletTransactions).values(data);
+  return result[0].insertId;
+}
+export async function getUserWalletTransactions(userId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(walletTransactions).where(eq(walletTransactions.userId, userId)).orderBy(desc(walletTransactions.createdAt));
+}
+
 export { eq, desc, asc, and, gt, isNull, sql } from "drizzle-orm";
-export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners, organizerApprovals, vatRates, travelSearches, travelBookings } from "../drizzle/schema";
+export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners, organizerApprovals, vatRates, travelSearches, travelBookings, paymentTransactions, platformWallets, walletTransactions, paymentGatewayConfig } from "../drizzle/schema";

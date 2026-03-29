@@ -1378,7 +1378,7 @@ export const travelBookings = mysqlTable("travel_bookings", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   bookingType: mysqlEnum("bookingType", ["hotel", "flight"]).notNull(),
-  status: mysqlEnum("status", ["pending", "confirmed", "cancelled", "completed", "refunded"]).default("pending").notNull(),
+  status: mysqlEnum("status", ["pending", "pending_payment", "confirmed", "cancelled", "completed", "refunded", "booking_failed", "ticketed"]).default("pending").notNull(),
   // Property/Flight info
   propertyName: varchar("propertyName", { length: 500 }),
   propertyAddress: varchar("propertyAddress", { length: 500 }),
@@ -1406,8 +1406,9 @@ export const travelBookings = mysqlTable("travel_bookings", {
   paymentWallet: varchar("paymentWallet", { length: 255 }),
   paymentStatus: mysqlEnum("paymentStatus", ["awaiting", "received", "confirmed", "failed"]).default("awaiting"),
   // External booking reference
-  externalProvider: varchar("externalProvider", { length: 100 }), // qunar, amadeus, trip.com
+  externalProvider: varchar("externalProvider", { length: 100 }), // mystifly, qunar, amadeus, trip.com
   externalBookingId: varchar("externalBookingId", { length: 255 }),
+  externalPnr: varchar("externalPnr", { length: 50 }), // Airline PNR
   externalBookingUrl: text("externalBookingUrl"),
   // Meta
   countryCode: varchar("countryCode", { length: 3 }),
@@ -1418,3 +1419,127 @@ export const travelBookings = mysqlTable("travel_bookings", {
 });
 export type TravelBooking = typeof travelBookings.$inferSelect;
 export type InsertTravelBooking = typeof travelBookings.$inferInsert;
+
+// ══════════════════════════════════════════════════════════
+// v9.0 - Payment Gateway & Platform Wallet Tables
+// ══════════════════════════════════════════════════════════
+
+// ── Payment Transactions (결제 트랜잭션 - NOWPayments/직접전송/자체화폐) ──
+export const paymentTransactions = mysqlTable("payment_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  bookingId: int("bookingId"), // travel_bookings.id
+  userId: int("userId").notNull(),
+  // Payment method
+  method: mysqlEnum("method", [
+    "nowpayments",      // NOWPayments 게이트웨이
+    "direct_usdt",      // 직접 USDT 전송
+    "platform_token",   // 자체 화폐/포인트
+    "visa_card",        // VISA 카드 (Crypto.com 등)
+    "mixed"             // 복합 결제
+  ]).notNull(),
+  // Amount info
+  amountUsdt: decimal("amountUsdt", { precision: 12, scale: 2 }).notNull(),
+  amountLocal: decimal("amountLocal", { precision: 12, scale: 2 }),
+  localCurrency: varchar("localCurrency", { length: 10 }),
+  amountPlatformToken: decimal("amountPlatformToken", { precision: 12, scale: 2 }).default("0"),
+  // Gateway-specific fields (NOWPayments)
+  gatewayPaymentId: varchar("gatewayPaymentId", { length: 255 }), // NOWPayments payment_id
+  gatewayInvoiceId: varchar("gatewayInvoiceId", { length: 255 }), // NOWPayments invoice_id
+  gatewayStatus: varchar("gatewayStatus", { length: 50 }),         // waiting, confirming, confirmed, sending, finished, failed, expired
+  gatewayPayUrl: text("gatewayPayUrl"),                            // NOWPayments hosted checkout URL
+  gatewayPayAddress: varchar("gatewayPayAddress", { length: 255 }),// deposit address
+  gatewayPayCurrency: varchar("gatewayPayCurrency", { length: 20 }),// e.g., usdttrc20
+  gatewayActuallyPaid: decimal("gatewayActuallyPaid", { precision: 12, scale: 6 }),
+  // Direct USDT transfer fields
+  txHash: varchar("txHash", { length: 255 }),
+  txNetwork: mysqlEnum("txNetwork", ["trc20", "erc20", "bep20", "polygon", "solana"]),
+  senderWallet: varchar("senderWallet", { length: 255 }),
+  receiverWallet: varchar("receiverWallet", { length: 255 }),
+  // Status
+  status: mysqlEnum("status", [
+    "created",      // 결제 생성됨
+    "pending",      // 결제 대기중
+    "confirming",   // 블록체인 확인중
+    "confirmed",    // 결제 확인됨
+    "completed",    // 완료
+    "failed",       // 실패
+    "expired",      // 만료
+    "refunded"      // 환불됨
+  ]).default("created").notNull(),
+  // Fee breakdown
+  gatewayFee: decimal("gatewayFee", { precision: 12, scale: 4 }).default("0"),     // NOWPayments 수수료
+  networkFee: decimal("networkFee", { precision: 12, scale: 4 }).default("0"),     // 블록체인 네트워크 수수료
+  platformFee: decimal("platformFee", { precision: 12, scale: 4 }).default("0"),   // 플랫폼 수수료
+  // Webhook data
+  webhookData: json("webhookData"),
+  // Meta
+  description: text("description"),
+  expiresAt: timestamp("expiresAt"),
+  confirmedAt: timestamp("confirmedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
+export type InsertPaymentTransaction = typeof paymentTransactions.$inferInsert;
+
+// ── Platform Wallets (자체 화폐/포인트 지갑) ──────────────────────
+export const platformWallets = mysqlTable("platform_wallets", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  balance: decimal("balance", { precision: 15, scale: 2 }).default("0").notNull(),
+  frozenBalance: decimal("frozenBalance", { precision: 15, scale: 2 }).default("0").notNull(), // 결제 진행중 동결
+  totalDeposited: decimal("totalDeposited", { precision: 15, scale: 2 }).default("0").notNull(),
+  totalSpent: decimal("totalSpent", { precision: 15, scale: 2 }).default("0").notNull(),
+  currency: varchar("currency", { length: 20 }).default("USDT").notNull(), // USDT or platform token
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PlatformWallet = typeof platformWallets.$inferSelect;
+export type InsertPlatformWallet = typeof platformWallets.$inferInsert;
+
+// ── Wallet Transactions (지갑 입출금 내역) ──────────────────────
+export const walletTransactions = mysqlTable("wallet_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  walletId: int("walletId").notNull(),
+  userId: int("userId").notNull(),
+  type: mysqlEnum("type", ["deposit", "withdraw", "payment", "refund", "bonus", "transfer"]).notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  balanceBefore: decimal("balanceBefore", { precision: 15, scale: 2 }).notNull(),
+  balanceAfter: decimal("balanceAfter", { precision: 15, scale: 2 }).notNull(),
+  // Reference
+  referenceType: varchar("referenceType", { length: 50 }), // booking, deposit, withdrawal
+  referenceId: int("referenceId"),
+  // Crypto details (for deposits)
+  txHash: varchar("txHash", { length: 255 }),
+  network: varchar("network", { length: 20 }),
+  fromAddress: varchar("fromAddress", { length: 255 }),
+  // Status
+  status: mysqlEnum("status", ["pending", "completed", "failed", "cancelled"]).default("pending").notNull(),
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type WalletTransaction = typeof walletTransactions.$inferSelect;
+export type InsertWalletTransaction = typeof walletTransactions.$inferInsert;
+
+// ── Payment Gateway Config (결제 게이트웨이 설정) ──────────────────────
+export const paymentGatewayConfig = mysqlTable("payment_gateway_config", {
+  id: int("id").autoincrement().primaryKey(),
+  gateway: mysqlEnum("gateway", ["nowpayments", "direct_usdt", "platform_token", "visa_card"]).notNull(),
+  isEnabled: boolean("isEnabled").default(true).notNull(),
+  displayName: varchar("displayName", { length: 100 }).notNull(),
+  description: text("description"),
+  feePercent: decimal("feePercent", { precision: 5, scale: 2 }).default("0"),
+  minAmount: decimal("minAmount", { precision: 12, scale: 2 }).default("1"),
+  maxAmount: decimal("maxAmount", { precision: 12, scale: 2 }).default("100000"),
+  // Wallet addresses for direct USDT
+  walletAddressTrc20: varchar("walletAddressTrc20", { length: 255 }),
+  walletAddressErc20: varchar("walletAddressErc20", { length: 255 }),
+  walletAddressBep20: varchar("walletAddressBep20", { length: 255 }),
+  // Config JSON (API keys etc stored in env, extra config here)
+  configJson: json("configJson"),
+  sortOrder: int("sortOrder").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PaymentGatewayConfig = typeof paymentGatewayConfig.$inferSelect;
+export type InsertPaymentGatewayConfig = typeof paymentGatewayConfig.$inferInsert;

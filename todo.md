@@ -1042,3 +1042,56 @@
 - [ ] VPS Docker 이미지 재빌드 및 배포
 - [ ] VPS DB 마이그레이션 적용
 - [ ] VPS 동작 확인
+
+## v9.0 - Trip.com 항공권 + USDT 결제 게이트웨이 연동
+
+### 결제 시스템 확장
+- [x] NOWPayments API 연동 (Invoice 생성, 결제 상태 확인, Webhook)
+- [x] 직접 USDT 전송 결제 옵션 유지 (TRC20/ERC20/BEP20)
+- [x] 자체 카드/자체 화폐 결제 옵션 추가 (플랫폼 내부 포인트)
+- [x] 결제 수단 선택 UI (NOWPayments / 직접전송 / 자체화폐)
+
+### Trip.com 연동 → Mystifly API로 전환
+- [x] Trip.com 대신 Mystifly GDS API 연동으로 전환
+- [x] Mystifly 항공권 검색/예약/발권 클라이언트 구현
+- [x] 가격 비교: 현지가 vs USD vs USDT 가격 표시
+
+### DB 스키마 확장
+- [x] payment_transactions 테이블 (NOWPayments 결제 내역)
+- [x] platform_wallets 테이블 (자체 화폐/포인트 잔액)
+- [x] payment_methods enum 확장 (nowpayments, direct_usdt, platform_token, visa_card)
+- [x] payment_gateway_config 테이블 (결제 게이트웨이 설정)
+- [x] wallet_transactions 테이블 (지갑 거래 내역)
+
+### 서버 API
+- [x] NOWPayments Invoice 생성 프로시저
+- [x] NOWPayments Webhook 수신 엔드포인트
+- [x] 결제 상태 폴링 프로시저
+- [x] 자체 화폐 충전/차감 프로시저
+- [x] 플랫폼 지갑 잔액 조회 프로시저
+
+### 프론트엔드
+- [x] 결제 수단 선택 모달 (3가지 옵션: Direct USDT / NOWPayments / Platform Balance)
+- [x] 네트워크 선택 UI (TRC20 / BEP20 / ERC20 / Polygon)
+- [x] 결제 완료 확인 페이지
+- [x] 플랫폼 잔액 표시
+
+### 테스트
+- [x] NOWPayments API 모킹 테스트
+- [x] 결제 플로우 통합 테스트 (19건 통과)
+
+## v9.1 - Trip.com → Mystifly API 전환
+
+### Mystifly API 연동
+- [x] Mystifly API 문서 조사 (인증, 항공권 검색, 예약, 발권)
+- [x] Mystifly API 클라이언트 모듈 구현 (server/mystiflyClient.ts)
+- [x] 항공권 검색 프로시저 Mystifly 연동 (데모 폴백 유지)
+- [x] 항공권 예약/발권 프로시저 구현 (bookMystiflyFlight, issueTicket)
+- [ ] Mystifly API Key 환경변수 등록 (API 계정 필요)
+
+### 프론트엔드 업데이트
+- [x] 검색 결과에 Mystifly GDS 상태 표시 (Demo/Live 배지)
+- [x] 결제 수단 선택 모달 (Direct USDT / NOWPayments / Platform Balance)
+- [x] 네트워크 선택 (TRC20/BEP20/ERC20/Polygon)
+- [x] 예약 확인 다이얼로그 (가격 분해 + 결제 수단 + 네트워크 선택)
+- [x] vitest 테스트 19건 통과 (Mystifly + 결제 로직)

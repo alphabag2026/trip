@@ -197,6 +197,27 @@
       "when": 1774432385919,
       "tag": "0027_windy_lilandra",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "5",
+      "when": 1774766248267,
+      "tag": "0028_wonderful_moon_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1774767183767,
+      "tag": "0029_boring_warpath",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1774767476992,
+      "tag": "0030_fantastic_hedge_knight",
+      "breakpoints": true
     }
   ]
 }

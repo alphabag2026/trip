@@ -14,6 +14,7 @@ import QRCode from "qrcode";
 import { sdk } from "./_core/sdk";
 import { sendEmail, buildVerificationEmail, buildPasswordResetEmail } from "./email";
 import { generateDemoHotels, generateDemoFlights } from "./demoTravelData";
+import { mystiflyClient, cabinClassToMystifly, type MystiflyFlight, type MystiflyBookingParams } from "./mystiflyClient";
 import {
   generateFlightSearchLinks,
   generateHotelSearchLinks,
@@ -5177,6 +5178,187 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         return { hotels: demoHotels, total: demoHotels.length, currency, vatRate: Math.round(vatRate * 10000) / 100, exchangeRate };
       }),
     // Search flights (demo data - ready for Amadeus API integration)
+    // Mystifly API status check
+    mystiflyStatus: publicProcedure.query(async () => {
+      return {
+        configured: mystiflyClient.isConfigured(),
+        provider: 'Mystifly SSP PaaS',
+        features: ['GDS Search (Amadeus/Sabre/Galileo)', 'Fare Revalidation', 'Booking', 'Ticketing', 'Cancellation'],
+      };
+    }),
+
+    // Revalidate fare before booking (Mystifly)
+    revalidateFare: publicProcedure
+      .input(z.object({ fareSourceCode: z.string() }))
+      .query(async ({ input }) => {
+        if (!mystiflyClient.isConfigured()) {
+          return { isValid: true, fareChanged: false, message: 'Demo mode - fare always valid' };
+        }
+        try {
+          const result = await mystiflyClient.revalidateFare(input.fareSourceCode);
+          return result;
+        } catch (e: any) {
+          return { isValid: false, fareChanged: false, message: e.message };
+        }
+      }),
+
+    // Get fare rules (Mystifly)
+    fareRules: publicProcedure
+      .input(z.object({ fareSourceCode: z.string() }))
+      .query(async ({ input }) => {
+        if (!mystiflyClient.isConfigured()) {
+          return { rules: 'Demo mode - Standard fare rules apply. Free cancellation within 24 hours. Changes subject to airline policy.' };
+        }
+        try {
+          const rules = await mystiflyClient.getFareRules(input.fareSourceCode);
+          return { rules };
+        } catch (e: any) {
+          return { rules: 'Unable to retrieve fare rules: ' + e.message };
+        }
+      }),
+
+    // Book flight via Mystifly
+    bookMystiflyFlight: protectedProcedure
+      .input(z.object({
+        fareSourceCode: z.string(),
+        passengers: z.array(z.object({
+          type: z.enum(['ADT', 'CHD', 'INF']),
+          title: z.string(),
+          firstName: z.string(),
+          lastName: z.string(),
+          dateOfBirth: z.string(),
+          nationality: z.string().default('KR'),
+          passportNumber: z.string().optional(),
+          passportExpiry: z.string().optional(),
+          passportCountry: z.string().optional(),
+        })),
+        contactEmail: z.string().email(),
+        contactPhone: z.string(),
+        // Price info for our booking record
+        totalFareUsd: z.number(),
+        usdtPrice: z.number(),
+        localPrice: z.number().optional(),
+        localCurrency: z.string().optional(),
+        vatAmount: z.number().optional(),
+        savingsAmount: z.number().optional(),
+        // Flight info for display
+        airline: z.string(),
+        flightNumber: z.string(),
+        origin: z.string(),
+        destination: z.string(),
+        departureTime: z.string(),
+        arrivalTime: z.string(),
+        countryCode: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Create our booking record first
+        const bookingId = await db.createTravelBooking({
+          userId: ctx.user.id,
+          bookingType: 'flight',
+          flightNumber: input.flightNumber,
+          airline: input.airline,
+          origin: input.origin,
+          destination: input.destination,
+          checkIn: new Date(input.departureTime),
+          checkOut: new Date(input.arrivalTime),
+          guests: input.passengers.length,
+          localPrice: String(input.localPrice || input.totalFareUsd),
+          localCurrency: input.localCurrency || 'USD',
+          usdPrice: String(input.totalFareUsd),
+          usdtPrice: String(input.usdtPrice),
+          vatAmount: String(input.vatAmount || 0),
+          savingsAmount: String(input.savingsAmount || 0),
+          paymentMethod: 'usdt_trc20',
+          countryCode: input.countryCode,
+        });
+
+        // If Mystifly is configured, actually book
+        if (mystiflyClient.isConfigured()) {
+          try {
+            const mystiflyResult = await mystiflyClient.bookFlight({
+              fareSourceCode: input.fareSourceCode,
+              passengers: input.passengers,
+              contactEmail: input.contactEmail,
+              contactPhone: input.contactPhone,
+            });
+
+            // Update booking with Mystifly PNR
+            await db.updateTravelBooking(bookingId, {
+              externalBookingId: mystiflyResult.bookingId,
+              externalPnr: mystiflyResult.pnr,
+              status: 'pending_payment',
+            });
+
+            return {
+              bookingId,
+              pnr: mystiflyResult.pnr,
+              mystiflyBookingId: mystiflyResult.bookingId,
+              demoMode: false,
+            };
+          } catch (e: any) {
+            // If Mystifly booking fails, keep our record but mark as failed
+            await db.updateTravelBooking(bookingId, { status: 'booking_failed' });
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `Flight booking failed: ${e.message}` });
+          }
+        }
+
+        // Demo mode
+        return {
+          bookingId,
+          pnr: `DEMO${String(bookingId).padStart(6, '0')}`,
+          mystiflyBookingId: null,
+          demoMode: true,
+        };
+      }),
+
+    // Issue ticket after payment confirmed (admin)
+    issueTicket: adminProcedure
+      .input(z.object({ bookingId: z.number() }))
+      .mutation(async ({ input }) => {
+        const booking = await db.getTravelBookingById(input.bookingId);
+        if (!booking) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (!booking.externalBookingId) {
+          return { success: false, message: 'No Mystifly booking ID - demo mode booking' };
+        }
+        if (!mystiflyClient.isConfigured()) {
+          return { success: false, message: 'Mystifly not configured' };
+        }
+        try {
+          const result = await mystiflyClient.issueTicket(booking.externalBookingId);
+          if (result.success) {
+            await db.updateTravelBooking(input.bookingId, { status: 'ticketed' });
+          }
+          return result;
+        } catch (e: any) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: e.message });
+        }
+      }),
+
+    // Cancel Mystifly booking (admin)
+    cancelMystiflyBooking: adminProcedure
+      .input(z.object({ bookingId: z.number() }))
+      .mutation(async ({ input }) => {
+        const booking = await db.getTravelBookingById(input.bookingId);
+        if (!booking) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (!booking.externalBookingId) {
+          await db.updateTravelBooking(input.bookingId, { status: 'cancelled' });
+          return { success: true, message: 'Demo booking cancelled' };
+        }
+        if (!mystiflyClient.isConfigured()) {
+          await db.updateTravelBooking(input.bookingId, { status: 'cancelled' });
+          return { success: true, message: 'Booking cancelled (Mystifly not configured)' };
+        }
+        try {
+          const result = await mystiflyClient.cancelBooking(booking.externalBookingId);
+          if (result.success) {
+            await db.updateTravelBooking(input.bookingId, { status: 'cancelled' });
+          }
+          return result;
+        } catch (e: any) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: e.message });
+        }
+      }),
+
     searchFlights: publicProcedure
       .input(z.object({
         origin: z.string(),
@@ -5188,6 +5370,7 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         countryCode: z.string().default('KR'),
       }))
       .query(async ({ input, ctx }) => {
+        // Log search
         try {
           await db.createTravelSearch({
             userId: ctx.user?.id,
@@ -5200,12 +5383,100 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
             countryCode: input.countryCode,
           });
         } catch (e) { /* ignore */ }
+
         const vatInfo = await db.getVatRateByCountry(input.countryCode);
         const vatRate = vatInfo ? parseFloat(String(vatInfo.vatRate)) / 100 : 0.1;
         const exchangeRate = vatInfo ? parseFloat(String(vatInfo.usdExchangeRate)) || 1 : 1;
         const currency = vatInfo?.currency || 'USD';
+
+        const EXCHANGE_FEE_RATE = 0.0185;
+        const PLATFORM_MARGIN_RATE = 0.03;
+
+        // Try Mystifly API first
+        if (mystiflyClient.isConfigured()) {
+          try {
+            const mystiflyFlights = await mystiflyClient.searchFlights({
+              origin: input.origin,
+              destination: input.destination,
+              departDate: input.departDate,
+              returnDate: input.returnDate,
+              adults: input.passengers,
+              cabinClass: cabinClassToMystifly(input.cabinClass),
+            });
+
+            // Convert Mystifly results to our format with USDT pricing
+            const flights = mystiflyFlights.map(f => {
+              const usdPrice = f.totalFare;
+              const localPrice = Math.round(usdPrice * exchangeRate * (1 + vatRate));
+              const priceExVat = localPrice / (1 + vatRate);
+              const usdPriceExVat = priceExVat / exchangeRate;
+              const exchangeFee = usdPriceExVat * EXCHANGE_FEE_RATE;
+              const platformMargin = usdPriceExVat * PLATFORM_MARGIN_RATE;
+              const usdtPrice = usdPriceExVat + exchangeFee + platformMargin;
+              const localPriceInUsd = localPrice / exchangeRate;
+              const savings = localPriceInUsd - usdtPrice;
+              const savingsPercent = (savings / localPriceInUsd) * 100;
+
+              return {
+                id: f.fareSourceCode || `mystifly-${f.flightNumber}`,
+                fareSourceCode: f.fareSourceCode,
+                airline: f.validatingCarrierName,
+                airlineCode: f.validatingCarrier,
+                flightNumber: f.flightNumber,
+                origin: f.origin,
+                originCode: f.origin,
+                destination: f.destination,
+                destinationCode: f.destination,
+                departureTime: f.departureTime,
+                arrivalTime: f.arrivalTime,
+                duration: f.duration,
+                stops: f.stops,
+                stopCities: f.stopCities,
+                cabinClass: input.cabinClass,
+                localPrice,
+                localCurrency: currency,
+                usdPrice: Math.round(localPriceInUsd * 100) / 100,
+                usdtPrice: Math.round(usdtPrice * 100) / 100,
+                vatAmount: Math.round((localPriceInUsd - usdPriceExVat) * 100) / 100,
+                savings: Math.round(savings * 100) / 100,
+                savingsPercent: Math.round(savingsPercent * 100) / 100,
+                baggageIncluded: f.baggageAllowance,
+                aircraft: f.aircraft,
+                imageUrl: '',
+                isRefundable: f.isRefundable,
+                baseFare: f.baseFare,
+                taxes: f.taxes,
+                segments: f.segments,
+                source: 'mystifly' as const,
+              };
+            });
+
+            return {
+              flights,
+              total: flights.length,
+              currency,
+              vatRate: Math.round(vatRate * 10000) / 100,
+              exchangeRate,
+              source: 'mystifly',
+              demoMode: false,
+            };
+          } catch (e: any) {
+            console.error('[Mystifly] Search error, falling back to demo:', e.message);
+            // Fall through to demo mode
+          }
+        }
+
+        // Demo mode fallback
         const demoFlights = generateDemoFlights(input.origin, input.destination, currency, exchangeRate, vatRate, input.departDate, input.cabinClass);
-        return { flights: demoFlights, total: demoFlights.length, currency, vatRate: Math.round(vatRate * 10000) / 100, exchangeRate };
+        return {
+          flights: demoFlights.map(f => ({ ...f, fareSourceCode: null, source: 'demo' as const, segments: [], isRefundable: false, baseFare: 0, taxes: 0 })),
+          total: demoFlights.length,
+          currency,
+          vatRate: Math.round(vatRate * 10000) / 100,
+          exchangeRate,
+          source: 'demo',
+          demoMode: true,
+        };
       }),
     // Create booking
     createBooking: protectedProcedure
@@ -5298,6 +5569,401 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
     bookingStats: superadminProcedure.query(async () => {
       return await db.getTravelBookingStats();
     }),
+  }),
+
+  // ══════════════════════════════════════════════════════════
+  // v9.0 - Payment Gateway & Wallet System
+  // ══════════════════════════════════════════════════════════
+  payment: router({
+    // Get enabled payment gateways
+    gateways: publicProcedure.query(async () => {
+      return await db.getEnabledPaymentGateways();
+    }),
+    // All gateways (admin)
+    allGateways: adminProcedure.query(async () => {
+      return await db.getPaymentGateways();
+    }),
+    // Update gateway config (admin)
+    updateGateway: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        isEnabled: z.boolean().optional(),
+        displayName: z.string().optional(),
+        description: z.string().optional(),
+        feePercent: z.number().optional(),
+        minAmount: z.number().optional(),
+        maxAmount: z.number().optional(),
+        walletAddressTrc20: z.string().optional(),
+        walletAddressErc20: z.string().optional(),
+        walletAddressBep20: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        const updateData: any = {};
+        if (data.isEnabled !== undefined) updateData.isEnabled = data.isEnabled;
+        if (data.displayName) updateData.displayName = data.displayName;
+        if (data.description) updateData.description = data.description;
+        if (data.feePercent !== undefined) updateData.feePercent = String(data.feePercent);
+        if (data.minAmount !== undefined) updateData.minAmount = String(data.minAmount);
+        if (data.maxAmount !== undefined) updateData.maxAmount = String(data.maxAmount);
+        if (data.walletAddressTrc20 !== undefined) updateData.walletAddressTrc20 = data.walletAddressTrc20;
+        if (data.walletAddressErc20 !== undefined) updateData.walletAddressErc20 = data.walletAddressErc20;
+        if (data.walletAddressBep20 !== undefined) updateData.walletAddressBep20 = data.walletAddressBep20;
+        await db.updatePaymentGateway(id, updateData);
+        return { success: true };
+      }),
+
+    // Create payment via NOWPayments
+    createNowPayment: protectedProcedure
+      .input(z.object({
+        bookingId: z.number(),
+        amountUsdt: z.number(),
+        description: z.string().optional(),
+        successUrl: z.string().optional(),
+        cancelUrl: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const booking = await db.getTravelBookingById(input.bookingId);
+        if (!booking || booking.userId !== ctx.user.id) throw new TRPCError({ code: 'NOT_FOUND' });
+
+        // Create NOWPayments invoice via their API
+        const apiKey = process.env.NOWPAYMENTS_API_KEY;
+        if (!apiKey) {
+          // Fallback: create transaction record without actual API call (demo mode)
+          const txId = await db.createPaymentTransaction({
+            bookingId: input.bookingId,
+            userId: ctx.user.id,
+            method: 'nowpayments',
+            amountUsdt: String(input.amountUsdt),
+            amountLocal: booking.localPrice,
+            localCurrency: booking.localCurrency,
+            status: 'created',
+            description: input.description || `Booking #${input.bookingId} payment`,
+            gatewayStatus: 'demo_mode',
+          });
+          return {
+            transactionId: txId,
+            payUrl: null,
+            payAddress: null,
+            demoMode: true,
+            message: 'NOWPayments API key not configured. Running in demo mode.',
+          };
+        }
+
+        try {
+          // Real NOWPayments API call
+          const response = await fetch('https://api.nowpayments.io/v1/invoice', {
+            method: 'POST',
+            headers: {
+              'x-api-key': apiKey,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              price_amount: input.amountUsdt,
+              price_currency: 'usd',
+              pay_currency: 'usdttrc20',
+              order_id: `booking-${input.bookingId}`,
+              order_description: input.description || `Booking #${input.bookingId}`,
+              ipn_callback_url: `${input.successUrl?.split('/').slice(0, 3).join('/')}/api/webhooks/nowpayments`,
+              success_url: input.successUrl,
+              cancel_url: input.cancelUrl,
+            }),
+          });
+          const data = await response.json();
+
+          const txId = await db.createPaymentTransaction({
+            bookingId: input.bookingId,
+            userId: ctx.user.id,
+            method: 'nowpayments',
+            amountUsdt: String(input.amountUsdt),
+            amountLocal: booking.localPrice,
+            localCurrency: booking.localCurrency,
+            gatewayInvoiceId: data.id?.toString(),
+            gatewayPayUrl: data.invoice_url,
+            gatewayStatus: data.payment_status || 'waiting',
+            status: 'pending',
+            description: input.description || `Booking #${input.bookingId} payment`,
+          });
+
+          return {
+            transactionId: txId,
+            invoiceId: data.id,
+            payUrl: data.invoice_url,
+            demoMode: false,
+          };
+        } catch (e: any) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `NOWPayments API error: ${e.message}` });
+        }
+      }),
+
+    // Create direct USDT transfer payment
+    createDirectPayment: protectedProcedure
+      .input(z.object({
+        bookingId: z.number(),
+        amountUsdt: z.number(),
+        network: z.enum(['trc20', 'erc20', 'bep20', 'polygon', 'solana']),
+        senderWallet: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const booking = await db.getTravelBookingById(input.bookingId);
+        if (!booking || booking.userId !== ctx.user.id) throw new TRPCError({ code: 'NOT_FOUND' });
+
+        // Get wallet address from gateway config
+        const gateways = await db.getPaymentGateways();
+        const directGateway = gateways.find(g => g.gateway === 'direct_usdt');
+        let receiverWallet = '';
+        if (directGateway) {
+          if (input.network === 'trc20') receiverWallet = directGateway.walletAddressTrc20 || '';
+          else if (input.network === 'erc20') receiverWallet = directGateway.walletAddressErc20 || '';
+          else if (input.network === 'bep20') receiverWallet = directGateway.walletAddressBep20 || '';
+        }
+
+        const txId = await db.createPaymentTransaction({
+          bookingId: input.bookingId,
+          userId: ctx.user.id,
+          method: 'direct_usdt',
+          amountUsdt: String(input.amountUsdt),
+          amountLocal: booking.localPrice,
+          localCurrency: booking.localCurrency,
+          txNetwork: input.network,
+          senderWallet: input.senderWallet,
+          receiverWallet,
+          status: 'pending',
+          description: `Direct USDT transfer for Booking #${input.bookingId}`,
+          expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 min expiry
+        });
+
+        return {
+          transactionId: txId,
+          receiverWallet,
+          network: input.network,
+          amountUsdt: input.amountUsdt,
+          expiresIn: 1800, // 30 minutes
+        };
+      }),
+
+    // Submit TX hash for direct payment
+    submitTxHash: protectedProcedure
+      .input(z.object({
+        transactionId: z.number(),
+        txHash: z.string().min(10),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const tx = await db.getPaymentTransaction(input.transactionId);
+        if (!tx || tx.userId !== ctx.user.id) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (tx.status !== 'pending') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Transaction is not in pending state' });
+
+        await db.updatePaymentTransaction(input.transactionId, {
+          txHash: input.txHash,
+          status: 'confirming',
+        });
+
+        // Also update booking
+        if (tx.bookingId) {
+          await db.updateTravelBooking(tx.bookingId, {
+            paymentTxHash: input.txHash,
+            paymentStatus: 'received',
+          });
+        }
+
+        return { success: true, message: 'TX hash submitted. Awaiting blockchain confirmation.' };
+      }),
+
+    // Pay with platform balance
+    payWithBalance: protectedProcedure
+      .input(z.object({
+        bookingId: z.number(),
+        amountUsdt: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const booking = await db.getTravelBookingById(input.bookingId);
+        if (!booking || booking.userId !== ctx.user.id) throw new TRPCError({ code: 'NOT_FOUND' });
+
+        const wallet = await db.getOrCreateWallet(ctx.user.id);
+        const balance = parseFloat(String(wallet.balance));
+        if (balance < input.amountUsdt) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: `Insufficient balance. Current: ${balance} USDT, Required: ${input.amountUsdt} USDT` });
+        }
+
+        // Deduct balance
+        const newBalance = balance - input.amountUsdt;
+        const newSpent = parseFloat(String(wallet.totalSpent)) + input.amountUsdt;
+        await db.updateWalletBalance(wallet.id, {
+          balance: String(newBalance),
+          totalSpent: String(newSpent),
+        });
+
+        // Record wallet transaction
+        await db.createWalletTransaction({
+          walletId: wallet.id,
+          userId: ctx.user.id,
+          type: 'payment',
+          amount: String(input.amountUsdt),
+          balanceBefore: String(balance),
+          balanceAfter: String(newBalance),
+          referenceType: 'booking',
+          referenceId: input.bookingId,
+          status: 'completed',
+          description: `Payment for Booking #${input.bookingId}`,
+        });
+
+        // Create payment transaction
+        const txId = await db.createPaymentTransaction({
+          bookingId: input.bookingId,
+          userId: ctx.user.id,
+          method: 'platform_token',
+          amountUsdt: String(input.amountUsdt),
+          amountPlatformToken: String(input.amountUsdt),
+          status: 'completed',
+          confirmedAt: new Date(),
+          description: `Platform balance payment for Booking #${input.bookingId}`,
+        });
+
+        // Update booking status
+        await db.updateTravelBooking(input.bookingId, {
+          paymentStatus: 'confirmed',
+          status: 'confirmed',
+        });
+
+        return { transactionId: txId, success: true, newBalance };
+      }),
+
+    // Admin: confirm payment manually
+    adminConfirmPayment: adminProcedure
+      .input(z.object({
+        transactionId: z.number(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const tx = await db.getPaymentTransaction(input.transactionId);
+        if (!tx) throw new TRPCError({ code: 'NOT_FOUND' });
+
+        await db.updatePaymentTransaction(input.transactionId, {
+          status: 'completed',
+          confirmedAt: new Date(),
+          description: tx.description ? `${tx.description} | Admin confirmed: ${input.notes || ''}` : `Admin confirmed: ${input.notes || ''}`,
+        });
+
+        if (tx.bookingId) {
+          await db.updateTravelBooking(tx.bookingId, {
+            paymentStatus: 'confirmed',
+            status: 'confirmed',
+          });
+        }
+
+        return { success: true };
+      }),
+
+    // Get my transactions
+    myTransactions: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUserPaymentTransactions(ctx.user.id);
+    }),
+
+    // Get transaction by id
+    transactionById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const tx = await db.getPaymentTransaction(input.id);
+        if (!tx || tx.userId !== ctx.user.id) throw new TRPCError({ code: 'NOT_FOUND' });
+        return tx;
+      }),
+
+    // Admin: all transactions
+    allTransactions: adminProcedure
+      .input(z.object({ status: z.string().optional(), method: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllPaymentTransactions(input);
+      }),
+  }),
+
+  // ── Platform Wallet System ──
+  wallet: router({
+    // Get my wallet
+    myWallet: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getOrCreateWallet(ctx.user.id);
+    }),
+
+    // Get my wallet transactions
+    myTransactions: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUserWalletTransactions(ctx.user.id);
+    }),
+
+    // Deposit USDT to platform wallet (creates pending deposit)
+    deposit: protectedProcedure
+      .input(z.object({
+        amount: z.number().min(1),
+        network: z.enum(['trc20', 'erc20', 'bep20', 'polygon', 'solana']),
+        txHash: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const wallet = await db.getOrCreateWallet(ctx.user.id);
+
+        // Get deposit wallet address
+        const gateways = await db.getPaymentGateways();
+        const directGateway = gateways.find(g => g.gateway === 'direct_usdt');
+        let depositAddress = '';
+        if (directGateway) {
+          if (input.network === 'trc20') depositAddress = directGateway.walletAddressTrc20 || '';
+          else if (input.network === 'erc20') depositAddress = directGateway.walletAddressErc20 || '';
+          else if (input.network === 'bep20') depositAddress = directGateway.walletAddressBep20 || '';
+        }
+
+        const txId = await db.createWalletTransaction({
+          walletId: wallet.id,
+          userId: ctx.user.id,
+          type: 'deposit',
+          amount: String(input.amount),
+          balanceBefore: String(wallet.balance),
+          balanceAfter: String(wallet.balance), // Updated after admin confirms
+          txHash: input.txHash,
+          network: input.network,
+          status: input.txHash ? 'pending' : 'pending',
+          description: `USDT deposit via ${input.network.toUpperCase()}`,
+        });
+
+        return {
+          transactionId: txId,
+          depositAddress,
+          network: input.network,
+          amount: input.amount,
+        };
+      }),
+
+    // Admin: confirm deposit
+    adminConfirmDeposit: adminProcedure
+      .input(z.object({
+        walletTransactionId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const txs = await db.getUserWalletTransactions(0); // need to get by ID
+        // Direct SQL for specific transaction
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const result = await dbInst.select().from(db.walletTransactions).where(db.eq(db.walletTransactions.id, input.walletTransactionId));
+        const tx = result[0];
+        if (!tx) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (tx.status !== 'pending') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Transaction already processed' });
+
+        // Update wallet balance
+        const wallet = await db.getOrCreateWallet(tx.userId);
+        const currentBalance = parseFloat(String(wallet.balance));
+        const depositAmount = parseFloat(String(tx.amount));
+        const newBalance = currentBalance + depositAmount;
+        const newDeposited = parseFloat(String(wallet.totalDeposited)) + depositAmount;
+
+        await db.updateWalletBalance(wallet.id, {
+          balance: String(newBalance),
+          totalDeposited: String(newDeposited),
+        });
+
+        // Update transaction
+        await dbInst.update(db.walletTransactions).set({
+          status: 'completed',
+          balanceAfter: String(newBalance),
+        }).where(db.eq(db.walletTransactions.id, input.walletTransactionId));
+
+        return { success: true, newBalance };
+      }),
   }),
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────

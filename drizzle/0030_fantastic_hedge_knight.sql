@@ -1,0 +1,1 @@
+ALTER TABLE `travel_bookings` MODIFY COLUMN `status` enum('pending','pending_payment','confirmed','cancelled','completed','refunded','booking_failed','ticketed') NOT NULL DEFAULT 'pending';

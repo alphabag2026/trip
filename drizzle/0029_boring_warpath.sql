@@ -1,0 +1,1 @@
+ALTER TABLE `travel_bookings` ADD `externalPnr` varchar(50);

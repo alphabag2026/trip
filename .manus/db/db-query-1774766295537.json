@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO payment_gateway_config (gateway, isEnabled, displayName, description, feePercent, minAmount, maxAmount, sortOrder) VALUES\n('nowpayments', true, 'NOWPayments (USDT)', 'NOWPayments 크립토 결제 게이트웨이를 통한 USDT 결제. 350+ 암호화폐 지원, 자동 변환.', 0.50, 5.00, 100000.00, 1),\n('direct_usdt', true, 'Direct USDT Transfer', 'TRC20/ERC20/BEP20 네트워크를 통한 직접 USDT 전송. 수수료 없음, TX 해시로 확인.', 0.00, 1.00, 500000.00, 2),\n('platform_token', true, 'Platform Balance (USDT)', '플랫폼 내 USDT 잔액으로 즉시 결제. 충전 후 사용 가능.', 0.00, 0.01, 100000.00, 3),\n('visa_card', false, 'Crypto VISA Card', 'Crypto.com/Binance 등 크립토 VISA 카드 결제. 추후 지원 예정.', 1.85, 10.00, 50000.00, 4);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute INSERT INTO payment_gateway_config (gateway, isEnabled, displayName, description, feePercent, minAmount, maxAmount, sortOrder) VALUES\n('nowpayments', true, 'NOWPayments (USDT)', 'NOWPayments 크립토 결제 게이트웨이를 통한 USDT 결제. 350+ 암호화폐 지원, 자동 변환.', 0.50, 5.00, 100000.00, 1),\n('direct_usdt', true, 'Direct USDT Transfer', 'TRC20/ERC20/BEP20 네트워크를 통한 직접 USDT 전송. 수수료 없음, TX 해시로 확인.', 0.00, 1.00, 500000.00, 2),\n('platform_token', true, 'Platform Balance (USDT)', '플랫폼 내 USDT 잔액으로 즉시 결제. 충전 후 사용 가능.', 0.00, 0.01, 100000.00, 3),\n('visa_card', false, 'Crypto VISA Card', 'Crypto.com/Binance 등 크립토 VISA 카드 결제. 추후 지원 예정.', 1.85, 10.00, 50000.00, 4);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1641
+}

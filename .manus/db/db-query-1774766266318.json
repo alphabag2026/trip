@@ -1,0 +1,28 @@
+{
+  "query": "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('ad_banners', 'organizer_approvals', 'payment_gateway_config', 'payment_transactions', 'platform_wallets', 'role_delegations', 'travel_bookings', 'travel_searches', 'vat_rates', 'wallet_transactions');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('ad_banners', 'organizer_approvals', 'payment_gateway_config', 'payment_transactions', 'platform_wallets', 'role_delegations', 'travel_bookings', 'travel_searches', 'vat_rates', 'wallet_transactions');",
+  "rows": [
+    {
+      "TABLE_NAME": "vat_rates"
+    },
+    {
+      "TABLE_NAME": "travel_searches"
+    },
+    {
+      "TABLE_NAME": "travel_bookings"
+    },
+    {
+      "TABLE_NAME": "role_delegations"
+    },
+    {
+      "TABLE_NAME": "organizer_approvals"
+    },
+    {
+      "TABLE_NAME": "ad_banners"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\nvat_rates\ntravel_searches\ntravel_bookings\nrole_delegations\norganizer_approvals\nad_banners\n",
+  "stderr": "",
+  "execution_time_ms": 1661
+}
