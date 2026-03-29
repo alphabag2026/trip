@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Car, MapPin, Navigation, Search, Loader2, Star, Clock,
-  Users, Shield, Wifi, Zap, ChevronRight, ArrowLeft,
+  Users, Shield, Wifi, Zap, ChevronRight, ArrowLeft, ArrowRight,
   Phone, CheckCircle2, XCircle, TrendingDown, DollarSign,
   Sparkles, Route, Timer, Battery, Droplets, Crown,
   Truck, CircleDot, MapPinned
@@ -107,6 +107,11 @@ export default function RideHailing() {
   };
 
   const handleBook = () => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to book a ride");
+      window.location.href = "/login";
+      return;
+    }
     if (!selectedRide) return;
     const center = CITY_CENTERS[selectedCountry.city];
     bookMutation.mutate({
@@ -441,7 +446,9 @@ export default function RideHailing() {
               <Card className="border-0 shadow-md">
                 <CardContent className="py-12 text-center">
                   <Car className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">Please log in to view your ride history</p>
+                  <p className="font-medium mb-2">Sign in to view your ride history</p>
+                  <p className="text-sm text-muted-foreground mb-4">You can search and compare rides without signing in. Sign in to book and track your rides.</p>
+                  <Link href="/login"><Button size="sm" className="gap-2">Sign In <ArrowRight className="h-3.5 w-3.5" /></Button></Link>
                 </CardContent>
               </Card>
             ) : myBookingsQuery.isLoading ? (
@@ -578,17 +585,25 @@ export default function RideHailing() {
               </div>
               <DialogFooter className="gap-2">
                 <Button variant="outline" onClick={() => setShowBookingDialog(false)}>Cancel</Button>
-                <Button
-                  onClick={handleBook}
-                  disabled={bookMutation.isPending}
-                  className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
-                >
-                  {bookMutation.isPending ? (
-                    <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Booking...</>
-                  ) : (
-                    <><CheckCircle2 className="h-4 w-4 mr-2" /> Book Ride</>
-                  )}
-                </Button>
+                {isAuthenticated ? (
+                  <Button
+                    onClick={handleBook}
+                    disabled={bookMutation.isPending}
+                    className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
+                  >
+                    {bookMutation.isPending ? (
+                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Booking...</>
+                    ) : (
+                      <><CheckCircle2 className="h-4 w-4 mr-2" /> Book Ride</>
+                    )}
+                  </Button>
+                ) : (
+                  <Link href="/login">
+                    <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 gap-2">
+                      Sign in to Book <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
               </DialogFooter>
             </>
           )}

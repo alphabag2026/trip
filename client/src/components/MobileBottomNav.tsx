@@ -1,7 +1,8 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
   Globe, ClipboardList, Bot, User,
-  UserPlus, LogIn, Home as HomeIcon
+  UserPlus, LogIn, Home as HomeIcon,
+  Car, UtensilsCrossed
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -57,15 +58,15 @@ export default function MobileBottomNav() {
               <Globe className="h-5 w-5" />
               <span>{t("nav.home")}</span>
             </Link>
-            <a href="#features" className="flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium text-muted-foreground">
-              <Bot className="h-5 w-5" />
-              <span>{t("nav.features")}</span>
-            </a>
-            <Link href="/login?tab=register" className="flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium text-primary">
-              <UserPlus className="h-5 w-5" />
-              <span>{t("nav.signup")}</span>
+            <Link href="/ride" className={`flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium ${isActive("/ride") ? activeClass : inactiveClass}`}>
+              <Car className="h-5 w-5" />
+              <span>{t("home.feat_ride_label", "Ride")}</span>
             </Link>
-            <Link href="/login" className="flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium text-muted-foreground">
+            <Link href="/delivery" className={`flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium ${isActive("/delivery") ? activeClass : inactiveClass}`}>
+              <UtensilsCrossed className="h-5 w-5" />
+              <span>{t("home.feat_delivery_label", "Delivery")}</span>
+            </Link>
+            <Link href="/login" className="flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium text-primary">
               <LogIn className="h-5 w-5" />
               <span>{t("nav.login")}</span>
             </Link>

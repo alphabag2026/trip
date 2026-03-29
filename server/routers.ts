@@ -5974,8 +5974,8 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
     // Supported cities list
     cities: publicProcedure.query(() => SUPPORTED_CITIES),
 
-    // Search ride options
-    search: protectedProcedure
+    // Search ride options (public - allows demo browsing without login)
+    search: publicProcedure
       .input(z.object({
         pickupLat: z.number(),
         pickupLng: z.number(),
@@ -6013,7 +6013,7 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         // Log search
         try {
           await db.createRideSearch({
-            userId: ctx.user.id,
+            userId: ctx.user?.id ?? null,
             pickupLat: String(input.pickupLat),
             pickupLng: String(input.pickupLng),
             pickupAddress: input.pickupAddress,
@@ -6154,8 +6154,8 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
     // Supported food categories
     categories: publicProcedure.query(() => FOOD_CATEGORIES),
 
-    // Get restaurants for a city
-    restaurants: protectedProcedure
+    // Get restaurants for a city (public - allows demo browsing without login)
+    restaurants: publicProcedure
       .input(z.object({
         city: z.string().default('Bangkok'),
         countryCode: z.string().default('TH'),
@@ -6178,8 +6178,8 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         };
       }),
 
-    // Calculate delivery pricing
-    calculatePrice: protectedProcedure
+    // Calculate delivery pricing (public - allows demo browsing without login)
+    calculatePrice: publicProcedure
       .input(z.object({
         subtotal: z.number(),
         deliveryFee: z.number(),

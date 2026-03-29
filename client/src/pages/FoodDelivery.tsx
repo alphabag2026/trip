@@ -68,7 +68,7 @@ export default function FoodDelivery() {
     city: selectedCountry.city,
     countryCode: selectedCountry.code,
     category: selectedCategory,
-  }, { enabled: isAuthenticated });
+  });
 
   const cartSubtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.qty, 0), [cart]);
   const currentRestaurant = selectedRestaurant;
@@ -78,7 +78,7 @@ export default function FoodDelivery() {
     subtotal: cartSubtotal,
     deliveryFee,
     countryCode: selectedCountry.code,
-  }, { enabled: cartSubtotal > 0 && isAuthenticated });
+  }, { enabled: cartSubtotal > 0 });
 
   const orderMutation = trpc.delivery.order.useMutation({
     onSuccess: (data) => {
@@ -121,6 +121,11 @@ export default function FoodDelivery() {
   };
 
   const handlePlaceOrder = () => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to place an order");
+      window.location.href = "/login";
+      return;
+    }
     if (!deliveryAddress) {
       toast.error("Please enter a delivery address");
       return;
@@ -468,7 +473,9 @@ export default function FoodDelivery() {
               <Card className="border-0 shadow-md">
                 <CardContent className="py-12 text-center">
                   <Package className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">Please log in to view your orders</p>
+                  <p className="font-medium mb-2">Sign in to view your order history</p>
+                  <p className="text-sm text-muted-foreground mb-4">You can browse restaurants and menus without signing in. Sign in to place orders and track deliveries.</p>
+                  <Link href="/login"><Button size="sm" className="gap-2">Sign In <ChevronRight className="h-3.5 w-3.5" /></Button></Link>
                 </CardContent>
               </Card>
             ) : myOrdersQuery.isLoading ? (
@@ -641,17 +648,25 @@ export default function FoodDelivery() {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowCartDialog(false)}>Continue Shopping</Button>
-            <Button
-              onClick={handlePlaceOrder}
-              disabled={orderMutation.isPending || !deliveryAddress}
-              className="bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600"
-            >
-              {orderMutation.isPending ? (
-                <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Placing order...</>
-              ) : (
-                <><CheckCircle2 className="h-4 w-4 mr-2" /> Place Order</>
-              )}
-            </Button>
+            {isAuthenticated ? (
+              <Button
+                onClick={handlePlaceOrder}
+                disabled={orderMutation.isPending || !deliveryAddress}
+                className="bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600"
+              >
+                {orderMutation.isPending ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Placing order...</>
+                ) : (
+                  <><CheckCircle2 className="h-4 w-4 mr-2" /> Place Order</>
+                )}
+              </Button>
+            ) : (
+              <Link href="/login">
+                <Button className="bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 gap-2">
+                  Sign in to Order <ChevronRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
