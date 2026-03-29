@@ -6425,7 +6425,117 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         return { translatedText };
       }),
   }),
-
+  // ── Team Schedules (팀 스케줄) ────────────────────────
+  teamSchedule: router({
+    list: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getTeamSchedulesByMeetup(input.meetupId);
+      }),
+    create: protectedProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        title: z.string().min(1),
+        description: z.string().optional(),
+        location: z.string().optional(),
+        eventTime: z.string(),
+        endTime: z.string().optional(),
+        memberIds: z.array(z.number()).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.createTeamSchedule({
+          ...input,
+          eventTime: new Date(input.eventTime),
+          endTime: input.endTime ? new Date(input.endTime) : undefined,
+          createdByUserId: ctx.user.id,
+        });
+        return { id };
+      }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        location: z.string().optional(),
+        eventTime: z.string().optional(),
+        endTime: z.string().optional(),
+        memberIds: z.array(z.number()).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        const updateData: any = { ...data };
+        if (data.eventTime) updateData.eventTime = new Date(data.eventTime);
+        if (data.endTime) updateData.endTime = new Date(data.endTime);
+        await db.updateTeamSchedule(id, updateData);
+        return { success: true };
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteTeamSchedule(input.id);
+        return { success: true };
+      }),
+    addMember: protectedProcedure
+      .input(z.object({ scheduleId: z.number(), registrationId: z.number() }))
+      .mutation(async ({ input }) => {
+        const schedule = await db.getTeamScheduleById(input.scheduleId);
+        if (!schedule) throw new TRPCError({ code: "NOT_FOUND" });
+        const currentMembers = (schedule.memberIds as number[]) || [];
+        if (!currentMembers.includes(input.registrationId)) {
+          await db.updateTeamSchedule(input.scheduleId, {
+            memberIds: [...currentMembers, input.registrationId],
+          });
+        }
+        return { success: true };
+      }),
+  }),
+  // ── Translation Requests (통역 요청) ────────────────────
+  translationRequest: router({
+    pending: protectedProcedure
+      .input(z.object({ meetupId: z.number().optional() }))
+      .query(async ({ input }) => {
+        return db.getPendingTranslationRequests(input.meetupId);
+      }),
+    myRequests: protectedProcedure
+      .query(async ({ ctx }) => {
+        return db.getTranslationRequestsByInterpreter(ctx.user.id);
+      }),
+    create: protectedProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        sourceLang: z.string(),
+        targetLang: z.string(),
+        context: z.string().optional(),
+        location: z.string().optional(),
+        scheduledTime: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.createTranslationRequest({
+          ...input,
+          requesterId: ctx.user.id,
+          scheduledTime: input.scheduledTime ? new Date(input.scheduledTime) : undefined,
+        });
+        return { id };
+      }),
+    assign: adminProcedure
+      .input(z.object({ id: z.number(), interpreterId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.updateTranslationRequest(input.id, {
+          interpreterId: input.interpreterId,
+          status: "assigned",
+        });
+        return { success: true };
+      }),
+    updateStatus: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["in_progress", "completed", "cancelled"]),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateTranslationRequest(input.id, { status: input.status });
+        return { success: true };
+      }),
+  }),
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────
 async function parseTravelInfoWithLLM(text: string, fileType: string) {

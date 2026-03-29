@@ -55,6 +55,8 @@ import {
   deliveryProviders, InsertDeliveryProvider,
   deliveryOrders, InsertDeliveryOrder,
   notes, InsertNote,
+  teamSchedules, InsertTeamSchedule,
+  translationRequests, InsertTranslationRequest,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -2820,4 +2822,51 @@ export async function getSharedNotes(meetupId: number) {
 }
 
 export { eq, desc, asc, and, gt, isNull, sql } from "drizzle-orm";
-export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners, organizerApprovals, vatRates, travelSearches, travelBookings, paymentTransactions, platformWallets, walletTransactions, paymentGatewayConfig, rideProviders, rideSearches, rideBookings, deliveryProviders, deliveryOrders, notes } from "../drizzle/schema";
+// ── Team Schedules (팀 스케줄) ──────────────────────────
+export async function createTeamSchedule(data: InsertTeamSchedule) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(teamSchedules).values(data);
+  return result[0].insertId;
+}
+export async function getTeamSchedulesByMeetup(meetupId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(teamSchedules).where(and(eq(teamSchedules.meetupId, meetupId), eq(teamSchedules.status, "active"))).orderBy(asc(teamSchedules.eventTime));
+}
+export async function getTeamScheduleById(id: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(teamSchedules).where(eq(teamSchedules.id, id)).limit(1);
+  return result[0];
+}
+export async function updateTeamSchedule(id: number, data: Partial<InsertTeamSchedule>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(teamSchedules).set(data).where(eq(teamSchedules.id, id));
+}
+export async function deleteTeamSchedule(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(teamSchedules).set({ status: "cancelled" }).where(eq(teamSchedules.id, id));
+}
+// ── Translation Requests (통역 요청) ──────────────────────
+export async function createTranslationRequest(data: InsertTranslationRequest) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(translationRequests).values(data);
+  return result[0].insertId;
+}
+export async function getTranslationRequestsByInterpreter(interpreterId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(translationRequests).where(eq(translationRequests.interpreterId, interpreterId)).orderBy(desc(translationRequests.createdAt));
+}
+export async function getPendingTranslationRequests(meetupId?: number) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [eq(translationRequests.status, "pending")];
+  if (meetupId) conditions.push(eq(translationRequests.meetupId, meetupId));
+  return db.select().from(translationRequests).where(and(...conditions)).orderBy(desc(translationRequests.createdAt));
+}
+export async function updateTranslationRequest(id: number, data: Partial<InsertTranslationRequest>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(translationRequests).set(data).where(eq(translationRequests.id, id));
+}
+export async function getDriverPickupAssignments(driverPhone: string) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(pickupAssignments).where(eq(pickupAssignments.driverPhone, driverPhone)).orderBy(asc(pickupAssignments.pickupTime));
+}
+export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners, organizerApprovals, vatRates, travelSearches, travelBookings, paymentTransactions, platformWallets, walletTransactions, paymentGatewayConfig, rideProviders, rideSearches, rideBookings, deliveryProviders, deliveryOrders, notes, teamSchedules, translationRequests } from "../drizzle/schema";

@@ -1391,7 +1391,37 @@
     "svc_user_util_title": "편의 도구",
     "svc_user_util_desc": "메모, 통역, AI 도우미",
     "footer_desc": "글로벌 밋업 & 출장 관리 플랫폼",
-    "ad_travel_title": "꿈의 여행지를 찾아보세요"
+    "ad_travel_title": "꿈의 여행지를 찾아보세요",
+    "d_today_pickup": "오늘 배차",
+    "d_route": "경로 안내",
+    "d_schedule": "주간 스케줄",
+    "d_contact": "연락처",
+    "d_passengers": "탑승자 목록",
+    "d_map": "지도",
+    "d_memo": "메모",
+    "d_translator": "통역",
+    "cat_driver_core": "오늘의 배차",
+    "cat_driver_support": "지원 도구",
+    "svc_driver_pickup_title": "오늘의 픽업",
+    "svc_driver_pickup_desc": "배정된 픽업 스케줄",
+    "svc_driver_support_title": "지원 도구",
+    "svc_driver_support_desc": "지도, 메모, 통역",
+    "role_driver": "기사",
+    "i_requests": "통역 요청",
+    "i_schedule": "오늘 일정",
+    "i_team": "담당 팀",
+    "i_chat": "소통",
+    "i_voice": "음성 통역",
+    "i_memo": "메모",
+    "i_map": "지도",
+    "i_contact": "연락처",
+    "cat_interp_core": "통역 요청",
+    "cat_interp_support": "지원 도구",
+    "svc_interp_request_title": "통역 요청",
+    "svc_interp_request_desc": "대기 중인 통역 요청",
+    "svc_interp_support_title": "지원 도구",
+    "svc_interp_support_desc": "메모, 지도, 연락",
+    "role_interpreter": "통역사"
   },
   "immigration": {
     "allReady": "출입국에 필요한 모든 서류가 준비되었습니다.",
@@ -2295,5 +2325,12 @@
     "kakaoLogin": "카카오로 로그인",
     "kakaoRegister": "카카오로 간편 가입",
     "orDivider": "또는"
+  },
+  "translator": {
+    "voice_mode": "음성 모드",
+    "listening": "듣는 중...",
+    "tap_to_speak": "탭하여 말하기",
+    "voice_not_supported": "음성 인식이 지원되지 않는 브라우저입니다",
+    "voice_error": "음성 인식 오류"
   }
 }

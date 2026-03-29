@@ -11,7 +11,7 @@ import {
   UtensilsCrossed, Bike, ChevronDown, Map, Headphones, Smartphone, Settings, DollarSign,
   Compass, Ship, BookOpen, Gift, CalendarDays, Video, Share2, Train, Phone, UserCheck,
   StickyNote, Languages, Megaphone, BarChart3, FileText, Bus, Anchor, Wallet,
-  Bell, Navigation, Coffee, ShoppingBag, Clock, PenTool
+  Bell, Navigation, Coffee, ShoppingBag, Clock, PenTool, Mic
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import {
@@ -106,6 +106,40 @@ const ORG_EXTRA: ServiceIcon[] = [
 ];
 
 // ═══════════════════════════════════════════════════════
+// 기사(driver) - 배차 현황 중심
+// ═══════════════════════════════════════════════════════
+const DRIVER_ROW1: ServiceIcon[] = [
+  { icon: Car, label: "home.d_today_pickup", href: "/ride", gradient: "from-blue-500 to-indigo-600", ring: "ring-blue-200 dark:ring-blue-900" },
+  { icon: Navigation, label: "home.d_route", href: "/ride", gradient: "from-emerald-500 to-teal-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
+  { icon: CalendarDays, label: "home.d_schedule", href: "/schedule", gradient: "from-violet-500 to-purple-600", ring: "ring-violet-200 dark:ring-violet-900" },
+  { icon: Phone, label: "home.d_contact", href: "/community", gradient: "from-sky-500 to-cyan-600", ring: "ring-sky-200 dark:ring-sky-900" },
+];
+
+const DRIVER_ROW2: ServiceIcon[] = [
+  { icon: Users, label: "home.d_passengers", href: "/lookup", gradient: "from-rose-500 to-pink-600", ring: "ring-rose-200 dark:ring-rose-900" },
+  { icon: Map, label: "home.d_map", href: "/booking", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
+  { icon: StickyNote, label: "home.d_memo", href: "/notes", gradient: "from-yellow-500 to-amber-600", ring: "ring-yellow-200 dark:ring-yellow-900" },
+  { icon: Languages, label: "home.d_translator", href: "/translator", gradient: "from-cyan-500 to-blue-600", ring: "ring-cyan-200 dark:ring-cyan-900" },
+];
+
+// ═══════════════════════════════════════════════════════
+// 통역사(interpreter) - 통역 요청 중심
+// ═══════════════════════════════════════════════════════
+const INTERP_ROW1: ServiceIcon[] = [
+  { icon: Languages, label: "home.i_requests", href: "/translator", gradient: "from-cyan-500 to-blue-600", ring: "ring-cyan-200 dark:ring-cyan-900" },
+  { icon: CalendarDays, label: "home.i_schedule", href: "/schedule", gradient: "from-emerald-500 to-teal-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
+  { icon: Users, label: "home.i_team", href: "/lookup", gradient: "from-violet-500 to-purple-600", ring: "ring-violet-200 dark:ring-violet-900" },
+  { icon: MessageCircle, label: "home.i_chat", href: "/community", gradient: "from-sky-500 to-cyan-600", ring: "ring-sky-200 dark:ring-sky-900" },
+];
+
+const INTERP_ROW2: ServiceIcon[] = [
+  { icon: Mic, label: "home.i_voice", href: "/translator", gradient: "from-rose-500 to-pink-600", ring: "ring-rose-200 dark:ring-rose-900", badge: "NEW" },
+  { icon: StickyNote, label: "home.i_memo", href: "/notes", gradient: "from-yellow-500 to-amber-600", ring: "ring-yellow-200 dark:ring-yellow-900" },
+  { icon: Map, label: "home.i_map", href: "/booking", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
+  { icon: Phone, label: "home.i_contact", href: "/community", gradient: "from-orange-500 to-red-600", ring: "ring-orange-200 dark:ring-orange-900" },
+];
+
+// ═══════════════════════════════════════════════════════
 // 비로그인 - 플랫폼 소개 + 서비스 체험
 // ═══════════════════════════════════════════════════════
 const GUEST_ROW1: ServiceIcon[] = [
@@ -154,6 +188,34 @@ function getMenuConfig(role: string | undefined, isAuthenticated: boolean) {
     };
   }
 
+  if (role === "driver") {
+    return {
+      row1: DRIVER_ROW1,
+      row2: DRIVER_ROW2,
+      extra: [],
+      cat1: "home.cat_driver_core",
+      cat1Default: "오늘의 배차",
+      cat2: "home.cat_driver_support",
+      cat2Default: "지원 도구",
+      catExtra: "",
+      catExtraDefault: "",
+    };
+  }
+
+  if (role === "interpreter") {
+    return {
+      row1: INTERP_ROW1,
+      row2: INTERP_ROW2,
+      extra: [],
+      cat1: "home.cat_interp_core",
+      cat1Default: "통역 요청",
+      cat2: "home.cat_interp_support",
+      cat2Default: "지원 도구",
+      catExtra: "",
+      catExtraDefault: "",
+    };
+  }
+
   // Default: user, partner
   return {
     row1: USER_ROW1,
@@ -183,6 +245,60 @@ function getServiceMenus(role: string | undefined, isAuthenticated: boolean, t: 
           { icon: Car, color: "text-purple-500", label: t("home.g_ride"), href: "/ride", badge: "NEW" },
           { icon: UtensilsCrossed, color: "text-orange-500", label: t("home.g_delivery"), href: "/delivery", badge: "NEW" },
           { icon: Bot, color: "text-cyan-500", label: t("home.g_ai"), href: "/chatbot" },
+        ],
+      },
+    ];
+  }
+
+  if (role === "driver") {
+    return [
+      {
+        color: "bg-blue-500",
+        title: t("home.svc_driver_pickup_title", "오늘의 픽업"),
+        desc: t("home.svc_driver_pickup_desc", "배정된 픽업 스케줄"),
+        items: [
+          { icon: Car, color: "text-blue-500", label: t("home.d_today_pickup", "오늘 배차"), href: "/ride" },
+          { icon: Navigation, color: "text-emerald-500", label: t("home.d_route", "경로 안내"), href: "/ride" },
+          { icon: Users, color: "text-rose-500", label: t("home.d_passengers", "탑승자 목록"), href: "/lookup" },
+          { icon: CalendarDays, color: "text-violet-500", label: t("home.d_schedule", "주간 스케줄"), href: "/schedule" },
+        ],
+      },
+      {
+        color: "bg-teal-500",
+        title: t("home.svc_driver_support_title", "지원 도구"),
+        desc: t("home.svc_driver_support_desc", "지도, 메모, 통역"),
+        items: [
+          { icon: Map, color: "text-teal-500", label: t("home.d_map", "지도"), href: "/booking" },
+          { icon: StickyNote, color: "text-yellow-500", label: t("home.d_memo", "메모"), href: "/notes" },
+          { icon: Languages, color: "text-cyan-500", label: t("home.d_translator", "통역"), href: "/translator" },
+          { icon: Phone, color: "text-sky-500", label: t("home.d_contact", "연락처"), href: "/community" },
+        ],
+      },
+    ];
+  }
+
+  if (role === "interpreter") {
+    return [
+      {
+        color: "bg-cyan-500",
+        title: t("home.svc_interp_request_title", "통역 요청"),
+        desc: t("home.svc_interp_request_desc", "대기 중인 통역 요청"),
+        items: [
+          { icon: Languages, color: "text-cyan-500", label: t("home.i_requests", "통역 요청"), href: "/translator" },
+          { icon: Mic, color: "text-rose-500", label: t("home.i_voice", "음성 통역"), href: "/translator", badge: "NEW" },
+          { icon: CalendarDays, color: "text-emerald-500", label: t("home.i_schedule", "오늘 일정"), href: "/schedule" },
+          { icon: Users, color: "text-violet-500", label: t("home.i_team", "담당 팀"), href: "/lookup" },
+        ],
+      },
+      {
+        color: "bg-amber-500",
+        title: t("home.svc_interp_support_title", "지원 도구"),
+        desc: t("home.svc_interp_support_desc", "메모, 지도, 연락"),
+        items: [
+          { icon: StickyNote, color: "text-yellow-500", label: t("home.i_memo", "메모"), href: "/notes" },
+          { icon: Map, color: "text-teal-500", label: t("home.i_map", "지도"), href: "/booking" },
+          { icon: MessageCircle, color: "text-sky-500", label: t("home.i_chat", "소통"), href: "/community" },
+          { icon: Phone, color: "text-orange-500", label: t("home.i_contact", "연락처"), href: "/community" },
         ],
       },
     ];
@@ -310,6 +426,8 @@ export default function Home() {
       organizer: t("home.role_organizer", "주최자"),
       agency: t("home.role_agency", "에이전시"),
       partner: t("home.role_partner", "파트너"),
+      driver: t("home.role_driver", "기사"),
+      interpreter: t("home.role_interpreter", "통역사"),
       user: t("home.role_user", "참석자"),
     };
     return labels[userRole || "user"] || labels.user;

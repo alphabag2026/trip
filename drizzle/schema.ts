@@ -8,7 +8,7 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   passwordHash: varchar("passwordHash", { length: 255 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin", "superadmin", "organizer", "agency", "partner"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "admin", "superadmin", "organizer", "agency", "partner", "driver", "interpreter"]).default("user").notNull(),
   organizationId: int("organizationId"),
   totpSecret: varchar("totpSecret", { length: 255 }),
   totpEnabled: boolean("totpEnabled").default(false).notNull(),
@@ -1767,3 +1767,41 @@ export const notes = mysqlTable("notes", {
 });
 export type Note = typeof notes.$inferSelect;
 export type InsertNote = typeof notes.$inferInsert;
+
+// ── Team Schedules (팀 스케줄 자동 등록) ──────────────────
+export const teamSchedules = mysqlTable("team_schedules", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description"),
+  location: varchar("location", { length: 500 }),
+  eventTime: timestamp("eventTime").notNull(),
+  endTime: timestamp("endTime"),
+  createdByUserId: int("createdByUserId"),
+  memberIds: json("memberIds").$type<number[]>(), // registration IDs
+  notified: boolean("notified").default(false).notNull(),
+  status: mysqlEnum("status", ["active", "cancelled"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type TeamSchedule = typeof teamSchedules.$inferSelect;
+export type InsertTeamSchedule = typeof teamSchedules.$inferInsert;
+
+// ── Translation Requests (통역 요청) ──────────────────
+export const translationRequests = mysqlTable("translation_requests", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId"),
+  requesterId: int("requesterId").notNull(),
+  interpreterId: int("interpreterId"),
+  sourceLang: varchar("sourceLang", { length: 10 }).notNull(),
+  targetLang: varchar("targetLang", { length: 10 }).notNull(),
+  context: text("context"),
+  location: varchar("location", { length: 500 }),
+  scheduledTime: timestamp("scheduledTime"),
+  status: mysqlEnum("status", ["pending", "assigned", "in_progress", "completed", "cancelled"]).default("pending").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type TranslationRequest = typeof translationRequests.$inferSelect;
+export type InsertTranslationRequest = typeof translationRequests.$inferInsert;

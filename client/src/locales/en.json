@@ -1391,7 +1391,37 @@
     "svc_user_util_title": "Utilities",
     "svc_user_util_desc": "Memo, translator, AI helper",
     "footer_desc": "Global Meetup & Business Trip Platform",
-    "ad_travel_title": "Discover your dream destination"
+    "ad_travel_title": "Discover your dream destination",
+    "d_today_pickup": "Today's Pickup",
+    "d_route": "Route Guide",
+    "d_schedule": "Weekly Schedule",
+    "d_contact": "Contacts",
+    "d_passengers": "Passenger List",
+    "d_map": "Map",
+    "d_memo": "Memo",
+    "d_translator": "Translator",
+    "cat_driver_core": "Today's Dispatch",
+    "cat_driver_support": "Support Tools",
+    "svc_driver_pickup_title": "Today's Pickup",
+    "svc_driver_pickup_desc": "Assigned pickup schedule",
+    "svc_driver_support_title": "Support Tools",
+    "svc_driver_support_desc": "Map, memo, translator",
+    "role_driver": "Driver",
+    "i_requests": "Translation Requests",
+    "i_schedule": "Today's Schedule",
+    "i_team": "Assigned Team",
+    "i_chat": "Communication",
+    "i_voice": "Voice Translation",
+    "i_memo": "Memo",
+    "i_map": "Map",
+    "i_contact": "Contacts",
+    "cat_interp_core": "Translation Requests",
+    "cat_interp_support": "Support Tools",
+    "svc_interp_request_title": "Translation Requests",
+    "svc_interp_request_desc": "Pending translation requests",
+    "svc_interp_support_title": "Support Tools",
+    "svc_interp_support_desc": "Memo, map, contacts",
+    "role_interpreter": "Interpreter"
   },
   "immigration": {
     "allReady": "All required documents are ready for immigration.",
@@ -2295,5 +2325,12 @@
     "kakaoLogin": "Login with Kakao",
     "kakaoRegister": "Sign up with Kakao",
     "orDivider": "or"
+  },
+  "translator": {
+    "voice_mode": "Voice Mode",
+    "listening": "Listening...",
+    "tap_to_speak": "Tap to speak",
+    "voice_not_supported": "Voice recognition not supported in this browser",
+    "voice_error": "Voice recognition error"
   }
 }
