@@ -23,8 +23,9 @@ import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "@/components/LanguageSelector";
 import ThemeToggle from "@/components/ThemeToggle";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { getLoginUrl } from "@/const";
+import PromoCarousel from "@/components/PromoCarousel";
 
 // CDN Image URLs
 const IMAGES = {
@@ -38,6 +39,11 @@ const IMAGES = {
   adHotel: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/ad-banner-hotel-KkWokkstuyCaX4eiNFaWeb.webp",
   adCruise: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/ad-square-cruise-UV3Mpji7tAjQa95k7HRPge.webp",
   testimonialBg: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/testimonial-bg-oLAKs5rQUp3ZSEXjUNfPbP.webp",
+  promoUsdt: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/promo-banner-usdt-kQn6mhiJvcWnPHjC44srGS.webp",
+  promoVat: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/promo-banner-vat-LnDugwMhVaD9R7wgrjvPuZ.webp",
+  promoRide: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/promo-banner-ride-nGA7EfthDNqzYb4nUSwJVE.webp",
+  promoDelivery: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/promo-banner-delivery-NaofzccrxbAWFgmzkSvJnX.webp",
+  promoCruise: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/promo-banner-cruise-NLWr8Bie5pCQKeZSeLvDR6.webp",
 };
 
 // Service icon grid items - Trip.com style
@@ -248,42 +254,60 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Promo Banner (Trip.com style) ── */}
+        {/* ── Promo Carousel (Trip.com style auto-slide) ── */}
         <section className="py-4">
           <div className="container max-w-lg mx-auto px-4">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-2xl p-5 border border-blue-100 dark:border-blue-900/50">
-              <h3 className="text-base font-bold text-center mb-3">{t("home.promoTitle", "나를 위한 할인 혜택까지, 딱 한 단계!")}</h3>
-              <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mb-4">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-lg">💰</span>
-                  <span>{t("home.promoTag1", "USDT 결제 할인")}</span>
-                </div>
-                <span className="text-border">|</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-lg">🏷️</span>
-                  <span>{t("home.promoTag2", "VAT 절감 혜택")}</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Link href="/booking">
-                  <Button variant="outline" className="w-full h-11 text-sm font-semibold rounded-xl border-2 border-foreground/20 hover:border-primary hover:bg-primary/5">
-                    {t("home.promoSearchBtn", "예약 검색")}
+            <PromoCarousel
+              slides={[
+                {
+                  id: "usdt",
+                  imageUrl: IMAGES.promoUsdt,
+                  href: "/booking",
+                },
+                {
+                  id: "vat",
+                  imageUrl: IMAGES.promoVat,
+                  href: "/ride",
+                },
+                {
+                  id: "ride",
+                  imageUrl: IMAGES.promoRide,
+                  href: "/ride",
+                },
+                {
+                  id: "delivery",
+                  imageUrl: IMAGES.promoDelivery,
+                  href: "/delivery",
+                },
+                {
+                  id: "cruise",
+                  imageUrl: IMAGES.promoCruise,
+                  href: "/booking",
+                },
+              ]}
+              autoPlayInterval={4000}
+            />
+
+            {/* CTA Buttons below carousel */}
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <Link href="/booking">
+                <Button variant="outline" className="w-full h-11 text-sm font-semibold rounded-xl border-2 border-foreground/20 hover:border-primary hover:bg-primary/5">
+                  {t("home.promoSearchBtn", "예약 검색")}
+                </Button>
+              </Link>
+              {isAuthenticated ? (
+                <Link href="/my-page">
+                  <Button className="w-full h-11 text-sm font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
+                    {t("home.promoMyPageBtn", "마이페이지")}
                   </Button>
                 </Link>
-                {isAuthenticated ? (
-                  <Link href="/my-page">
-                    <Button className="w-full h-11 text-sm font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
-                      {t("home.promoMyPageBtn", "마이페이지")}
-                    </Button>
-                  </Link>
-                ) : (
-                  <a href={getLoginUrl()}>
-                    <Button className="w-full h-11 text-sm font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
-                      {t("home.promoLoginBtn", "로그인/회원가입")}
-                    </Button>
-                  </a>
-                )}
-              </div>
+              ) : (
+                <a href={getLoginUrl()}>
+                  <Button className="w-full h-11 text-sm font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
+                    {t("home.promoLoginBtn", "로그인/회원가입")}
+                  </Button>
+                </a>
+              )}
             </div>
           </div>
         </section>
