@@ -83,13 +83,21 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     if (!values.lastSignedIn) values.lastSignedIn = new Date();
     if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
     await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
-  } catch (error) { console.error("[Database] Failed to upsert user:", error); throw error; }
+  } catch (error) {
+    console.error("[Database] Failed to upsert user:", error instanceof Error ? error.message : error);
+    // Don't throw - login should still work even if upsert fails
+  }
 }
 
 export async function getUserByOpenId(openId: string) {
   const db = await getDb(); if (!db) return undefined;
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  try {
+    const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error('[DB] getUserByOpenId error:', error instanceof Error ? error.message : error);
+    return undefined;
+  }
 }
 
 // ── Meetups ────────────────────────────────────────
@@ -2202,8 +2210,13 @@ export async function assignUserToOrganization(userId: number, organizationId: n
 export async function getUserByEmail(email: string) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  try {
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error('[DB] getUserByEmail error:', error instanceof Error ? error.message : error);
+    return undefined;
+  }
 }
 
 export async function createUserWithPassword(data: {
@@ -2214,17 +2227,22 @@ export async function createUserWithPassword(data: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const openId = `local_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
-  await db.insert(users).values({
-    openId,
-    email: data.email,
-    name: data.name,
-    passwordHash: data.passwordHash,
-    loginMethod: "email",
-    role: data.role || "user",
-    lastSignedIn: new Date(),
-  });
-  return getUserByEmail(data.email);
+  try {
+    const openId = `local_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    await db.insert(users).values({
+      openId,
+      email: data.email,
+      name: data.name,
+      passwordHash: data.passwordHash,
+      loginMethod: "email",
+      role: data.role || "user",
+      lastSignedIn: new Date(),
+    });
+    return getUserByEmail(data.email);
+  } catch (error) {
+    console.error('[DB] createUserWithPassword error:', error instanceof Error ? error.message : error);
+    throw new Error("회원가입 처리 중 오류가 발생했습니다");
+  }
 }
 
 export async function updateUserPassword(userId: number, passwordHash: string) {
@@ -2242,8 +2260,13 @@ export async function updateUserTotp(userId: number, totpSecret: string | null, 
 export async function getUserById(userId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  try {
+    const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error('[DB] getUserById error:', error instanceof Error ? error.message : error);
+    return undefined;
+  }
 }
 
 

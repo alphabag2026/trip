@@ -1095,3 +1095,9 @@
 - [x] 네트워크 선택 (TRC20/BEP20/ERC20/Polygon)
 - [x] 예약 확인 다이얼로그 (가격 분해 + 결제 수단 + 네트워크 선택)
 - [x] vitest 테스트 19건 통과 (Mystifly + 결제 로직)
+
+## v9.2 - VPS 로그인 SQL 에러 수정
+- [x] 로그인 실패 원인 분석 → 실제 원인: email_verified vs emailVerified 컬럼명 불일치
+- [x] SQL 쿼리 에러 메시지 노출 방지 (getUserByEmail/getUserById/upsertUser에 try-catch 추가)
+- [x] VPS DB 컬럼명 수정 (email_verified → emailVerified) + 8개 새 테이블 생성 + VAT/결제 초기 데이터 삽입
+- [x] VPS 코드 재배포 (Docker 이미지 재빌드) + 로그인 API 테스트 통과
