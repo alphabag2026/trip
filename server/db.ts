@@ -49,6 +49,11 @@ import {
   platformWallets, InsertPlatformWallet,
   walletTransactions, InsertWalletTransaction,
   paymentGatewayConfig, InsertPaymentGatewayConfig,
+  rideProviders, InsertRideProvider,
+  rideSearches, InsertRideSearch,
+  rideBookings, InsertRideBooking,
+  deliveryProviders, InsertDeliveryProvider,
+  deliveryOrders, InsertDeliveryOrder,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -2690,5 +2695,100 @@ export async function getUserWalletTransactions(userId: number) {
   return db.select().from(walletTransactions).where(eq(walletTransactions.userId, userId)).orderBy(desc(walletTransactions.createdAt));
 }
 
+// ══════════════════════════════════════════════════════════
+// v10.0 - Ride-Hailing & Delivery DB Helpers
+// ══════════════════════════════════════════════════════════
+
+// ── Ride Providers ──
+export async function getRideProviders(activeOnly = false) {
+  const db = await getDb(); if (!db) return [];
+  if (activeOnly) return db.select().from(rideProviders).where(eq(rideProviders.isActive, true));
+  return db.select().from(rideProviders);
+}
+export async function upsertRideProvider(data: InsertRideProvider) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(rideProviders).values(data);
+  return result[0].insertId;
+}
+export async function updateRideProvider(id: number, data: Partial<InsertRideProvider>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(rideProviders).set(data).where(eq(rideProviders.id, id));
+}
+
+// ── Ride Searches ──
+export async function createRideSearch(data: InsertRideSearch) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(rideSearches).values(data);
+  return result[0].insertId;
+}
+export async function getUserRideSearches(userId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(rideSearches).where(eq(rideSearches.userId, userId)).orderBy(desc(rideSearches.createdAt)).limit(20);
+}
+
+// ── Ride Bookings ──
+export async function createRideBooking(data: InsertRideBooking) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(rideBookings).values(data);
+  return result[0].insertId;
+}
+export async function getRideBookingById(id: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(rideBookings).where(eq(rideBookings.id, id)).limit(1);
+  return result[0];
+}
+export async function getUserRideBookings(userId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(rideBookings).where(eq(rideBookings.userId, userId)).orderBy(desc(rideBookings.createdAt));
+}
+export async function updateRideBooking(id: number, data: Partial<InsertRideBooking>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(rideBookings).set(data).where(eq(rideBookings.id, id));
+}
+export async function getAllRideBookings() {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(rideBookings).orderBy(desc(rideBookings.createdAt));
+}
+
+// ── Delivery Providers ──
+export async function getDeliveryProviders(activeOnly = false) {
+  const db = await getDb(); if (!db) return [];
+  if (activeOnly) return db.select().from(deliveryProviders).where(eq(deliveryProviders.isActive, true));
+  return db.select().from(deliveryProviders);
+}
+export async function upsertDeliveryProvider(data: InsertDeliveryProvider) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(deliveryProviders).values(data);
+  return result[0].insertId;
+}
+export async function updateDeliveryProvider(id: number, data: Partial<InsertDeliveryProvider>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(deliveryProviders).set(data).where(eq(deliveryProviders.id, id));
+}
+
+// ── Delivery Orders ──
+export async function createDeliveryOrder(data: InsertDeliveryOrder) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(deliveryOrders).values(data);
+  return result[0].insertId;
+}
+export async function getDeliveryOrderById(id: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(deliveryOrders).where(eq(deliveryOrders.id, id)).limit(1);
+  return result[0];
+}
+export async function getUserDeliveryOrders(userId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(deliveryOrders).where(eq(deliveryOrders.userId, userId)).orderBy(desc(deliveryOrders.createdAt));
+}
+export async function updateDeliveryOrder(id: number, data: Partial<InsertDeliveryOrder>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(deliveryOrders).set(data).where(eq(deliveryOrders.id, id));
+}
+export async function getAllDeliveryOrders() {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(deliveryOrders).orderBy(desc(deliveryOrders.createdAt));
+}
+
 export { eq, desc, asc, and, gt, isNull, sql } from "drizzle-orm";
-export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners, organizerApprovals, vatRates, travelSearches, travelBookings, paymentTransactions, platformWallets, walletTransactions, paymentGatewayConfig } from "../drizzle/schema";
+export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners, organizerApprovals, vatRates, travelSearches, travelBookings, paymentTransactions, platformWallets, walletTransactions, paymentGatewayConfig, rideProviders, rideSearches, rideBookings, deliveryProviders, deliveryOrders } from "../drizzle/schema";

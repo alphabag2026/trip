@@ -1101,3 +1101,65 @@
 - [x] SQL 쿼리 에러 메시지 노출 방지 (getUserByEmail/getUserById/upsertUser에 try-catch 추가)
 - [x] VPS DB 컬럼명 수정 (email_verified → emailVerified) + 8개 새 테이블 생성 + VAT/결제 초기 데이터 삽입
 - [x] VPS 코드 재배포 (Docker 이미지 재빌드) + 로그인 API 테스트 통과
+
+## v9.3 - VPS 로그인 'Zero-length key' 에러 수정
+- [x] VPS 환경변수 확인 → JWT_SECRET 누락 확인
+- [x] 비밀번호 해싱 코드 확인 → JWT 세션 서명 시 cookieSecret(JWT_SECRET) 사용
+- [x] docker-compose.yml에 JWT_SECRET 환경변수 추가 + 컨테이너 재시작
+- [x] 로그인 API 테스트 통과 (success: true)
+
+## v9.4 - VPS 로그인 후 세션 유지 안 되는 문제
+- [ ] 세션 쿠키 설정 코드 확인 (Secure, SameSite, Domain, Path)
+- [ ] VPS Nginx/프록시 설정 확인 (쿠키 전달 여부)
+- [ ] 쿠키 설정 수정 및 VPS 재배포
+- [ ] 로그인 후 세션 유지 테스트
+
+## v10.0 - 차량 호출(Ride-Hailing) 및 배달(Delivery) 서비스 통합
+
+### DB 스키마
+- [x] ride_searches 테이블 (차량 호출 검색 기록)
+- [x] ride_bookings 테이블 (차량 호출 예약)
+- [x] delivery_orders 테이블 (배달 주문)
+- [x] ride_providers 테이블 (차량 호출 제공업체 설정)
+- [x] delivery_providers 테이블 (배달 제공업체 설정)
+
+### 서버 API - 차량 호출
+- [x] 차량 호출 검색 프로시저 (출발지/도착지/차종)
+- [x] 차량 호출 예약 프로시저 (USDT 결제 연동)
+- [x] 차량 호출 예약 취소/상태 조회 프로시저
+- [x] 데모 데이터 생성 (주요 도시별 요금/차종)
+- [x] 가격 비교: 현지가 vs USD vs USDT (VAT 제거)
+
+### 서버 API - 배달
+- [x] 배달 주문 검색 프로시저 (음식/물품 배달)
+- [x] 배달 주문 생성 프로시저 (USDT 결제 연동)
+- [x] 배달 주문 취소/상태 추적 프로시저
+- [x] 데모 데이터 생성 (레스토랑/배달 카테고리)
+- [x] 가격 비교: 현지가 vs USD vs USDT (VAT 제거)
+
+### 프론트엔드 - 차량 호출 페이지
+- [x] RideHailing 페이지 UI (지도 기반 출발/도착 선택)
+- [x] 차종 선택 카드 (이코노미/컴포트/프리미엄/밴)
+- [x] 가격 비교 패널 (현지가/USD/USDT + VAT 절감 표시)
+- [x] USDT 결제 플로우 연동
+- [x] 예약 확인 및 상태 추적 UI
+- [x] 내 차량 호출 이력 페이지
+
+### 프론트엔드 - 배달 페이지
+- [x] Delivery 페이지 UI (카테고리별 브라우징)
+- [x] 음식 배달 탭 (레스토랑 목록/메뉴/장바구니)
+- [x] 물품 배달 탭 (픽업/드롭오프 설정)
+- [x] 가격 비교 패널 (현지가/USD/USDT + VAT 절감 표시)
+- [x] USDT 결제 플로우 연동
+- [x] 주문 추적 실시간 UI
+- [x] 내 배달 주문 이력 페이지
+
+### 네비게이션 통합
+- [x] 홈 화면에 차량 호출/배달 카드 추가
+- [x] 상단 네비게이션에 서비스 메뉴 추가
+- [x] App.tsx 라우팅 등록
+
+### 테스트
+- [x] 차량 호출 API 테스트 (18/18 passed)
+- [x] 배달 API 테스트 (18/18 passed)
+- [x] 빌드 검증

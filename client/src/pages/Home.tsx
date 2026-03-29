@@ -7,7 +7,8 @@ import {
   Plane, ClipboardList, Search, Shield, MapPin, Globe,
   MessageCircle, Car, Hotel, Luggage, User, LayoutDashboard,
   UserPlus, LogIn, ArrowRight, CheckCircle2, Building2, Users, Briefcase, LogOut, AlertCircle,
-  Ticket, Bot, MoreHorizontal, Timer, Sparkles, Star, ChevronRight, ExternalLink, Play
+  Ticket, Bot, MoreHorizontal, Timer, Sparkles, Star, ChevronRight, ExternalLink, Play,
+  UtensilsCrossed, Bike
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import {
@@ -76,6 +77,8 @@ export default function Home() {
     { icon: ClipboardList, titleKey: "home.feat_register", descKey: "home.feat_register_desc", href: "/register", color: "text-blue-500", bg: "bg-blue-500/10" },
     { icon: Ticket, titleKey: "home.bookingCenterTitle", descKey: "home.bookingCenterDesc", href: "/booking", color: "text-emerald-500", bg: "bg-emerald-500/10" },
     { icon: Bot, titleKey: "home.feat_ai", descKey: "home.feat_ai_desc", href: "/chatbot", color: "text-purple-500", bg: "bg-purple-500/10" },
+    { icon: Car, titleKey: "home.rideHailingTitle", descKey: "home.rideHailingDesc", href: "/ride", color: "text-violet-500", bg: "bg-violet-500/10" },
+    { icon: UtensilsCrossed, titleKey: "home.foodDeliveryTitle", descKey: "home.foodDeliveryDesc", href: "/delivery", color: "text-orange-500", bg: "bg-orange-500/10" },
   ];
 
   const secondaryFeatures = [
@@ -707,6 +710,8 @@ export default function Home() {
                 <li><Link href="/register" className="hover:text-foreground transition-colors">{t("home.feat_register")}</Link></li>
                 <li><Link href="/booking" className="hover:text-foreground transition-colors">{t("home.bookingCenterTitle")}</Link></li>
                 <li><Link href="/chatbot" className="hover:text-foreground transition-colors">{t("home.feat_ai")}</Link></li>
+                <li><Link href="/ride" className="hover:text-foreground transition-colors">{t("home.rideHailingTitle", "Ride-Hailing")}</Link></li>
+                <li><Link href="/delivery" className="hover:text-foreground transition-colors">{t("home.foodDeliveryTitle", "Food Delivery")}</Link></li>
               </ul>
             </div>
             <div>

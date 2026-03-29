@@ -1543,3 +1543,209 @@ export const paymentGatewayConfig = mysqlTable("payment_gateway_config", {
 });
 export type PaymentGatewayConfig = typeof paymentGatewayConfig.$inferSelect;
 export type InsertPaymentGatewayConfig = typeof paymentGatewayConfig.$inferInsert;
+
+
+// ══════════════════════════════════════════════════════════
+// v10.0 - 차량 호출(Ride-Hailing) & 배달(Delivery) 서비스
+// ══════════════════════════════════════════════════════════
+
+// ── Ride Providers (차량 호출 제공업체 설정) ──────────────────────
+export const rideProviders = mysqlTable("ride_providers", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(), // Karhoo, Uber, Grab, Bolt
+  apiType: varchar("apiType", { length: 50 }).notNull(), // karhoo, uber, grab, bolt, demo
+  apiKey: varchar("apiKey", { length: 500 }),
+  apiSecret: varchar("apiSecret", { length: 500 }),
+  baseUrl: varchar("baseUrl", { length: 500 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  supportedCountries: json("supportedCountries"), // ["TH","VN","SG",...]
+  supportedCities: json("supportedCities"), // ["Bangkok","Singapore",...]
+  commissionRate: decimal("commissionRate", { precision: 5, scale: 2 }).default("15"), // 마크업 %
+  minFare: decimal("minFare", { precision: 10, scale: 2 }).default("2"),
+  logoUrl: varchar("logoUrl", { length: 1000 }),
+  configJson: json("configJson"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type RideProvider = typeof rideProviders.$inferSelect;
+export type InsertRideProvider = typeof rideProviders.$inferInsert;
+
+// ── Ride Searches (차량 호출 검색 기록) ──────────────────────
+export const rideSearches = mysqlTable("ride_searches", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  meetupId: int("meetupId"),
+  // 출발지
+  pickupLat: decimal("pickupLat", { precision: 10, scale: 7 }),
+  pickupLng: decimal("pickupLng", { precision: 10, scale: 7 }),
+  pickupAddress: text("pickupAddress"),
+  pickupPlaceName: varchar("pickupPlaceName", { length: 500 }),
+  // 도착지
+  dropoffLat: decimal("dropoffLat", { precision: 10, scale: 7 }),
+  dropoffLng: decimal("dropoffLng", { precision: 10, scale: 7 }),
+  dropoffAddress: text("dropoffAddress"),
+  dropoffPlaceName: varchar("dropoffPlaceName", { length: 500 }),
+  // 검색 조건
+  countryCode: varchar("countryCode", { length: 3 }),
+  city: varchar("city", { length: 100 }),
+  vehicleType: mysqlEnum("vehicleType", ["economy", "comfort", "premium", "van", "suv"]).default("economy"),
+  passengers: int("passengers").default(1),
+  scheduledAt: timestamp("scheduledAt"), // 예약 시간 (null이면 즉시)
+  // 검색 결과
+  resultCount: int("resultCount").default(0),
+  searchResults: json("searchResults"), // 제공업체별 결과 캐시
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type RideSearch = typeof rideSearches.$inferSelect;
+export type InsertRideSearch = typeof rideSearches.$inferInsert;
+
+// ── Ride Bookings (차량 호출 예약) ──────────────────────
+export const rideBookings = mysqlTable("ride_bookings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  meetupId: int("meetupId"),
+  searchId: int("searchId"),
+  providerId: int("providerId"),
+  providerName: varchar("providerName", { length: 100 }),
+  // 출발/도착
+  pickupLat: decimal("pickupLat", { precision: 10, scale: 7 }),
+  pickupLng: decimal("pickupLng", { precision: 10, scale: 7 }),
+  pickupAddress: text("pickupAddress"),
+  pickupPlaceName: varchar("pickupPlaceName", { length: 500 }),
+  dropoffLat: decimal("dropoffLat", { precision: 10, scale: 7 }),
+  dropoffLng: decimal("dropoffLng", { precision: 10, scale: 7 }),
+  dropoffAddress: text("dropoffAddress"),
+  dropoffPlaceName: varchar("dropoffPlaceName", { length: 500 }),
+  // 차량 정보
+  vehicleType: mysqlEnum("vehicleType", ["economy", "comfort", "premium", "van", "suv"]).default("economy"),
+  vehicleName: varchar("vehicleName", { length: 200 }),
+  driverName: varchar("driverName", { length: 200 }),
+  driverPhone: varchar("driverPhone", { length: 50 }),
+  licensePlate: varchar("licensePlate", { length: 50 }),
+  passengers: int("passengers").default(1),
+  // 가격 정보
+  priceLocal: decimal("priceLocal", { precision: 12, scale: 2 }),
+  localCurrency: varchar("localCurrency", { length: 10 }),
+  priceUsd: decimal("priceUsd", { precision: 12, scale: 2 }),
+  priceUsdt: decimal("priceUsdt", { precision: 12, scale: 2 }),
+  vatAmount: decimal("vatAmount", { precision: 12, scale: 2 }).default("0"),
+  vatRate: decimal("vatRate", { precision: 5, scale: 2 }).default("0"),
+  vatSaved: decimal("vatSaved", { precision: 12, scale: 2 }).default("0"),
+  platformMarkup: decimal("platformMarkup", { precision: 12, scale: 2 }).default("0"),
+  platformRevenue: decimal("platformRevenue", { precision: 12, scale: 2 }).default("0"),
+  // 거리/시간
+  distanceKm: decimal("distanceKm", { precision: 8, scale: 2 }),
+  estimatedMinutes: int("estimatedMinutes"),
+  // 일정
+  scheduledAt: timestamp("scheduledAt"),
+  pickedUpAt: timestamp("pickedUpAt"),
+  droppedOffAt: timestamp("droppedOffAt"),
+  // 결제
+  paymentMethod: mysqlEnum("paymentMethod", ["direct_usdt", "nowpayments", "platform_token", "visa_card"]).default("direct_usdt"),
+  paymentTransactionId: int("paymentTransactionId"),
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "refunded", "failed"]).default("pending"),
+  // 상태
+  status: mysqlEnum("status", ["searching", "confirmed", "driver_assigned", "en_route", "arrived", "in_progress", "completed", "cancelled"]).default("searching"),
+  cancellationReason: text("cancellationReason"),
+  // 외부 참조
+  externalBookingId: varchar("externalBookingId", { length: 255 }),
+  countryCode: varchar("countryCode", { length: 3 }),
+  rating: int("rating"), // 1-5
+  ratingComment: text("ratingComment"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type RideBooking = typeof rideBookings.$inferSelect;
+export type InsertRideBooking = typeof rideBookings.$inferInsert;
+
+// ── Delivery Providers (배달 제공업체 설정) ──────────────────────
+export const deliveryProviders = mysqlTable("delivery_providers", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(), // Lalamove, GrabExpress, Deliverect
+  apiType: varchar("apiType", { length: 50 }).notNull(), // lalamove, grab_express, deliverect, demo
+  serviceType: mysqlEnum("serviceType", ["food", "package", "document", "grocery", "all"]).default("all"),
+  apiKey: varchar("apiKey", { length: 500 }),
+  apiSecret: varchar("apiSecret", { length: 500 }),
+  baseUrl: varchar("baseUrl", { length: 500 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  supportedCountries: json("supportedCountries"),
+  supportedCities: json("supportedCities"),
+  commissionRate: decimal("commissionRate", { precision: 5, scale: 2 }).default("12"),
+  minOrderAmount: decimal("minOrderAmount", { precision: 10, scale: 2 }).default("5"),
+  logoUrl: varchar("logoUrl", { length: 1000 }),
+  configJson: json("configJson"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type DeliveryProvider = typeof deliveryProviders.$inferSelect;
+export type InsertDeliveryProvider = typeof deliveryProviders.$inferInsert;
+
+// ── Delivery Orders (배달 주문) ──────────────────────
+export const deliveryOrders = mysqlTable("delivery_orders", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  meetupId: int("meetupId"),
+  providerId: int("providerId"),
+  providerName: varchar("providerName", { length: 100 }),
+  // 주문 유형
+  orderType: mysqlEnum("orderType", ["food", "package", "document", "grocery"]).default("food"),
+  // 픽업 위치 (레스토랑/발송지)
+  pickupLat: decimal("pickupLat", { precision: 10, scale: 7 }),
+  pickupLng: decimal("pickupLng", { precision: 10, scale: 7 }),
+  pickupAddress: text("pickupAddress"),
+  pickupPlaceName: varchar("pickupPlaceName", { length: 500 }),
+  pickupPhone: varchar("pickupPhone", { length: 50 }),
+  // 배달 위치
+  deliveryLat: decimal("deliveryLat", { precision: 10, scale: 7 }),
+  deliveryLng: decimal("deliveryLng", { precision: 10, scale: 7 }),
+  deliveryAddress: text("deliveryAddress"),
+  deliveryPlaceName: varchar("deliveryPlaceName", { length: 500 }),
+  deliveryPhone: varchar("deliveryPhone", { length: 50 }),
+  deliveryInstructions: text("deliveryInstructions"),
+  // 주문 상세 (음식 배달)
+  restaurantName: varchar("restaurantName", { length: 500 }),
+  restaurantCategory: varchar("restaurantCategory", { length: 100 }), // korean, thai, japanese, western, etc
+  orderItems: json("orderItems"), // [{name, qty, price, notes}]
+  // 물품 배달
+  packageDescription: text("packageDescription"),
+  packageWeight: decimal("packageWeight", { precision: 8, scale: 2 }),
+  packageSize: mysqlEnum("packageSize", ["small", "medium", "large", "extra_large"]),
+  // 가격 정보
+  subtotal: decimal("subtotal", { precision: 12, scale: 2 }),
+  deliveryFee: decimal("deliveryFee", { precision: 12, scale: 2 }),
+  serviceFee: decimal("serviceFee", { precision: 12, scale: 2 }),
+  priceLocal: decimal("priceLocal", { precision: 12, scale: 2 }),
+  localCurrency: varchar("localCurrency", { length: 10 }),
+  priceUsd: decimal("priceUsd", { precision: 12, scale: 2 }),
+  priceUsdt: decimal("priceUsdt", { precision: 12, scale: 2 }),
+  vatAmount: decimal("vatAmount", { precision: 12, scale: 2 }).default("0"),
+  vatRate: decimal("vatRate", { precision: 5, scale: 2 }).default("0"),
+  vatSaved: decimal("vatSaved", { precision: 12, scale: 2 }).default("0"),
+  platformMarkup: decimal("platformMarkup", { precision: 12, scale: 2 }).default("0"),
+  platformRevenue: decimal("platformRevenue", { precision: 12, scale: 2 }).default("0"),
+  // 배달 정보
+  estimatedMinutes: int("estimatedMinutes"),
+  distanceKm: decimal("distanceKm", { precision: 8, scale: 2 }),
+  driverName: varchar("driverName", { length: 200 }),
+  driverPhone: varchar("driverPhone", { length: 50 }),
+  // 일정
+  orderedAt: timestamp("orderedAt").defaultNow(),
+  pickedUpAt: timestamp("pickedUpAt"),
+  deliveredAt: timestamp("deliveredAt"),
+  // 결제
+  paymentMethod: mysqlEnum("paymentMethod", ["direct_usdt", "nowpayments", "platform_token", "visa_card"]).default("direct_usdt"),
+  paymentTransactionId: int("paymentTransactionId"),
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "refunded", "failed"]).default("pending"),
+  // 상태
+  status: mysqlEnum("status", ["pending", "confirmed", "preparing", "picked_up", "in_transit", "delivered", "cancelled", "refunded"]).default("pending"),
+  cancellationReason: text("cancellationReason"),
+  // 외부 참조
+  externalOrderId: varchar("externalOrderId", { length: 255 }),
+  countryCode: varchar("countryCode", { length: 3 }),
+  rating: int("rating"), // 1-5
+  ratingComment: text("ratingComment"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type DeliveryOrder = typeof deliveryOrders.$inferSelect;
+export type InsertDeliveryOrder = typeof deliveryOrders.$inferInsert;

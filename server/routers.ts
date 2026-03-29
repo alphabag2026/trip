@@ -14,6 +14,7 @@ import QRCode from "qrcode";
 import { sdk } from "./_core/sdk";
 import { sendEmail, buildVerificationEmail, buildPasswordResetEmail } from "./email";
 import { generateDemoHotels, generateDemoFlights } from "./demoTravelData";
+import { generateDemoRideOptions, generateDemoRestaurants, calculateDeliveryPricing, SUPPORTED_CITIES, FOOD_CATEGORIES } from "./demoRideDeliveryData";
 import { mystiflyClient, cabinClassToMystifly, type MystiflyFlight, type MystiflyBookingParams } from "./mystiflyClient";
 import {
   generateFlightSearchLinks,
@@ -5965,6 +5966,358 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         return { success: true, newBalance };
       }),
   }),
+
+  // ══════════════════════════════════════════════════════════
+  // v10.0 - Ride-Hailing & Delivery Services
+  // ══════════════════════════════════════════════════════════
+  ride: router({
+    // Supported cities list
+    cities: publicProcedure.query(() => SUPPORTED_CITIES),
+
+    // Search ride options
+    search: protectedProcedure
+      .input(z.object({
+        pickupLat: z.number(),
+        pickupLng: z.number(),
+        pickupAddress: z.string(),
+        pickupPlaceName: z.string().optional(),
+        dropoffLat: z.number(),
+        dropoffLng: z.number(),
+        dropoffAddress: z.string(),
+        dropoffPlaceName: z.string().optional(),
+        city: z.string().default('Bangkok'),
+        countryCode: z.string().default('TH'),
+        vehicleType: z.enum(['economy', 'comfort', 'premium', 'van', 'suv']).optional(),
+        passengers: z.number().default(1),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Calculate distance (Haversine)
+        const R = 6371;
+        const dLat = (input.dropoffLat - input.pickupLat) * Math.PI / 180;
+        const dLng = (input.dropoffLng - input.pickupLng) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(input.pickupLat * Math.PI / 180) * Math.cos(input.dropoffLat * Math.PI / 180) *
+          Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        let distanceKm = Math.round(R * c * 1.3 * 10) / 10; // 1.3x for road factor
+        if (distanceKm < 1) distanceKm = 1 + Math.random() * 3;
+
+        // Get VAT info
+        const vatInfo = await db.getVatRateByCountry(input.countryCode);
+        const vatRate = vatInfo ? parseFloat(String(vatInfo.vatRate)) / 100 : 0.07;
+        const exchangeRate = vatInfo ? parseFloat(String(vatInfo.usdExchangeRate)) || 1 : 1;
+
+        // Generate demo results
+        const options = generateDemoRideOptions(input.city, distanceKm, exchangeRate, vatRate);
+
+        // Log search
+        try {
+          await db.createRideSearch({
+            userId: ctx.user.id,
+            pickupLat: String(input.pickupLat),
+            pickupLng: String(input.pickupLng),
+            pickupAddress: input.pickupAddress,
+            pickupPlaceName: input.pickupPlaceName,
+            dropoffLat: String(input.dropoffLat),
+            dropoffLng: String(input.dropoffLng),
+            dropoffAddress: input.dropoffAddress,
+            dropoffPlaceName: input.dropoffPlaceName,
+            countryCode: input.countryCode,
+            city: input.city,
+            vehicleType: input.vehicleType || 'economy',
+            passengers: input.passengers,
+            resultCount: options.length,
+            searchResults: options,
+          });
+        } catch (e) { /* ignore */ }
+
+        return {
+          options,
+          distanceKm,
+          currency: vatInfo?.currency || 'THB',
+          vatRate: Math.round(vatRate * 10000) / 100,
+          exchangeRate,
+        };
+      }),
+
+    // Book a ride
+    book: protectedProcedure
+      .input(z.object({
+        rideOptionId: z.string(),
+        pickupLat: z.number(),
+        pickupLng: z.number(),
+        pickupAddress: z.string(),
+        pickupPlaceName: z.string().optional(),
+        dropoffLat: z.number(),
+        dropoffLng: z.number(),
+        dropoffAddress: z.string(),
+        dropoffPlaceName: z.string().optional(),
+        vehicleType: z.enum(['economy', 'comfort', 'premium', 'van', 'suv']),
+        vehicleName: z.string(),
+        providerName: z.string(),
+        priceLocal: z.number(),
+        localCurrency: z.string(),
+        priceUsd: z.number(),
+        priceUsdt: z.number(),
+        vatAmount: z.number(),
+        vatSaved: z.number(),
+        platformMarkup: z.number(),
+        distanceKm: z.number(),
+        estimatedMinutes: z.number(),
+        passengers: z.number().default(1),
+        countryCode: z.string().default('TH'),
+        paymentMethod: z.enum(['direct_usdt', 'nowpayments', 'platform_token', 'visa_card']).default('direct_usdt'),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const bookingId = await db.createRideBooking({
+          userId: ctx.user.id,
+          providerName: input.providerName,
+          pickupLat: String(input.pickupLat),
+          pickupLng: String(input.pickupLng),
+          pickupAddress: input.pickupAddress,
+          pickupPlaceName: input.pickupPlaceName,
+          dropoffLat: String(input.dropoffLat),
+          dropoffLng: String(input.dropoffLng),
+          dropoffAddress: input.dropoffAddress,
+          dropoffPlaceName: input.dropoffPlaceName,
+          vehicleType: input.vehicleType,
+          vehicleName: input.vehicleName,
+          passengers: input.passengers,
+          priceLocal: String(input.priceLocal),
+          localCurrency: input.localCurrency,
+          priceUsd: String(input.priceUsd),
+          priceUsdt: String(input.priceUsdt),
+          vatAmount: String(input.vatAmount),
+          vatSaved: String(input.vatSaved),
+          platformMarkup: String(input.platformMarkup),
+          platformRevenue: String(input.platformMarkup),
+          distanceKm: String(input.distanceKm),
+          estimatedMinutes: input.estimatedMinutes,
+          paymentMethod: input.paymentMethod,
+          paymentStatus: 'pending',
+          status: 'confirmed',
+          countryCode: input.countryCode,
+          driverName: ['Somchai', 'Nguyen', 'Ahmad', 'Tanaka', 'Kim'][Math.floor(Math.random() * 5)],
+          driverPhone: '+66-' + Math.floor(80000000 + Math.random() * 19999999),
+          licensePlate: (Math.random() > 0.5 ? 'กท' : 'ขก') + ' ' + Math.floor(1000 + Math.random() * 8999),
+        });
+
+        return {
+          bookingId,
+          status: 'confirmed',
+          driverEta: Math.round(2 + Math.random() * 6),
+          message: 'Ride booked successfully! Driver is on the way.',
+        };
+      }),
+
+    // Get my ride bookings
+    myBookings: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUserRideBookings(ctx.user.id);
+    }),
+
+    // Cancel ride
+    cancel: protectedProcedure
+      .input(z.object({ bookingId: z.number(), reason: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        const booking = await db.getRideBookingById(input.bookingId);
+        if (!booking || booking.userId !== ctx.user.id) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (booking.status === 'completed' || booking.status === 'cancelled') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot cancel this ride' });
+        }
+        await db.updateRideBooking(input.bookingId, {
+          status: 'cancelled',
+          cancellationReason: input.reason || 'User cancelled',
+        });
+        return { success: true };
+      }),
+
+    // Rate ride
+    rate: protectedProcedure
+      .input(z.object({ bookingId: z.number(), rating: z.number().min(1).max(5), comment: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        const booking = await db.getRideBookingById(input.bookingId);
+        if (!booking || booking.userId !== ctx.user.id) throw new TRPCError({ code: 'NOT_FOUND' });
+        await db.updateRideBooking(input.bookingId, {
+          rating: input.rating,
+          ratingComment: input.comment,
+        });
+        return { success: true };
+      }),
+
+    // Admin: all bookings
+    allBookings: adminProcedure.query(async () => {
+      return await db.getAllRideBookings();
+    }),
+  }),
+
+  delivery: router({
+    // Supported food categories
+    categories: publicProcedure.query(() => FOOD_CATEGORIES),
+
+    // Get restaurants for a city
+    restaurants: protectedProcedure
+      .input(z.object({
+        city: z.string().default('Bangkok'),
+        countryCode: z.string().default('TH'),
+        category: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        const vatInfo = await db.getVatRateByCountry(input.countryCode);
+        const exchangeRate = vatInfo ? parseFloat(String(vatInfo.usdExchangeRate)) || 1 : 1;
+        const vatRate = vatInfo ? parseFloat(String(vatInfo.vatRate)) / 100 : 0.07;
+        let restaurants = generateDemoRestaurants(input.city, exchangeRate, vatRate);
+        if (input.category && input.category !== 'all') {
+          restaurants = restaurants.filter(r => r.category === input.category);
+        }
+        return {
+          restaurants,
+          total: restaurants.length,
+          currency: vatInfo?.currency || 'THB',
+          vatRate: Math.round(vatRate * 10000) / 100,
+          exchangeRate,
+        };
+      }),
+
+    // Calculate delivery pricing
+    calculatePrice: protectedProcedure
+      .input(z.object({
+        subtotal: z.number(),
+        deliveryFee: z.number(),
+        countryCode: z.string().default('TH'),
+      }))
+      .query(async ({ input }) => {
+        const vatInfo = await db.getVatRateByCountry(input.countryCode);
+        const exchangeRate = vatInfo ? parseFloat(String(vatInfo.usdExchangeRate)) || 1 : 1;
+        const vatRate = vatInfo ? parseFloat(String(vatInfo.vatRate)) / 100 : 0.07;
+        const currency = vatInfo?.currency || 'THB';
+        return calculateDeliveryPricing(input.subtotal, input.deliveryFee, currency, exchangeRate, vatRate);
+      }),
+
+    // Place delivery order
+    order: protectedProcedure
+      .input(z.object({
+        orderType: z.enum(['food', 'package', 'document', 'grocery']).default('food'),
+        // Pickup (restaurant)
+        pickupAddress: z.string(),
+        pickupPlaceName: z.string().optional(),
+        pickupLat: z.number().optional(),
+        pickupLng: z.number().optional(),
+        // Delivery
+        deliveryAddress: z.string(),
+        deliveryPlaceName: z.string().optional(),
+        deliveryLat: z.number().optional(),
+        deliveryLng: z.number().optional(),
+        deliveryPhone: z.string().optional(),
+        deliveryInstructions: z.string().optional(),
+        // Restaurant info
+        restaurantName: z.string().optional(),
+        restaurantCategory: z.string().optional(),
+        // Order items
+        orderItems: z.array(z.object({
+          name: z.string(),
+          qty: z.number(),
+          price: z.number(),
+          notes: z.string().optional(),
+        })),
+        // Pricing
+        subtotal: z.number(),
+        deliveryFee: z.number(),
+        priceLocal: z.number(),
+        localCurrency: z.string(),
+        priceUsd: z.number(),
+        priceUsdt: z.number(),
+        vatAmount: z.number(),
+        vatSaved: z.number(),
+        platformMarkup: z.number(),
+        countryCode: z.string().default('TH'),
+        paymentMethod: z.enum(['direct_usdt', 'nowpayments', 'platform_token', 'visa_card']).default('direct_usdt'),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const serviceFee = input.subtotal * 0.05;
+        const orderId = await db.createDeliveryOrder({
+          userId: ctx.user.id,
+          orderType: input.orderType,
+          pickupAddress: input.pickupAddress,
+          pickupPlaceName: input.pickupPlaceName,
+          pickupLat: input.pickupLat ? String(input.pickupLat) : undefined,
+          pickupLng: input.pickupLng ? String(input.pickupLng) : undefined,
+          deliveryAddress: input.deliveryAddress,
+          deliveryPlaceName: input.deliveryPlaceName,
+          deliveryLat: input.deliveryLat ? String(input.deliveryLat) : undefined,
+          deliveryLng: input.deliveryLng ? String(input.deliveryLng) : undefined,
+          deliveryPhone: input.deliveryPhone,
+          deliveryInstructions: input.deliveryInstructions,
+          restaurantName: input.restaurantName,
+          restaurantCategory: input.restaurantCategory,
+          orderItems: input.orderItems,
+          subtotal: String(input.subtotal),
+          deliveryFee: String(input.deliveryFee),
+          serviceFee: String(Math.round(serviceFee)),
+          priceLocal: String(input.priceLocal),
+          localCurrency: input.localCurrency,
+          priceUsd: String(input.priceUsd),
+          priceUsdt: String(input.priceUsdt),
+          vatAmount: String(input.vatAmount),
+          vatSaved: String(input.vatSaved),
+          platformMarkup: String(input.platformMarkup),
+          platformRevenue: String(input.platformMarkup),
+          estimatedMinutes: 25 + Math.floor(Math.random() * 20),
+          paymentMethod: input.paymentMethod,
+          paymentStatus: 'pending',
+          status: 'confirmed',
+          countryCode: input.countryCode,
+          driverName: ['Somchai', 'Nguyen', 'Ahmad', 'Tanaka', 'Kim'][Math.floor(Math.random() * 5)],
+          driverPhone: '+66-' + Math.floor(80000000 + Math.random() * 19999999),
+        });
+
+        return {
+          orderId,
+          status: 'confirmed',
+          estimatedMinutes: 25 + Math.floor(Math.random() * 20),
+          message: 'Order placed successfully! Preparing your order.',
+        };
+      }),
+
+    // Get my delivery orders
+    myOrders: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUserDeliveryOrders(ctx.user.id);
+    }),
+
+    // Cancel order
+    cancel: protectedProcedure
+      .input(z.object({ orderId: z.number(), reason: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        const order = await db.getDeliveryOrderById(input.orderId);
+        if (!order || order.userId !== ctx.user.id) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (['delivered', 'cancelled', 'refunded'].includes(order.status || '')) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot cancel this order' });
+        }
+        await db.updateDeliveryOrder(input.orderId, {
+          status: 'cancelled',
+          cancellationReason: input.reason || 'User cancelled',
+        });
+        return { success: true };
+      }),
+
+    // Rate order
+    rate: protectedProcedure
+      .input(z.object({ orderId: z.number(), rating: z.number().min(1).max(5), comment: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        const order = await db.getDeliveryOrderById(input.orderId);
+        if (!order || order.userId !== ctx.user.id) throw new TRPCError({ code: 'NOT_FOUND' });
+        await db.updateDeliveryOrder(input.orderId, {
+          rating: input.rating,
+          ratingComment: input.comment,
+        });
+        return { success: true };
+      }),
+
+    // Admin: all orders
+    allOrders: adminProcedure.query(async () => {
+      return await db.getAllDeliveryOrders();
+    }),
+  }),
+
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────
 async function parseTravelInfoWithLLM(text: string, fileType: string) {

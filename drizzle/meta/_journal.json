@@ -218,6 +218,13 @@
       "when": 1774767476992,
       "tag": "0030_fantastic_hedge_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "5",
+      "when": 1774783853689,
+      "tag": "0031_cute_menace",
+      "breakpoints": true
     }
   ]
 }

@@ -66,6 +66,8 @@ import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import MyBookings from "./pages/MyBookings";
+import RideHailing from "./pages/RideHailing";
+import FoodDelivery from "./pages/FoodDelivery";
 
 function PublicRouter() {
   return (
@@ -90,6 +92,8 @@ function PublicRouter() {
       <Route path="/immigration-checklist" component={ImmigrationChecklist} />
       <Route path="/booking" component={BookingCenter} />
       <Route path="/my-bookings" component={MyBookings} />
+      <Route path="/ride" component={RideHailing} />
+      <Route path="/delivery" component={FoodDelivery} />
       <Route path="/community" component={CommunityChat} />
       <Route path="/community/:roomId" component={CommunityChat} />
       <Route path="/welcome" component={Welcome} />
