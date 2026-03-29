@@ -1263,6 +1263,7 @@
     "goNow": "Go Now",
     "quickServicesTitle": "Services",
     "quickServicesDesc": "Try without signing in",
+    "quickServicesDescAuth": "Choose a service to get started",
     "tryNow": "Try Now",
     "loginToBook": "Sign in to book",
     "demoMode": "Demo Mode",

@@ -739,23 +739,130 @@ export default function Home() {
                   <Link href="/lookup"><Button size="lg" variant="outline" className="gap-2"><Search className="h-5 w-5" />{t("home.lookupBtn")}</Button></Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  {primaryFeatures.map((f, i) => (
-                    <Link key={i} href={f.href}>
-                      <Card className="bg-card border-border/50 hover:border-primary/30 transition-all hover:shadow-lg cursor-pointer group h-full">
-                        <CardContent className="p-6">
-                          <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl ${f.bg} mb-4`}>
-                            <f.icon className={`h-6 w-6 ${f.color}`} />
+                {/* ══ Quick Services - App Style Cards (same as non-auth) ══ */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-xl md:text-2xl font-bold tracking-tight">{t("home.quickServicesTitle")}</h2>
+                      <p className="text-muted-foreground text-sm mt-0.5">{t("home.quickServicesDescAuth", t("home.quickServicesDesc"))}</p>
+                    </div>
+                  </div>
+
+                  {/* Ride-Hailing Card */}
+                  <Link href="/ride">
+                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-6 md:p-8 mb-4 cursor-pointer transition-all hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-0.5">
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
+                      <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />
+                      <div className="relative flex flex-col md:flex-row md:items-center gap-6">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl shadow-lg">🚕</div>
+                            <div>
+                              <span className="text-white/60 text-xs font-medium uppercase tracking-wider">{t("home.feat_ride_label")}</span>
+                              <h3 className="text-xl md:text-2xl font-bold text-white">{t("home.feat_ride_title")}</h3>
+                            </div>
                           </div>
-                          <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">{t(f.titleKey)}</h3>
-                          <p className="text-muted-foreground text-sm">{t(f.descKey)}</p>
-                          <div className="mt-3 flex items-center text-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                            {t("home.goNow", "바로 가기")} <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                          <p className="text-white/70 text-sm leading-relaxed max-w-lg mb-4">{t("home.feat_ride_desc")}</p>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            <Badge className="bg-white/15 text-white border-0 text-xs">{t("home.feat_tag_ride1")}</Badge>
+                            <Badge className="bg-white/15 text-white border-0 text-xs">{t("home.feat_tag_ride2")}</Badge>
+                            <Badge className="bg-white/15 text-white border-0 text-xs">{t("home.feat_tag_ride3")}</Badge>
                           </div>
-                        </CardContent>
-                      </Card>
+                          <div className="inline-flex items-center gap-2 text-white font-medium text-sm group-hover:gap-3 transition-all">
+                            {t("home.tryNow")} <ArrowRight className="h-4 w-4" />
+                          </div>
+                        </div>
+                        <div className="hidden md:flex flex-col gap-2 min-w-[200px]">
+                          {[{emoji: '🚗', label: 'Economy', price: '$3.50'}, {emoji: '🚙', label: 'Comfort', price: '$5.80'}, {emoji: '🏎️', label: 'Premium', price: '$12.00'}].map((v, i) => (
+                            <div key={i} className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2.5 group-hover:bg-white/15 transition-colors">
+                              <span className="text-lg">{v.emoji}</span>
+                              <div className="flex-1"><div className="text-white text-sm font-medium">{v.label}</div></div>
+                              <div className="text-white/80 text-sm font-mono">~{v.price}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Food Delivery Card */}
+                  <Link href="/delivery">
+                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 via-red-500 to-rose-600 p-6 md:p-8 mb-4 cursor-pointer transition-all hover:shadow-2xl hover:shadow-orange-500/20 hover:-translate-y-0.5">
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
+                      <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />
+                      <div className="relative flex flex-col md:flex-row md:items-center gap-6">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl shadow-lg">🍽️</div>
+                            <div>
+                              <span className="text-white/60 text-xs font-medium uppercase tracking-wider">{t("home.feat_delivery_label")}</span>
+                              <h3 className="text-xl md:text-2xl font-bold text-white">{t("home.feat_delivery_title")}</h3>
+                            </div>
+                          </div>
+                          <p className="text-white/70 text-sm leading-relaxed max-w-lg mb-4">{t("home.feat_delivery_desc")}</p>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            <Badge className="bg-white/15 text-white border-0 text-xs">{t("home.feat_tag_delivery1")}</Badge>
+                            <Badge className="bg-white/15 text-white border-0 text-xs">{t("home.feat_tag_delivery2")}</Badge>
+                            <Badge className="bg-white/15 text-white border-0 text-xs">{t("home.feat_tag_delivery3")}</Badge>
+                          </div>
+                          <div className="inline-flex items-center gap-2 text-white font-medium text-sm group-hover:gap-3 transition-all">
+                            {t("home.tryNow")} <ArrowRight className="h-4 w-4" />
+                          </div>
+                        </div>
+                        <div className="hidden md:grid grid-cols-3 gap-2 min-w-[240px]">
+                          {[{emoji: '🍜', label: 'Thai'}, {emoji: '🍣', label: 'Japanese'}, {emoji: '🍲', label: 'Vietnamese'}, {emoji: '🥘', label: 'Korean'}, {emoji: '🍔', label: 'Western'}, {emoji: '🍰', label: 'Dessert'}].map((c, i) => (
+                            <div key={i} className="flex flex-col items-center gap-1 bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2.5 group-hover:bg-white/15 transition-colors">
+                              <span className="text-xl">{c.emoji}</span>
+                              <span className="text-white/80 text-[10px] font-medium">{c.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Quick Action Cards Row */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <Link href="/booking">
+                      <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 cursor-pointer transition-all hover:shadow-xl hover:shadow-emerald-500/20 hover:-translate-y-0.5">
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
+                        <div className="relative flex items-center gap-4">
+                          <div className="h-11 w-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl shadow-lg">✈️</div>
+                          <div className="flex-1">
+                            <h3 className="text-base font-bold text-white">{t("home.bookingCenterTitle")}</h3>
+                            <p className="text-white/70 text-xs">{t("home.bookingCenterDesc")}</p>
+                          </div>
+                          <ArrowRight className="h-5 w-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                        </div>
+                      </div>
                     </Link>
-                  ))}
+                    <Link href="/register">
+                      <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 p-5 cursor-pointer transition-all hover:shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5">
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
+                        <div className="relative flex items-center gap-4">
+                          <div className="h-11 w-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl shadow-lg">📋</div>
+                          <div className="flex-1">
+                            <h3 className="text-base font-bold text-white">{t("home.feat_register")}</h3>
+                            <p className="text-white/70 text-xs">{t("home.feat_register_desc")}</p>
+                          </div>
+                          <ArrowRight className="h-5 w-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                        </div>
+                      </div>
+                    </Link>
+                    <Link href="/chatbot">
+                      <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-fuchsia-600 p-5 cursor-pointer transition-all hover:shadow-xl hover:shadow-purple-500/20 hover:-translate-y-0.5">
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
+                        <div className="relative flex items-center gap-4">
+                          <div className="h-11 w-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl shadow-lg">🤖</div>
+                          <div className="flex-1">
+                            <h3 className="text-base font-bold text-white">{t("home.feat_ai")}</h3>
+                            <p className="text-white/70 text-xs">{t("home.feat_ai_desc")}</p>
+                          </div>
+                          <ArrowRight className="h-5 w-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
                 </div>
 
                 {/* Ad Banner for authenticated users - Dynamic from DB (bottom) */}
