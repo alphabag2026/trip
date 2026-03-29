@@ -54,6 +54,7 @@ import {
   rideBookings, InsertRideBooking,
   deliveryProviders, InsertDeliveryProvider,
   deliveryOrders, InsertDeliveryOrder,
+  notes, InsertNote,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -2790,5 +2791,33 @@ export async function getAllDeliveryOrders() {
   return db.select().from(deliveryOrders).orderBy(desc(deliveryOrders.createdAt));
 }
 
+// ── Notes (메모) ──────────────────────────────────────
+export async function createNote(data: InsertNote) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(notes).values(data);
+  return result[0].insertId;
+}
+export async function getUserNotes(userId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(notes).where(eq(notes.userId, userId)).orderBy(desc(notes.isPinned), desc(notes.updatedAt));
+}
+export async function getNoteById(id: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(notes).where(eq(notes.id, id)).limit(1);
+  return result[0];
+}
+export async function updateNote(id: number, data: Partial<InsertNote>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(notes).set(data).where(eq(notes.id, id));
+}
+export async function deleteNote(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(notes).where(eq(notes.id, id));
+}
+export async function getSharedNotes(meetupId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(notes).where(and(eq(notes.isShared, true), eq(notes.sharedWithMeetup, meetupId))).orderBy(desc(notes.updatedAt));
+}
+
 export { eq, desc, asc, and, gt, isNull, sql } from "drizzle-orm";
-export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners, organizerApprovals, vatRates, travelSearches, travelBookings, paymentTransactions, platformWallets, walletTransactions, paymentGatewayConfig, rideProviders, rideSearches, rideBookings, deliveryProviders, deliveryOrders } from "../drizzle/schema";
+export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners, organizerApprovals, vatRates, travelSearches, travelBookings, paymentTransactions, platformWallets, walletTransactions, paymentGatewayConfig, rideProviders, rideSearches, rideBookings, deliveryProviders, deliveryOrders, notes } from "../drizzle/schema";

@@ -9,7 +9,9 @@ import {
   UserPlus, LogIn, ArrowRight, CheckCircle2, Building2, Users, Briefcase, LogOut, AlertCircle,
   Ticket, Bot, MoreHorizontal, Timer, Sparkles, Star, ChevronRight, ExternalLink, Play,
   UtensilsCrossed, Bike, ChevronDown, Map, Headphones, Smartphone, Settings, DollarSign,
-  Compass, Ship, BookOpen, Gift, CalendarDays, Video, Share2, Train, Phone, UserCheck
+  Compass, Ship, BookOpen, Gift, CalendarDays, Video, Share2, Train, Phone, UserCheck,
+  StickyNote, Languages, Megaphone, BarChart3, FileText, Bus, Anchor, Wallet,
+  Bell, Navigation, Coffee, ShoppingBag, Clock, PenTool
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import {
@@ -30,55 +32,242 @@ import PromoCarousel from "@/components/PromoCarousel";
 // CDN Image URLs
 const IMAGES = {
   heroBanner: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/hero-banner-main-RHKBHr3tmWcbadw6sfeo2v.webp",
-  featureMeetup: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/feature-meetup-E5PcfucWTtZ4bQJoVDtDUX.webp",
-  featureTravel: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/feature-travel-kr6kzeGjMpVtJ2WYudmQUh.webp",
-  featurePassport: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/feature-passport-ghzP5AXN43JfVneYxEQJmd.webp",
-  featureCommunity: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/feature-community-8YEFFMwGt8JKZzHNoiyD5E.webp",
-  featureBooking: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/feature-booking-gfDtaoNENGKKQqXPR5AnP3.webp",
-  adTravel: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/ad-banner-travel-hQHohRtnBqxSohmoBcK87V.webp",
-  adHotel: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/ad-banner-hotel-KkWokkstuyCaX4eiNFaWeb.webp",
-  adCruise: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/ad-square-cruise-UV3Mpji7tAjQa95k7HRPge.webp",
-  testimonialBg: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/testimonial-bg-oLAKs5rQUp3ZSEXjUNfPbP.webp",
   promoUsdt: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/promo-banner-usdt-kQn6mhiJvcWnPHjC44srGS.webp",
   promoVat: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/promo-banner-vat-LnDugwMhVaD9R7wgrjvPuZ.webp",
   promoRide: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/promo-banner-ride-nGA7EfthDNqzYb4nUSwJVE.webp",
   promoDelivery: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/promo-banner-delivery-NaofzccrxbAWFgmzkSvJnX.webp",
   promoCruise: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/promo-banner-cruise-NLWr8Bie5pCQKeZSeLvDR6.webp",
+  adTravel: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/ad-banner-travel-hQHohRtnBqxSohmoBcK87V.webp",
 };
 
-// ── Row 1: 핵심 기능 (밋업/출장 관리의 핵심)
-const CORE_ICONS = [
-  { icon: Users, label: "home.menu_meetup", href: "/register", gradient: "from-indigo-500 to-blue-600", ring: "ring-indigo-200 dark:ring-indigo-800" },
-  { icon: UserCheck, label: "home.menu_invite", href: "/lookup", gradient: "from-violet-500 to-purple-600", ring: "ring-violet-200 dark:ring-violet-800" },
-  { icon: CalendarDays, label: "home.menu_schedule", href: "/schedule", gradient: "from-emerald-500 to-teal-600", ring: "ring-emerald-200 dark:ring-emerald-800" },
-  { icon: MessageCircle, label: "home.menu_chat", href: "/community", gradient: "from-sky-500 to-cyan-600", ring: "ring-sky-200 dark:ring-sky-800" },
+type ServiceIcon = {
+  icon: any;
+  label: string;
+  href: string;
+  gradient: string;
+  ring: string;
+  badge?: string;
+};
+
+// ═══════════════════════════════════════════════════════
+// 일반 유저(참석자) - 출장 플로우 중심
+// ═══════════════════════════════════════════════════════
+const USER_ROW1: ServiceIcon[] = [
+  { icon: ClipboardList, label: "home.u_apply", href: "/register", gradient: "from-blue-500 to-indigo-600", ring: "ring-blue-200 dark:ring-blue-900" },
+  { icon: Ticket, label: "home.u_transport", href: "/my-page", gradient: "from-violet-500 to-purple-600", ring: "ring-violet-200 dark:ring-violet-900" },
+  { icon: CalendarDays, label: "home.u_schedule", href: "/schedule", gradient: "from-emerald-500 to-teal-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
+  { icon: MessageCircle, label: "home.u_team_chat", href: "/community", gradient: "from-sky-500 to-cyan-600", ring: "ring-sky-200 dark:ring-sky-900" },
 ];
 
-// ── Row 2: 업무 지원 (이동/숙박 예약)
-const WORK_ICONS = [
-  { icon: Share2, label: "home.menu_share_schedule", href: "/dashboard", gradient: "from-amber-500 to-orange-600", ring: "ring-amber-200 dark:ring-amber-800" },
-  { icon: Plane, label: "home.menu_flights", href: "/booking", gradient: "from-blue-500 to-indigo-600", ring: "ring-blue-200 dark:ring-blue-800" },
-  { icon: Hotel, label: "home.menu_hotels", href: "/booking", gradient: "from-rose-500 to-pink-600", ring: "ring-rose-200 dark:ring-rose-800" },
-  { icon: Train, label: "home.menu_rail", href: "/booking", gradient: "from-slate-500 to-gray-600", ring: "ring-slate-200 dark:ring-slate-800" },
+const USER_ROW2: ServiceIcon[] = [
+  { icon: Hotel, label: "home.u_hotel_info", href: "/booking", gradient: "from-rose-500 to-pink-600", ring: "ring-rose-200 dark:ring-rose-900" },
+  { icon: Car, label: "home.u_ride", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900", badge: "NEW" },
+  { icon: UtensilsCrossed, label: "home.u_delivery", href: "/delivery", gradient: "from-orange-500 to-red-600", ring: "ring-orange-200 dark:ring-orange-900", badge: "NEW" },
+  { icon: Map, label: "home.u_map", href: "/booking", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
 ];
 
-// ── Row 3+: 부가 서비스 (자유시간/개인 서비스)
-const EXTRA_ICONS = [
-  { icon: Car, label: "home.menu_ride", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-800" },
-  { icon: UtensilsCrossed, label: "home.menu_delivery", href: "/delivery", gradient: "from-orange-500 to-red-600", ring: "ring-orange-200 dark:ring-orange-800" },
-  { icon: Map, label: "home.menu_map", href: "/booking", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-800" },
-  { icon: Bot, label: "home.menu_ai", href: "/chatbot", gradient: "from-cyan-500 to-blue-600", ring: "ring-cyan-200 dark:ring-cyan-800" },
-  { icon: Video, label: "home.menu_video_call", href: "/community", gradient: "from-pink-500 to-rose-600", ring: "ring-pink-200 dark:ring-pink-800" },
-  { icon: Shield, label: "home.menu_passport", href: "/my-page", gradient: "from-yellow-500 to-amber-600", ring: "ring-yellow-200 dark:ring-yellow-800" },
-  { icon: Luggage, label: "home.menu_baggage", href: "/flight-tracker", gradient: "from-stone-500 to-neutral-600", ring: "ring-stone-200 dark:ring-stone-800" },
-  { icon: Compass, label: "home.menu_guide", href: "/immigration-checklist", gradient: "from-lime-500 to-green-600", ring: "ring-lime-200 dark:ring-lime-800" },
+const USER_EXTRA: ServiceIcon[] = [
+  { icon: StickyNote, label: "home.u_memo", href: "/notes", gradient: "from-yellow-500 to-amber-600", ring: "ring-yellow-200 dark:ring-yellow-900", badge: "NEW" },
+  { icon: Languages, label: "home.u_translator", href: "/translator", gradient: "from-cyan-500 to-blue-600", ring: "ring-cyan-200 dark:ring-cyan-900", badge: "NEW" },
+  { icon: Bot, label: "home.u_ai", href: "/chatbot", gradient: "from-indigo-500 to-violet-600", ring: "ring-indigo-200 dark:ring-indigo-900" },
+  { icon: Share2, label: "home.u_share", href: "/dashboard", gradient: "from-amber-500 to-orange-600", ring: "ring-amber-200 dark:ring-amber-900" },
+  { icon: Video, label: "home.u_video", href: "/community", gradient: "from-pink-500 to-rose-600", ring: "ring-pink-200 dark:ring-pink-900" },
+  { icon: Shield, label: "home.u_passport", href: "/my-page", gradient: "from-slate-500 to-gray-600", ring: "ring-slate-200 dark:ring-slate-900" },
+  { icon: Compass, label: "home.u_guide", href: "/immigration-checklist", gradient: "from-lime-500 to-green-600", ring: "ring-lime-200 dark:ring-lime-900" },
+  { icon: Luggage, label: "home.u_baggage", href: "/flight-tracker", gradient: "from-stone-500 to-neutral-600", ring: "ring-stone-200 dark:ring-stone-900" },
 ];
 
+// ═══════════════════════════════════════════════════════
+// 관계자(organizer/agency/admin/superadmin) - 관리 중심
+// ═══════════════════════════════════════════════════════
+const ORG_ROW1: ServiceIcon[] = [
+  { icon: Users, label: "home.o_attendees", href: "/lookup", gradient: "from-indigo-500 to-blue-600", ring: "ring-indigo-200 dark:ring-indigo-900" },
+  { icon: Plane, label: "home.o_flights", href: "/booking", gradient: "from-blue-500 to-sky-600", ring: "ring-blue-200 dark:ring-blue-900" },
+  { icon: Hotel, label: "home.o_hotels", href: "/booking", gradient: "from-rose-500 to-pink-600", ring: "ring-rose-200 dark:ring-rose-900" },
+  { icon: CalendarDays, label: "home.o_schedule", href: "/schedule", gradient: "from-emerald-500 to-teal-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
+];
+
+const ORG_ROW2: ServiceIcon[] = [
+  { icon: Train, label: "home.o_rail", href: "/booking", gradient: "from-slate-500 to-gray-600", ring: "ring-slate-200 dark:ring-slate-900" },
+  { icon: Car, label: "home.o_vehicle", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900" },
+  { icon: Megaphone, label: "home.o_announce", href: "/community", gradient: "from-amber-500 to-orange-600", ring: "ring-amber-200 dark:ring-amber-900" },
+  { icon: MessageCircle, label: "home.o_comms", href: "/community", gradient: "from-sky-500 to-cyan-600", ring: "ring-sky-200 dark:ring-sky-900" },
+];
+
+const ORG_EXTRA: ServiceIcon[] = [
+  { icon: Languages, label: "home.o_translator", href: "/translator", gradient: "from-cyan-500 to-blue-600", ring: "ring-cyan-200 dark:ring-cyan-900", badge: "NEW" },
+  { icon: StickyNote, label: "home.o_memo", href: "/notes", gradient: "from-yellow-500 to-amber-600", ring: "ring-yellow-200 dark:ring-yellow-900", badge: "NEW" },
+  { icon: UtensilsCrossed, label: "home.o_catering", href: "/delivery", gradient: "from-orange-500 to-red-600", ring: "ring-orange-200 dark:ring-orange-900" },
+  { icon: BarChart3, label: "home.o_report", href: "/admin", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
+  { icon: Wallet, label: "home.o_settlement", href: "/admin", gradient: "from-green-500 to-emerald-600", ring: "ring-green-200 dark:ring-green-900" },
+  { icon: Map, label: "home.o_map", href: "/booking", gradient: "from-teal-500 to-cyan-600", ring: "ring-teal-200 dark:ring-teal-900" },
+  { icon: Bot, label: "home.o_ai", href: "/chatbot", gradient: "from-indigo-500 to-violet-600", ring: "ring-indigo-200 dark:ring-indigo-900" },
+  { icon: Shield, label: "home.o_immigration", href: "/immigration-checklist", gradient: "from-lime-500 to-green-600", ring: "ring-lime-200 dark:ring-lime-900" },
+];
+
+// ═══════════════════════════════════════════════════════
+// 비로그인 - 플랫폼 소개 + 서비스 체험
+// ═══════════════════════════════════════════════════════
+const GUEST_ROW1: ServiceIcon[] = [
+  { icon: ClipboardList, label: "home.g_apply", href: "/register", gradient: "from-blue-500 to-indigo-600", ring: "ring-blue-200 dark:ring-blue-900" },
+  { icon: UserCheck, label: "home.g_lookup", href: "/lookup", gradient: "from-violet-500 to-purple-600", ring: "ring-violet-200 dark:ring-violet-900" },
+  { icon: CalendarDays, label: "home.g_schedule", href: "/schedule", gradient: "from-emerald-500 to-teal-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
+  { icon: MessageCircle, label: "home.g_community", href: "/community", gradient: "from-sky-500 to-cyan-600", ring: "ring-sky-200 dark:ring-sky-900" },
+];
+
+const GUEST_ROW2: ServiceIcon[] = [
+  { icon: Car, label: "home.g_ride", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900" },
+  { icon: UtensilsCrossed, label: "home.g_delivery", href: "/delivery", gradient: "from-orange-500 to-red-600", ring: "ring-orange-200 dark:ring-orange-900" },
+  { icon: Bot, label: "home.g_ai", href: "/chatbot", gradient: "from-cyan-500 to-blue-600", ring: "ring-cyan-200 dark:ring-cyan-900" },
+  { icon: Map, label: "home.g_map", href: "/booking", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
+];
+
+// ═══════════════════════════════════════════════════════
+// Helper: role → menu config
+// ═══════════════════════════════════════════════════════
+function getMenuConfig(role: string | undefined, isAuthenticated: boolean) {
+  if (!isAuthenticated) {
+    return {
+      row1: GUEST_ROW1,
+      row2: GUEST_ROW2,
+      extra: [],
+      cat1: "home.cat_guest_main",
+      cat1Default: "서비스 체험",
+      cat2: "home.cat_guest_more",
+      cat2Default: "더 알아보기",
+      catExtra: "",
+      catExtraDefault: "",
+    };
+  }
+
+  if (role === "organizer" || role === "agency" || role === "admin" || role === "superadmin") {
+    return {
+      row1: ORG_ROW1,
+      row2: ORG_ROW2,
+      extra: ORG_EXTRA,
+      cat1: "home.cat_org_core",
+      cat1Default: "참석자/예약 관리",
+      cat2: "home.cat_org_ops",
+      cat2Default: "운영 지원",
+      catExtra: "home.cat_org_extra",
+      catExtraDefault: "부가 기능",
+    };
+  }
+
+  // Default: user, partner
+  return {
+    row1: USER_ROW1,
+    row2: USER_ROW2,
+    extra: USER_EXTRA,
+    cat1: "home.cat_user_core",
+    cat1Default: "출장 핵심",
+    cat2: "home.cat_user_onsite",
+    cat2Default: "현장 서비스",
+    catExtra: "home.cat_user_extra",
+    catExtraDefault: "편의 기능",
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// Service menu list configs per role
+// ═══════════════════════════════════════════════════════
+function getServiceMenus(role: string | undefined, isAuthenticated: boolean, t: any) {
+  if (!isAuthenticated) {
+    return [
+      {
+        color: "bg-blue-500",
+        title: t("home.svc_guest_title", "서비스 둘러보기"),
+        desc: t("home.svc_guest_desc", "로그인 없이 체험해보세요"),
+        items: [
+          { icon: ClipboardList, color: "text-blue-500", label: t("home.u_apply"), href: "/register" },
+          { icon: Car, color: "text-purple-500", label: t("home.g_ride"), href: "/ride", badge: "NEW" },
+          { icon: UtensilsCrossed, color: "text-orange-500", label: t("home.g_delivery"), href: "/delivery", badge: "NEW" },
+          { icon: Bot, color: "text-cyan-500", label: t("home.g_ai"), href: "/chatbot" },
+        ],
+      },
+    ];
+  }
+
+  if (role === "organizer" || role === "agency" || role === "admin" || role === "superadmin") {
+    return [
+      {
+        color: "bg-indigo-500",
+        title: t("home.svc_org_manage_title", "참석자/예약 관리"),
+        desc: t("home.svc_org_manage_desc", "초청 인원과 예약을 한눈에"),
+        items: [
+          { icon: Users, color: "text-indigo-500", label: t("home.o_attendees"), href: "/lookup" },
+          { icon: Plane, color: "text-blue-500", label: t("home.o_flights"), href: "/booking" },
+          { icon: Hotel, color: "text-rose-500", label: t("home.o_hotels"), href: "/booking" },
+          { icon: Train, color: "text-slate-500", label: t("home.o_rail"), href: "/booking" },
+          { icon: CalendarDays, color: "text-emerald-500", label: t("home.o_schedule"), href: "/schedule" },
+        ],
+      },
+      {
+        color: "bg-amber-500",
+        title: t("home.svc_org_ops_title", "운영 도구"),
+        desc: t("home.svc_org_ops_desc", "차량, 소통, 공지를 관리"),
+        items: [
+          { icon: Car, color: "text-purple-500", label: t("home.o_vehicle"), href: "/ride" },
+          { icon: Megaphone, color: "text-amber-500", label: t("home.o_announce"), href: "/community" },
+          { icon: MessageCircle, color: "text-sky-500", label: t("home.o_comms"), href: "/community" },
+          { icon: Languages, color: "text-cyan-500", label: t("home.o_translator"), href: "/translator", badge: "NEW" },
+          { icon: BarChart3, color: "text-teal-500", label: t("home.o_report"), href: "/admin" },
+        ],
+      },
+    ];
+  }
+
+  // user / partner
+  return [
+    {
+      color: "bg-blue-500",
+      title: t("home.svc_user_trip_title", "출장 관리"),
+      desc: t("home.svc_user_trip_desc", "신청부터 일정까지 한 곳에서"),
+      items: [
+        { icon: ClipboardList, color: "text-blue-500", label: t("home.u_apply"), href: "/register" },
+        { icon: Ticket, color: "text-violet-500", label: t("home.u_transport"), href: "/my-page" },
+        { icon: CalendarDays, color: "text-emerald-500", label: t("home.u_schedule"), href: "/schedule" },
+        { icon: MessageCircle, color: "text-sky-500", label: t("home.u_team_chat"), href: "/community" },
+        { icon: Share2, color: "text-amber-500", label: t("home.u_share"), href: "/dashboard" },
+      ],
+    },
+    {
+      color: "bg-purple-500",
+      title: t("home.svc_user_onsite_title", "현장 서비스"),
+      desc: t("home.svc_user_onsite_desc", "도착 후 필요한 모든 것"),
+      items: [
+        { icon: Car, color: "text-purple-500", label: t("home.u_ride"), href: "/ride", badge: "NEW" },
+        { icon: UtensilsCrossed, color: "text-orange-500", label: t("home.u_delivery"), href: "/delivery", badge: "NEW" },
+        { icon: Hotel, color: "text-rose-500", label: t("home.u_hotel_info"), href: "/booking" },
+        { icon: Map, color: "text-teal-500", label: t("home.u_map"), href: "/booking" },
+      ],
+    },
+    {
+      color: "bg-amber-500",
+      title: t("home.svc_user_util_title", "편의 도구"),
+      desc: t("home.svc_user_util_desc", "메모, 통역, AI 도우미"),
+      items: [
+        { icon: StickyNote, color: "text-yellow-500", label: t("home.u_memo"), href: "/notes", badge: "NEW" },
+        { icon: Languages, color: "text-cyan-500", label: t("home.u_translator"), href: "/translator", badge: "NEW" },
+        { icon: Bot, color: "text-indigo-500", label: t("home.u_ai"), href: "/chatbot" },
+        { icon: Compass, color: "text-lime-500", label: t("home.u_guide"), href: "/immigration-checklist" },
+      ],
+    },
+  ];
+}
+
+// ═══════════════════════════════════════════════════════
+// COMPONENT
+// ═══════════════════════════════════════════════════════
 export default function Home() {
   const { user, isAuthenticated, logout } = useAuth();
   const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [showMoreServices, setShowMoreServices] = useState(false);
+
+  const userRole = user?.role as string | undefined;
+  const menuConfig = useMemo(() => getMenuConfig(userRole, isAuthenticated), [userRole, isAuthenticated]);
+  const serviceMenus = useMemo(() => getServiceMenus(userRole, isAuthenticated, t), [userRole, isAuthenticated, t]);
 
   // DB에서 활성 광고 배너 불러오기
   const { data: adBanners } = trpc.adBanner.list.useQuery(
@@ -112,21 +301,42 @@ export default function Home() {
     return Math.round((filled / total) * 100);
   })();
 
-  const secondaryFeatures = [
-    { icon: Shield, titleKey: "home.feat_passport", descKey: "home.feat_passport_desc" },
-    { icon: Plane, titleKey: "home.feat_flight", descKey: "home.feat_flight_desc" },
-    { icon: Car, titleKey: "home.feat_pickup", descKey: "home.feat_pickup_desc" },
-    { icon: Hotel, titleKey: "home.feat_hotel", descKey: "home.feat_hotel_desc" },
-    { icon: MessageCircle, titleKey: "home.feat_comm", descKey: "home.feat_comm_desc" },
-    { icon: MapPin, titleKey: "home.feat_country", descKey: "home.feat_country_desc" },
-    { icon: Globe, titleKey: "home.feat_telegram", descKey: "home.feat_telegram_desc" },
-    { icon: Search, titleKey: "home.feat_data", descKey: "home.feat_data_desc" },
-    { icon: Luggage, titleKey: "home.feat_baggage", descKey: "home.feat_baggage_desc" },
-  ];
+  // Role label for header
+  const roleLabel = useMemo(() => {
+    if (!isAuthenticated) return null;
+    const labels: Record<string, string> = {
+      superadmin: t("home.role_superadmin", "슈퍼관리자"),
+      admin: t("home.role_admin", "관리자"),
+      organizer: t("home.role_organizer", "주최자"),
+      agency: t("home.role_agency", "에이전시"),
+      partner: t("home.role_partner", "파트너"),
+      user: t("home.role_user", "참석자"),
+    };
+    return labels[userRole || "user"] || labels.user;
+  }, [userRole, isAuthenticated, t]);
+
+  // Icon grid renderer
+  const renderIconGrid = (icons: ServiceIcon[]) => (
+    <div className="grid grid-cols-4 gap-y-4 gap-x-2">
+      {icons.map((svc, i) => (
+        <Link key={i} href={svc.href}>
+          <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
+            <div className={`relative w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-2xl bg-gradient-to-br ${svc.gradient} flex items-center justify-center shadow-lg ring-2 ${svc.ring} group-hover:scale-110 group-hover:shadow-xl transition-all duration-200`}>
+              <svc.icon className="h-5 w-5 md:h-6 md:w-6 text-white drop-shadow" />
+              {svc.badge && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-full leading-none">{svc.badge}</span>
+              )}
+            </div>
+            <span className="text-[11px] font-medium text-foreground text-center leading-tight">{t(svc.label)}</span>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ===== HEADER - Trip.com Style ===== */}
+      {/* ===== HEADER ===== */}
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/95">
         <div className="container flex items-center justify-between h-14 gap-3">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
@@ -134,11 +344,8 @@ export default function Home() {
             <span className="font-bold text-lg hidden sm:inline" style={{ fontFamily: 'Inter, sans-serif' }}>Alpha Trip</span>
           </Link>
 
-          {/* Search Bar - Trip.com style */}
-          <div
-            className="flex-1 max-w-md mx-2 cursor-pointer"
-            onClick={() => navigate("/booking")}
-          >
+          {/* Search Bar */}
+          <div className="flex-1 max-w-md mx-2 cursor-pointer" onClick={() => navigate("/booking")}>
             <div className="flex items-center gap-2 bg-muted/60 hover:bg-muted rounded-full px-4 py-2 transition-colors border border-border/50">
               <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <span className="text-sm text-muted-foreground truncate">{t("home.searchPlaceholder", "어디로 가세요?")}</span>
@@ -156,27 +363,34 @@ export default function Home() {
                     <span className="hidden sm:inline text-sm">{user?.name}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuContent align="end" className="w-56">
+                  {/* Role badge */}
+                  <div className="px-2 py-1.5 border-b border-border/50 mb-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-[10px]">{roleLabel}</Badge>
+                      <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
+                    </div>
+                  </div>
                   <DropdownMenuItem asChild>
                     <Link href="/my-page" className="cursor-pointer"><User className="h-4 w-4 mr-2" />{t("nav.myProfile")}</Link>
                   </DropdownMenuItem>
-                  {(user?.role === "admin" || user?.role === "superadmin") && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin" className="cursor-pointer"><LayoutDashboard className="h-4 w-4 mr-2" />{t("nav.backoffice")}</Link>
-                    </DropdownMenuItem>
-                  )}
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="cursor-pointer"><LayoutDashboard className="h-4 w-4 mr-2" />{t("nav.dashboard")}</Link>
+                    <Link href="/notes" className="cursor-pointer"><StickyNote className="h-4 w-4 mr-2" />{t("home.u_memo", "메모")}</Link>
                   </DropdownMenuItem>
+                  {(userRole === "admin" || userRole === "superadmin" || userRole === "organizer" || userRole === "agency") && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="cursor-pointer"><LayoutDashboard className="h-4 w-4 mr-2" />{t("nav.backoffice")}</Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/flight-pickup" className="cursor-pointer"><Plane className="h-4 w-4 mr-2" />{t("nav.flightPickup")}</Link>
+                    <Link href="/dashboard" className="cursor-pointer"><LayoutDashboard className="h-4 w-4 mr-2" />{t("nav.dashboard", "대시보드")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/community" className="cursor-pointer"><MessageCircle className="h-4 w-4 mr-2" />{t("nav.community", "커뮤니티")}</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/immigration-checklist" className="cursor-pointer"><Shield className="h-4 w-4 mr-2" />{t("nav.immigrationChecklist", "입국 체크리스트")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={async () => { await logout(); window.location.href = "/"; }}>
@@ -196,7 +410,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Onboarding Banner for authenticated users */}
+      {/* Onboarding Banner */}
       {needsOnboarding && (
         <section className="bg-primary/10 border-b border-primary/20">
           <div className="container py-3 flex items-center justify-between gap-4">
@@ -214,116 +428,78 @@ export default function Home() {
         </section>
       )}
 
-      {/* ===== MAIN CONTENT - Trip.com App Style ===== */}
+      {/* ===== MAIN CONTENT ===== */}
       <main className="pb-20 md:pb-0">
 
-        {/* ── Service Icon Grid - Categorized with glassmorphism ── */}
+        {/* ── Role-based Icon Grid ── */}
         <section className="pt-5 pb-2">
           <div className="container max-w-lg mx-auto px-4">
 
-            {/* Category: Core - 밋업/출장 핵심 */}
+            {/* Row 1 */}
             <div className="mb-1">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">{t("home.cat_core", "밋업 관리")}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">
+                {t(menuConfig.cat1, menuConfig.cat1Default)}
+              </span>
             </div>
-            <div className="grid grid-cols-4 gap-y-4 gap-x-2 mb-5">
-              {CORE_ICONS.map((svc, i) => (
-                <Link key={`core-${i}`} href={svc.href}>
-                  <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
-                    <div className={`relative w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-2xl bg-gradient-to-br ${svc.gradient} flex items-center justify-center shadow-lg ring-2 ${svc.ring} group-hover:scale-110 group-hover:shadow-xl transition-all duration-200`}>
-                      <svc.icon className="h-5 w-5 md:h-6 md:w-6 text-white drop-shadow" />
-                    </div>
-                    <span className="text-[11px] font-medium text-foreground text-center leading-tight">{t(svc.label)}</span>
-                  </div>
-                </Link>
-              ))}
+            <div className="mb-5">
+              {renderIconGrid(menuConfig.row1)}
             </div>
 
-            {/* Category: Work Support - 업무 지원 */}
+            {/* Row 2 */}
             <div className="mb-1">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-500 dark:text-amber-400">{t("home.cat_work", "이동/숙박")}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-500 dark:text-amber-400">
+                {t(menuConfig.cat2, menuConfig.cat2Default)}
+              </span>
             </div>
-            <div className="grid grid-cols-4 gap-y-4 gap-x-2 mb-4">
-              {WORK_ICONS.map((svc, i) => (
-                <Link key={`work-${i}`} href={svc.href}>
-                  <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
-                    <div className={`relative w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-2xl bg-gradient-to-br ${svc.gradient} flex items-center justify-center shadow-lg ring-2 ${svc.ring} group-hover:scale-110 group-hover:shadow-xl transition-all duration-200`}>
-                      <svc.icon className="h-5 w-5 md:h-6 md:w-6 text-white drop-shadow" />
-                    </div>
-                    <span className="text-[11px] font-medium text-foreground text-center leading-tight">{t(svc.label)}</span>
-                  </div>
-                </Link>
-              ))}
+            <div className="mb-4">
+              {renderIconGrid(menuConfig.row2)}
             </div>
 
-            {/* More services toggle */}
-            {showMoreServices && (
+            {/* Extra (toggle) - only for authenticated users */}
+            {menuConfig.extra.length > 0 && (
               <>
-                <div className="mb-1">
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-purple-500 dark:text-purple-400">{t("home.cat_extra", "부가 서비스")}</span>
-                </div>
-                <div className="grid grid-cols-4 gap-y-4 gap-x-2 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                  {EXTRA_ICONS.map((svc, i) => (
-                    <Link key={`extra-${i}`} href={svc.href}>
-                      <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
-                        <div className={`relative w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-2xl bg-gradient-to-br ${svc.gradient} flex items-center justify-center shadow-lg ring-2 ${svc.ring} group-hover:scale-110 group-hover:shadow-xl transition-all duration-200`}>
-                          <svc.icon className="h-5 w-5 md:h-6 md:w-6 text-white drop-shadow" />
-                        </div>
-                        <span className="text-[11px] font-medium text-foreground text-center leading-tight">{t(svc.label)}</span>
-                      </div>
-                    </Link>
-                  ))}
+                {showMoreServices && (
+                  <>
+                    <div className="mb-1">
+                      <span className="text-[10px] font-semibold uppercase tracking-widest text-purple-500 dark:text-purple-400">
+                        {t(menuConfig.catExtra, menuConfig.catExtraDefault)}
+                      </span>
+                    </div>
+                    <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      {renderIconGrid(menuConfig.extra)}
+                    </div>
+                  </>
+                )}
+
+                <div className="flex items-center justify-center mt-2">
+                  <button
+                    onClick={() => setShowMoreServices(!showMoreServices)}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1 px-3 rounded-full hover:bg-muted/50"
+                  >
+                    {showMoreServices ? t("home.showLess", "접기") : t("home.showMore", "더 보기")}
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${showMoreServices ? "rotate-180" : ""}`} />
+                  </button>
                 </div>
               </>
             )}
-
-            {/* Toggle button */}
-            <div className="flex items-center justify-center mt-2">
-              <button
-                onClick={() => setShowMoreServices(!showMoreServices)}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1 px-3 rounded-full hover:bg-muted/50"
-              >
-                {showMoreServices ? t("home.showLess", "접기") : t("home.showMore", "더 보기")}
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${showMoreServices ? "rotate-180" : ""}`} />
-              </button>
-            </div>
           </div>
         </section>
 
-        {/* ── Promo Carousel (Trip.com style auto-slide) ── */}
+        {/* ── Promo Carousel ── */}
         <section className="py-4">
           <div className="container max-w-lg mx-auto px-4">
             <PromoCarousel
               slides={[
-                {
-                  id: "usdt",
-                  imageUrl: IMAGES.promoUsdt,
-                  href: "/booking",
-                },
-                {
-                  id: "vat",
-                  imageUrl: IMAGES.promoVat,
-                  href: "/ride",
-                },
-                {
-                  id: "ride",
-                  imageUrl: IMAGES.promoRide,
-                  href: "/ride",
-                },
-                {
-                  id: "delivery",
-                  imageUrl: IMAGES.promoDelivery,
-                  href: "/delivery",
-                },
-                {
-                  id: "cruise",
-                  imageUrl: IMAGES.promoCruise,
-                  href: "/booking",
-                },
+                { id: "usdt", imageUrl: IMAGES.promoUsdt, href: "/booking" },
+                { id: "vat", imageUrl: IMAGES.promoVat, href: "/ride" },
+                { id: "ride", imageUrl: IMAGES.promoRide, href: "/ride" },
+                { id: "delivery", imageUrl: IMAGES.promoDelivery, href: "/delivery" },
+                { id: "cruise", imageUrl: IMAGES.promoCruise, href: "/booking" },
               ]}
               autoPlayInterval={4000}
             />
 
-            {/* CTA Buttons below carousel */}
+            {/* CTA Buttons */}
             <div className="grid grid-cols-2 gap-3 mt-4">
               <Link href="/booking">
                 <Button variant="outline" className="w-full h-11 text-sm font-semibold rounded-xl border-2 border-foreground/20 hover:border-primary hover:bg-primary/5">
@@ -353,7 +529,10 @@ export default function Home() {
             <div className="container max-w-lg mx-auto px-4">
               <div className="bg-card border border-border/50 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">{t("home.profileCompletion", "프로필 완성도")}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{t("home.profileCompletion", "프로필 완성도")}</span>
+                    <Badge variant="secondary" className="text-[10px]">{roleLabel}</Badge>
+                  </div>
                   <span className="text-sm font-bold text-primary">{profileCompletion}%</span>
                 </div>
                 <Progress value={profileCompletion} className="h-2 mb-2" />
@@ -367,7 +546,7 @@ export default function Home() {
           </section>
         )}
 
-        {/* ── Ad Banner - Dynamic from DB ── */}
+        {/* ── Ad Banner ── */}
         {(() => {
           const ad1 = getAdByPosition("hero_top");
           const imgSrc = ad1?.imageUrl || IMAGES.adTravel;
@@ -407,7 +586,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Settings Section (Trip.com style) ── */}
+        {/* ── Settings Section ── */}
         <section className="py-2">
           <div className="container max-w-lg mx-auto px-4">
             <div className="border-t border-border/50 pt-4">
@@ -428,144 +607,32 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Service Menu: 밋업/출장 관리 ── */}
-        <section className="py-2">
-          <div className="container max-w-lg mx-auto px-4">
-            <div className="border-t border-border/50 pt-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full bg-indigo-500" />
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">{t("home.svc_core_title", "밋업/출장 관리")}</h4>
-                <span className="text-[10px] text-muted-foreground">{t("home.svc_core_desc", "초청, 일정, 소통을 한 곳에서")}</span>
-              </div>
-              <div className="space-y-0">
-                <Link href="/register">
-                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Users className="h-5 w-5 text-indigo-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_meetup")}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-                <Link href="/lookup">
-                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <UserCheck className="h-5 w-5 text-violet-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_invite")}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-                <Link href="/dashboard">
-                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <CalendarDays className="h-5 w-5 text-emerald-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_schedule")}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-                <Link href="/community">
-                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <MessageCircle className="h-5 w-5 text-sky-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_chat")}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-                <Link href="/community">
-                  <div className="flex items-center gap-3 py-3 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Video className="h-5 w-5 text-pink-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_video_call")}</span>
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">NEW</Badge>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
+        {/* ── Role-based Service Menu Lists ── */}
+        {serviceMenus.map((menu, idx) => (
+          <section key={idx} className="py-2">
+            <div className="container max-w-lg mx-auto px-4">
+              <div className="border-t border-border/50 pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={`w-1 h-4 rounded-full ${menu.color}`} />
+                  <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">{menu.title}</h4>
+                  <span className="text-[10px] text-muted-foreground">{menu.desc}</span>
+                </div>
+                <div className="space-y-0">
+                  {menu.items.map((item, i) => (
+                    <Link key={i} href={item.href}>
+                      <div className={`flex items-center gap-3 py-3 ${i < menu.items.length - 1 ? "border-b border-border/30" : ""} cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors`}>
+                        <item.icon className={`h-5 w-5 ${item.color}`} />
+                        <span className="text-sm font-medium flex-1">{item.label}</span>
+                        {item.badge && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{item.badge}</Badge>}
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* ── Service Menu: 이동/숙박 예약 ── */}
-        <section className="py-2">
-          <div className="container max-w-lg mx-auto px-4">
-            <div className="border-t border-border/50 pt-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full bg-amber-500" />
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">{t("home.svc_travel_title", "이동/숙박 예약")}</h4>
-                <span className="text-[10px] text-muted-foreground">{t("home.svc_travel_desc", "항공, 호텔, 철도를 쉽게 예약")}</span>
-              </div>
-              <div className="space-y-0">
-                <Link href="/booking">
-                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Plane className="h-5 w-5 text-blue-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_flights")}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-                <Link href="/booking">
-                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Hotel className="h-5 w-5 text-rose-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_hotels")}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-                <Link href="/booking">
-                  <div className="flex items-center gap-3 py-3 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Train className="h-5 w-5 text-slate-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_rail")}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Service Menu: 자유시간 서비스 ── */}
-        <section className="py-2 pb-6">
-          <div className="container max-w-lg mx-auto px-4">
-            <div className="border-t border-border/50 pt-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full bg-purple-500" />
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">{t("home.svc_personal_title", "자유시간 서비스")}</h4>
-                <span className="text-[10px] text-muted-foreground">{t("home.svc_personal_desc", "차량, 배달, 지도 등 개인 서비스")}</span>
-              </div>
-              <div className="space-y-0">
-                <Link href="/ride">
-                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Car className="h-5 w-5 text-purple-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_ride")}</span>
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">NEW</Badge>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-                <Link href="/delivery">
-                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <UtensilsCrossed className="h-5 w-5 text-orange-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_delivery")}</span>
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">NEW</Badge>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-                <Link href="/booking">
-                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Map className="h-5 w-5 text-teal-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_map")}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-                <Link href="/chatbot">
-                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Bot className="h-5 w-5 text-cyan-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_ai")}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-                <Link href="/immigration-checklist">
-                  <div className="flex items-center gap-3 py-3 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Compass className="h-5 w-5 text-lime-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.menu_guide")}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
+        ))}
 
       </main>
 
@@ -576,11 +643,11 @@ export default function Home() {
             <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-6 w-6 rounded" />
             <span className="font-bold text-sm">Alpha Trip</span>
           </div>
-          <p className="text-xs text-muted-foreground mb-4">{t("home.footer_desc", "글로벌 밋업 & 여행 자동화 플랫폼")}</p>
+          <p className="text-xs text-muted-foreground mb-4">{t("home.footer_desc", "글로벌 밋업 & 출장 관리 플랫폼")}</p>
           <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-            <Link href="/booking" className="hover:text-foreground transition-colors">{t("home.bookingCenterTitle")}</Link>
-            <Link href="/ride" className="hover:text-foreground transition-colors">{t("home.rideHailingTitle", "Ride")}</Link>
-            <Link href="/delivery" className="hover:text-foreground transition-colors">{t("home.foodDeliveryTitle", "Delivery")}</Link>
+            <Link href="/register" className="hover:text-foreground transition-colors">{t("home.u_apply", "밋업 신청")}</Link>
+            <Link href="/ride" className="hover:text-foreground transition-colors">{t("home.u_ride", "차량 호출")}</Link>
+            <Link href="/delivery" className="hover:text-foreground transition-colors">{t("home.u_delivery", "음식 배달")}</Link>
             <a href="https://t.me/alphatrip" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Telegram</a>
           </div>
           <div className="border-t border-border/30 mt-4 pt-4 text-xs text-muted-foreground">

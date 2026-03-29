@@ -1749,3 +1749,21 @@ export const deliveryOrders = mysqlTable("delivery_orders", {
 });
 export type DeliveryOrder = typeof deliveryOrders.$inferSelect;
 export type InsertDeliveryOrder = typeof deliveryOrders.$inferInsert;
+
+// ── Notes (메모) ──────────────────────────────────────
+export const notes = mysqlTable("notes", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  meetupId: int("meetupId"), // optional: link to a meetup
+  title: varchar("title", { length: 500 }).notNull(),
+  content: text("content"),
+  color: varchar("color", { length: 20 }).default("yellow"), // yellow, blue, green, pink, purple
+  isPinned: boolean("isPinned").default(false).notNull(),
+  isShared: boolean("isShared").default(false).notNull(), // shared with team
+  sharedWithMeetup: int("sharedWithMeetup"), // meetup id for team sharing
+  tags: json("tags").$type<string[]>(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Note = typeof notes.$inferSelect;
+export type InsertNote = typeof notes.$inferInsert;

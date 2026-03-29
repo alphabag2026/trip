@@ -69,6 +69,8 @@ import MyBookings from "./pages/MyBookings";
 import RideHailing from "./pages/RideHailing";
 import FoodDelivery from "./pages/FoodDelivery";
 import ScheduleHub from "./pages/ScheduleHub";
+import Notes from "./pages/Notes";
+import Translator from "./pages/Translator";
 
 function PublicRouter() {
   return (
@@ -98,6 +100,8 @@ function PublicRouter() {
       <Route path="/delivery" component={FoodDelivery} />
       <Route path="/community" component={CommunityChat} />
       <Route path="/community/:roomId" component={CommunityChat} />
+      <Route path="/notes" component={Notes} />
+      <Route path="/translator" component={Translator} />
       <Route path="/welcome" component={Welcome} />
       <Route path="/404" component={NotFound} />
     </Switch>

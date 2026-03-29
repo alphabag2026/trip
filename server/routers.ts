@@ -6318,6 +6318,114 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
     }),
   }),
 
+  // ── Notes (메모) ──────────────────────────────────────────
+  note: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUserNotes(ctx.user.id);
+    }),
+    shared: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getSharedNotes(input.meetupId);
+      }),
+    create: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1).max(500),
+        content: z.string().optional(),
+        color: z.enum(["yellow", "blue", "green", "pink", "purple"]).optional(),
+        meetupId: z.number().optional(),
+        tags: z.array(z.string()).optional(),
+        isShared: z.boolean().optional(),
+        sharedWithMeetup: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.createNote({
+          userId: ctx.user.id,
+          title: input.title,
+          content: input.content || null,
+          color: input.color || "yellow",
+          meetupId: input.meetupId || null,
+          tags: input.tags || null,
+          isShared: input.isShared || false,
+          sharedWithMeetup: input.sharedWithMeetup || null,
+        });
+        return { id };
+      }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1).max(500).optional(),
+        content: z.string().optional(),
+        color: z.enum(["yellow", "blue", "green", "pink", "purple"]).optional(),
+        isPinned: z.boolean().optional(),
+        isShared: z.boolean().optional(),
+        sharedWithMeetup: z.number().optional(),
+        tags: z.array(z.string()).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const note = await db.getNoteById(input.id);
+        if (!note || note.userId !== ctx.user.id) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "메모를 찾을 수 없습니다" });
+        }
+        const { id, ...updateData } = input;
+        await db.updateNote(id, updateData as any);
+        return { success: true };
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const note = await db.getNoteById(input.id);
+        if (!note || note.userId !== ctx.user.id) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "메모를 찾을 수 없습니다" });
+        }
+        await db.deleteNote(input.id);
+        return { success: true };
+      }),
+    togglePin: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const note = await db.getNoteById(input.id);
+        if (!note || note.userId !== ctx.user.id) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "메모를 찾을 수 없습니다" });
+        }
+        await db.updateNote(input.id, { isPinned: !note.isPinned });
+        return { success: true, isPinned: !note.isPinned };
+      }),
+  }),
+
+  // ── Translator (통역) ───────────────────────────────────────
+  translator: router({
+    translate: protectedProcedure
+      .input(z.object({
+        text: z.string().min(1).max(5000),
+        sourceLang: z.string().min(2).max(5),
+        targetLang: z.string().min(2).max(5),
+      }))
+      .mutation(async ({ input }) => {
+        const langNames: Record<string, string> = {
+          ko: "Korean", en: "English", zh: "Chinese", ja: "Japanese",
+          vi: "Vietnamese", th: "Thai", id: "Indonesian", ms: "Malay",
+          ru: "Russian", fr: "French", de: "German", es: "Spanish",
+          pt: "Portuguese", it: "Italian", ar: "Arabic", hi: "Hindi",
+          tr: "Turkish", tl: "Filipino", mn: "Mongolian",
+        };
+        const srcName = langNames[input.sourceLang] || input.sourceLang;
+        const tgtName = langNames[input.targetLang] || input.targetLang;
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a professional translator. Translate the following text from ${srcName} to ${tgtName}. Only output the translated text, nothing else. Maintain the original tone and formatting. If the text contains proper nouns, keep them as-is or transliterate appropriately.`,
+            },
+            { role: "user", content: input.text },
+          ],
+        });
+        const rawContent = response.choices[0]?.message?.content || "";
+        const translatedText = typeof rawContent === "string" ? rawContent.trim() : "";
+        return { translatedText };
+      }),
+  }),
+
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────
 async function parseTravelInfoWithLLM(text: string, fileType: string) {
