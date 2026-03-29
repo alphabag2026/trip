@@ -621,6 +621,27 @@ export const appRouter = router({
           const sent = await sendTelegram(message);
           if (sent) await db.updateRegistration(id, { telegramNotified: true });
         } catch (e) { console.error("[Telegram] Failed:", e); }
+        // v10.8: 밋업 신청 시 팀 스케줄 자동 등록 + 팀원 알림
+        try {
+          if (input.meetupId && input.scheduleStart) {
+            const meetup = await db.getMeetupById(input.meetupId);
+            const scheduleTitle = `${input.name} - ${meetup?.title || '밋업'} 참석`;
+            await db.createTeamSchedule({
+              meetupId: input.meetupId,
+              title: scheduleTitle,
+              description: `${input.name}님이 밋업에 신청했습니다. 팀: ${input.teamName || '-'}`,
+              location: meetup?.location || undefined,
+              eventTime: new Date(input.scheduleStart),
+              endTime: input.scheduleEnd ? new Date(input.scheduleEnd) : undefined,
+              memberIds: [id],
+              notified: false,
+            });
+            try {
+              const teamMsg = `📅 팀 스케줄 자동 등록\n${input.name}님이 ${meetup?.title || '밋업'}에 참석 신청했습니다.\n📍 ${meetup?.location || '-'}\n🕐 ${input.scheduleStart}${input.scheduleEnd ? ' ~ ' + input.scheduleEnd : ''}`;
+              await sendTelegram(teamMsg);
+            } catch (e2) { console.error('[TeamSchedule Notify] Failed:', e2); }
+          }
+        } catch (e) { console.error('[TeamSchedule Auto] Failed:', e); }
         return { id };
       }),
     update: adminProcedure

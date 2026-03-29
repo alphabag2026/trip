@@ -71,6 +71,9 @@ import FoodDelivery from "./pages/FoodDelivery";
 import ScheduleHub from "./pages/ScheduleHub";
 import Notes from "./pages/Notes";
 import Translator from "./pages/Translator";
+import TeamSchedule from "./pages/TeamSchedule";
+import DriverDashboard from "./pages/DriverDashboard";
+import InterpreterDashboard from "./pages/InterpreterDashboard";
 
 function PublicRouter() {
   return (
@@ -102,6 +105,9 @@ function PublicRouter() {
       <Route path="/community/:roomId" component={CommunityChat} />
       <Route path="/notes" component={Notes} />
       <Route path="/translator" component={Translator} />
+      <Route path="/team-schedule" component={TeamSchedule} />
+      <Route path="/driver-dashboard" component={DriverDashboard} />
+      <Route path="/interpreter-dashboard" component={InterpreterDashboard} />
       <Route path="/welcome" component={Welcome} />
       <Route path="/404" component={NotFound} />
     </Switch>
