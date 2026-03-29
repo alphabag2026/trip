@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as cnt FROM vat_rates;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT COUNT(*) as cnt FROM vat_rates;",
+  "rows": [
+    {
+      "cnt": "25"
+    }
+  ],
+  "messages": [],
+  "stdout": "cnt\n25\n",
+  "stderr": "",
+  "execution_time_ms": 1621
+}

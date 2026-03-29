@@ -13,6 +13,7 @@ import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
 import { sdk } from "./_core/sdk";
 import { sendEmail, buildVerificationEmail, buildPasswordResetEmail } from "./email";
+import { generateDemoHotels, generateDemoFlights } from "./demoTravelData";
 import {
   generateFlightSearchLinks,
   generateHotelSearchLinks,
@@ -5082,6 +5083,220 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
     }),
     adBannerStats: superadminProcedure.query(async () => {
       return await db.getAdBannerClickStats();
+    }),
+  }),
+  // ── Travel Search & Booking (호텔/항공 검색 + USDT 결제) ──
+  travel: router({
+    // Get all VAT rates
+    vatRates: publicProcedure.query(async () => {
+      return await db.getVatRates();
+    }),
+    // Get VAT rate for specific country
+    vatRateByCountry: publicProcedure
+      .input(z.object({ countryCode: z.string() }))
+      .query(async ({ input }) => {
+        return await db.getVatRateByCountry(input.countryCode);
+      }),
+    // Calculate USDT price (core business logic)
+    calculateUsdtPrice: publicProcedure
+      .input(z.object({
+        localPrice: z.number(),
+        localCurrency: z.string(),
+        countryCode: z.string(),
+        exchangeFeeRate: z.number().default(0.0185), // 1.85% default
+        platformMarginRate: z.number().default(0.03), // 3% platform margin
+      }))
+      .query(async ({ input }) => {
+        const vatInfo = await db.getVatRateByCountry(input.countryCode);
+        if (!vatInfo) throw new TRPCError({ code: 'NOT_FOUND', message: 'Country VAT info not found' });
+        const vatRate = parseFloat(String(vatInfo.vatRate)) / 100;
+        const exchangeRate = parseFloat(String(vatInfo.usdExchangeRate)) || 1;
+        // Price without VAT
+        const priceExVat = input.localPrice / (1 + vatRate);
+        // Convert to USD
+        const usdPrice = priceExVat / exchangeRate;
+        // Apply exchange fee
+        const exchangeFee = usdPrice * input.exchangeFeeRate;
+        // Platform margin
+        const platformMargin = usdPrice * input.platformMarginRate;
+        // Final USDT price (no VAT + exchange fee + margin)
+        const usdtPrice = usdPrice + exchangeFee + platformMargin;
+        // User savings (compared to local price in USD)
+        const localPriceInUsd = input.localPrice / exchangeRate;
+        const savings = localPriceInUsd - usdtPrice;
+        return {
+          localPrice: input.localPrice,
+          localCurrency: input.localCurrency,
+          vatRate: vatRate * 100,
+          vatAmount: (input.localPrice - priceExVat) / exchangeRate,
+          priceExVat: priceExVat / exchangeRate,
+          usdPrice: localPriceInUsd,
+          exchangeFee,
+          platformMargin,
+          usdtPrice: Math.round(usdtPrice * 100) / 100,
+          savings: Math.round(savings * 100) / 100,
+          savingsPercent: Math.round((savings / localPriceInUsd) * 10000) / 100,
+          countryName: vatInfo.countryName,
+          exchangeRate,
+        };
+      }),
+    // Search hotels (demo data - ready for Amadeus/Qunar API integration)
+    searchHotels: publicProcedure
+      .input(z.object({
+        destination: z.string(),
+        countryCode: z.string().default('KR'),
+        checkIn: z.string(),
+        checkOut: z.string(),
+        guests: z.number().default(2),
+        rooms: z.number().default(1),
+        priceMin: z.number().optional(),
+        priceMax: z.number().optional(),
+        stars: z.number().optional(),
+      }))
+      .query(async ({ input, ctx }) => {
+        // Log search
+        try {
+          await db.createTravelSearch({
+            userId: ctx.user?.id,
+            searchType: 'hotel',
+            destination: input.destination,
+            checkIn: new Date(input.checkIn),
+            checkOut: new Date(input.checkOut),
+            guests: input.guests,
+            rooms: input.rooms,
+            countryCode: input.countryCode,
+          });
+        } catch (e) { /* ignore search log errors */ }
+        // Get VAT info for pricing
+        const vatInfo = await db.getVatRateByCountry(input.countryCode);
+        const vatRate = vatInfo ? parseFloat(String(vatInfo.vatRate)) / 100 : 0.1;
+        const exchangeRate = vatInfo ? parseFloat(String(vatInfo.usdExchangeRate)) || 1 : 1;
+        const currency = vatInfo?.currency || 'USD';
+        // Demo hotel data (will be replaced with real API)
+        const demoHotels = generateDemoHotels(input.destination, input.countryCode, currency, exchangeRate, vatRate, input.checkIn, input.checkOut);
+        return { hotels: demoHotels, total: demoHotels.length, currency, vatRate: Math.round(vatRate * 10000) / 100, exchangeRate };
+      }),
+    // Search flights (demo data - ready for Amadeus API integration)
+    searchFlights: publicProcedure
+      .input(z.object({
+        origin: z.string(),
+        destination: z.string(),
+        departDate: z.string(),
+        returnDate: z.string().optional(),
+        passengers: z.number().default(1),
+        cabinClass: z.enum(['economy', 'premium_economy', 'business', 'first']).default('economy'),
+        countryCode: z.string().default('KR'),
+      }))
+      .query(async ({ input, ctx }) => {
+        try {
+          await db.createTravelSearch({
+            userId: ctx.user?.id,
+            searchType: 'flight',
+            origin: input.origin,
+            destination: input.destination,
+            checkIn: new Date(input.departDate),
+            checkOut: input.returnDate ? new Date(input.returnDate) : undefined,
+            guests: input.passengers,
+            countryCode: input.countryCode,
+          });
+        } catch (e) { /* ignore */ }
+        const vatInfo = await db.getVatRateByCountry(input.countryCode);
+        const vatRate = vatInfo ? parseFloat(String(vatInfo.vatRate)) / 100 : 0.1;
+        const exchangeRate = vatInfo ? parseFloat(String(vatInfo.usdExchangeRate)) || 1 : 1;
+        const currency = vatInfo?.currency || 'USD';
+        const demoFlights = generateDemoFlights(input.origin, input.destination, currency, exchangeRate, vatRate, input.departDate, input.cabinClass);
+        return { flights: demoFlights, total: demoFlights.length, currency, vatRate: Math.round(vatRate * 10000) / 100, exchangeRate };
+      }),
+    // Create booking
+    createBooking: protectedProcedure
+      .input(z.object({
+        bookingType: z.enum(['hotel', 'flight']),
+        propertyName: z.string().optional(),
+        propertyAddress: z.string().optional(),
+        flightNumber: z.string().optional(),
+        airline: z.string().optional(),
+        origin: z.string().optional(),
+        destination: z.string().optional(),
+        checkIn: z.string(),
+        checkOut: z.string().optional(),
+        guests: z.number().default(1),
+        rooms: z.number().default(1),
+        localPrice: z.number(),
+        localCurrency: z.string(),
+        usdPrice: z.number(),
+        usdtPrice: z.number(),
+        vatAmount: z.number().default(0),
+        vatRate: z.number().default(0),
+        savingsAmount: z.number().default(0),
+        exchangeFee: z.number().default(0),
+        platformMargin: z.number().default(0),
+        paymentMethod: z.enum(['usdt_trc20', 'usdt_erc20', 'usdt_bep20', 'usd_card', 'local_card']).default('usdt_trc20'),
+        countryCode: z.string().optional(),
+        imageUrl: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const bookingId = await db.createTravelBooking({
+          userId: ctx.user.id,
+          bookingType: input.bookingType,
+          propertyName: input.propertyName,
+          propertyAddress: input.propertyAddress,
+          flightNumber: input.flightNumber,
+          airline: input.airline,
+          origin: input.origin,
+          destination: input.destination,
+          checkIn: new Date(input.checkIn),
+          checkOut: input.checkOut ? new Date(input.checkOut) : undefined,
+          guests: input.guests,
+          rooms: input.rooms,
+          localPrice: String(input.localPrice),
+          localCurrency: input.localCurrency,
+          usdPrice: String(input.usdPrice),
+          usdtPrice: String(input.usdtPrice),
+          vatAmount: String(input.vatAmount),
+          vatRate: String(input.vatRate),
+          savingsAmount: String(input.savingsAmount),
+          exchangeFee: String(input.exchangeFee),
+          platformMargin: String(input.platformMargin),
+          paymentMethod: input.paymentMethod,
+          countryCode: input.countryCode,
+          imageUrl: input.imageUrl,
+        });
+        return { bookingId, walletAddress: 'TXyz...USDT_WALLET_ADDRESS' };
+      }),
+    // Get my bookings
+    myBookings: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getTravelBookings(ctx.user.id);
+    }),
+    // Get booking by id
+    bookingById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const booking = await db.getTravelBookingById(input.id);
+        if (!booking || booking.userId !== ctx.user.id) throw new TRPCError({ code: 'NOT_FOUND' });
+        return booking;
+      }),
+    // Confirm payment (admin or user with tx hash)
+    confirmPayment: protectedProcedure
+      .input(z.object({ bookingId: z.number(), txHash: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        const booking = await db.getTravelBookingById(input.bookingId);
+        if (!booking || booking.userId !== ctx.user.id) throw new TRPCError({ code: 'NOT_FOUND' });
+        await db.updateTravelBooking(input.bookingId, {
+          paymentTxHash: input.txHash,
+          paymentStatus: 'received',
+          status: 'confirmed',
+        });
+        return { success: true };
+      }),
+    // Admin: all bookings
+    allBookings: superadminProcedure
+      .input(z.object({ status: z.string().optional(), bookingType: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllTravelBookings(input);
+      }),
+    // Admin: booking stats
+    bookingStats: superadminProcedure.query(async () => {
+      return await db.getTravelBookingStats();
     }),
   }),
 });

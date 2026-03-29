@@ -1,0 +1,25 @@
+{
+  "query": "SHOW TABLES LIKE 'vat_rates'; SHOW TABLES LIKE 'travel_searches'; SHOW TABLES LIKE 'travel_bookings';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SHOW TABLES LIKE 'vat_rates'; SHOW TABLES LIKE 'travel_searches'; SHOW TABLES LIKE 'travel_bookings';",
+  "rows": [
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (vat_rates)": "vat_rates"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (vat_rates)": "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (travel_searches)"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (vat_rates)": "travel_searches"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (vat_rates)": "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (travel_bookings)"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (vat_rates)": "travel_bookings"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (vat_rates)\nvat_rates\nTables_in_9L2UFkGMTFNGvGrFPN8jYv (travel_searches)\ntravel_searches\nTables_in_9L2UFkGMTFNGvGrFPN8jYv (travel_bookings)\ntravel_bookings\n",
+  "stderr": "",
+  "execution_time_ms": 2081
+}

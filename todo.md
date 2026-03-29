@@ -1004,3 +1004,41 @@
 - [x] VPS Docker 이미지 재빌드 및 배포
 - [x] VPS DB 마이그레이션 적용 (organizer_approvals, users.isApproved, ad_banners 초기 데이터)
 - [x] VPS 동작 확인 (https://alphatrip.org HTTP 200 정상)
+
+## v8.0 - 호텔/항공 검색 + USDT 결제 시스템
+
+### 비즈니스 모델
+- 각국 현지 통화 가격 + USD 가격 + USDT 가격 동시 표시
+- USDT 결제 시 부가세 면제 가격 제공 (홍콩/BVI 법인)
+- 실제 예약은 Qunar/Amadeus 통해 현지 통화 결제
+- 차익 = 각국 부가세(10~25%) - 환전수수료(1.85%)
+
+### DB 스키마
+- [x] travel_searches 테이블 (검색 이력)
+- [x] travel_bookings 테이블 (예약 내역)
+- [x] exchange_rates 테이블 (환율 캐시)
+- [x] vat_rates 테이블 (국가별 부가세율)
+
+### 서버 API
+- [x] 호텔 검색 프로시저 (데모 데이터 + Amadeus API 연동 준비)
+- [x] 항공 검색 프로시저 (데모 데이터 + Amadeus API 연동 준비)
+- [x] 환율 조회 프로시저 (USD/USDT/각국 통화)
+- [x] 국가별 부가세율 조회 프로시저
+- [x] USDT 가격 계산 로직 (현지가격 - VAT + 마진)
+- [x] 예약 생성/조회/취소 프로시저
+
+### 프론트엔드 UI
+- [x] 호텔 검색 페이지 (도시/날짜/인원 입력)
+- [x] 항공 검색 페이지 (출발/도착/날짜 입력)
+- [x] 검색 결과 페이지 (현지통화 + USD + USDT 3가격 동시 표시)
+- [x] USDT 절약 금액 하이라이트 (부가세 절감액 표시)
+- [x] 예약 상세 페이지 (USDT 결제 플로우)
+- [x] 내 예약 목록 페이지
+
+### 테스트
+- [x] vitest 테스트 작성 및 통과 (15건 통과)
+
+### VPS 재배포
+- [ ] VPS Docker 이미지 재빌드 및 배포
+- [ ] VPS DB 마이그레이션 적용
+- [ ] VPS 동작 확인

@@ -42,6 +42,9 @@ import {
   roleDelegations, InsertRoleDelegation,
   adBanners, InsertAdBanner,
   organizerApprovals, InsertOrganizerApproval,
+  vatRates, InsertVatRate,
+  travelSearches, InsertTravelSearch,
+  travelBookings, InsertTravelBooking,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -2517,5 +2520,68 @@ export async function getDashboardKPIs() {
   };
 }
 
+// ── VAT Rates ──────────────────────────────────────
+export async function getVatRates() {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(vatRates).where(eq(vatRates.isActive, true)).orderBy(vatRates.countryName);
+}
+export async function getVatRateByCountry(countryCode: string) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(vatRates).where(eq(vatRates.countryCode, countryCode)).limit(1);
+  return result[0];
+}
+export async function updateVatRate(id: number, data: Partial<InsertVatRate>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(vatRates).set(data).where(eq(vatRates.id, id));
+}
+
+// ── Travel Searches ──────────────────────────────────
+export async function createTravelSearch(data: InsertTravelSearch) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(travelSearches).values(data);
+  return result[0].insertId;
+}
+
+// ── Travel Bookings ──────────────────────────────────
+export async function createTravelBooking(data: InsertTravelBooking) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(travelBookings).values(data);
+  return result[0].insertId;
+}
+export async function getTravelBookings(userId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(travelBookings).where(eq(travelBookings.userId, userId)).orderBy(desc(travelBookings.createdAt));
+}
+export async function getTravelBookingById(id: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(travelBookings).where(eq(travelBookings.id, id)).limit(1);
+  return result[0];
+}
+export async function updateTravelBooking(id: number, data: Partial<InsertTravelBooking>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(travelBookings).set(data).where(eq(travelBookings.id, id));
+}
+export async function getAllTravelBookings(filters?: { status?: string; bookingType?: string }) {
+  const db = await getDb(); if (!db) return [];
+  const conditions: any[] = [];
+  if (filters?.status) conditions.push(eq(travelBookings.status, filters.status as any));
+  if (filters?.bookingType) conditions.push(eq(travelBookings.bookingType, filters.bookingType as any));
+  return db.select().from(travelBookings).where(conditions.length ? and(...conditions) : undefined).orderBy(desc(travelBookings.createdAt));
+}
+export async function getTravelBookingStats() {
+  const db = await getDb();
+  if (!db) return { totalBookings: 0, totalRevenue: 0, totalMargin: 0, pendingBookings: 0 };
+  const totalResult = await db.execute(sql`SELECT COUNT(*) as count FROM travel_bookings`);
+  const revenueResult = await db.execute(sql`SELECT COALESCE(SUM(usdtPrice), 0) as total FROM travel_bookings WHERE paymentStatus = 'confirmed'`);
+  const marginResult = await db.execute(sql`SELECT COALESCE(SUM(platformMargin), 0) as total FROM travel_bookings WHERE paymentStatus = 'confirmed'`);
+  const pendingResult = await db.execute(sql`SELECT COUNT(*) as count FROM travel_bookings WHERE status = 'pending'`);
+  return {
+    totalBookings: (totalResult[0] as unknown as any[])[0]?.count || 0,
+    totalRevenue: parseFloat((revenueResult[0] as unknown as any[])[0]?.total || '0'),
+    totalMargin: parseFloat((marginResult[0] as unknown as any[])[0]?.total || '0'),
+    pendingBookings: (pendingResult[0] as unknown as any[])[0]?.count || 0,
+  };
+}
+
 export { eq, desc, asc, and, gt, isNull, sql } from "drizzle-orm";
-export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners, organizerApprovals } from "../drizzle/schema";
+export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners, organizerApprovals, vatRates, travelSearches, travelBookings } from "../drizzle/schema";

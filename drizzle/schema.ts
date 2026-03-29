@@ -1338,3 +1338,83 @@ export const organizerApprovals = mysqlTable("organizer_approvals", {
 });
 export type OrganizerApproval = typeof organizerApprovals.$inferSelect;
 export type InsertOrganizerApproval = typeof organizerApprovals.$inferInsert;
+
+// ── VAT Rates (국가별 부가세율) ──────────────────────
+export const vatRates = mysqlTable("vat_rates", {
+  id: int("id").autoincrement().primaryKey(),
+  countryCode: varchar("countryCode", { length: 3 }).notNull().unique(),
+  countryName: varchar("countryName", { length: 100 }).notNull(),
+  vatRate: decimal("vatRate", { precision: 5, scale: 2 }).notNull(), // e.g., 10.00 for 10%
+  currency: varchar("currency", { length: 10 }).notNull(), // local currency code
+  usdExchangeRate: decimal("usdExchangeRate", { precision: 15, scale: 6 }), // 1 USD = X local currency
+  lastRateUpdate: timestamp("lastRateUpdate"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type VatRate = typeof vatRates.$inferSelect;
+export type InsertVatRate = typeof vatRates.$inferInsert;
+
+// ── Travel Searches (여행 검색 이력) ──────────────────────
+export const travelSearches = mysqlTable("travel_searches", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  searchType: mysqlEnum("searchType", ["hotel", "flight"]).notNull(),
+  destination: varchar("destination", { length: 255 }),
+  origin: varchar("origin", { length: 255 }),
+  checkIn: timestamp("checkIn"),
+  checkOut: timestamp("checkOut"),
+  guests: int("guests").default(1),
+  rooms: int("rooms").default(1),
+  countryCode: varchar("countryCode", { length: 3 }),
+  resultCount: int("resultCount").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type TravelSearch = typeof travelSearches.$inferSelect;
+export type InsertTravelSearch = typeof travelSearches.$inferInsert;
+
+// ── Travel Bookings (여행 예약 내역) ──────────────────────
+export const travelBookings = mysqlTable("travel_bookings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  bookingType: mysqlEnum("bookingType", ["hotel", "flight"]).notNull(),
+  status: mysqlEnum("status", ["pending", "confirmed", "cancelled", "completed", "refunded"]).default("pending").notNull(),
+  // Property/Flight info
+  propertyName: varchar("propertyName", { length: 500 }),
+  propertyAddress: varchar("propertyAddress", { length: 500 }),
+  flightNumber: varchar("flightNumber", { length: 50 }),
+  airline: varchar("airline", { length: 200 }),
+  origin: varchar("origin", { length: 255 }),
+  destination: varchar("destination", { length: 255 }),
+  checkIn: timestamp("checkIn"),
+  checkOut: timestamp("checkOut"),
+  guests: int("guests").default(1),
+  rooms: int("rooms").default(1),
+  // Pricing
+  localPrice: decimal("localPrice", { precision: 12, scale: 2 }).notNull(),
+  localCurrency: varchar("localCurrency", { length: 10 }).notNull(),
+  usdPrice: decimal("usdPrice", { precision: 12, scale: 2 }).notNull(),
+  usdtPrice: decimal("usdtPrice", { precision: 12, scale: 2 }).notNull(),
+  vatAmount: decimal("vatAmount", { precision: 12, scale: 2 }).default("0"),
+  vatRate: decimal("vatRate", { precision: 5, scale: 2 }).default("0"),
+  savingsAmount: decimal("savingsAmount", { precision: 12, scale: 2 }).default("0"), // how much user saves
+  exchangeFee: decimal("exchangeFee", { precision: 12, scale: 2 }).default("0"),
+  platformMargin: decimal("platformMargin", { precision: 12, scale: 2 }).default("0"),
+  // Payment
+  paymentMethod: mysqlEnum("paymentMethod", ["usdt_trc20", "usdt_erc20", "usdt_bep20", "usd_card", "local_card"]).default("usdt_trc20"),
+  paymentTxHash: varchar("paymentTxHash", { length: 255 }),
+  paymentWallet: varchar("paymentWallet", { length: 255 }),
+  paymentStatus: mysqlEnum("paymentStatus", ["awaiting", "received", "confirmed", "failed"]).default("awaiting"),
+  // External booking reference
+  externalProvider: varchar("externalProvider", { length: 100 }), // qunar, amadeus, trip.com
+  externalBookingId: varchar("externalBookingId", { length: 255 }),
+  externalBookingUrl: text("externalBookingUrl"),
+  // Meta
+  countryCode: varchar("countryCode", { length: 3 }),
+  imageUrl: text("imageUrl"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type TravelBooking = typeof travelBookings.$inferSelect;
+export type InsertTravelBooking = typeof travelBookings.$inferInsert;
