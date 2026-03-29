@@ -9,7 +9,7 @@ import {
   UserPlus, LogIn, ArrowRight, CheckCircle2, Building2, Users, Briefcase, LogOut, AlertCircle,
   Ticket, Bot, MoreHorizontal, Timer, Sparkles, Star, ChevronRight, ExternalLink, Play,
   UtensilsCrossed, Bike, ChevronDown, Map, Headphones, Smartphone, Settings, DollarSign,
-  Compass, Ship, BookOpen, Gift
+  Compass, Ship, BookOpen, Gift, CalendarDays, Video, Share2, Train, Phone, UserCheck
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import {
@@ -46,24 +46,32 @@ const IMAGES = {
   promoCruise: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/promo-banner-cruise-NLWr8Bie5pCQKeZSeLvDR6.webp",
 };
 
-// Service icon grid items - Trip.com style
-const SERVICE_ICONS = [
-  { icon: Hotel, label: "home.feat_hotel", href: "/booking", color: "from-blue-400 to-blue-600" },
-  { icon: Plane, label: "home.feat_flight", href: "/booking", color: "from-blue-400 to-blue-600" },
-  { icon: Car, label: "home.rideHailingTitle", href: "/ride", color: "from-blue-400 to-blue-600" },
-  { icon: UtensilsCrossed, label: "home.foodDeliveryTitle", href: "/delivery", color: "from-blue-400 to-blue-600" },
-  { icon: ClipboardList, label: "home.feat_register", href: "/register", color: "from-blue-400 to-blue-600" },
-  { icon: Ship, label: "home.feat_cruise", href: "/booking", color: "from-blue-400 to-blue-600" },
-  { icon: Bot, label: "home.feat_ai_short", href: "/chatbot", color: "from-blue-400 to-blue-600" },
-  { icon: Map, label: "home.feat_map", href: "/booking", color: "from-blue-400 to-blue-600" },
+// ── Row 1: 핵심 기능 (밋업/출장 관리의 핵심)
+const CORE_ICONS = [
+  { icon: Users, label: "home.menu_meetup", href: "/register", gradient: "from-indigo-500 to-blue-600", ring: "ring-indigo-200 dark:ring-indigo-800" },
+  { icon: UserCheck, label: "home.menu_invite", href: "/lookup", gradient: "from-violet-500 to-purple-600", ring: "ring-violet-200 dark:ring-violet-800" },
+  { icon: CalendarDays, label: "home.menu_schedule", href: "/schedule", gradient: "from-emerald-500 to-teal-600", ring: "ring-emerald-200 dark:ring-emerald-800" },
+  { icon: MessageCircle, label: "home.menu_chat", href: "/community", gradient: "from-sky-500 to-cyan-600", ring: "ring-sky-200 dark:ring-sky-800" },
 ];
 
-// More services for expandable section
-const MORE_SERVICE_ICONS = [
-  { icon: Compass, label: "home.feat_guide", href: "/booking", color: "from-blue-400 to-blue-600" },
-  { icon: Shield, label: "home.feat_passport", href: "/my-page", color: "from-blue-400 to-blue-600" },
-  { icon: MessageCircle, label: "home.feat_comm", href: "/community", color: "from-blue-400 to-blue-600" },
-  { icon: Luggage, label: "home.feat_baggage", href: "/flight-tracker", color: "from-blue-400 to-blue-600" },
+// ── Row 2: 업무 지원 (이동/숙박 예약)
+const WORK_ICONS = [
+  { icon: Share2, label: "home.menu_share_schedule", href: "/dashboard", gradient: "from-amber-500 to-orange-600", ring: "ring-amber-200 dark:ring-amber-800" },
+  { icon: Plane, label: "home.menu_flights", href: "/booking", gradient: "from-blue-500 to-indigo-600", ring: "ring-blue-200 dark:ring-blue-800" },
+  { icon: Hotel, label: "home.menu_hotels", href: "/booking", gradient: "from-rose-500 to-pink-600", ring: "ring-rose-200 dark:ring-rose-800" },
+  { icon: Train, label: "home.menu_rail", href: "/booking", gradient: "from-slate-500 to-gray-600", ring: "ring-slate-200 dark:ring-slate-800" },
+];
+
+// ── Row 3+: 부가 서비스 (자유시간/개인 서비스)
+const EXTRA_ICONS = [
+  { icon: Car, label: "home.menu_ride", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-800" },
+  { icon: UtensilsCrossed, label: "home.menu_delivery", href: "/delivery", gradient: "from-orange-500 to-red-600", ring: "ring-orange-200 dark:ring-orange-800" },
+  { icon: Map, label: "home.menu_map", href: "/booking", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-800" },
+  { icon: Bot, label: "home.menu_ai", href: "/chatbot", gradient: "from-cyan-500 to-blue-600", ring: "ring-cyan-200 dark:ring-cyan-800" },
+  { icon: Video, label: "home.menu_video_call", href: "/community", gradient: "from-pink-500 to-rose-600", ring: "ring-pink-200 dark:ring-pink-800" },
+  { icon: Shield, label: "home.menu_passport", href: "/my-page", gradient: "from-yellow-500 to-amber-600", ring: "ring-yellow-200 dark:ring-yellow-800" },
+  { icon: Luggage, label: "home.menu_baggage", href: "/flight-tracker", gradient: "from-stone-500 to-neutral-600", ring: "ring-stone-200 dark:ring-stone-800" },
+  { icon: Compass, label: "home.menu_guide", href: "/immigration-checklist", gradient: "from-lime-500 to-green-600", ring: "ring-lime-200 dark:ring-lime-800" },
 ];
 
 export default function Home() {
@@ -209,46 +217,73 @@ export default function Home() {
       {/* ===== MAIN CONTENT - Trip.com App Style ===== */}
       <main className="pb-20 md:pb-0">
 
-        {/* ── Service Icon Grid (Trip.com style circular icons) ── */}
-        <section className="pt-6 pb-2">
+        {/* ── Service Icon Grid - Categorized with glassmorphism ── */}
+        <section className="pt-5 pb-2">
           <div className="container max-w-lg mx-auto px-4">
-            <div className="grid grid-cols-4 gap-y-5 gap-x-2">
-              {SERVICE_ICONS.map((svc, i) => (
-                <Link key={i} href={svc.href}>
+
+            {/* Category: Core - 밋업/출장 핵심 */}
+            <div className="mb-1">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">{t("home.cat_core", "밋업 관리")}</span>
+            </div>
+            <div className="grid grid-cols-4 gap-y-4 gap-x-2 mb-5">
+              {CORE_ICONS.map((svc, i) => (
+                <Link key={`core-${i}`} href={svc.href}>
                   <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
-                    <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br ${svc.color} flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all`}>
-                      <svc.icon className="h-6 w-6 md:h-7 md:w-7 text-white" />
+                    <div className={`relative w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-2xl bg-gradient-to-br ${svc.gradient} flex items-center justify-center shadow-lg ring-2 ${svc.ring} group-hover:scale-110 group-hover:shadow-xl transition-all duration-200`}>
+                      <svc.icon className="h-5 w-5 md:h-6 md:w-6 text-white drop-shadow" />
                     </div>
-                    <span className="text-xs font-medium text-foreground text-center leading-tight">{t(svc.label)}</span>
+                    <span className="text-[11px] font-medium text-foreground text-center leading-tight">{t(svc.label)}</span>
                   </div>
                 </Link>
               ))}
             </div>
 
-            {/* More services - expandable */}
-            {showMoreServices && (
-              <div className="grid grid-cols-4 gap-y-5 gap-x-2 mt-5 animate-in fade-in slide-in-from-top-2 duration-300">
-                {MORE_SERVICE_ICONS.map((svc, i) => (
-                  <Link key={i} href={svc.href}>
-                    <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
-                      <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br ${svc.color} flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all`}>
-                        <svc.icon className="h-6 w-6 md:h-7 md:w-7 text-white" />
-                      </div>
-                      <span className="text-xs font-medium text-foreground text-center leading-tight">{t(svc.label)}</span>
+            {/* Category: Work Support - 업무 지원 */}
+            <div className="mb-1">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-500 dark:text-amber-400">{t("home.cat_work", "이동/숙박")}</span>
+            </div>
+            <div className="grid grid-cols-4 gap-y-4 gap-x-2 mb-4">
+              {WORK_ICONS.map((svc, i) => (
+                <Link key={`work-${i}`} href={svc.href}>
+                  <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
+                    <div className={`relative w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-2xl bg-gradient-to-br ${svc.gradient} flex items-center justify-center shadow-lg ring-2 ${svc.ring} group-hover:scale-110 group-hover:shadow-xl transition-all duration-200`}>
+                      <svc.icon className="h-5 w-5 md:h-6 md:w-6 text-white drop-shadow" />
                     </div>
-                  </Link>
-                ))}
-              </div>
+                    <span className="text-[11px] font-medium text-foreground text-center leading-tight">{t(svc.label)}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* More services toggle */}
+            {showMoreServices && (
+              <>
+                <div className="mb-1">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-purple-500 dark:text-purple-400">{t("home.cat_extra", "부가 서비스")}</span>
+                </div>
+                <div className="grid grid-cols-4 gap-y-4 gap-x-2 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  {EXTRA_ICONS.map((svc, i) => (
+                    <Link key={`extra-${i}`} href={svc.href}>
+                      <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
+                        <div className={`relative w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-2xl bg-gradient-to-br ${svc.gradient} flex items-center justify-center shadow-lg ring-2 ${svc.ring} group-hover:scale-110 group-hover:shadow-xl transition-all duration-200`}>
+                          <svc.icon className="h-5 w-5 md:h-6 md:w-6 text-white drop-shadow" />
+                        </div>
+                        <span className="text-[11px] font-medium text-foreground text-center leading-tight">{t(svc.label)}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
             )}
 
-            {/* Pagination dots + More toggle */}
-            <div className="flex items-center justify-center gap-1.5 mt-4">
+            {/* Toggle button */}
+            <div className="flex items-center justify-center mt-2">
               <button
                 onClick={() => setShowMoreServices(!showMoreServices)}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1 px-3 rounded-full hover:bg-muted/50"
               >
                 {showMoreServices ? t("home.showLess", "접기") : t("home.showMore", "더 보기")}
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showMoreServices ? "rotate-180" : ""}`} />
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${showMoreServices ? "rotate-180" : ""}`} />
               </button>
             </div>
           </div>
@@ -393,38 +428,48 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Travel Services Menu (Trip.com style list) ── */}
+        {/* ── Service Menu: 밋업/출장 관리 ── */}
         <section className="py-2">
           <div className="container max-w-lg mx-auto px-4">
             <div className="border-t border-border/50 pt-4">
-              <h4 className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">{t("home.travelMenuTitle", "여행 상품/서비스 메뉴")}</h4>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full bg-indigo-500" />
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">{t("home.svc_core_title", "밋업/출장 관리")}</h4>
+                <span className="text-[10px] text-muted-foreground">{t("home.svc_core_desc", "초청, 일정, 소통을 한 곳에서")}</span>
+              </div>
               <div className="space-y-0">
-                <Link href="/booking">
-                  <div className="flex items-center gap-3 py-3.5 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Hotel className="h-5 w-5 text-blue-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.feat_hotel")}</span>
+                <Link href="/register">
+                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <Users className="h-5 w-5 text-indigo-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_meetup")}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </Link>
-                <Link href="/booking">
-                  <div className="flex items-center gap-3 py-3.5 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Plane className="h-5 w-5 text-blue-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.feat_flight")}</span>
+                <Link href="/lookup">
+                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <UserCheck className="h-5 w-5 text-violet-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_invite")}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </Link>
-                <Link href="/ride">
-                  <div className="flex items-center gap-3 py-3.5 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Car className="h-5 w-5 text-violet-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.rideHailingTitle")}</span>
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">NEW</Badge>
+                <Link href="/dashboard">
+                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <CalendarDays className="h-5 w-5 text-emerald-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_schedule")}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </Link>
-                <Link href="/delivery">
-                  <div className="flex items-center gap-3 py-3.5 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <UtensilsCrossed className="h-5 w-5 text-orange-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.foodDeliveryTitle")}</span>
+                <Link href="/community">
+                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <MessageCircle className="h-5 w-5 text-sky-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_chat")}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </Link>
+                <Link href="/community">
+                  <div className="flex items-center gap-3 py-3 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <Video className="h-5 w-5 text-pink-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_video_call")}</span>
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0">NEW</Badge>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
@@ -434,30 +479,86 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Other Section (Trip.com style) ── */}
+        {/* ── Service Menu: 이동/숙박 예약 ── */}
+        <section className="py-2">
+          <div className="container max-w-lg mx-auto px-4">
+            <div className="border-t border-border/50 pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full bg-amber-500" />
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">{t("home.svc_travel_title", "이동/숙박 예약")}</h4>
+                <span className="text-[10px] text-muted-foreground">{t("home.svc_travel_desc", "항공, 호텔, 철도를 쉽게 예약")}</span>
+              </div>
+              <div className="space-y-0">
+                <Link href="/booking">
+                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <Plane className="h-5 w-5 text-blue-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_flights")}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </Link>
+                <Link href="/booking">
+                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <Hotel className="h-5 w-5 text-rose-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_hotels")}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </Link>
+                <Link href="/booking">
+                  <div className="flex items-center gap-3 py-3 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <Train className="h-5 w-5 text-slate-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_rail")}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Service Menu: 자유시간 서비스 ── */}
         <section className="py-2 pb-6">
           <div className="container max-w-lg mx-auto px-4">
             <div className="border-t border-border/50 pt-4">
-              <h4 className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">{t("home.otherTitle", "기타")}</h4>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full bg-purple-500" />
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">{t("home.svc_personal_title", "자유시간 서비스")}</h4>
+                <span className="text-[10px] text-muted-foreground">{t("home.svc_personal_desc", "차량, 배달, 지도 등 개인 서비스")}</span>
+              </div>
               <div className="space-y-0">
+                <Link href="/ride">
+                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <Car className="h-5 w-5 text-purple-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_ride")}</span>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">NEW</Badge>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </Link>
+                <Link href="/delivery">
+                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <UtensilsCrossed className="h-5 w-5 text-orange-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_delivery")}</span>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">NEW</Badge>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </Link>
+                <Link href="/booking">
+                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <Map className="h-5 w-5 text-teal-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_map")}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </Link>
                 <Link href="/chatbot">
-                  <div className="flex items-center gap-3 py-3.5 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <Bot className="h-5 w-5 text-purple-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.feat_ai")}</span>
+                  <div className="flex items-center gap-3 py-3 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <Bot className="h-5 w-5 text-cyan-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_ai")}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </Link>
-                <Link href="/community">
-                  <div className="flex items-center gap-3 py-3.5 border-b border-border/30 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <MessageCircle className="h-5 w-5 text-emerald-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.feat_comm")}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-                <Link href="/register">
-                  <div className="flex items-center gap-3 py-3.5 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                    <ClipboardList className="h-5 w-5 text-blue-500" />
-                    <span className="text-sm font-medium flex-1">{t("home.feat_register")}</span>
+                <Link href="/immigration-checklist">
+                  <div className="flex items-center gap-3 py-3 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                    <Compass className="h-5 w-5 text-lime-500" />
+                    <span className="text-sm font-medium flex-1">{t("home.menu_guide")}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </Link>
