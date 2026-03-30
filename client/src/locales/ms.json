@@ -2144,5 +2144,21 @@
     "kakaoLogin": "Login with Kakao",
     "kakaoRegister": "Sign up with Kakao",
     "orDivider": "or"
-  }
+  },
+  "home.platform_title": "Apa itu Alpha Trip?",
+  "home.platform_desc": "Alpha Trip adalah platform sehenti untuk menguruskan perjumpaan global dan perjalanan perniagaan. Dari pendaftaran perjumpaan hingga tempahan penerbangan & hotel, penghantaran kenderaan di lokasi, penghantaran makanan, dan terjemahan masa nyata — urus setiap aspek perjalanan perniagaan anda dengan Alpha Trip.",
+  "home.platform_desc2": "Kami menyediakan papan pemuka khusus peranan untuk penganjur, agensi, rakan kongsi, pemandu, jurubahasa, dan lain-lain untuk kerjasama yang cekap. Dengan sokongan pembayaran USDT, terjemahan masa nyata dalam 19 bahasa, dan bantuan chatbot AI, alami perniagaan global tanpa halangan bahasa.",
+  "home.features_title": "Ciri Utama",
+  "home.feat1_title": "Pendaftaran & Pengurusan Perjumpaan",
+  "home.feat1_desc": "Daftar dengan mudah untuk perjumpaan, dan jadual pasukan akan dibuat secara automatik selepas kelulusan. Dapatkan pemberitahuan masa nyata apabila ahli pasukan menyertai untuk komunikasi pantas.",
+  "home.feat2_title": "Penerbangan · Hotel · Pengangkutan",
+  "home.feat2_desc": "Cari dan tempah penerbangan, kereta api, bas ekspres, dan hotel di satu tempat. Semak butiran pengangkutan dan penginapan yang ditugaskan secara masa nyata.",
+  "home.feat3_title": "Penghantaran Kenderaan & Makanan di Lokasi",
+  "home.feat3_desc": "Gunakan perkhidmatan penghantaran kenderaan dan makanan khusus selepas tiba di lokasi. Pemandu mengurus status penghantaran masa nyata melalui papan pemuka khusus mereka.",
+  "home.feat4_title": "Terjemahan & Nota Masa Nyata",
+  "home.feat4_desc": "Atasi halangan bahasa dengan terjemahan masa nyata AI dalam 19 bahasa dan pengecaman suara. Rekod nota penting dengan segera semasa perjalanan anda menggunakan ciri memo.",
+  "home.feat5_title": "Jadual & Komunikasi Pasukan",
+  "home.feat5_desc": "Kongsi lokasi dan masa mesyuarat melalui kalendar dengan ahli pasukan, dan berkomunikasi dengan lancar melalui pengumuman pasukan dan sembang masa nyata. Jadual pasukan dibuat secara automatik apabila mendaftar untuk perjumpaan.",
+  "home.feat6_title": "Papan Pemuka Berdasarkan Peranan",
+  "home.feat6_desc": "Skrin khusus yang dioptimumkan untuk setiap peranan — peserta, penganjur, pemandu, jurubahasa, agensi, dan rakan kongsi. Lihat hanya maklumat yang anda perlukan dengan sekilas pandang."
 }

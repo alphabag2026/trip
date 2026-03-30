@@ -2144,5 +2144,21 @@
     "kakaoLogin": "Login with Kakao",
     "kakaoRegister": "Sign up with Kakao",
     "orDivider": "or"
-  }
+  },
+  "home.platform_title": "Ano ang Alpha Trip?",
+  "home.platform_desc": "Ang Alpha Trip ay isang all-in-one na platform para sa pamamahala ng mga global na meetup at business trip. Mula sa pagpaparehistro sa meetup hanggang sa pag-book ng flight at hotel, on-site na pag-dispatch ng sasakyan, pag-deliver ng pagkain, at real-time na pagsasalin — asikasuhin ang bawat aspeto ng iyong business trip gamit ang Alpha Trip.",
+  "home.platform_desc2": "Nagbibigay kami ng mga dashboard na partikular sa papel para sa mga organizer, ahensya, partner, driver, interpreter, at higit pa para sa mahusay na pakikipagtulungan. Sa suporta sa pagbabayad ng USDT, 19-wika na real-time na pagsasalin, at tulong mula sa AI chatbot, maranasan ang tuluy-tuloy na pandaigdigang negosyo nang walang mga hadlang sa wika.",
+  "home.features_title": "Mga Pangunahing Tampok",
+  "home.feat1_title": "Pagpaparehistro at Pamamahala ng Meetup",
+  "home.feat1_desc": "Madaling magrehistro para sa mga meetup, at awtomatikong nililikha ang mga iskedyul ng team sa pag-apruba. Makatanggap ng mga real-time na abiso kapag sumali ang mga miyembro ng team para sa mabilis na komunikasyon.",
+  "home.feat2_title": "Mga Flight · Hotel · Transportasyon",
+  "home.feat2_desc": "Maghanap at mag-book ng mga flight, tren, express bus, at hotel sa isang lugar. Suriin ang iyong mga nakatalagang detalye ng transportasyon at tirahan sa real-time.",
+  "home.feat3_title": "On-site na Sasakyan at Pag-deliver ng Pagkain",
+  "home.feat3_desc": "Gumamit ng mga dedikadong serbisyo sa pag-dispatch ng sasakyan at pag-deliver ng pagkain pagdating sa venue. Pinamamahalaan ng mga driver ang real-time na status ng dispatch sa pamamagitan ng kanilang dedikadong dashboard.",
+  "home.feat4_title": "Real-time na Pagsasalin at Mga Tala",
+  "home.feat4_desc": "Basagin ang mga hadlang sa wika gamit ang AI real-time na pagsasalin sa 19 na wika at pagkilala sa boses. Mag-record kaagad ng mahahalagang tala habang nasa biyahe gamit ang tampok na memo.",
+  "home.feat5_title": "Iskedyul at Komunikasyon ng Team",
+  "home.feat5_desc": "Ibahagi ang mga lokasyon at oras ng pulong sa pamamagitan ng kalendaryo sa mga miyembro ng team, at makipag-usap nang maayos sa pamamagitan ng mga anunsyo ng team at real-time na chat. Awtomatikong nililikha ang mga iskedyul ng team kapag nagrerehistro para sa mga meetup.",
+  "home.feat6_title": "Mga Dashboard na Batay sa Papel",
+  "home.feat6_desc": "Mga naka-optimize na dedikadong screen para sa bawat papel — mga dadalo, organizer, driver, interpreter, ahensya, at partner. Tingnan lamang ang impormasyong kailangan mo sa isang sulyap."
 }

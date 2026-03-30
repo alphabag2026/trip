@@ -2144,5 +2144,21 @@
     "kakaoLogin": "Se connecter avec Kakao",
     "kakaoRegister": "S'inscrire avec Kakao",
     "orDivider": "ou"
-  }
+  },
+  "home.platform_title": "Qu'est-ce qu'Alpha Trip ?",
+  "home.platform_desc": "Alpha Trip est une plateforme tout-en-un pour la gestion de rencontres mondiales et de voyages d'affaires. De l'inscription à la rencontre à la réservation de vols et d'hôtels, en passant par l'envoi de véhicules sur place, la livraison de repas et la traduction en temps réel, gérez chaque aspect de votre voyage d'affaires avec Alpha Trip.",
+  "home.platform_desc2": "Nous fournissons des tableaux de bord spécifiques aux rôles pour les organisateurs, les agences, les partenaires, les chauffeurs, les interprètes, etc. pour une collaboration efficace. Avec la prise en charge des paiements en USDT, la traduction en temps réel en 19 langues et l'assistance d'un chatbot IA, vivez une expérience commerciale mondiale transparente et sans barrières linguistiques.",
+  "home.features_title": "Fonctionnalités clés",
+  "home.feat1_title": "Inscription et gestion des rencontres",
+  "home.feat1_desc": "Inscrivez-vous facilement aux rencontres et les emplois du temps des équipes sont automatiquement créés après approbation. Recevez des notifications en temps réel lorsque des membres de l'équipe se joignent pour une communication rapide.",
+  "home.feat2_title": "Vols · Hôtels · Transport",
+  "home.feat2_desc": "Recherchez et réservez des vols, des trains, des bus express et des hôtels en un seul endroit. Vérifiez en temps réel les détails de votre transport et de votre hébergement attribués.",
+  "home.feat3_title": "Véhicule sur place et livraison de repas",
+  "home.feat3_desc": "Utilisez des services dédiés d'envoi de véhicules et de livraison de repas après votre arrivée sur le lieu de la rencontre. Les chauffeurs gèrent l'état d'avancement de l'envoi en temps réel via leur tableau de bord dédié.",
+  "home.feat4_title": "Traduction et notes en temps réel",
+  "home.feat4_desc": "Dépassez les barrières linguistiques avec la traduction en temps réel par IA en 19 langues et la reconnaissance vocale. Enregistrez instantanément des notes importantes pendant votre voyage grâce à la fonction mémo.",
+  "home.feat5_title": "Emploi du temps et communication de l'équipe",
+  "home.feat5_desc": "Partagez les lieux et les heures de réunion via un calendrier avec les membres de l'équipe, et communiquez en toute fluidité grâce aux annonces de l'équipe et au chat en temps réel. Les emplois du temps des équipes sont créés automatiquement lors de l'inscription aux rencontres.",
+  "home.feat6_title": "Tableaux de bord basés sur les rôles",
+  "home.feat6_desc": "Écrans dédiés optimisés pour chaque rôle : participants, organisateurs, chauffeurs, interprètes, agences et partenaires. Ne voyez que les informations dont vous avez besoin en un coup d'œil."
 }

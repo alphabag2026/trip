@@ -2144,5 +2144,21 @@
     "kakaoLogin": "Login with Kakao",
     "kakaoRegister": "Sign up with Kakao",
     "orDivider": "or"
-  }
+  },
+  "home.platform_title": "Cos'è Alpha Trip?",
+  "home.platform_desc": "Alpha Trip è una piattaforma all-in-one per la gestione di meetup globali e viaggi di lavoro. Dalla registrazione ai meetup alla prenotazione di voli e hotel, dal dispacciamento di veicoli in loco alla consegna di cibo e alla traduzione in tempo reale — gestisci ogni aspetto del tuo viaggio di lavoro con Alpha Trip.",
+  "home.platform_desc2": "Forniamo dashboard specifici per ruolo per organizzatori, agenzie, partner, autisti, interpreti e altro ancora per una collaborazione efficiente. Con il supporto ai pagamenti in USDT, la traduzione in tempo reale in 19 lingue e l'assistenza di un chatbot AI, sperimenta un business globale senza interruzioni e senza barriere linguistiche.",
+  "home.features_title": "Caratteristiche principali",
+  "home.feat1_title": "Registrazione e gestione dei meetup",
+  "home.feat1_desc": "Registrati facilmente ai meetup e i programmi dei team vengono creati automaticamente dopo l'approvazione. Ricevi notifiche in tempo reale quando i membri del team si uniscono per una comunicazione rapida.",
+  "home.feat2_title": "Voli · Hotel · Trasporti",
+  "home.feat2_desc": "Cerca e prenota voli, treni, autobus espressi e hotel in un unico posto. Controlla i dettagli del trasporto e dell'alloggio assegnati in tempo reale.",
+  "home.feat3_title": "Veicoli in loco e consegna di cibo",
+  "home.feat3_desc": "Utilizza i servizi dedicati di dispacciamento veicoli e consegna cibo dopo essere arrivato alla sede. Gli autisti gestiscono lo stato di dispacciamento in tempo reale tramite la loro dashboard dedicata.",
+  "home.feat4_title": "Traduzione in tempo reale e note",
+  "home.feat4_desc": "Supera le barriere linguistiche con la traduzione AI in tempo reale in 19 lingue e il riconoscimento vocale. Registra istantaneamente le note importanti durante il tuo viaggio con la funzione memo.",
+  "home.feat5_title": "Programma e comunicazione del team",
+  "home.feat5_desc": "Condividi luoghi e orari delle riunioni tramite calendario con i membri del team e comunica senza problemi tramite annunci di squadra e chat in tempo reale. I programmi del team vengono creati automaticamente al momento della registrazione ai meetup.",
+  "home.feat6_title": "Dashboard basati sui ruoli",
+  "home.feat6_desc": "Schermate dedicate e ottimizzate per ogni ruolo: partecipanti, organizzatori, autisti, interpreti, agenzie e partner. Visualizza a colpo d'occhio solo le informazioni di cui hai bisogno."
 }

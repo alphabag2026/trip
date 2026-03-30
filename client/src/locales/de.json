@@ -2144,5 +2144,21 @@
     "kakaoLogin": "Mit Kakao anmelden",
     "kakaoRegister": "Mit Kakao registrieren",
     "orDivider": "oder"
-  }
+  },
+  "home.platform_title": "Was ist Alpha Trip?",
+  "home.platform_desc": "Alpha Trip ist eine All-in-One-Plattform zur Verwaltung globaler Meetups und Geschäftsreisen. Von der Meetup-Anmeldung über Flug- und Hotelbuchung, vor Ort Fahrzeugdisposition, Essenslieferung bis hin zur Echtzeitübersetzung – erledigen Sie jeden Aspekt Ihrer Geschäftsreise mit Alpha Trip.",
+  "home.platform_desc2": "Wir bieten rollenbasierte Dashboards für Organisatoren, Agenturen, Partner, Fahrer, Dolmetscher und mehr für effiziente Zusammenarbeit. Mit USDT-Zahlungsunterstützung, 19-sprachiger Echtzeitübersetzung und AI-Chatbot-Hilfe erleben Sie nahtloses globales Business ohne Sprachbarrieren.",
+  "home.features_title": "Hauptfunktionen",
+  "home.feat1_title": "Meetup Anmeldung & Verwaltung",
+  "home.feat1_desc": "Melden Sie sich einfach zu Meetups an, und Teampläne werden nach der Genehmigung automatisch erstellt. Erhalten Sie Echtzeit-Benachrichtigungen, wenn Teammitglieder beitreten, für schnelle Kommunikation.",
+  "home.feat2_title": "Flüge · Hotels · Transport",
+  "home.feat2_desc": "Suchen und buchen Sie Flüge, Züge, Expressbusse und Hotels an einem Ort. Prüfen Sie Ihre zugewiesenen Transport- und Unterkunftsdaten in Echtzeit.",
+  "home.feat3_title": "Vor Ort Fahrzeug- & Essenslieferung",
+  "home.feat3_desc": "Nutzen Sie vor Ort dedizierte Fahrzeugdisposition und Essenslieferdienste. Fahrer verwalten den Echtzeit-Dispositionsstatus über ihr spezielles Dashboard.",
+  "home.feat4_title": "Echtzeitübersetzung & Notizen",
+  "home.feat4_desc": "Überwinden Sie Sprachbarrieren mit AI-Echtzeitübersetzung in 19 Sprachen und Spracherkennung. Halten Sie wichtige Notizen sofort während Ihrer Reise mit der Memo-Funktion fest.",
+  "home.feat5_title": "Teamplan & Kommunikation",
+  "home.feat5_desc": "Teilen Sie Meeting-Orte und -Zeiten über den Kalender mit Teammitgliedern und kommunizieren Sie reibungslos über Teambekanntmachungen und Echtzeit-Chat. Teampläne werden bei der Meetup-Anmeldung automatisch erstellt.",
+  "home.feat6_title": "Rollenbasierte Dashboards",
+  "home.feat6_desc": "Optimierte dedizierte Bildschirme für jede Rolle – Teilnehmer, Organisatoren, Fahrer, Dolmetscher, Agenturen und Partner. Sehen Sie nur die Informationen, die Sie auf einen Blick benötigen."
 }

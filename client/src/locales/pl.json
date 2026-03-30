@@ -2144,5 +2144,21 @@
     "kakaoLogin": "Login with Kakao",
     "kakaoRegister": "Sign up with Kakao",
     "orDivider": "or"
-  }
+  },
+  "home.platform_title": "Czym jest Alpha Trip?",
+  "home.platform_desc": "Alpha Trip to kompleksowa platforma do zarządzania globalnymi spotkaniami i podróżami służbowymi. Od rejestracji na spotkania, przez rezerwację lotów i hoteli, dyspozycję pojazdów na miejscu, dostawę jedzenia, po tłumaczenia w czasie rzeczywistym — zarządzaj każdym aspektem swojej podróży służbowej z Alpha Trip.",
+  "home.platform_desc2": "Zapewniamy pulpity nawigacyjne dostosowane do ról dla organizatorów, agencji, partnerów, kierowców, tłumaczy i innych, aby zapewnić wydajną współpracę. Dzięki obsłudze płatności USDT, tłumaczeniom w czasie rzeczywistym w 19 językach i pomocy chatbota AI, doświadcz płynnego globalnego biznesu bez barier językowych.",
+  "home.features_title": "Kluczowe cechy",
+  "home.feat1_title": "Rejestracja i zarządzanie spotkaniami",
+  "home.feat1_desc": "Łatwo rejestruj się na spotkania, a harmonogramy zespołów są tworzone automatycznie po zatwierdzeniu. Otrzymuj powiadomienia w czasie rzeczywistym, gdy członkowie zespołu dołączą, aby zapewnić szybką komunikację.",
+  "home.feat2_title": "Loty · Hotele · Transport",
+  "home.feat2_desc": "Wyszukuj i rezerwuj loty, pociągi, autobusy ekspresowe i hotele w jednym miejscu. Sprawdzaj przypisane szczegóły transportu i zakwaterowania w czasie rzeczywistym.",
+  "home.feat3_title": "Pojazdy na miejscu i dostawa jedzenia",
+  "home.feat3_desc": "Korzystaj z dedykowanych usług dyspozycji pojazdów i dostawy jedzenia po przybyciu na miejsce. Kierowcy zarządzają statusem dyspozycji w czasie rzeczywistym za pośrednictwem swojego dedykowanego pulpitu nawigacyjnego.",
+  "home.feat4_title": "Tłumaczenie w czasie rzeczywistym i notatki",
+  "home.feat4_desc": "Przełam bariery językowe dzięki tłumaczeniu AI w czasie rzeczywistym w 19 językach i rozpoznawaniu głosu. Błyskawicznie zapisuj ważne notatki podczas podróży dzięki funkcji notatek.",
+  "home.feat5_title": "Harmonogram zespołu i komunikacja",
+  "home.feat5_desc": "Udostępniaj lokalizacje i godziny spotkań za pośrednictwem kalendarza członkom zespołu i płynnie komunikuj się za pomocą ogłoszeń zespołu i czatu w czasie rzeczywistym. Harmonogramy zespołów są tworzone automatycznie podczas rejestracji na spotkania.",
+  "home.feat6_title": "Pulpity nawigacyjne oparte na rolach",
+  "home.feat6_desc": "Zoptymalizowane, dedykowane ekrany dla każdej roli — uczestników, organizatorów, kierowców, tłumaczy, agencji i partnerów. Zobacz tylko potrzebne informacje na pierwszy rzut oka."
 }

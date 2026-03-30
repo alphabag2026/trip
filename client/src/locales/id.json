@@ -2144,5 +2144,21 @@
     "kakaoLogin": "Login with Kakao",
     "kakaoRegister": "Sign up with Kakao",
     "orDivider": "or"
-  }
+  },
+  "home.platform_title": "Apa itu Alpha Trip?",
+  "home.platform_desc": "Alpha Trip adalah platform lengkap untuk mengelola pertemuan global dan perjalanan bisnis. Mulai dari pendaftaran pertemuan hingga pemesanan penerbangan & hotel, pengiriman kendaraan di lokasi, pengiriman makanan, dan terjemahan waktu nyata — tangani setiap aspek perjalanan bisnis Anda dengan Alpha Trip.",
+  "home.platform_desc2": "Kami menyediakan dasbor khusus peran untuk penyelenggara, agen, mitra, pengemudi, penerjemah, dan lainnya untuk kolaborasi yang efisien. Dengan dukungan pembayaran USDT, terjemahan waktu nyata 19 bahasa, dan bantuan chatbot AI, rasakan bisnis global tanpa hambatan bahasa.",
+  "home.features_title": "Fitur Utama",
+  "home.feat1_title": "Pendaftaran & Manajemen Pertemuan",
+  "home.feat1_desc": "Daftar pertemuan dengan mudah, dan jadwal tim secara otomatis dibuat setelah disetujui. Dapatkan notifikasi waktu nyata saat anggota tim bergabung untuk komunikasi cepat.",
+  "home.feat2_title": "Penerbangan · Hotel · Transportasi",
+  "home.feat2_desc": "Cari dan pesan penerbangan, kereta api, bus ekspres, dan hotel di satu tempat. Periksa transportasi yang Anda tetapkan dan detail akomodasi secara waktu nyata.",
+  "home.feat3_title": "Pengiriman Kendaraan & Makanan di Lokasi",
+  "home.feat3_desc": "Gunakan layanan pengiriman kendaraan dan pengiriman makanan khusus setelah tiba di tempat. Pengemudi mengelola status pengiriman waktu nyata melalui dasbor khusus mereka.",
+  "home.feat4_title": "Terjemahan & Catatan Waktu Nyata",
+  "home.feat4_desc": "Hancurkan hambatan bahasa dengan terjemahan waktu nyata AI dalam 19 bahasa dan pengenalan suara. Rekam catatan penting secara instan selama perjalanan Anda dengan fitur memo.",
+  "home.feat5_title": "Jadwal & Komunikasi Tim",
+  "home.feat5_desc": "Bagikan lokasi dan waktu rapat melalui kalender dengan anggota tim, dan berkomunikasi dengan lancar melalui pengumuman tim dan obrolan waktu nyata. Jadwal tim secara otomatis dibuat saat mendaftar pertemuan.",
+  "home.feat6_title": "Dasbor Berbasis Peran",
+  "home.feat6_desc": "Layar khusus yang dioptimalkan untuk setiap peran — peserta, penyelenggara, pengemudi, penerjemah, agen, dan mitra. Lihat hanya informasi yang Anda butuhkan secara sekilas."
 }

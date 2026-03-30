@@ -2144,5 +2144,21 @@
     "kakaoLogin": "Login with Kakao",
     "kakaoRegister": "Sign up with Kakao",
     "orDivider": "or"
-  }
+  },
+  "home.platform_title": "Alpha Trip nedir?",
+  "home.platform_desc": "Alpha Trip, küresel buluşmaları ve iş gezilerini yönetmek için hepsi bir arada bir platformdur. Buluşma kaydından uçak ve otel rezervasyonuna, yerinde araç tahsisinden yemek siparişine ve gerçek zamanlı çeviriye kadar iş gezinizin her yönünü Alpha Trip ile yönetin.",
+  "home.platform_desc2": "Organizatörler, acenteler, ortaklar, sürücüler, tercümanlar ve daha fazlası için verimli işbirliği amacıyla role özgü panolar sunuyoruz. USDT ödeme desteği, 19 dilde gerçek zamanlı çeviri ve AI sohbet robotu yardımı ile dil engeli olmadan sorunsuz küresel iş deneyimi yaşayın.",
+  "home.features_title": "Ana Özellikler",
+  "home.feat1_title": "Buluşma Kaydı ve Yönetimi",
+  "home.feat1_desc": "Buluşmalara kolayca kaydolun, onay üzerine ekip programları otomatik olarak oluşturulur. Ekip üyeleri katıldığında hızlı iletişim için gerçek zamanlı bildirimler alın.",
+  "home.feat2_title": "Uçuşlar · Oteller · Ulaşım",
+  "home.feat2_desc": "Uçak, tren, ekspres otobüs ve otelleri tek bir yerden arayın ve rezerve edin. Atanan ulaşım ve konaklama detaylarınızı gerçek zamanlı olarak kontrol edin.",
+  "home.feat3_title": "Yerinde Araç ve Yemek Teslimatı",
+  "home.feat3_desc": "Mekana vardıktan sonra özel araç tahsisi ve yemek teslimat hizmetlerini kullanın. Sürücüler, özel panoları aracılığıyla gerçek zamanlı sevk durumunu yönetir.",
+  "home.feat4_title": "Gerçek Zamanlı Çeviri ve Notlar",
+  "home.feat4_desc": "19 dilde AI gerçek zamanlı çeviri ve ses tanıma ile dil engellerini aşın. Not özelliği ile geziniz sırasında önemli notları anında kaydedin.",
+  "home.feat5_title": "Ekip Programı ve İletişim",
+  "home.feat5_desc": "Toplantı yerlerini ve zamanlarını takvim aracılığıyla ekip üyeleriyle paylaşın ve ekip duyuruları ve gerçek zamanlı sohbet yoluyla sorunsuz bir şekilde iletişim kurun. Buluşmalara kaydolurken ekip programları otomatik olarak oluşturulur.",
+  "home.feat6_title": "Role Dayalı Panolar",
+  "home.feat6_desc": "Her rol için optimize edilmiş özel ekranlar — katılımcılar, organizatörler, sürücüler, tercümanlar, acenteler ve ortaklar. İhtiyacınız olan bilgileri bir bakışta görün."
 }

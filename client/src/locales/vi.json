@@ -2144,5 +2144,21 @@
     "kakaoLogin": "Đăng nhập bằng Kakao",
     "kakaoRegister": "Đăng ký bằng Kakao",
     "orDivider": "hoặc"
-  }
+  },
+  "home.platform_title": "Alpha Trip là gì?",
+  "home.platform_desc": "Alpha Trip là một nền tảng tất cả trong một để quản lý các cuộc gặp gỡ toàn cầu và các chuyến công tác. Từ đăng ký cuộc gặp đến đặt vé máy bay & khách sạn, điều phối phương tiện tại chỗ, giao đồ ăn và dịch thuật thời gian thực — xử lý mọi khía cạnh của chuyến công tác của bạn với Alpha Trip.",
+  "home.platform_desc2": "Chúng tôi cung cấp các bảng điều khiển dành riêng cho từng vai trò cho người tổ chức, đại lý, đối tác, tài xế, thông dịch viên, v.v. để cộng tác hiệu quả. Với hỗ trợ thanh toán bằng USDT, dịch thuật thời gian thực 19 ngôn ngữ và hỗ trợ chatbot AI, hãy trải nghiệm kinh doanh toàn cầu liền mạch không có rào cản ngôn ngữ.",
+  "home.features_title": "Các tính năng chính",
+  "home.feat1_title": "Đăng ký & Quản lý cuộc gặp",
+  "home.feat1_desc": "Dễ dàng đăng ký các cuộc gặp và lịch trình của nhóm sẽ tự động được tạo sau khi được phê duyệt. Nhận thông báo thời gian thực khi các thành viên trong nhóm tham gia để liên lạc nhanh chóng.",
+  "home.feat2_title": "Chuyến bay · Khách sạn · Vận chuyển",
+  "home.feat2_desc": "Tìm kiếm và đặt vé máy bay, tàu hỏa, xe buýt tốc hành và khách sạn ở cùng một nơi. Kiểm tra chi tiết phương tiện di chuyển và chỗ ở được chỉ định của bạn trong thời gian thực.",
+  "home.feat3_title": "Điều phối phương tiện & Giao đồ ăn tại chỗ",
+  "home.feat3_desc": "Sử dụng các dịch vụ điều phối phương tiện và giao đồ ăn chuyên dụng sau khi đến địa điểm. Tài xế quản lý trạng thái điều phối thời gian thực thông qua bảng điều khiển chuyên dụng của họ.",
+  "home.feat4_title": "Dịch thuật & Ghi chú thời gian thực",
+  "home.feat4_desc": "Phá vỡ rào cản ngôn ngữ với dịch thuật thời gian thực bằng AI với 19 ngôn ngữ và nhận dạng giọng nói. Ghi lại các ghi chú quan trọng ngay lập tức trong chuyến đi của bạn với tính năng ghi nhớ.",
+  "home.feat5_title": "Lịch trình & Giao tiếp nhóm",
+  "home.feat5_desc": "Chia sẻ địa điểm và thời gian cuộc họp qua lịch với các thành viên trong nhóm và giao tiếp thuận lợi thông qua các thông báo của nhóm và trò chuyện thời gian thực. Lịch trình của nhóm được tạo tự động khi đăng ký các cuộc gặp.",
+  "home.feat6_title": "Bảng điều khiển dựa trên vai trò",
+  "home.feat6_desc": "Các màn hình chuyên dụng được tối ưu hóa cho từng vai trò — người tham dự, người tổ chức, tài xế, thông dịch viên, đại lý và đối tác. Xem nhanh chỉ những thông tin bạn cần."
 }

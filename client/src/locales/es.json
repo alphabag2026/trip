@@ -2144,5 +2144,21 @@
     "kakaoLogin": "Iniciar sesión con Kakao",
     "kakaoRegister": "Registrarse con Kakao",
     "orDivider": "o"
-  }
+  },
+  "home.platform_title": "¿Qué es Alpha Trip?",
+  "home.platform_desc": "Alpha Trip es una plataforma todo en uno para gestionar reuniones globales y viajes de negocios. Desde el registro de reuniones hasta la reserva de vuelos y hoteles, el envío de vehículos en el lugar, la entrega de alimentos y la traducción en tiempo real: gestione todos los aspectos de su viaje de negocios con Alpha Trip.",
+  "home.platform_desc2": "Ofrecemos paneles de control específicos para cada función para organizadores, agencias, socios, conductores, intérpretes y más para una colaboración eficiente. Con soporte de pago en USDT, traducción en tiempo real en 19 idiomas y asistencia de chatbot con IA, experimente negocios globales sin problemas y sin barreras idiomáticas.",
+  "home.features_title": "Características Clave",
+  "home.feat1_title": "Registro y Gestión de Reuniones",
+  "home.feat1_desc": "Regístrese fácilmente para las reuniones y los horarios de los equipos se crearán automáticamente después de la aprobación. Reciba notificaciones en tiempo real cuando los miembros del equipo se unan para una comunicación rápida.",
+  "home.feat2_title": "Vuelos · Hoteles · Transporte",
+  "home.feat2_desc": "Busque y reserve vuelos, trenes, autobuses expresos y hoteles en un solo lugar. Verifique los detalles de su transporte y alojamiento asignados en tiempo real.",
+  "home.feat3_title": "Envío de Vehículos y Entrega de Alimentos en el Lugar",
+  "home.feat3_desc": "Utilice los servicios dedicados de envío de vehículos y entrega de alimentos después de llegar al lugar. Los conductores gestionan el estado del envío en tiempo real a través de su panel de control dedicado.",
+  "home.feat4_title": "Traducción y Notas en Tiempo Real",
+  "home.feat4_desc": "Rompa las barreras del idioma con la traducción en tiempo real con IA en 19 idiomas y el reconocimiento de voz. Grabe notas importantes al instante durante su viaje con la función de memo.",
+  "home.feat5_title": "Horario y Comunicación del Equipo",
+  "home.feat5_desc": "Comparta las ubicaciones y los horarios de las reuniones a través del calendario con los miembros del equipo y comuníquese sin problemas a través de los anuncios del equipo y el chat en tiempo real. Los horarios de los equipos se crean automáticamente al registrarse en las reuniones.",
+  "home.feat6_title": "Paneles de Control Basados en Funciones",
+  "home.feat6_desc": "Pantallas dedicadas y optimizadas para cada función: asistentes, organizadores, conductores, intérpretes, agencias y socios. Vea solo la información que necesita de un vistazo."
 }

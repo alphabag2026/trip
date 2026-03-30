@@ -2144,5 +2144,21 @@
     "kakaoLogin": "Login with Kakao",
     "kakaoRegister": "Sign up with Kakao",
     "orDivider": "or"
-  }
+  },
+  "home.platform_title": "Vad är Alpha Trip?",
+  "home.platform_desc": "Alpha Trip är en allt-i-ett-plattform för att hantera globala möten och affärsresor. Från registrering till mötet till bokning av flyg och hotell, utkörning av fordon på plats, matleverans och realtidsöversättning – hantera varje aspekt av din affärsresa med Alpha Trip.",
+  "home.platform_desc2": "Vi erbjuder rollspecifika instrumentpaneler för organisatörer, byråer, partners, förare, tolkar med flera för effektivt samarbete. Med stöd för USDT-betalningar, realtidsöversättning på 19 språk och AI-chattbotassistent kan du uppleva sömlös global affärsverksamhet utan språkbarriärer.",
+  "home.features_title": "Huvudfunktioner",
+  "home.feat1_title": "Anmälan och hantering av möten",
+  "home.feat1_desc": "Registrera dig enkelt för meetups, och teamscheman skapas automatiskt vid godkännande. Få realtidsnotiser när teammedlemmar ansluter för snabb kommunikation.",
+  "home.feat2_title": "Flyg · Hotell · Transport",
+  "home.feat2_desc": "Sök och boka flyg, tåg, expressbussar och hotell på ett och samma ställe. Kontrollera dina tilldelade transport- och boendedetaljer i realtid.",
+  "home.feat3_title": "Leverans av fordon och mat på plats",
+  "home.feat3_desc": "Använd dedikerade fordonsdistributions- och matleveranstjänster efter ankomst till platsen. Förare hanterar realtidsstatus för distribution via sin dedikerade instrumentpanel.",
+  "home.feat4_title": "Översättning och anteckningar i realtid",
+  "home.feat4_desc": "Bryt språkbarriärer med AI i realtid för översättning på 19 språk och röstigenkänning. Spela in viktiga anteckningar direkt under din resa med memo-funktionen.",
+  "home.feat5_title": "Team Schema & Kommunikation",
+  "home.feat5_desc": "Dela mötesplatser och tider via kalendern med teammedlemmar och kommunicera smidigt genom teammeddelanden och chatt i realtid. Teamscheman skapas automatiskt vid registrering för träffar.",
+  "home.feat6_title": "Rollbaserade instrumentpaneler",
+  "home.feat6_desc": "Optimerade dedikerade skärmar för varje roll — deltagare, arrangörer, förare, tolkar, byråer och partners. Se endast den information du behöver vid en snabb blick."
 }

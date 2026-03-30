@@ -2144,5 +2144,21 @@
     "kakaoLogin": "Login with Kakao",
     "kakaoRegister": "Sign up with Kakao",
     "orDivider": "or"
-  }
+  },
+  "home.platform_title": "Wat is Alpha Trip?",
+  "home.platform_desc": "Alpha Trip is een alles-in-één platform voor het beheren van wereldwijde meetups en zakenreizen. Van meetup-registratie tot het boeken van vluchten en hotels, voertuigverzending ter plaatse, maaltijdbezorging en real-time vertaling — regel elk aspect van uw zakenreis met Alpha Trip.",
+  "home.platform_desc2": "We bieden rolspecifieke dashboards voor organisatoren, bureaus, partners, chauffeurs, tolken en meer voor efficiënte samenwerking. Met USDT-betalingsondersteuning, real-time vertaling in 19 talen en AI-chatbotassistentie, ervaar naadloze wereldwijde zaken zonder taalbarrières.",
+  "home.features_title": "Belangrijkste kenmerken",
+  "home.feat1_title": "Meetup Registratie & Beheer",
+  "home.feat1_desc": "Registreer eenvoudig voor meetups, en teamschema's worden automatisch aangemaakt na goedkeuring. Ontvang real-time meldingen wanneer teamleden zich aansluiten voor snelle communicatie.",
+  "home.feat2_title": "Vluchten · Hotels · Vervoer",
+  "home.feat2_desc": "Zoek en boek vluchten, treinen, expressbussen en hotels op één plek. Controleer uw toegewezen vervoers- en accommodatiegegevens in real-time.",
+  "home.feat3_title": "Voertuig ter plaatse & Maaltijdbezorging",
+  "home.feat3_desc": "Gebruik speciale voertuigverzending en maaltijdbezorgdiensten na aankomst op de locatie. Chauffeurs beheren de real-time verzendstatus via hun speciale dashboard.",
+  "home.feat4_title": "Real-time Vertaling & Notities",
+  "home.feat4_desc": "Doorbreek taalbarrières met AI real-time vertaling in 19 talen en spraakherkenning. Leg belangrijke notities direct vast tijdens uw reis met de memofunctie.",
+  "home.feat5_title": "Teamschema & Communicatie",
+  "home.feat5_desc": "Deel vergaderlocaties en -tijden via de kalender met teamleden en communiceer soepel via teamaankondigingen en real-time chat. Teamschema's worden automatisch aangemaakt bij het registreren voor meetups.",
+  "home.feat6_title": "Rolgebaseerde Dashboards",
+  "home.feat6_desc": "Geoptimaliseerde speciale schermen voor elke rol — deelnemers, organisatoren, chauffeurs, tolken, bureaus en partners. Zie in één oogopslag alleen de informatie die u nodig heeft."
 }
