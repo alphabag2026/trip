@@ -2437,5 +2437,21 @@
     "voiceMode": "Voice Mode",
     "teamInfo": "Team Info",
     "refreshData": "Refresh"
-  }
+  },
+  "home.platform_title": "What is Alpha Trip?",
+  "home.platform_desc": "Alpha Trip is an all-in-one platform for managing global meetups and business trips. From meetup registration to flight & hotel booking, on-site vehicle dispatch, food delivery, and real-time translation — handle every aspect of your business trip with Alpha Trip.",
+  "home.platform_desc2": "We provide role-specific dashboards for organizers, agencies, partners, drivers, interpreters, and more for efficient collaboration. With USDT payment support, 19-language real-time translation, and AI chatbot, experience global business without language barriers.",
+  "home.features_title": "Key Features",
+  "home.feat1_title": "Meetup Registration & Management",
+  "home.feat1_desc": "Easily register for meetups, and team schedules are automatically created upon approval. Get real-time notifications when team members join for quick communication.",
+  "home.feat2_title": "Flights · Hotels · Transport",
+  "home.feat2_desc": "Search and book flights, trains, express buses, and hotels in one place. Check your assigned transport and accommodation details in real-time.",
+  "home.feat3_title": "On-site Vehicle & Food Delivery",
+  "home.feat3_desc": "Use dedicated vehicle dispatch and food delivery services after arriving at the venue. Drivers manage real-time dispatch status through their dedicated dashboard.",
+  "home.feat4_title": "Real-time Translation & Notes",
+  "home.feat4_desc": "Break language barriers with AI real-time translation in 19 languages and voice recognition. Record important notes instantly during your trip with the memo feature.",
+  "home.feat5_title": "Team Schedule & Communication",
+  "home.feat5_desc": "Share meeting locations and times via calendar with team members, and communicate smoothly through team announcements and real-time chat. Team schedules are auto-created when registering for meetups.",
+  "home.feat6_title": "Role-based Dashboards",
+  "home.feat6_desc": "Optimized dedicated screens for each role — attendees, organizers, drivers, interpreters, agencies, and partners. See only the information you need at a glance."
 }

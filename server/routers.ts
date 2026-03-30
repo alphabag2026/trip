@@ -350,6 +350,13 @@ export const appRouter = router({
             console.error("[Register] Failed to create approval:", approvalErr);
           }
         }
+        // Auto-verify email on registration (skip email verification step)
+        try {
+          await db.setUserEmailVerified(user.id, true);
+          await db.updateOnboardingStep(user.id, "emailVerified", true);
+        } catch (e) {
+          console.error("[Register] Auto email verify failed:", e);
+        }
         // Auto-login after registration
         const sessionToken = await sdk.createSessionToken(user.openId, { name: user.name || "", expiresInMs: ONE_YEAR_MS });
         const cookieOptions = getSessionCookieOptions(ctx.req);
