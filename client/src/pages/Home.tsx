@@ -28,6 +28,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { useState, useMemo } from "react";
 import { getLoginUrl } from "@/const";
 import PromoCarousel from "@/components/PromoCarousel";
+import OrganizerHome from "@/pages/OrganizerHome";
 
 // CDN Image URLs
 const IMAGES = {
@@ -451,6 +452,11 @@ export default function Home() {
       ))}
     </div>
   );
+
+  // 주최자 역할이면 전용 홈 화면으로 분기
+  if (isAuthenticated && (userRole === "organizer" || userRole === "admin" || userRole === "superadmin")) {
+    return <OrganizerHome />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

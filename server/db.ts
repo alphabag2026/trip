@@ -1107,12 +1107,12 @@ export async function cancelInvitation(id: number) {
 // ── Role-based Dashboard Data ──────────────────────────
 export async function getOrganizerDashboardData(userId: number) {
   const db = await getDb();
-  if (!db) return { meetups: [], registrations: [], totalAttendees: 0, pendingRegistrations: 0 };
+  if (!db) return { meetups: [], registrations: [], totalAttendees: 0, pendingRegistrations: 0, flightAssigned: 0, hotelAssigned: 0, pickupAssigned: 0, scheduleCount: 0 };
 
   // organizer가 생성한 밋업 또는 소속 조직의 밋업
   const userRow = await db.select().from(users).where(eq(users.id, userId));
   const user = userRow[0];
-  if (!user) return { meetups: [], registrations: [], totalAttendees: 0, pendingRegistrations: 0 };
+  if (!user) return { meetups: [], registrations: [], totalAttendees: 0, pendingRegistrations: 0, flightAssigned: 0, hotelAssigned: 0, pickupAssigned: 0, scheduleCount: 0 };
 
   const allMeetups = await db.select().from(meetups);
   const allRegs = await db.select().from(registrations);
@@ -1125,12 +1125,30 @@ export async function getOrganizerDashboardData(userId: number) {
   const myMeetups = allMeetups;
   const myRegs = allRegs.filter((r: any) => myMeetups.some((m: any) => m.id === r.meetupId));
 
+  // 항공편/호텔/픽업/일정 배정 수 조회
+  const meetupIds = myMeetups.map((m: any) => m.id);
+  let flightAssigned = 0, hotelAssigned = 0, pickupAssigned = 0, scheduleCount = 0;
+  if (meetupIds.length > 0) {
+    const allFlights = await db.select().from(flightSchedules);
+    flightAssigned = allFlights.filter((f: any) => meetupIds.includes(f.meetupId)).length;
+    const allHotels = await db.select().from(hotelVouchers);
+    hotelAssigned = allHotels.filter((h: any) => meetupIds.includes(h.meetupId)).length;
+    const allPickups = await db.select().from(pickupAssignments);
+    pickupAssigned = allPickups.filter((p: any) => meetupIds.includes(p.meetupId)).length;
+    const allSchedules = await db.select().from(scheduleEvents);
+    scheduleCount = allSchedules.filter((s: any) => meetupIds.includes(s.meetupId)).length;
+  }
+
   return {
     meetups: myMeetups.slice(0, 10),
     registrations: myRegs.slice(0, 20),
     totalAttendees: myRegs.length,
     pendingRegistrations: myRegs.filter((r: any) => r.status === "pending").length,
     orgIds,
+    flightAssigned,
+    hotelAssigned,
+    pickupAssigned,
+    scheduleCount,
   };
 }
 
