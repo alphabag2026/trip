@@ -63,6 +63,7 @@ const USER_ROW1: ServiceIcon[] = [
 const USER_ROW2: ServiceIcon[] = [
   { icon: Hotel, label: "home.u_hotel_info", href: "/booking", gradient: "from-rose-500 to-pink-600", ring: "ring-rose-200 dark:ring-rose-900" },
   { icon: Car, label: "home.u_ride", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900", badge: "NEW" },
+  { icon: Globe, label: "home.u_country", href: "/countries", gradient: "from-emerald-500 to-cyan-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
   { icon: Map, label: "home.u_map", href: "/booking", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
 ];
 
@@ -90,8 +91,8 @@ const ORG_ROW1: ServiceIcon[] = [
 const ORG_ROW2: ServiceIcon[] = [
   { icon: Train, label: "home.o_rail", href: "/booking", gradient: "from-slate-500 to-gray-600", ring: "ring-slate-200 dark:ring-slate-900" },
   { icon: Car, label: "home.o_vehicle", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900" },
+  { icon: Globe, label: "home.o_country", href: "/countries", gradient: "from-emerald-500 to-cyan-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
   { icon: Megaphone, label: "home.o_announce", href: "/community", gradient: "from-amber-500 to-orange-600", ring: "ring-amber-200 dark:ring-amber-900" },
-  { icon: MessageCircle, label: "home.o_comms", href: "/community", gradient: "from-sky-500 to-cyan-600", ring: "ring-sky-200 dark:ring-sky-900" },
 ];
 
 const ORG_EXTRA: ServiceIcon[] = [
@@ -151,6 +152,7 @@ const GUEST_ROW1: ServiceIcon[] = [
 
 const GUEST_ROW2: ServiceIcon[] = [
   { icon: Car, label: "home.g_ride", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900" },
+  { icon: Globe, label: "home.g_country", href: "/countries", gradient: "from-emerald-500 to-cyan-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
   { icon: Bot, label: "home.g_ai", href: "/chatbot", gradient: "from-cyan-500 to-blue-600", ring: "ring-cyan-200 dark:ring-cyan-900" },
   { icon: Map, label: "home.g_map", href: "/booking", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
 ];

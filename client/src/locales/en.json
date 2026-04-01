@@ -1422,7 +1422,10 @@
     "svc_interp_support_title": "Support Tools",
     "svc_interp_support_desc": "Memo, map, contacts",
     "role_interpreter": "Interpreter",
-    "o_create_meetup": "Create Meetup"
+    "o_create_meetup": "Create Meetup",
+    "g_country": "Countries",
+    "u_country": "Countries",
+    "o_country": "Countries"
   },
   "immigration": {
     "allReady": "All required documents are ready for immigration.",

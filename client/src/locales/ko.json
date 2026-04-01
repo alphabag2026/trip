@@ -1422,7 +1422,10 @@
     "svc_interp_support_title": "지원 도구",
     "svc_interp_support_desc": "메모, 지도, 연락",
     "role_interpreter": "통역사",
-    "o_create_meetup": "밋업 생성"
+    "o_create_meetup": "밋업 생성",
+    "g_country": "국가/지역",
+    "u_country": "국가/지역",
+    "o_country": "국가/지역"
   },
   "immigration": {
     "allReady": "출입국에 필요한 모든 서류가 준비되었습니다.",

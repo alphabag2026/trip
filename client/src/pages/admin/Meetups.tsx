@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, MapPin, Calendar, Luggage, Edit } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, MapPin, Calendar, Luggage, Edit, Sparkles, Loader2, Wand2, CheckCircle2, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
@@ -21,6 +22,38 @@ export default function AdminMeetups() {
   const deleteMutation = trpc.meetup.delete.useMutation({ onSuccess: () => { refetch(); toast.success(t("admin.meetups.deleted")); }});
   const updateMutation = trpc.meetup.update.useMutation({ onSuccess: () => { refetch(); toast.success("업데이트되었습니다."); }});
 
+  // AI 프롬프트 상태
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [showAiMode, setShowAiMode] = useState(false);
+  const [aiParsedData, setAiParsedData] = useState<any>(null);
+  const aiParseMutation = trpc.aiMeetup.parsePrompt.useMutation({
+    onSuccess: (result) => {
+      if (result.success && result.data) {
+        setAiParsedData(result.data);
+        // 폼에 자동 채우기
+        setForm({
+          title: result.data.title || "",
+          type: (result.data.type || "meetup") as any,
+          locationType: (result.data.locationType || "domestic") as any,
+          destinationCountry: result.data.destinationCountry || "",
+          location: result.data.location || "",
+          description: result.data.description || "",
+          scheduleStart: result.data.scheduleStart || "",
+          scheduleEnd: result.data.scheduleEnd || "",
+          maxParticipants: result.data.maxParticipants || 0,
+          baggageNotice: result.data.suggestedBaggageNotice || "초과화물은 직접부담할 수 있습니다.",
+        });
+        setShowAiMode(false);
+        toast.success("AI가 밋업 정보를 자동으로 채웠습니다!");
+      } else {
+        toast.error(result.error || "AI 파싱에 실패했습니다.");
+      }
+    },
+    onError: () => {
+      toast.error("AI 처리 중 오류가 발생했습니다.");
+    },
+  });
+
   const [form, setForm] = useState({
     title: "", type: "meetup" as const, locationType: "domestic" as const,
     destinationCountry: "", location: "", description: "",
@@ -32,11 +65,40 @@ export default function AdminMeetups() {
     meetup: "밋업", pre_visit: "사전방문", event: "이벤트", meeting: "미팅", other: "기타"
   };
 
+  const COUNTRY_FLAGS: Record<string, string> = {
+    KR: "🇰🇷", CN: "🇨🇳", JP: "🇯🇵", TH: "🇹🇭", VN: "🇻🇳", SG: "🇸🇬", MY: "🇲🇾",
+    ID: "🇮🇩", PH: "🇵🇭", US: "🇺🇸", GB: "🇬🇧", DE: "🇩🇪", FR: "🇫🇷", AU: "🇦🇺",
+    IN: "🇮🇳", TW: "🇹🇼", HK: "🇭🇰", AE: "🇦🇪", TR: "🇹🇷", RU: "🇷🇺", BR: "🇧🇷",
+    CA: "🇨🇦", MX: "🇲🇽", IT: "🇮🇹", ES: "🇪🇸", NL: "🇳🇱", CH: "🇨🇭", SE: "🇸🇪",
+    PL: "🇵🇱", UA: "🇺🇦", NZ: "🇳🇿", KH: "🇰🇭", LA: "🇱🇦", MM: "🇲🇲", MN: "🇲🇳",
+  };
+
+  const handleAiParse = () => {
+    if (!aiPrompt.trim()) {
+      toast.error("밋업 정보를 입력해주세요.");
+      return;
+    }
+    aiParseMutation.mutate({ prompt: aiPrompt });
+  };
+
+  const handleOpenCreate = () => {
+    setForm({
+      title: "", type: "meetup" as const, locationType: "domestic" as const,
+      destinationCountry: "", location: "", description: "",
+      scheduleStart: "", scheduleEnd: "", maxParticipants: 0,
+      baggageNotice: "초과화물은 직접부담할 수 있습니다.",
+    });
+    setAiParsedData(null);
+    setAiPrompt("");
+    setShowAiMode(false);
+    setShowCreate(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{t("admin.meetups.title")}</h1>
-        <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />새 밋업</Button>
+        <Button onClick={handleOpenCreate}><Plus className="h-4 w-4 mr-2" />새 밋업</Button>
       </div>
 
       <div className="grid gap-4">
@@ -96,7 +158,84 @@ export default function AdminMeetups() {
       {/* Create Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>새 밋업 생성</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            새 밋업 생성
+          </DialogTitle></DialogHeader>
+
+          {/* AI 프롬프트 입력 영역 */}
+          <div className="space-y-3">
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-2">
+                <Wand2 className="h-4 w-4 text-violet-500" />
+                <Label className="text-sm font-semibold text-violet-600 dark:text-violet-400">
+                  AI 자동 입력
+                </Label>
+                <Badge variant="outline" className="text-[10px] border-violet-300 text-violet-500">BETA</Badge>
+              </div>
+              <div className="relative">
+                <Textarea
+                  placeholder={`예시:\n• 프로젝트 밋업 태국 방콕, 4월1일~4월25일, 초청국가 한국 중국\n• 사전방문 일본 도쿄, 5월10일~15일, 50명\n• 내륙 밋업 서울 강남, 3월20일~22일`}
+                  value={aiPrompt}
+                  onChange={e => setAiPrompt(e.target.value)}
+                  rows={3}
+                  className="pr-20 bg-violet-50/50 dark:bg-violet-950/20 border-violet-200 dark:border-violet-800 focus:border-violet-400"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleAiParse}
+                  disabled={aiParseMutation.isPending || !aiPrompt.trim()}
+                  className="absolute right-2 bottom-2 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-sm"
+                >
+                  {aiParseMutation.isPending ? (
+                    <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />분석중</>
+                  ) : (
+                    <><Sparkles className="h-3.5 w-3.5 mr-1" />자동입력</>
+                  )}
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                자연어로 밋업 정보를 입력하면 AI가 자동으로 모든 필드를 채워줍니다
+              </p>
+            </div>
+
+            {/* AI 파싱 결과 미리보기 */}
+            {aiParsedData && (
+              <div className="p-3 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">AI 분석 완료</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 text-xs">
+                  <span className="text-muted-foreground">제목:</span>
+                  <span className="font-medium truncate">{aiParsedData.title}</span>
+                  <span className="text-muted-foreground">장소:</span>
+                  <span className="font-medium">{aiParsedData.location}</span>
+                  <span className="text-muted-foreground">기간:</span>
+                  <span className="font-medium">{aiParsedData.scheduleStart} ~ {aiParsedData.scheduleEnd}</span>
+                  {aiParsedData.invitedCountries?.length > 0 && (
+                    <>
+                      <span className="text-muted-foreground">초청국:</span>
+                      <span className="font-medium flex items-center gap-1 flex-wrap">
+                        {aiParsedData.invitedCountries.map((code: string) => (
+                          <span key={code} className="inline-flex items-center gap-0.5">
+                            {COUNTRY_FLAGS[code] || "🏳️"}{code}
+                          </span>
+                        ))}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="relative flex items-center py-1">
+              <div className="flex-1 border-t border-border" />
+              <span className="px-3 text-xs text-muted-foreground bg-background">또는 직접 입력</span>
+              <div className="flex-1 border-t border-border" />
+            </div>
+          </div>
+
           <form onSubmit={e => { e.preventDefault(); createMutation.mutate({
             ...form,
             maxParticipants: form.maxParticipants || undefined,
@@ -133,10 +272,27 @@ export default function AdminMeetups() {
                 </Select>
               </div>
             </div>
-            <div><Label>장소</Label><Input value={form.location} onChange={e => setForm(p => ({...p, location: e.target.value}))} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>목적지 국가</Label>
+                <Input
+                  value={form.destinationCountry}
+                  onChange={e => setForm(p => ({...p, destinationCountry: e.target.value}))}
+                  placeholder="예: TH, JP, CN"
+                />
+              </div>
+              <div>
+                <Label>장소</Label>
+                <Input value={form.location} onChange={e => setForm(p => ({...p, location: e.target.value}))} placeholder="예: Bangkok, Thailand" />
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>{t("admin.meetups.startDate")}</Label><Input type="date" value={form.scheduleStart} onChange={e => setForm(p => ({...p, scheduleStart: e.target.value}))} /></div>
               <div><Label>{t("admin.meetups.endDate")}</Label><Input type="date" value={form.scheduleEnd} onChange={e => setForm(p => ({...p, scheduleEnd: e.target.value}))} /></div>
+            </div>
+            <div>
+              <Label>최대 참석자 수</Label>
+              <Input type="number" value={form.maxParticipants || ""} onChange={e => setForm(p => ({...p, maxParticipants: parseInt(e.target.value) || 0}))} placeholder="0 = 제한없음" />
             </div>
             <div><Label>{t("admin.meetups.description")}</Label><Textarea value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))} rows={3} /></div>
             {/* 수화물 공지 */}
@@ -150,7 +306,10 @@ export default function AdminMeetups() {
               />
               <p className="text-xs text-muted-foreground mt-1">신청 페이지에 표시될 수화물 안내 문구입니다.</p>
             </div>
-            <Button type="submit" className="w-full" disabled={createMutation.isPending}>생성</Button>
+            <Button type="submit" className="w-full" disabled={createMutation.isPending}>
+              {createMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+              밋업 생성
+            </Button>
           </form>
         </DialogContent>
       </Dialog>

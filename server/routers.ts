@@ -6564,6 +6564,80 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         return { success: true };
       }),
   }),
+
+  // ── AI 프롬프트 밋업 자동 생성 ──────────────────────────
+  aiMeetup: router({
+    parsePrompt: protectedProcedure
+      .input(z.object({ prompt: z.string().min(3) }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a meetup/event planning assistant. Parse the user's natural language input and extract structured meetup information.
+
+Return ONLY valid JSON with these fields:
+{
+  "title": "string - meetup title (generate a professional title if not explicitly stated)",
+  "type": "meetup" | "pre_visit" | "event" | "meeting" | "other",
+  "locationType": "domestic" | "overseas",
+  "destinationCountry": "string - ISO country code (e.g. TH, CN, KR, JP)",
+  "location": "string - specific city or venue (e.g. Bangkok, Thailand)",
+  "scheduleStart": "string - YYYY-MM-DD format",
+  "scheduleEnd": "string - YYYY-MM-DD format",
+  "description": "string - auto-generated description in Korean based on the input",
+  "maxParticipants": number or null,
+  "invitedCountries": ["string - ISO country codes of invited countries"],
+  "suggestedBaggageNotice": "string - suggested baggage notice based on destination"
+}
+
+Rules:
+- Current year is 2026 if not specified
+- If only month/day given, assume 2026
+- "내륙" or domestic Korean cities = locationType: "domestic"
+- Any foreign country = locationType: "overseas"
+- Generate a professional Korean title if the user doesn't provide one explicitly
+- Generate a brief Korean description summarizing the meetup purpose
+- For invited countries, parse country names to ISO codes (한국=KR, 중국=CN, 일본=JP, 태국=TH, 베트남=VN, 미국=US, etc.)
+- If destination is overseas, suggest appropriate baggage notice
+- Always respond in valid JSON only, no markdown.`,
+            },
+            {
+              role: "user",
+              content: input.prompt,
+            },
+          ],
+          response_format: { type: "json_object" },
+        });
+
+        const content = response.choices[0]?.message?.content;
+        if (typeof content === "string") {
+          try {
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+            return {
+              success: true,
+              data: {
+                title: parsed.title || "",
+                type: parsed.type || "meetup",
+                locationType: parsed.locationType || "domestic",
+                destinationCountry: parsed.destinationCountry || "",
+                location: parsed.location || "",
+                scheduleStart: parsed.scheduleStart || "",
+                scheduleEnd: parsed.scheduleEnd || "",
+                description: parsed.description || "",
+                maxParticipants: parsed.maxParticipants || 0,
+                invitedCountries: parsed.invitedCountries || [],
+                suggestedBaggageNotice: parsed.suggestedBaggageNotice || "초과화물은 직접부담할 수 있습니다.",
+              },
+            };
+          } catch {
+            return { success: false, data: null, error: "AI 응답 파싱 실패" };
+          }
+        }
+        return { success: false, data: null, error: "AI 응답 없음" };
+      }),
+  }),
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────
 async function parseTravelInfoWithLLM(text: string, fileType: string) {
