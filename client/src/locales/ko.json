@@ -1332,8 +1332,8 @@
     "role_partner_label": "파트너",
     "u_apply": "밋업 신청",
     "u_transport": "교통편 확인",
-    "u_schedule": "일정표",
-    "u_team_chat": "팀 채팅",
+    "u_schedule": "일정",
+    "u_team_chat": "채팅",
     "u_hotel_info": "호텔 정보",
     "u_ride": "차량 호출",
     "u_delivery": "음식 배달",
@@ -1349,12 +1349,12 @@
     "o_attendees": "참석자 관리",
     "o_flights": "항공 예약",
     "o_hotels": "호텔 예약",
-    "o_schedule": "일정 관리",
+    "o_schedule": "일정",
     "o_rail": "철도 예약",
     "o_vehicle": "차량 배치",
     "o_announce": "공지 관리",
-    "o_comms": "소통 채널",
-    "o_translator": "통역 요청",
+    "o_comms": "채팅",
+    "o_translator": "통역",
     "o_memo": "메모",
     "o_catering": "케이터링",
     "o_report": "리포트",
@@ -1394,7 +1394,7 @@
     "ad_travel_title": "꿈의 여행지를 찾아보세요",
     "d_today_pickup": "오늘 배차",
     "d_route": "경로 안내",
-    "d_schedule": "주간 스케줄",
+    "d_schedule": "일정",
     "d_contact": "연락처",
     "d_passengers": "탑승자 목록",
     "d_map": "지도",
@@ -1407,10 +1407,10 @@
     "svc_driver_support_title": "지원 도구",
     "svc_driver_support_desc": "지도, 메모, 통역",
     "role_driver": "기사",
-    "i_requests": "통역 요청",
-    "i_schedule": "오늘 일정",
+    "i_requests": "통역",
+    "i_schedule": "일정",
     "i_team": "담당 팀",
-    "i_chat": "소통",
+    "i_chat": "채팅",
     "i_voice": "음성 통역",
     "i_memo": "메모",
     "i_map": "지도",
@@ -1421,7 +1421,8 @@
     "svc_interp_request_desc": "대기 중인 통역 요청",
     "svc_interp_support_title": "지원 도구",
     "svc_interp_support_desc": "메모, 지도, 연락",
-    "role_interpreter": "통역사"
+    "role_interpreter": "통역사",
+    "o_create_meetup": "밋업 생성"
   },
   "immigration": {
     "allReady": "출입국에 필요한 모든 서류가 준비되었습니다.",
@@ -2515,5 +2516,12 @@
   "org_home.nav_home": "홈",
   "org_home.nav_attendees": "참석자",
   "org_home.nav_manage": "관리",
-  "org_home.nav_chat": "소통"
+  "org_home.nav_chat": "소통",
+  "community": {
+    "search_hint": "이름 또는 이메일을 2글자 이상 입력하세요",
+    "no_results": "검색 결과 없음"
+  },
+  "org_home": {
+    "nav_chat": "채팅"
+  }
 }

@@ -11,7 +11,7 @@ import {
   UtensilsCrossed, Bike, ChevronDown, Map, Headphones, Smartphone, Settings, DollarSign,
   Compass, Ship, BookOpen, Gift, CalendarDays, Video, Share2, Train, Phone, UserCheck,
   StickyNote, Languages, Megaphone, BarChart3, FileText, Bus, Anchor, Wallet,
-  Bell, Navigation, Coffee, ShoppingBag, Clock, PenTool, Mic
+  Bell, Navigation, Coffee, ShoppingBag, Clock, PenTool, Mic, Plus
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import {
@@ -82,10 +82,10 @@ const USER_EXTRA: ServiceIcon[] = [
 // 관계자(organizer/agency/admin/superadmin) - 관리 중심
 // ═══════════════════════════════════════════════════════
 const ORG_ROW1: ServiceIcon[] = [
+  { icon: Plus, label: "home.o_create_meetup", href: "/admin/meetups", gradient: "from-blue-600 to-indigo-600", ring: "ring-blue-300 dark:ring-blue-800", badge: "NEW" },
   { icon: Users, label: "home.o_attendees", href: "/lookup", gradient: "from-indigo-500 to-blue-600", ring: "ring-indigo-200 dark:ring-indigo-900" },
   { icon: Plane, label: "home.o_flights", href: "/booking", gradient: "from-blue-500 to-sky-600", ring: "ring-blue-200 dark:ring-blue-900" },
   { icon: Hotel, label: "home.o_hotels", href: "/booking", gradient: "from-rose-500 to-pink-600", ring: "ring-rose-200 dark:ring-rose-900" },
-  { icon: CalendarDays, label: "home.o_schedule", href: "/schedule", gradient: "from-emerald-500 to-teal-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
 ];
 
 const ORG_ROW2: ServiceIcon[] = [
@@ -261,7 +261,7 @@ function getServiceMenus(role: string | undefined, isAuthenticated: boolean, t: 
           { icon: Car, color: "text-blue-500", label: t("home.d_today_pickup", "오늘 배차"), href: "/ride" },
           { icon: Navigation, color: "text-emerald-500", label: t("home.d_route", "경로 안내"), href: "/ride" },
           { icon: Users, color: "text-rose-500", label: t("home.d_passengers", "탑승자 목록"), href: "/lookup" },
-          { icon: CalendarDays, color: "text-violet-500", label: t("home.d_schedule", "주간 스케줄"), href: "/schedule" },
+          { icon: CalendarDays, color: "text-violet-500", label: t("home.d_schedule", "일정"), href: "/schedule" },
         ],
       },
       {
@@ -285,9 +285,9 @@ function getServiceMenus(role: string | undefined, isAuthenticated: boolean, t: 
         title: t("home.svc_interp_request_title", "통역 요청"),
         desc: t("home.svc_interp_request_desc", "대기 중인 통역 요청"),
         items: [
-          { icon: Languages, color: "text-cyan-500", label: t("home.i_requests", "통역 요청"), href: "/translator" },
+          { icon: Languages, color: "text-cyan-500", label: t("home.i_requests", "통역"), href: "/translator" },
           { icon: Mic, color: "text-rose-500", label: t("home.i_voice", "음성 통역"), href: "/translator", badge: "NEW" },
-          { icon: CalendarDays, color: "text-emerald-500", label: t("home.i_schedule", "오늘 일정"), href: "/schedule" },
+          { icon: CalendarDays, color: "text-emerald-500", label: t("home.i_schedule", "일정"), href: "/schedule" },
           { icon: Users, color: "text-violet-500", label: t("home.i_team", "담당 팀"), href: "/lookup" },
         ],
       },
@@ -298,7 +298,7 @@ function getServiceMenus(role: string | undefined, isAuthenticated: boolean, t: 
         items: [
           { icon: StickyNote, color: "text-yellow-500", label: t("home.i_memo", "메모"), href: "/notes" },
           { icon: Map, color: "text-teal-500", label: t("home.i_map", "지도"), href: "/booking" },
-          { icon: MessageCircle, color: "text-sky-500", label: t("home.i_chat", "소통"), href: "/community" },
+          { icon: MessageCircle, color: "text-sky-500", label: t("home.i_chat", "채팅"), href: "/community" },
           { icon: Phone, color: "text-orange-500", label: t("home.i_contact", "연락처"), href: "/community" },
         ],
       },

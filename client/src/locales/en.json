@@ -1333,7 +1333,7 @@
     "u_apply": "Apply",
     "u_transport": "Transport",
     "u_schedule": "Schedule",
-    "u_team_chat": "Team Chat",
+    "u_team_chat": "Chat",
     "u_hotel_info": "Hotel Info",
     "u_ride": "Ride",
     "u_delivery": "Delivery",
@@ -1353,7 +1353,7 @@
     "o_rail": "Rail",
     "o_vehicle": "Vehicles",
     "o_announce": "Announce",
-    "o_comms": "Comms",
+    "o_comms": "Chat",
     "o_translator": "Translator",
     "o_memo": "Memo",
     "o_catering": "Catering",
@@ -1394,7 +1394,7 @@
     "ad_travel_title": "Discover your dream destination",
     "d_today_pickup": "Today's Pickup",
     "d_route": "Route Guide",
-    "d_schedule": "Weekly Schedule",
+    "d_schedule": "Schedule",
     "d_contact": "Contacts",
     "d_passengers": "Passenger List",
     "d_map": "Map",
@@ -1407,10 +1407,10 @@
     "svc_driver_support_title": "Support Tools",
     "svc_driver_support_desc": "Map, memo, translator",
     "role_driver": "Driver",
-    "i_requests": "Translation Requests",
-    "i_schedule": "Today's Schedule",
+    "i_requests": "Translator",
+    "i_schedule": "Schedule",
     "i_team": "Assigned Team",
-    "i_chat": "Communication",
+    "i_chat": "Chat",
     "i_voice": "Voice Translation",
     "i_memo": "Memo",
     "i_map": "Map",
@@ -1421,7 +1421,8 @@
     "svc_interp_request_desc": "Pending translation requests",
     "svc_interp_support_title": "Support Tools",
     "svc_interp_support_desc": "Memo, map, contacts",
-    "role_interpreter": "Interpreter"
+    "role_interpreter": "Interpreter",
+    "o_create_meetup": "Create Meetup"
   },
   "immigration": {
     "allReady": "All required documents are ready for immigration.",
@@ -2515,5 +2516,12 @@
   "org_home.nav_home": "Home",
   "org_home.nav_attendees": "Attendees",
   "org_home.nav_manage": "Manage",
-  "org_home.nav_chat": "Chat"
+  "org_home.nav_chat": "Chat",
+  "community": {
+    "search_hint": "Enter at least 2 characters to search",
+    "no_results": "No results found"
+  },
+  "org_home": {
+    "nav_chat": "Chat"
+  }
 }

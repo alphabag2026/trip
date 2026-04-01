@@ -22,6 +22,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useParams, useLocation } from "wouter";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "react-i18next";
 
 // ── 상수 ──────────────────────────────────────────────
 const ROOM_TYPE_MAP: Record<string, { label: string; icon: any; color: string }> = {
@@ -65,6 +66,7 @@ const LANGUAGES = [
 // ── 채팅방 목록 ──────────────────────────────────────────
 function RoomList() {
   const { user, isAuthenticated, loading } = useAuth();
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const { data: rooms, refetch: refetchRooms } = trpc.chatRoom.list.useQuery({}, { enabled: isAuthenticated });
   const { data: myRooms, refetch: refetchMyRooms } = trpc.chatRoom.myRooms.useQuery(undefined, { enabled: isAuthenticated });
@@ -99,13 +101,17 @@ function RoomList() {
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [userSearch, setUserSearch] = useState("");
 
+  // 주최자/에이전시/관리자는 전체 목록 표시, 참가자/파트너는 검색어 입력 시에만 노출
+  const isManagerRole = user?.role === "organizer" || user?.role === "agency" || user?.role === "admin" || user?.role === "superadmin";
   const filteredUsers = useMemo(() => {
     if (!allUsers) return [];
+    // 참가자/파트너: 검색어가 2글자 이상일 때만 결과 표시
+    if (!isManagerRole && userSearch.trim().length < 2) return [];
     return allUsers.filter((u: any) =>
       u.id !== user?.id &&
       (u.name?.toLowerCase().includes(userSearch.toLowerCase()) || u.email?.toLowerCase().includes(userSearch.toLowerCase()))
     );
-  }, [allUsers, userSearch, user?.id]);
+  }, [allUsers, userSearch, user?.id, isManagerRole]);
 
   const myRoomIds = useMemo(() => new Set(myRooms?.map((r: any) => r.id) || []), [myRooms]);
 
@@ -203,7 +209,9 @@ function RoomList() {
                 <Input placeholder="이름 또는 이메일로 검색..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="mb-2" />
                 <div className="max-h-40 overflow-y-auto border rounded-lg">
                   {filteredUsers.length === 0 ? (
-                    <p className="text-xs text-muted-foreground p-3 text-center">검색 결과 없음</p>
+                    <p className="text-xs text-muted-foreground p-3 text-center">
+                      {!isManagerRole && userSearch.trim().length < 2 ? t("community.search_hint", "이름 또는 이메일을 2글자 이상 입력하세요") : t("community.no_results", "검색 결과 없음")}
+                    </p>
                   ) : (
                     filteredUsers.map((u: any) => (
                       <label key={u.id} className="flex items-center gap-2 px-3 py-2 hover:bg-muted/50 cursor-pointer">

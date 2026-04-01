@@ -244,6 +244,16 @@ export default function OrganizerHome() {
             </div>
           </section>
 
+          {/* ── 밋업 생성 CTA 버튼 (최전면) ── */}
+          <section className="pb-3">
+            <Link href="/admin/meetups">
+              <Button className="w-full h-12 text-base font-bold gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 rounded-xl">
+                <Plus className="h-5 w-5" />
+                {t("org_home.create_meetup", "밋업 생성하기")}
+              </Button>
+            </Link>
+          </section>
+
           {/* ── 긴급 알림 배너 ── */}
           {pendingRegistrations > 0 && (
             <section className="pb-3">
