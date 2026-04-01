@@ -75,6 +75,7 @@ import TeamSchedule from "./pages/TeamSchedule";
 import DriverDashboard from "./pages/DriverDashboard";
 import InterpreterDashboard from "./pages/InterpreterDashboard";
 import CountryExplorer from "./pages/CountryExplorer";
+import MeetupPortal from "./pages/MeetupPortal";
 
 function PublicRouter() {
   return (
@@ -110,6 +111,7 @@ function PublicRouter() {
       <Route path="/driver-dashboard" component={DriverDashboard} />
       <Route path="/interpreter-dashboard" component={InterpreterDashboard} />
       <Route path="/countries" component={CountryExplorer} />
+      <Route path="/m/:token" component={MeetupPortal} />
       <Route path="/welcome" component={Welcome} />
       <Route path="/404" component={NotFound} />
     </Switch>

@@ -139,6 +139,18 @@ export async function deleteMeetup(id: number) {
   await db.delete(meetups).where(eq(meetups.id, id));
 }
 
+export async function getMeetupByShareToken(token: string) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(meetups).where(eq(meetups.shareToken, token)).limit(1);
+  return result[0];
+}
+
+export async function getMeetupByProjectCode(code: string) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(meetups).where(eq(meetups.projectCode, code)).limit(1);
+  return result[0];
+}
+
 // ── Registrations (강화된 검색 필터) ──────────────
 export async function createRegistration(data: InsertRegistration) {
   const db = await getDb(); if (!db) throw new Error("DB not available");

@@ -536,16 +536,27 @@ export const appRouter = router({
         scheduleStart: z.string().optional(), scheduleEnd: z.string().optional(),
         description: z.string().optional(), maxParticipants: z.number().optional(),
         baggageNotice: z.string().optional(),
+        invitedCountries: z.array(z.string()).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        // 프로젝트 코드 자동 생성 (예: 104.340.300)
+        const genCode = () => {
+          const p = () => Math.floor(Math.random() * 900 + 100);
+          return `${p()}.${p()}.${p()}`;
+        };
+        const projectCode = genCode();
+        const shareToken = nanoid(16);
         const id = await db.createMeetup({
           ...input,
           baggageNotice: input.baggageNotice || "초과화물은 직접부담할 수 있습니다.",
           scheduleStart: input.scheduleStart ? new Date(input.scheduleStart) : undefined,
           scheduleEnd: input.scheduleEnd ? new Date(input.scheduleEnd) : undefined,
           createdBy: ctx.user.id,
+          projectCode,
+          shareToken,
+          invitedCountries: input.invitedCountries || [],
         });
-        return { id };
+        return { id, projectCode, shareToken };
       }),
     update: adminProcedure
       .input(z.object({
@@ -557,6 +568,7 @@ export const appRouter = router({
         description: z.string().optional(), maxParticipants: z.number().optional(),
         status: z.enum(["draft", "open", "closed", "completed"]).optional(),
         baggageNotice: z.string().optional(),
+        invitedCountries: z.array(z.string()).optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
@@ -569,6 +581,22 @@ export const appRouter = router({
       }),
     delete: adminProcedure.input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => { await db.deleteMeetup(input.id); return { success: true }; }),
+    // 공유 토큰으로 밋업 조회 (비로그인 가능)
+    getByShareToken: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const meetup = await db.getMeetupByShareToken(input.token);
+        if (!meetup) throw new TRPCError({ code: "NOT_FOUND", message: "밋업을 찾을 수 없습니다" });
+        return meetup;
+      }),
+    // 프로젝트 코드로 밋업 조회 (비로그인 가능)
+    getByProjectCode: publicProcedure
+      .input(z.object({ code: z.string() }))
+      .query(async ({ input }) => {
+        const meetup = await db.getMeetupByProjectCode(input.code);
+        if (!meetup) throw new TRPCError({ code: "NOT_FOUND", message: "밋업을 찾을 수 없습니다" });
+        return meetup;
+      }),
   }),
 
   // ── Registrations ────────────────────────────────
@@ -6636,6 +6664,127 @@ Rules:
           }
         }
         return { success: false, data: null, error: "AI 응답 없음" };
+      }),
+  }),
+
+  // ── AI 신청 프롬프트 파싱 + 여권 스캔 ───────────────────────────────────────
+  aiRegistration: router({
+    parsePrompt: publicProcedure
+      .input(z.object({ prompt: z.string().min(3), meetupId: z.number().optional() }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a meetup registration assistant. Parse the user's natural language input and extract registration information.
+
+Return ONLY valid JSON with these fields:
+{
+  "name": "string - 신청자 이름",
+  "phone": "string - 전화번호",
+  "messengerId": "string - 텔레그램/카카오톡 ID",
+  "locationType": "domestic" | "overseas",
+  "scheduleStart": "YYYY-MM-DD",
+  "scheduleEnd": "YYYY-MM-DD",
+  "walletAddress": "string - 지갑 주소",
+  "referrerName": "string - 추천인",
+  "teamName": "string - 팀명",
+  "teamIntro": "string - 팀 소개",
+  "notes": "string - 기타 메모",
+  "category": "meetup" | "pre_visit" | "event" | "meeting" | "other",
+  "transportType": "flight" | "ktx" | "none" | "other",
+  "mealPreference": "string",
+  "allergies": "string",
+  "drinkAlcohol": "yes" | "no" | "sometimes",
+  "smoking": "yes" | "no"
+}
+
+Rules:
+- Current year is 2026 if not specified
+- Parse Korean, English, Chinese input
+- Extract phone numbers in any format
+- Parse messenger IDs (telegram: @xxx, kakao: xxx)
+- If destination mentions foreign country, locationType = "overseas"
+- Generate reasonable defaults for missing fields
+- Always respond in valid JSON only, no markdown.`,
+            },
+            { role: "user", content: input.prompt },
+          ],
+          response_format: { type: "json_object" },
+        });
+        const content = response.choices[0]?.message?.content;
+        if (typeof content === "string") {
+          try {
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+            return { success: true, data: parsed };
+          } catch {
+            return { success: false, data: null, error: "AI 응답 파싱 실패" };
+          }
+        }
+        return { success: false, data: null, error: "AI 응답 없음" };
+      }),
+
+    // 여권 이미지 OCR - 신청 폼 자동 채움용
+    scanPassport: publicProcedure
+      .input(z.object({ imageBase64: z.string(), mimeType: z.string().default("image/jpeg") }))
+      .mutation(async ({ input }) => {
+        try {
+          const ocrResponse = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content: `You are a passport OCR system for meetup registration. Extract information from the passport image and return JSON:
+{
+  "fullName": "string - full name as on passport",
+  "firstName": "string",
+  "lastName": "string",
+  "passportNumber": "string",
+  "nationality": "string - ISO country code (KR, CN, JP, etc.)",
+  "nationalityName": "string - country name in Korean",
+  "dateOfBirth": "YYYY-MM-DD",
+  "gender": "M" | "F",
+  "expiryDate": "YYYY-MM-DD",
+  "issuingCountry": "string - ISO code",
+  "phone": "string - if visible",
+  "mrzLine1": "string - MRZ line 1 if readable",
+  "mrzLine2": "string - MRZ line 2 if readable"
+}
+Return ONLY valid JSON. If a field is not readable, use empty string.`,
+              },
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: "Extract passport information from this image for meetup registration:" },
+                  { type: "image_url", image_url: { url: `data:${input.mimeType};base64,${input.imageBase64}`, detail: "high" } },
+                ],
+              },
+            ],
+            response_format: { type: "json_object" },
+          });
+          const ocrContent = ocrResponse.choices[0]?.message?.content;
+          if (typeof ocrContent === "string") {
+            const jsonMatch = ocrContent.match(/\{[\s\S]*\}/);
+            const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+            return {
+              success: true,
+              data: {
+                name: parsed.fullName || `${parsed.firstName || ""} ${parsed.lastName || ""}`.trim(),
+                passportNumber: parsed.passportNumber || "",
+                nationality: parsed.nationality || "",
+                nationalityName: parsed.nationalityName || "",
+                dateOfBirth: parsed.dateOfBirth || "",
+                gender: parsed.gender || "",
+                expiryDate: parsed.expiryDate || "",
+                issuingCountry: parsed.issuingCountry || "",
+                phone: parsed.phone || "",
+              },
+            };
+          }
+          return { success: false, data: null, error: "OCR 응답 없음" };
+        } catch (e: any) {
+          return { success: false, data: null, error: e.message || "OCR 실패" };
+        }
       }),
   }),
 });

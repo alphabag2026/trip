@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, MapPin, Calendar, Luggage, Edit, Sparkles, Loader2, Wand2, CheckCircle2, Globe } from "lucide-react";
+import { Plus, Trash2, MapPin, Calendar, Luggage, Edit, Sparkles, Loader2, Wand2, CheckCircle2, Globe, Copy, Link2, Share2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
@@ -121,6 +121,42 @@ export default function AdminMeetups() {
                       {new Date(m.scheduleStart).toLocaleDateString("ko-KR")}
                       {m.scheduleEnd && ` ~ ${new Date(m.scheduleEnd).toLocaleDateString("ko-KR")}`}
                     </p>
+                  )}
+                  {/* 프로젝트 코드 & 초청국가 */}
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {m.projectCode && (
+                      <Badge variant="secondary" className="text-[10px] font-mono gap-1">
+                        <Link2 className="h-2.5 w-2.5" />#{m.projectCode}
+                      </Badge>
+                    )}
+                    {m.invitedCountries && Array.isArray(m.invitedCountries) && (m.invitedCountries as string[]).length > 0 && (
+                      <div className="flex items-center gap-1">
+                        <Globe className="h-3 w-3 text-blue-500" />
+                        {(m.invitedCountries as string[]).map((code: string) => (
+                          <span key={code} className="text-xs">{COUNTRY_FLAGS[code] || code}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* 공유 URL 복사 */}
+                  {m.shareToken && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Share2 className="h-3 w-3 text-primary shrink-0" />
+                      <span className="text-[11px] text-muted-foreground font-mono truncate">
+                        {window.location.origin}/m/{m.shareToken}
+                      </span>
+                      <Button
+                        variant="ghost" size="icon" className="h-5 w-5 shrink-0"
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${window.location.origin}/m/${m.shareToken}`);
+                          toast.success("공유 URL이 복사되었습니다");
+                        }}
+                      ><Copy className="h-3 w-3" /></Button>
+                      <Button
+                        variant="ghost" size="icon" className="h-5 w-5 shrink-0"
+                        onClick={() => window.open(`/m/${m.shareToken}`, "_blank")}
+                      ><ExternalLink className="h-3 w-3" /></Button>
+                    </div>
                   )}
                   {/* 수화물 공지 표시 */}
                   <div className="flex items-center gap-2 mt-2">

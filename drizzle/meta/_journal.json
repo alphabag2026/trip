@@ -225,6 +225,13 @@
       "when": 1774783853689,
       "tag": "0031_cute_menace",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "5",
+      "when": 1775070161605,
+      "tag": "0032_shocking_ego",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle, Clock, UtensilsCrossed, Wine, Cigarette, Train, Car, Check } from "lucide-react";
+import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle, Clock, UtensilsCrossed, Wine, Cigarette, Train, Car, Check, Sparkles, ScanLine, Camera, Loader2 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
@@ -32,6 +32,11 @@ export default function Register() {
   const [passportFile, setPassportFile] = useState<File | null>(null);
   const [checkedBagRequest, setCheckedBagRequest] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [showAiPrompt, setShowAiPrompt] = useState(false);
+  const [aiPromptText, setAiPromptText] = useState("");
+  const [isAiParsing, setIsAiParsing] = useState(false);
+  const [isPassportScanning, setIsPassportScanning] = useState(false);
+  const passportInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     name: "", phone: "", messengerId: "",
     scheduleStart: "", scheduleEnd: "",
@@ -76,12 +81,95 @@ export default function Register() {
 
   const createMutation = trpc.registration.create.useMutation();
   const uploadPassportMutation = trpc.registration.uploadPassport.useMutation();
+  const aiParseMutation = trpc.aiRegistration.parsePrompt.useMutation();
+  const passportScanMutation = trpc.aiRegistration.scanPassport.useMutation();
 
   const handleChange = useCallback((field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
   }, []);
 
   const baggageNotice = selectedMeetup?.baggageNotice || t("register.baggageNotice");
+
+  // AI 프롬프트 자동 입력
+  const handleAiParse = async () => {
+    if (!aiPromptText.trim()) return;
+    setIsAiParsing(true);
+    try {
+      const result = await aiParseMutation.mutateAsync({ prompt: aiPromptText, meetupId });
+      if (result.success && result.data) {
+        const d = result.data;
+        setForm(prev => ({
+          ...prev,
+          name: d.name || prev.name,
+          phone: d.phone || prev.phone,
+          messengerId: d.messengerId || prev.messengerId,
+          scheduleStart: d.scheduleStart || prev.scheduleStart,
+          scheduleEnd: d.scheduleEnd || prev.scheduleEnd,
+          walletAddress: d.walletAddress || prev.walletAddress,
+          referrerName: d.referrerName || prev.referrerName,
+          teamName: d.teamName || prev.teamName,
+          teamIntro: d.teamIntro || prev.teamIntro,
+          notes: d.notes || prev.notes,
+          category: d.category || prev.category,
+          transportType: d.transportType || prev.transportType,
+          mealPreference: d.mealPreference || prev.mealPreference,
+          allergies: d.allergies || prev.allergies,
+          drinkAlcohol: d.drinkAlcohol || prev.drinkAlcohol,
+          smoking: d.smoking || prev.smoking,
+        }));
+        if (d.locationType) setLocationType(d.locationType);
+        toast.success(t("register.aiParseSuccess", "AI가 정보를 자동으로 채웠습니다"));
+        setShowAiPrompt(false);
+        setAiPromptText("");
+      } else {
+        toast.error(result.error || t("register.aiParseFail", "AI 파싱 실패"));
+      }
+    } catch (err: any) {
+      toast.error(err.message || t("register.aiParseFail", "AI 파싱 실패"));
+    } finally {
+      setIsAiParsing(false);
+    }
+  };
+
+  // 여권 스캔 자동 채움
+  const handlePassportScan = async (file: File) => {
+    setIsPassportScanning(true);
+    setPassportFile(file);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(",")[1];
+        try {
+          const result = await passportScanMutation.mutateAsync({
+            imageBase64: base64,
+            mimeType: file.type,
+          });
+          if (result.success && result.data) {
+            const d = result.data;
+            setForm(prev => ({
+              ...prev,
+              name: d.name || prev.name,
+              phone: d.phone || prev.phone,
+            }));
+            if (d.nationality) {
+              // 해외 여권이면 자동으로 overseas 설정
+              setLocationType("overseas");
+            }
+            toast.success(t("register.passportScanSuccess", "여권 정보가 자동으로 채워졌습니다"));
+          } else {
+            toast.error(result.error || t("register.passportScanFail", "여권 스캔 실패"));
+          }
+        } catch (err: any) {
+          toast.error(err.message || t("register.passportScanFail", "여권 스캔 실패"));
+        } finally {
+          setIsPassportScanning(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setIsPassportScanning(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,6 +256,108 @@ export default function Register() {
       </header>
 
       <div className="container max-w-2xl py-8">
+        {/* AI 빠른 입력 + 여권 스캔 버튼 */}
+        <div className="flex gap-2 mb-4">
+          <Button
+            type="button"
+            variant={showAiPrompt ? "default" : "outline"}
+            className="flex-1 gap-2"
+            onClick={() => setShowAiPrompt(!showAiPrompt)}
+          >
+            <Sparkles className="h-4 w-4" />
+            {t("register.aiQuickInput", "AI 빠른 입력")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 gap-2"
+            onClick={() => passportInputRef.current?.click()}
+            disabled={isPassportScanning}
+          >
+            {isPassportScanning ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ScanLine className="h-4 w-4" />
+            )}
+            {t("register.passportScan", "여권 스캔")}
+          </Button>
+          <input
+            ref={passportInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) handlePassportScan(file);
+            }}
+          />
+        </div>
+
+        {/* AI 프롬프트 입력 패널 */}
+        {showAiPrompt && (
+          <Card className="mb-6 border-primary/30 bg-primary/5">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                <Sparkles className="h-4 w-4" />
+                {t("register.aiPromptTitle", "AI 자동 입력")}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("register.aiPromptDesc", "자연어로 신청 정보를 입력하면 AI가 자동으로 폼을 채워줍니다.")}
+              </p>
+              <Textarea
+                value={aiPromptText}
+                onChange={e => setAiPromptText(e.target.value)}
+                placeholder={t("register.aiPromptPlaceholder", "예: 홍길동, 010-1234-5678, 텔레그램 @hong, 4월1일~4월25일, 팀 블록체인코리아, 추천인 김철수, 채식주의, 비흡연")}
+                rows={3}
+                className="bg-background"
+              />
+              <div className="flex gap-2 justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setShowAiPrompt(false); setAiPromptText(""); }}
+                >
+                  {t("register.cancel", "취소")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleAiParse}
+                  disabled={isAiParsing || !aiPromptText.trim()}
+                  className="gap-2"
+                >
+                  {isAiParsing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {t("register.aiParsing", "분석 중...")}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      {t("register.aiParseBtn", "자동 채우기")}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 여권 스캔 진행 중 표시 */}
+        {isPassportScanning && (
+          <Card className="mb-6 border-blue-500/30 bg-blue-500/5">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+              <div>
+                <p className="text-sm font-medium text-blue-500">{t("register.passportScanning", "여권 스캔 중...")}</p>
+                <p className="text-xs text-muted-foreground">{t("register.passportScanningDesc", "AI가 여권 정보를 읽고 있습니다")}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Step Indicator */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
@@ -231,8 +421,8 @@ export default function Register() {
                     onClick={() => handleChange("transportType", opt.value)}
                     className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
                       form.transportType === opt.value
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border hover:border-primary/50'
                     }`}
                   >
                     <opt.icon className="h-6 w-6" />
@@ -489,7 +679,13 @@ export default function Register() {
                 <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
                   <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                   <p className="text-sm text-muted-foreground mb-3">{t("register.passportDesc")}</p>
-                  <input type="file" accept="image/*" className="hidden" id="passport-upload" onChange={e => setPassportFile(e.target.files?.[0] || null)} />
+                  <input type="file" accept="image/*" className="hidden" id="passport-upload" onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setPassportFile(file);
+                      handlePassportScan(file);
+                    }
+                  }} />
                   <label htmlFor="passport-upload">
                     <Button type="button" variant="outline" asChild><span>{t("register.selectFile")}</span></Button>
                   </label>
