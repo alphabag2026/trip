@@ -1747,7 +1747,7 @@
     "nextComplete": "나머지 정보를 채워주세요"
   },
   "nav": {
-    "ai": "AI",
+    "ai": "AI 도우미",
     "apply": "신청",
     "backoffice": "백오피스",
     "bookingCenter": "예약센터",
@@ -1766,7 +1766,10 @@
     "search": "조회",
     "signup": "회원가입",
     "more": "더보기",
-    "immigrationChecklist": "입국 체크리스트"
+    "immigrationChecklist": "입국 체크리스트",
+    "schedule": "일정",
+    "chat": "채팅",
+    "grab": "그랩"
   },
   "notFound": {
     "desc": "죄송합니다, 찾으시는 페이지가 존재하지 않습니다.",

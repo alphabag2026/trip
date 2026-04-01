@@ -598,22 +598,23 @@ export default function OrganizerHome() {
         <div className="flex items-center justify-around h-14 max-w-lg mx-auto">
           <Link href="/" className="flex flex-col items-center gap-0.5 py-1 text-primary">
             <LayoutDashboard className="h-5 w-5" />
-            <span className="text-[10px] font-medium">{t("org_home.nav_home", "홈")}</span>
+            <span className="text-[10px] font-medium">{t("nav.home", "홈")}</span>
           </Link>
-          <Link href="/admin/registrations" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground hover:text-foreground transition-colors relative">
-            <Users className="h-5 w-5" />
-            <span className="text-[10px] font-medium">{t("org_home.nav_attendees", "참석자")}</span>
-            {pendingRegistrations > 0 && (
-              <span className="absolute -top-0.5 right-0 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{pendingRegistrations > 9 ? "9+" : pendingRegistrations}</span>
-            )}
-          </Link>
-          <Link href="/admin" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground hover:text-foreground transition-colors">
-            <Settings className="h-5 w-5" />
-            <span className="text-[10px] font-medium">{t("org_home.nav_manage", "관리")}</span>
+          <Link href="/schedule" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground hover:text-foreground transition-colors">
+            <CalendarDays className="h-5 w-5" />
+            <span className="text-[10px] font-medium">{t("nav.schedule", "일정")}</span>
           </Link>
           <Link href="/community" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground hover:text-foreground transition-colors">
             <MessageCircle className="h-5 w-5" />
-            <span className="text-[10px] font-medium">{t("org_home.nav_chat", "소통")}</span>
+            <span className="text-[10px] font-medium">{t("nav.chat", "채팅")}</span>
+          </Link>
+          <Link href="/chatbot" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground hover:text-foreground transition-colors">
+            <Bot className="h-5 w-5" />
+            <span className="text-[10px] font-medium">{t("nav.ai", "AI 도우미")}</span>
+          </Link>
+          <Link href="/ride" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground hover:text-foreground transition-colors">
+            <Car className="h-5 w-5" />
+            <span className="text-[10px] font-medium">{t("nav.grab", "그랩")}</span>
           </Link>
         </div>
       </nav>

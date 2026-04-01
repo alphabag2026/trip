@@ -1,20 +1,18 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
-  Globe, ClipboardList, Bot, User,
-  UserPlus, LogIn, Home as HomeIcon,
-  Car, UtensilsCrossed
+  Home as HomeIcon, CalendarDays, MessageCircle, Bot, Car, LogIn
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 
 /**
  * 모바일 하단 네비게이션 바
- * - 핵심 4개 탭: 홈, 밋업 신청, AI 도우미, 마이페이지
+ * - 5개 탭: 홈, 일정, 채팅, AI 도우미, 그랩
  * - md 이상에서는 숨김
  * - admin 페이지에서는 표시하지 않음
  */
 export default function MobileBottomNav() {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
   const [location] = useLocation();
 
@@ -30,48 +28,38 @@ export default function MobileBottomNav() {
   const activeClass = "text-primary";
   const inactiveClass = "text-muted-foreground";
 
+  // 로그인/비로그인 공통 5개 탭 (비로그인 시 마지막은 로그인 버튼)
+  const tabs = isAuthenticated
+    ? [
+        { icon: HomeIcon, label: t("nav.home", "홈"), href: "/" },
+        { icon: CalendarDays, label: t("nav.schedule", "일정"), href: "/schedule" },
+        { icon: MessageCircle, label: t("nav.chat", "채팅"), href: "/community" },
+        { icon: Bot, label: t("nav.ai", "AI 도우미"), href: "/chatbot" },
+        { icon: Car, label: t("nav.grab", "그랩"), href: "/ride" },
+      ]
+    : [
+        { icon: HomeIcon, label: t("nav.home", "홈"), href: "/" },
+        { icon: CalendarDays, label: t("nav.schedule", "일정"), href: "/schedule" },
+        { icon: MessageCircle, label: t("nav.chat", "채팅"), href: "/community" },
+        { icon: Bot, label: t("nav.ai", "AI 도우미"), href: "/chatbot" },
+        { icon: LogIn, label: t("nav.login", "로그인"), href: "/login" },
+      ];
+
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border z-50 safe-area-bottom">
       <div className="flex justify-around py-1.5">
-        {isAuthenticated ? (
-          <>
-            <Link href="/" className={`flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium ${isActive("/") ? activeClass : inactiveClass}`}>
-              <HomeIcon className="h-5 w-5" />
-              <span>{t("nav.home")}</span>
-            </Link>
-            <Link href="/register" className={`flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium ${isActive("/register") ? activeClass : inactiveClass}`}>
-              <ClipboardList className="h-5 w-5" />
-              <span>{t("nav.apply")}</span>
-            </Link>
-            <Link href="/chatbot" className={`flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium ${isActive("/chatbot") ? activeClass : inactiveClass}`}>
-              <Bot className="h-5 w-5" />
-              <span>{t("nav.ai", "AI")}</span>
-            </Link>
-            <Link href="/my-page" className={`flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium ${isActive("/my-page") ? activeClass : inactiveClass}`}>
-              <User className="h-5 w-5" />
-              <span>{t("nav.myProfile")}</span>
-            </Link>
-          </>
-        ) : (
-          <>
-            <Link href="/" className={`flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium ${isActive("/") ? activeClass : inactiveClass}`}>
-              <Globe className="h-5 w-5" />
-              <span>{t("nav.home")}</span>
-            </Link>
-            <Link href="/ride" className={`flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium ${isActive("/ride") ? activeClass : inactiveClass}`}>
-              <Car className="h-5 w-5" />
-              <span>{t("home.feat_ride_label", "Ride")}</span>
-            </Link>
-            <Link href="/delivery" className={`flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium ${isActive("/delivery") ? activeClass : inactiveClass}`}>
-              <UtensilsCrossed className="h-5 w-5" />
-              <span>{t("home.feat_delivery_label", "Delivery")}</span>
-            </Link>
-            <Link href="/login" className="flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium text-primary">
-              <LogIn className="h-5 w-5" />
-              <span>{t("nav.login")}</span>
-            </Link>
-          </>
-        )}
+        {tabs.map((tab) => (
+          <Link
+            key={tab.href}
+            href={tab.href}
+            className={`flex flex-col items-center gap-0.5 p-1.5 text-[10px] font-medium ${
+              isActive(tab.href) ? activeClass : inactiveClass
+            }`}
+          >
+            <tab.icon className="h-5 w-5" />
+            <span>{tab.label}</span>
+          </Link>
+        ))}
       </div>
     </div>
   );

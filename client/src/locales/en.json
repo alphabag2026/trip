@@ -1747,7 +1747,7 @@
     "nextComplete": "Please fill in remaining information"
   },
   "nav": {
-    "ai": "AI",
+    "ai": "AI Assistant",
     "apply": "Apply",
     "backoffice": "Backoffice",
     "bookingCenter": "Booking Center",
@@ -1766,7 +1766,10 @@
     "search": "Search",
     "signup": "Sign Up",
     "more": "More",
-    "immigrationChecklist": "Immigration Checklist"
+    "immigrationChecklist": "Immigration Checklist",
+    "schedule": "Schedule",
+    "chat": "Chat",
+    "grab": "Grab"
   },
   "notFound": {
     "desc": "Sorry, the page you are looking for doesn't exist.",
