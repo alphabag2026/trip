@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, MapPin, Calendar, Luggage, Edit, Sparkles, Loader2, Wand2, CheckCircle2, Globe, Copy, Link2, Share2, ExternalLink } from "lucide-react";
+import { Plus, Trash2, MapPin, Calendar, Luggage, Edit, Sparkles, Loader2, Wand2, CheckCircle2, Globe, Copy, Link2, Share2, ExternalLink, QrCode, Download } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
@@ -21,6 +22,9 @@ export default function AdminMeetups() {
   const createMutation = trpc.meetup.create.useMutation({ onSuccess: () => { refetch(); setShowCreate(false); toast.success(t("admin.meetups.created")); }});
   const deleteMutation = trpc.meetup.delete.useMutation({ onSuccess: () => { refetch(); toast.success(t("admin.meetups.deleted")); }});
   const updateMutation = trpc.meetup.update.useMutation({ onSuccess: () => { refetch(); toast.success("업데이트되었습니다."); }});
+
+  // QR 코드 다이얼로그 상태
+  const [qrMeetup, setQrMeetup] = useState<any>(null);
 
   // AI 프롬프트 상태
   const [aiPrompt, setAiPrompt] = useState("");
@@ -156,6 +160,11 @@ export default function AdminMeetups() {
                         variant="ghost" size="icon" className="h-5 w-5 shrink-0"
                         onClick={() => window.open(`/m/${m.shareToken}`, "_blank")}
                       ><ExternalLink className="h-3 w-3" /></Button>
+                      <Button
+                        variant="ghost" size="icon" className="h-5 w-5 shrink-0"
+                        onClick={() => setQrMeetup(m)}
+                        title="QR 코드"
+                      ><QrCode className="h-3 w-3" /></Button>
                     </div>
                   )}
                   {/* 수화물 공지 표시 */}
@@ -347,6 +356,76 @@ export default function AdminMeetups() {
               밋업 생성
             </Button>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* QR Code Dialog */}
+      <Dialog open={!!qrMeetup} onOpenChange={open => { if (!open) setQrMeetup(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="flex items-center gap-2">
+            <QrCode className="h-5 w-5 text-primary" />
+            QR 코드 - 밋업 초대장
+          </DialogTitle></DialogHeader>
+          {qrMeetup && (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <div className="bg-white p-4 rounded-2xl shadow-lg" id="qr-container">
+                <QRCodeSVG
+                  value={`${window.location.origin}/m/${qrMeetup.shareToken}`}
+                  size={220}
+                  level="H"
+                  includeMargin={true}
+                  bgColor="#ffffff"
+                  fgColor="#1a1a2e"
+                />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="font-semibold text-sm">{qrMeetup.title}</p>
+                {qrMeetup.projectCode && (
+                  <Badge variant="secondary" className="text-[10px] font-mono">#{qrMeetup.projectCode}</Badge>
+                )}
+                <p className="text-[11px] text-muted-foreground font-mono">
+                  {window.location.origin}/m/{qrMeetup.shareToken}
+                </p>
+              </div>
+              <div className="flex gap-2 w-full">
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-1.5"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/m/${qrMeetup.shareToken}`);
+                    toast.success("URL이 복사되었습니다");
+                  }}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  URL 복사
+                </Button>
+                <Button
+                  className="flex-1 gap-1.5"
+                  onClick={() => {
+                    const svg = document.querySelector('#qr-container svg');
+                    if (!svg) return;
+                    const svgData = new XMLSerializer().serializeToString(svg);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 440; canvas.height = 440;
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.onload = () => {
+                      ctx?.drawImage(img, 0, 0, 440, 440);
+                      const a = document.createElement('a');
+                      a.download = `meetup-qr-${qrMeetup.projectCode || qrMeetup.id}.png`;
+                      a.href = canvas.toDataURL('image/png');
+                      a.click();
+                      toast.success("QR 코드 다운로드 완료");
+                    };
+                    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+                  }}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  PNG 다운로드
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

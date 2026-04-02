@@ -556,6 +556,28 @@ export const appRouter = router({
           shareToken,
           invitedCountries: input.invitedCountries || [],
         });
+
+        // 전용 채팅방 자동 생성 (공지 / 일반 / 문의)
+        const defaultRooms = [
+          { name: `📢 ${input.title} - 공지`, roomType: "announcement" as const, description: "밋업 공지사항을 안내하는 채널입니다." },
+          { name: `💬 ${input.title} - 일반`, roomType: "general" as const, description: "참가자들의 자유로운 소통 채널입니다." },
+          { name: `❓ ${input.title} - 문의`, roomType: "support" as const, description: "밋업 관련 문의사항을 남기는 채널입니다." },
+        ];
+        for (const room of defaultRooms) {
+          try {
+            const roomId = await db.createChatRoom({
+              meetupId: id,
+              name: room.name,
+              roomType: room.roomType,
+              description: room.description,
+              createdBy: ctx.user.id,
+              autoTranslate: true,
+            });
+            // 생성자를 admin으로 자동 참여
+            await db.addChatRoomMember({ roomId, userId: ctx.user.id, memberRole: "admin" });
+          } catch (e) { /* 채팅방 생성 실패해도 밋업 생성은 성공 */ }
+        }
+
         return { id, projectCode, shareToken };
       }),
     update: adminProcedure

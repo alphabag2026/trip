@@ -25,7 +25,7 @@ import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "@/components/LanguageSelector";
 import ThemeToggle from "@/components/ThemeToggle";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { getLoginUrl } from "@/const";
 import PromoCarousel from "@/components/PromoCarousel";
 import OrganizerHome from "@/pages/OrganizerHome";
@@ -468,13 +468,8 @@ export default function Home() {
             <span className="font-bold text-lg hidden sm:inline" style={{ fontFamily: 'Inter, sans-serif' }}>Alpha Trip</span>
           </Link>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-md mx-2 cursor-pointer" onClick={() => navigate("/booking")}>
-            <div className="flex items-center gap-2 bg-muted/60 hover:bg-muted rounded-full px-4 py-2 transition-colors border border-border/50">
-              <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <span className="text-sm text-muted-foreground truncate">{t("home.searchPlaceholder", "어디로 가세요?")}</span>
-            </div>
-          </div>
+          {/* Search Bar - 프로젝트 코드 검색 */}
+          <ProjectCodeSearch navigate={navigate} t={t} />
 
           <div className="flex items-center gap-2 flex-shrink-0">
             <ThemeToggle />
@@ -896,6 +891,101 @@ export default function Home() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// 프로젝트 코드 검색 컴포넌트
+// ═══════════════════════════════════════════════════════
+function ProjectCodeSearch({ navigate, t }: { navigate: (path: string) => void; t: any }) {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchError, setSearchError] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const searchMutation = trpc.meetup.getByProjectCode.useQuery(
+    { code: searchQuery.trim() },
+    {
+      enabled: false, // 수동 트리거
+      retry: false,
+    }
+  );
+
+  const handleSearch = async () => {
+    const q = searchQuery.trim();
+    if (!q) return;
+    setSearchError("");
+    try {
+      const utils = trpc.useUtils();
+      const result = await utils.meetup.getByProjectCode.fetch({ code: q });
+      if (result?.shareToken) {
+        navigate(`/m/${result.shareToken}`);
+        setSearchOpen(false);
+        setSearchQuery("");
+      } else {
+        setSearchError(t("home.searchNotFound", "해당 프로젝트 코드의 밋업을 찾을 수 없습니다."));
+      }
+    } catch {
+      setSearchError(t("home.searchNotFound", "해당 프로젝트 코드의 밋업을 찾을 수 없습니다."));
+    }
+  };
+
+  if (!searchOpen) {
+    return (
+      <div
+        className="flex-1 max-w-md mx-2 cursor-pointer"
+        onClick={() => {
+          setSearchOpen(true);
+          setTimeout(() => inputRef.current?.focus(), 100);
+        }}
+      >
+        <div className="flex items-center gap-2 bg-muted/60 hover:bg-muted rounded-full px-4 py-2 transition-colors border border-border/50">
+          <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <span className="text-sm text-muted-foreground truncate">
+            {t("home.searchPlaceholder2", "프로젝트 코드 또는 밋업 검색")}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 max-w-md mx-2 relative">
+      <div className="flex items-center gap-1 bg-background rounded-full border-2 border-primary/50 shadow-lg px-3 py-1.5 transition-all">
+        <Search className="h-4 w-4 text-primary flex-shrink-0" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={searchQuery}
+          onChange={e => { setSearchQuery(e.target.value); setSearchError(""); }}
+          onKeyDown={e => {
+            if (e.key === "Enter") handleSearch();
+            if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); setSearchError(""); }
+          }}
+          placeholder={t("home.searchCodePlaceholder", "예: 104.340.300")}
+          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground min-w-0"
+          autoFocus
+        />
+        <button
+          onClick={handleSearch}
+          disabled={!searchQuery.trim()}
+          className="text-xs font-semibold text-primary hover:text-primary/80 disabled:text-muted-foreground px-2 py-1 rounded-full hover:bg-primary/10 transition-colors"
+        >
+          {t("home.searchBtn", "검색")}
+        </button>
+        <button
+          onClick={() => { setSearchOpen(false); setSearchQuery(""); setSearchError(""); }}
+          className="text-xs text-muted-foreground hover:text-foreground px-1"
+        >
+          ✕
+        </button>
+      </div>
+      {searchError && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-2 text-xs text-destructive z-50">
+          {searchError}
+        </div>
+      )}
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   FileText, Info, AlertTriangle
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -211,22 +212,39 @@ export default function MeetupPortal() {
               </CardContent>
             </Card>
 
-            {/* 공유 URL */}
+            {/* 공유 URL + QR 코드 */}
             <Card className="border-primary/20 bg-primary/5">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-3">
                   <Share2 className="h-4 w-4 text-primary" />
                   <span className="text-sm font-medium">{t("meetupPortal.shareUrl", "공유 URL")}</span>
                 </div>
-                <div className="flex gap-2">
-                  <Input value={shareUrl} readOnly className="text-xs font-mono bg-background" />
-                  <Button size="sm" variant="outline" onClick={handleCopyUrl} className="shrink-0 gap-1.5">
-                    {copied ? <CheckCircle className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                  </Button>
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                  <div className="bg-white p-3 rounded-xl shadow-sm shrink-0">
+                    <QRCodeSVG
+                      value={shareUrl}
+                      size={140}
+                      level="H"
+                      includeMargin={true}
+                      bgColor="#ffffff"
+                      fgColor="#1a1a2e"
+                    />
+                  </div>
+                  <div className="flex-1 w-full space-y-2">
+                    <div className="flex gap-2">
+                      <Input value={shareUrl} readOnly className="text-xs font-mono bg-background" />
+                      <Button size="sm" variant="outline" onClick={handleCopyUrl} className="shrink-0 gap-1.5">
+                        {copied ? <CheckCircle className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {t("meetupPortal.shareDesc", "이 URL을 공유하면 누구나 이 밋업에 바로 접속할 수 있습니다.")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("meetupPortal.qrDesc", "QR 코드를 초대장이나 포스터에 활용하세요.")}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {t("meetupPortal.shareDesc", "이 URL을 공유하면 누구나 이 밋업에 바로 접속할 수 있습니다.")}
-                </p>
               </CardContent>
             </Card>
           </TabsContent>
