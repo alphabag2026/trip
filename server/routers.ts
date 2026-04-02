@@ -6809,6 +6809,52 @@ Return ONLY valid JSON. If a field is not readable, use empty string.`,
         }
       }),
   }),
+  // ── Attendee Dashboard ──────────────────────────────
+  attendeeDashboard: router({
+    stats: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }).optional())
+      .query(({ input }) => db.getRegistrationStatsByMeetup(input?.meetupId)),
+    bulkUpdateStatus: adminProcedure
+      .input(z.object({
+        ids: z.array(z.number()).min(1),
+        status: z.enum(["approved", "rejected", "completed"]),
+      }))
+      .mutation(async ({ input }) => {
+        await db.bulkUpdateRegistrationStatus(input.ids, input.status);
+        return { success: true, count: input.ids.length };
+      }),
+    generateInvitation: adminProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        lang: z.enum(["ko", "en", "zh"]).default("ko"),
+        origin: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const meetup = await db.getMeetupById(input.meetupId);
+        if (!meetup) throw new TRPCError({ code: "NOT_FOUND", message: "밋업을 찾을 수 없습니다" });
+        const { generateInvitationImage } = await import("./invitation");
+        const dateRange = meetup.scheduleStart && meetup.scheduleEnd
+          ? `${new Date(meetup.scheduleStart).toLocaleDateString()} ~ ${new Date(meetup.scheduleEnd).toLocaleDateString()}`
+          : "미정";
+        const qrUrl = meetup.shareToken
+          ? `${input.origin}/m/${meetup.shareToken}`
+          : `${input.origin}/register/${meetup.id}`;
+        const pngBuffer = await generateInvitationImage({
+          meetupTitle: meetup.title,
+          meetupType: meetup.type,
+          location: meetup.location || "",
+          country: meetup.destinationCountry || "",
+          dateRange,
+          maxParticipants: meetup.maxParticipants || undefined,
+          description: meetup.description || undefined,
+          qrUrl,
+          lang: input.lang,
+        });
+        const key = `invitations/${meetup.id}-${input.lang}-${Date.now()}.png`;
+        const { url } = await storagePut(key, pngBuffer, "image/png");
+        return { url, meetupTitle: meetup.title };
+      }),
+  }),
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────
 async function parseTravelInfoWithLLM(text: string, fileType: string) {
@@ -6859,3 +6905,4 @@ Always respond in valid JSON only.`,
 }
 
 export type AppRouter = typeof appRouter;
+

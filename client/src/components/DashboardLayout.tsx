@@ -64,6 +64,8 @@ const menuItemDefs = [
   { icon: ShieldCheck, labelKey: "admin.sidebar.passportList", path: "/passport-list" },
   { icon: Receipt, labelKey: "admin.sidebar.expenses", path: "/expenses" },
   { icon: Image, labelKey: "admin.sidebar.adBanners", path: "/ad-banners" },
+  { icon: Users, labelKey: "admin.sidebar.attendeeDashboard", path: "/attendee-dashboard" },
+  { icon: CreditCard, labelKey: "admin.sidebar.invitation", path: "/invitation" },
   { icon: Shield, labelKey: "admin.sidebar.2faSettings", path: "/2fa-settings" },
   { icon: Home, labelKey: "admin.sidebar.goHome", path: "~/" },
 ];

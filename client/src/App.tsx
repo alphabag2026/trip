@@ -62,6 +62,8 @@ import LoginPage from "./pages/LoginPage";
 import Welcome from "./pages/Welcome";
 import TwoFactorSettings from "./pages/admin/TwoFactorSettings";
 import AdminAdBanners from "./pages/admin/AdBanners";
+import AdminAttendeeDashboard from "./pages/admin/AttendeeDashboard";
+import AdminInvitationGenerator from "./pages/admin/InvitationGenerator";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -154,6 +156,8 @@ function AdminRouter() {
         <Route path="/passport-list" component={AdminPassportList} />
         <Route path="/expenses" component={AdminExpenses} />
         <Route path="/ad-banners" component={AdminAdBanners} />
+        <Route path="/attendee-dashboard" component={AdminAttendeeDashboard} />
+        <Route path="/invitation" component={AdminInvitationGenerator} />
         <Route path="/2fa-settings" component={TwoFactorSettings} />
         <Route component={NotFound} />
       </Switch>

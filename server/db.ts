@@ -2900,3 +2900,67 @@ export async function getDriverPickupAssignments(driverPhone: string) {
   return db.select().from(pickupAssignments).where(eq(pickupAssignments.driverPhone, driverPhone)).orderBy(asc(pickupAssignments.pickupTime));
 }
 export { companyInfo, meetupInvitations, invitationStatistics, transportationOptions, participantTransportation, roleDelegations, adBanners, organizerApprovals, vatRates, travelSearches, travelBookings, paymentTransactions, platformWallets, walletTransactions, paymentGatewayConfig, rideProviders, rideSearches, rideBookings, deliveryProviders, deliveryOrders, notes, teamSchedules, translationRequests } from "../drizzle/schema";
+
+
+// ── Attendee Dashboard Statistics ──────────────────────
+export async function getRegistrationStatsByMeetup(meetupId?: number) {
+  const db = await getDb();
+  if (!db) return { total: 0, pending: 0, approved: 0, rejected: 0, completed: 0, domestic: 0, overseas: 0, byCategory: [], byNationality: [], recentTrend: [] };
+  
+  const conditions: any[] = [];
+  if (meetupId) conditions.push(eq(registrations.meetupId, meetupId));
+  const where = conditions.length ? and(...conditions) : undefined;
+
+  // Basic counts
+  const [total] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where);
+  const [pending] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where ? and(where, eq(registrations.status, "pending")) : eq(registrations.status, "pending"));
+  const [approved] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where ? and(where, eq(registrations.status, "approved")) : eq(registrations.status, "approved"));
+  const [rejected] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where ? and(where, eq(registrations.status, "rejected")) : eq(registrations.status, "rejected"));
+  const [completed] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where ? and(where, eq(registrations.status, "completed")) : eq(registrations.status, "completed"));
+  const [domestic] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where ? and(where, eq(registrations.locationType, "domestic")) : eq(registrations.locationType, "domestic"));
+  const [overseas] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where ? and(where, eq(registrations.locationType, "overseas")) : eq(registrations.locationType, "overseas"));
+
+  // By category
+  const byCategory = await db.select({
+    category: registrations.category,
+    count: sql<number>`count(*)`,
+  }).from(registrations).where(where).groupBy(registrations.category);
+
+  // By nationality (from passportOcrData)
+  const allRegs = await db.select({
+    passportOcrData: registrations.passportOcrData,
+  }).from(registrations).where(where);
+  
+  const nationalityMap: Record<string, number> = {};
+  for (const r of allRegs) {
+    const ocr = r.passportOcrData as any;
+    const nat = ocr?.nationality || ocr?.issuingCountry || "Unknown";
+    nationalityMap[nat] = (nationalityMap[nat] || 0) + 1;
+  }
+  const byNationality = Object.entries(nationalityMap)
+    .map(([nationality, count]) => ({ nationality, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 20);
+
+  // Recent 30-day trend
+  const recentTrend = await db.select({
+    date: sql<string>`DATE(createdAt)`,
+    count: sql<number>`count(*)`,
+  }).from(registrations).where(
+    where ? and(where, gte(registrations.createdAt, sql`DATE_SUB(NOW(), INTERVAL 30 DAY)`))
+      : gte(registrations.createdAt, sql`DATE_SUB(NOW(), INTERVAL 30 DAY)`)
+  ).groupBy(sql`DATE(createdAt)`).orderBy(sql`DATE(createdAt)`);
+
+  return {
+    total: total.count, pending: pending.count, approved: approved.count,
+    rejected: rejected.count, completed: completed.count,
+    domestic: domestic.count, overseas: overseas.count,
+    byCategory, byNationality, recentTrend,
+  };
+}
+
+export async function bulkUpdateRegistrationStatus(ids: number[], status: "approved" | "rejected" | "completed") {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(registrations).set({ status }).where(inArray(registrations.id, ids));
+}
