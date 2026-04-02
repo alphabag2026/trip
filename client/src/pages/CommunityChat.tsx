@@ -83,12 +83,12 @@ function RoomList() {
   }, [unreadMap]);
   const { data: allUsers } = trpc.userSearch.list.useQuery(undefined, { enabled: isAuthenticated });
   const joinMutation = trpc.chatRoom.join.useMutation({
-    onSuccess: (r) => { toast.success("채팅방에 참여했습니다"); navigate(`/community/${r.id}`); },
+    onSuccess: (r) => { toast.success(t("communityChat.t63", "채팅방에 참여했습니다")); navigate(`/community/${r.id}`); },
     onError: (e) => toast.error(e.message),
   });
   const createMutation = trpc.chatRoom.create.useMutation({
     onSuccess: (r) => {
-      toast.success("채팅방이 생성되었습니다");
+      toast.success(t("communityChat.t64", "채팅방이 생성되었습니다"));
       refetchRooms(); refetchMyRooms();
       setShowCreate(false);
       navigate(`/community/${r.id}`);
@@ -116,7 +116,7 @@ function RoomList() {
   const myRoomIds = useMemo(() => new Set(myRooms?.map((r: any) => r.id) || []), [myRooms]);
 
   const handleCreate = () => {
-    if (!newRoom.name.trim()) { toast.error("채팅방 이름을 입력해주세요"); return; }
+    if (!newRoom.name.trim()) { toast.error(t("communityChat.t65", "채팅방 이름을 입력해주세요")); return; }
     createMutation.mutate({
       name: newRoom.name,
       description: newRoom.description || undefined,
@@ -133,18 +133,18 @@ function RoomList() {
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
             <MessageCircle className="h-8 w-8 text-blue-500" />
           </div>
-          <h2 className="text-xl font-bold mb-2">커뮤니티</h2>
-          <p className="text-muted-foreground mb-6">여행자 그룹과 담당자가 함께 소통하는 공간입니다. 참여하려면 로그인이 필요합니다.</p>
+          <h2 className="text-xl font-bold mb-2">{t("communityChat.t1", "커뮤니티")}</h2>
+          <p className="text-muted-foreground mb-6">{t("communityChat.t2", "여행자 그룹과 담당자가 함께 소통하는 공간입니다. 참여하려면 로그인이 필요합니다.")}</p>
           <div className="flex gap-3 justify-center">
             <Link href="/login?returnPath=/community">
-              <Button>로그인</Button>
+              <Button>{t("communityChat.t3", "로그인")}</Button>
             </Link>
             <Link href="/login?tab=register">
-              <Button variant="outline">회원가입</Button>
+              <Button variant="outline">{t("communityChat.t4", "회원가입")}</Button>
             </Link>
           </div>
           <Link href="/">
-            <Button variant="ghost" size="sm" className="mt-4"><ArrowLeft className="h-4 w-4 mr-1" /> 홈으로</Button>
+            <Button variant="ghost" size="sm" className="mt-4"><ArrowLeft className="h-4 w-4 mr-1" /> {t("communityChat.t5", "홈으로")}</Button>
           </Link>
         </div>
       </div>
@@ -163,12 +163,12 @@ function RoomList() {
                 <Badge className="bg-red-500 text-white text-xs ml-2">{totalUnread > 99 ? "99+" : totalUnread}</Badge>
               )}
             </h1>
-            <p className="text-muted-foreground text-sm mt-1">여행자 그룹과 담당자가 함께 소통하는 공간</p>
+            <p className="text-muted-foreground text-sm mt-1">{t("communityChat.t6", "여행자 그룹과 담당자가 함께 소통하는 공간")}</p>
           </div>
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-1" /> 대화방 만들기</Button>
+            <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-1" /> {t("communityChat.t7", "대화방 만들기")}</Button>
             <Link href="/">
-              <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> 홈</Button>
+              <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> {t("communityChat.t8", "홈")}</Button>
             </Link>
           </div>
         </div>
@@ -176,29 +176,29 @@ function RoomList() {
         {/* 대화방 생성 다이얼로그 */}
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
           <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle className="flex items-center gap-2"><UserPlus className="h-5 w-5 text-blue-400" /> 대화방 만들기</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="flex items-center gap-2"><UserPlus className="h-5 w-5 text-blue-400" /> {t("communityChat.t9", "대화방 만들기")}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">방 이름</label>
-                <Input placeholder="예: 방콕 여행 그룹" value={newRoom.name} onChange={(e) => setNewRoom(p => ({ ...p, name: e.target.value }))} />
+                <label className="text-sm font-medium mb-1 block">{t("communityChat.t10", "방 이름")}</label>
+                <Input placeholder={t("communityChat.t84", "예: 방콕 여행 그룹")} value={newRoom.name} onChange={(e) => setNewRoom(p => ({ ...p, name: e.target.value }))} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">설명 (선택)</label>
-                <Input placeholder="방 설명" value={newRoom.description} onChange={(e) => setNewRoom(p => ({ ...p, description: e.target.value }))} />
+                <label className="text-sm font-medium mb-1 block">{t("communityChat.t11", "설명 (선택)")}</label>
+                <Input placeholder={t("communityChat.t85", "방 설명")} value={newRoom.description} onChange={(e) => setNewRoom(p => ({ ...p, description: e.target.value }))} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">방 유형</label>
+                <label className="text-sm font-medium mb-1 block">{t("communityChat.t12", "방 유형")}</label>
                 <Select value={newRoom.roomType} onValueChange={(v) => setNewRoom(p => ({ ...p, roomType: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="group">그룹 대화</SelectItem>
-                    <SelectItem value="direct">1:1 대화</SelectItem>
-                    <SelectItem value="social">소셜</SelectItem>
+                    <SelectItem value="group">{t("communityChat.t13", "그룹 대화")}</SelectItem>
+                    <SelectItem value="direct">{t("communityChat.t14", "1:1 대화")}</SelectItem>
+                    <SelectItem value="social">{t("communityChat.t15", "소셜")}</SelectItem>
                     {(user?.role === "admin" || user?.role === "superadmin") && (
                       <>
-                        <SelectItem value="general">일반</SelectItem>
-                        <SelectItem value="announcement">공지</SelectItem>
-                        <SelectItem value="support">문의</SelectItem>
+                        <SelectItem value="general">{t("communityChat.t16", "일반")}</SelectItem>
+                        <SelectItem value="announcement">{t("communityChat.t17", "공지")}</SelectItem>
+                        <SelectItem value="support">{t("communityChat.t18", "문의")}</SelectItem>
                       </>
                     )}
                   </SelectContent>
@@ -206,7 +206,7 @@ function RoomList() {
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">참여자 초대 ({selectedUsers.length}명 선택)</label>
-                <Input placeholder="이름 또는 이메일로 검색..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="mb-2" />
+                <Input placeholder={t("communityChat.t86", "이름 또는 이메일로 검색...")} value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="mb-2" />
                 <div className="max-h-40 overflow-y-auto border rounded-lg">
                   {filteredUsers.length === 0 ? (
                     <p className="text-xs text-muted-foreground p-3 text-center">
@@ -250,7 +250,7 @@ function RoomList() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setShowCreate(false)}>취소</Button>
+              <Button variant="ghost" onClick={() => setShowCreate(false)}>{t("communityChat.t19", "취소")}</Button>
               <Button onClick={handleCreate} disabled={createMutation.isPending}>
                 {createMutation.isPending ? "생성 중..." : "대화방 생성"}
               </Button>
@@ -261,7 +261,7 @@ function RoomList() {
         {/* 내 채팅방 */}
         {myRooms && myRooms.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-sm font-medium text-muted-foreground mb-3">내 채팅방</h2>
+            <h2 className="text-sm font-medium text-muted-foreground mb-3">{t("communityChat.t20", "내 채팅방")}</h2>
             <div className="space-y-2">
               {myRooms.map((room: any) => {
                 const typeInfo = ROOM_TYPE_MAP[room.roomType] || ROOM_TYPE_MAP.general;
@@ -294,27 +294,27 @@ function RoomList() {
 
         {/* 전체 채팅방 */}
         <div>
-          <h2 className="text-sm font-medium text-muted-foreground mb-3">전체 채팅방</h2>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3">{t("communityChat.t21", "전체 채팅방")}</h2>
           {rooms?.length === 0 && (!myRooms || myRooms.length === 0) && (
             <Card className="bg-gradient-to-br from-blue-500/5 to-purple-500/5 border-dashed border-2 border-border/50">
               <CardContent className="p-10 text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/10 mb-4">
                   <MessageCircle className="h-8 w-8 text-blue-400" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">아직 대화방이 없습니다</h3>
+                <h3 className="font-semibold text-lg mb-2">{t("communityChat.t22", "아직 대화방이 없습니다")}</h3>
                 <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
                   첫 번째 대화방을 만들어 여행자들과 소통을 시작해 보세요!<br/>
-                  그룹 대화, 1:1 대화, 공지 채널 등 다양한 유형을 지원합니다.
+                  {t("communityChat.t23", "그룹 대화, 1:1 대화, 공지 채널 등 다양한 유형을 지원합니다.")}
                 </p>
                 <Button onClick={() => setShowCreate(true)} className="gap-2">
                   <Plus className="h-4 w-4" />
-                  첫 대화방 만들기
+                  {t("communityChat.t24", "첫 대화방 만들기")}
                 </Button>
               </CardContent>
             </Card>
           )}
           {rooms?.length === 0 && myRooms && myRooms.length > 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">참여하지 않은 다른 채팅방이 없습니다</p>
+            <p className="text-sm text-muted-foreground text-center py-4">{t("communityChat.t25", "참여하지 않은 다른 채팅방이 없습니다")}</p>
           )}
           <div className="space-y-2">
             {rooms?.map((room: any) => {
@@ -335,9 +335,9 @@ function RoomList() {
                       {room.description && <p className="text-xs text-muted-foreground truncate">{room.description}</p>}
                     </div>
                     {isMember ? (
-                      <Button size="sm" variant="outline" onClick={() => navigate(`/community/${room.id}`)}>입장</Button>
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/community/${room.id}`)}>{t("communityChat.t26", "입장")}</Button>
                     ) : (
-                      <Button size="sm" onClick={() => joinMutation.mutate({ roomId: room.id })} disabled={joinMutation.isPending}>참여</Button>
+                      <Button size="sm" onClick={() => joinMutation.mutate({ roomId: room.id })} disabled={joinMutation.isPending}>{t("communityChat.t27", "참여")}</Button>
                     )}
                   </CardContent>
                 </Card>
@@ -352,13 +352,14 @@ function RoomList() {
 
 // ── 번역 패널 ──────────────────────────────────────────
 function TranslatorPanel({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const [inputText, setInputText] = useState("");
   const [sourceLang, setSourceLang] = useState("auto");
   const [targetLang, setTargetLang] = useState("en");
   const [translated, setTranslated] = useState("");
   const translateMutation = trpc.chatMessage.translateText.useMutation({
     onSuccess: (r) => setTranslated(r.translated as string),
-    onError: () => toast.error("번역 실패"),
+    onError: () => toast.error(t("communityChat.t66", "번역 실패")),
   });
 
   return (
@@ -366,7 +367,7 @@ function TranslatorPanel({ onClose }: { onClose: () => void }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Languages className="h-5 w-5 text-blue-400" />
-          <span className="font-medium text-sm">실시간 통번역</span>
+          <span className="font-medium text-sm">{t("communityChat.t28", "실시간 통번역")}</span>
         </div>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}><X className="h-4 w-4" /></Button>
       </div>
@@ -374,7 +375,7 @@ function TranslatorPanel({ onClose }: { onClose: () => void }) {
         <Select value={sourceLang} onValueChange={setSourceLang}>
           <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="auto">자동 감지</SelectItem>
+            <SelectItem value="auto">{t("communityChat.t29", "자동 감지")}</SelectItem>
             {LANGUAGES.map(l => <SelectItem key={l.code} value={l.code}>{l.flag} {l.name}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -389,7 +390,7 @@ function TranslatorPanel({ onClose }: { onClose: () => void }) {
       <Textarea
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
-        placeholder="번역할 텍스트를 입력하세요..."
+        placeholder={t("communityChat.t87", "번역할 텍스트를 입력하세요...")}
         className="text-sm min-h-[60px] resize-none"
       />
       <Button
@@ -403,8 +404,8 @@ function TranslatorPanel({ onClose }: { onClose: () => void }) {
       {translated && (
         <div className="bg-muted/50 rounded-lg p-3">
           <p className="text-sm whitespace-pre-wrap">{translated}</p>
-          <Button variant="ghost" size="sm" className="mt-1 text-xs" onClick={() => { navigator.clipboard.writeText(translated); toast.success("복사됨"); }}>
-            복사
+          <Button variant="ghost" size="sm" className="mt-1 text-xs" onClick={() => { navigator.clipboard.writeText(translated); toast.success(t("communityChat.t67", "복사됨")); }}>
+            {t("communityChat.t30", "복사")}
           </Button>
         </div>
       )}
@@ -414,13 +415,14 @@ function TranslatorPanel({ onClose }: { onClose: () => void }) {
 
 // ── 위치 공유 다이얼로그 ──────────────────────────────────
 function LocationShareDialog({ open, onClose, onSend }: { open: boolean; onClose: () => void; onSend: (lat: number, lng: number, name: string) => void }) {
+  const { t } = useTranslation();
   const [locationName, setLocationName] = useState("");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
   const [loading, setLoading] = useState(false);
 
   const getCurrentLocation = () => {
-    if (!navigator.geolocation) { toast.error("위치 서비스를 지원하지 않는 브라우저입니다"); return; }
+    if (!navigator.geolocation) { toast.error(t("communityChat.t68", "위치 서비스를 지원하지 않는 브라우저입니다")); return; }
     setLoading(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -429,29 +431,29 @@ function LocationShareDialog({ open, onClose, onSend }: { open: boolean; onClose
         setLocationName("내 현재 위치");
         setLoading(false);
       },
-      () => { toast.error("위치를 가져올 수 없습니다"); setLoading(false); }
+      () => { toast.error(t("communityChat.t69", "위치를 가져올 수 없습니다")); setLoading(false); }
     );
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-red-400" /> 위치 공유</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-red-400" /> {t("communityChat.t31", "위치 공유")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <Button variant="outline" className="w-full" onClick={getCurrentLocation} disabled={loading}>
             <MapPin className="h-4 w-4 mr-2" /> {loading ? "위치 확인 중..." : "현재 위치 가져오기"}
           </Button>
-          <div className="text-xs text-muted-foreground text-center">또는 직접 입력</div>
-          <Input placeholder="장소 이름 (예: 인천공항 제2터미널)" value={locationName} onChange={(e) => setLocationName(e.target.value)} />
+          <div className="text-xs text-muted-foreground text-center">{t("communityChat.t32", "또는 직접 입력")}</div>
+          <Input placeholder={t("communityChat.t88", "장소 이름 (예: 인천공항 제2터미널)")} value={locationName} onChange={(e) => setLocationName(e.target.value)} />
           <div className="grid grid-cols-2 gap-2">
-            <Input placeholder="위도 (latitude)" value={lat} onChange={(e) => setLat(e.target.value)} type="number" step="any" />
-            <Input placeholder="경도 (longitude)" value={lng} onChange={(e) => setLng(e.target.value)} type="number" step="any" />
+            <Input placeholder={t("communityChat.t89", "위도 (latitude)")} value={lat} onChange={(e) => setLat(e.target.value)} type="number" step="any" />
+            <Input placeholder={t("communityChat.t90", "경도 (longitude)")} value={lng} onChange={(e) => setLng(e.target.value)} type="number" step="any" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>취소</Button>
+          <Button variant="ghost" onClick={onClose}>{t("communityChat.t33", "취소")}</Button>
           <Button onClick={() => { onSend(parseFloat(lat), parseFloat(lng), locationName); onClose(); }} disabled={!lat || !lng || !locationName}>
-            <Send className="h-4 w-4 mr-2" /> 전송
+            <Send className="h-4 w-4 mr-2" /> {t("communityChat.t34", "전송")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -463,6 +465,7 @@ function LocationShareDialog({ open, onClose, onSend }: { open: boolean; onClose
 function CallOverlay({ callId, callType, callerName, isOutgoing, onEnd }: {
   callId: string; callType: "voice" | "video"; callerName: string; isOutgoing: boolean; onEnd: () => void;
 }) {
+  const { t } = useTranslation();
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -528,7 +531,7 @@ function CallOverlay({ callId, callType, callerName, isOutgoing, onEnd }: {
         if (localVideoRef.current) localVideoRef.current.srcObject = stream;
         stream.getTracks().forEach(t => pc.addTrack(t, stream));
       } catch {
-        toast.error("미디어 장치에 접근할 수 없습니다");
+        toast.error(t("communityChat.t70", "미디어 장치에 접근할 수 없습니다"));
       }
     };
 
@@ -625,6 +628,7 @@ function CallOverlay({ callId, callType, callerName, isOutgoing, onEnd }: {
 function GroupCallOverlay({ callId, callType, roomName, onEnd }: {
   callId: string; callType: "voice" | "video"; roomName: string; onEnd: () => void;
 }) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
@@ -672,7 +676,7 @@ function GroupCallOverlay({ callId, callType, roomName, onEnd }: {
         localStreamRef.current = stream;
         if (localVideoRef.current) localVideoRef.current.srcObject = stream;
       } catch {
-        toast.error("미디어 장치에 접근할 수 없습니다");
+        toast.error(t("communityChat.t71", "미디어 장치에 접근할 수 없습니다"));
       }
     };
     initMedia();
@@ -847,7 +851,7 @@ function GroupCallOverlay({ callId, callType, roomName, onEnd }: {
           <div key={`empty-${i}`} className="bg-gray-800/50 rounded-xl flex items-center justify-center">
             <div className="text-center">
               <div className="animate-pulse h-3 w-3 rounded-full bg-yellow-500 mx-auto mb-2" />
-              <span className="text-xs text-white/40">연결 중...</span>
+              <span className="text-xs text-white/40">{t("communityChat.t35", "연결 중...")}</span>
             </div>
           </div>
         ))}
@@ -884,6 +888,7 @@ function RemoteVideo({ stream }: { stream: MediaStream }) {
 function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onUnpin, myLang }: {
   msg: any; isMe: boolean; isAdmin: boolean; user: any; onReply: (m: any) => void; onDelete: (id: number) => void; onPin?: (id: number) => void; onUnpin?: (id: number) => void; myLang: string;
 }) {
+  const { t } = useTranslation();
   const [showTranslation, setShowTranslation] = useState(false);
   const translateMutation = trpc.chatMessage.translate.useMutation();
   const [translated, setTranslated] = useState("");
@@ -892,7 +897,7 @@ function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onU
     if (translated) { setShowTranslation(!showTranslation); return; }
     translateMutation.mutate({ messageId: msg.id, targetLang: myLang }, {
       onSuccess: (r) => { setTranslated(r.translated as string); setShowTranslation(true); },
-      onError: () => toast.error("번역 실패"),
+      onError: () => toast.error(t("communityChat.t72", "번역 실패")),
     });
   };
 
@@ -909,7 +914,7 @@ function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onU
       <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
         <div className="flex items-center gap-2 mb-1">
           <Megaphone className="h-4 w-4 text-orange-400" />
-          <span className="text-xs font-medium text-orange-400">공지</span>
+          <span className="text-xs font-medium text-orange-400">{t("communityChat.t36", "공지")}</span>
           <span className="text-xs text-muted-foreground">{msg.senderName}</span>
         </div>
         <p className="text-sm">{msg.content}</p>
@@ -949,7 +954,7 @@ function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onU
                 <div className="bg-muted/50 rounded-lg p-2 text-xs hover:bg-muted/70 transition-colors">
                   <div className="flex items-center gap-1 text-blue-400">
                     <MapPin className="h-3 w-3" />
-                    <span>Google Maps에서 보기</span>
+                    <span>{t("communityChat.t37", "Google Maps에서 보기")}</span>
                   </div>
                   <p className="text-muted-foreground mt-0.5">{Number(msg.latitude).toFixed(5)}, {Number(msg.longitude).toFixed(5)}</p>
                 </div>
@@ -988,24 +993,24 @@ function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onU
           </div>
         )}
         {msg.replyToId && (
-          <div className="text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1 mb-1 border-l-2 border-blue-400">답글</div>
+          <div className="text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1 mb-1 border-l-2 border-blue-400">{t("communityChat.t38", "답글")}</div>
         )}
         <div className={`rounded-2xl px-3 py-2 text-sm ${isMe ? "bg-blue-600 text-white" : "bg-muted"} ${msg.isPinned ? "ring-1 ring-amber-400/50" : ""}`}>
           {msg.isPinned && (
             <div className="flex items-center gap-1 text-amber-400 text-[10px] mb-1">
               <Pin className="h-2.5 w-2.5" />
-              <span>고정됨</span>
+              <span>{t("communityChat.t39", "고정됨")}</span>
             </div>
           )}
           {renderContent()}
-          {msg.isEdited && <span className="text-[10px] opacity-60 ml-1">(수정됨)</span>}
+          {msg.isEdited && <span className="text-[10px] opacity-60 ml-1">{t("communityChat.t40", "(수정됨)")}</span>}
         </div>
         {/* 번역 표시 */}
         {showTranslation && translated && (
           <div className={`mt-1 rounded-lg px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/20 ${isMe ? "text-right" : ""}`}>
             <div className="flex items-center gap-1 text-blue-400 mb-0.5">
               <Globe className="h-3 w-3" />
-              <span>번역</span>
+              <span>{t("communityChat.t41", "번역")}</span>
             </div>
             <p className="text-foreground">{translated}</p>
           </div>
@@ -1016,7 +1021,7 @@ function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onU
           </span>
           {/* 번역 버튼 */}
           {msg.messageType === "text" && msg.content && (
-            <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100" onClick={handleTranslate} title="번역">
+            <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100" onClick={handleTranslate} title={t("communityChat.t92", "번역")}>
               <Globe className="h-3 w-3" />
             </Button>
           )}
@@ -1024,12 +1029,12 @@ function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onU
             <Reply className="h-3 w-3" />
           </Button>
           {isAdmin && !msg.isPinned && onPin && (
-            <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 text-amber-400" onClick={() => onPin(msg.id)} title="고정">
+            <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 text-amber-400" onClick={() => onPin(msg.id)} title={t("communityChat.t93", "고정")}>
               <Pin className="h-3 w-3" />
             </Button>
           )}
           {isAdmin && msg.isPinned && onUnpin && (
-            <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 text-amber-400" onClick={() => onUnpin(msg.id)} title="고정 해제">
+            <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 text-amber-400" onClick={() => onUnpin(msg.id)} title={t("communityChat.t94", "고정 해제")}>
               <PinOff className="h-3 w-3" />
             </Button>
           )}
@@ -1046,6 +1051,7 @@ function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onU
 
 // ── 채팅방 뷰 ──────────────────────────────────────────
 function ChatRoomView({ roomId }: { roomId: number }) {
+  const { t } = useTranslation();
   const { user, isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
   const [message, setMessage] = useState("");
@@ -1075,17 +1081,17 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   });
 
   const uploadMutation = trpc.chatMessage.uploadFile.useMutation({
-    onSuccess: () => { refetch(); toast.success("파일 전송 완료"); },
+    onSuccess: () => { refetch(); toast.success(t("communityChat.t73", "파일 전송 완료")); },
     onError: (e) => toast.error(e.message),
   });
 
   const deleteMutation = trpc.chatMessage.delete.useMutation({
-    onSuccess: () => { refetch(); toast.success("삭제됨"); },
+    onSuccess: () => { refetch(); toast.success(t("communityChat.t74", "삭제됨")); },
     onError: (e) => toast.error(e.message),
   });
 
   const leaveMutation = trpc.chatRoom.leave.useMutation({
-    onSuccess: () => { toast.success("채팅방을 나갔습니다"); navigate("/community"); },
+    onSuccess: () => { toast.success(t("communityChat.t75", "채팅방을 나갔습니다")); navigate("/community"); },
     onError: (e) => toast.error(e.message),
   });
 
@@ -1110,11 +1116,11 @@ function ChatRoomView({ roomId }: { roomId: number }) {
     { enabled: isAuthenticated, refetchInterval: 10000 }
   );
   const pinMutation = trpc.chatMessage.pin.useMutation({
-    onSuccess: () => { refetch(); refetchPinned(); toast.success("메시지가 고정되었습니다"); },
+    onSuccess: () => { refetch(); refetchPinned(); toast.success(t("communityChat.t76", "메시지가 고정되었습니다")); },
     onError: (e) => toast.error(e.message),
   });
   const unpinMutation = trpc.chatMessage.unpin.useMutation({
-    onSuccess: () => { refetch(); refetchPinned(); toast.success("고정이 해제되었습니다"); },
+    onSuccess: () => { refetch(); refetchPinned(); toast.success(t("communityChat.t77", "고정이 해제되었습니다")); },
     onError: (e) => toast.error(e.message),
   });
 
@@ -1190,7 +1196,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 25 * 1024 * 1024) { toast.error("파일 크기는 25MB 이하만 가능합니다"); return; }
+    if (file.size > 25 * 1024 * 1024) { toast.error(t("communityChat.t78", "파일 크기는 25MB 이하만 가능합니다")); return; }
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = (reader.result as string).split(",")[1];
@@ -1215,9 +1221,9 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const { data: iceConfig } = trpc.webrtc.getIceServers.useQuery();
 
   const startCall = async (type: "voice" | "video") => {
-    if (!members || members.length < 2) { toast.error("통화할 상대가 없습니다"); return; }
+    if (!members || members.length < 2) { toast.error(t("communityChat.t79", "통화할 상대가 없습니다")); return; }
     const otherMember = members.find((m: any) => m.userId !== user?.id);
-    if (!otherMember) { toast.error("통화할 상대를 찾을 수 없습니다"); return; }
+    if (!otherMember) { toast.error(t("communityChat.t80", "통화할 상대를 찾을 수 없습니다")); return; }
 
     try {
       const pc = new RTCPeerConnection({
@@ -1244,7 +1250,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
         isOutgoing: true,
       });
     } catch {
-      toast.error("통화를 시작할 수 없습니다. 미디어 권한을 확인해주세요.");
+      toast.error(t("communityChat.t81", "통화를 시작할 수 없습니다. 미디어 권한을 확인해주세요."));
     }
   };
 
@@ -1254,7 +1260,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
       setGroupCall({ callId: result.callId, callType: type });
       toast.success(`그룹 ${type === "video" ? "영상" : "음성"} 통화가 시작되었습니다`);
     } catch {
-      toast.error("그룹 통화를 시작할 수 없습니다");
+      toast.error(t("communityChat.t82", "그룹 통화를 시작할 수 없습니다"));
     }
   };
 
@@ -1263,7 +1269,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
     try {
       await joinGroupCallMutation.mutateAsync({ callId: activeGroupCall.callId });
       setGroupCall({ callId: activeGroupCall.callId, callType: activeGroupCall.callType as "voice" | "video" });
-      toast.success("그룹 통화에 참여했습니다");
+      toast.success(t("communityChat.t83", "그룹 통화에 참여했습니다"));
     } catch (e: any) {
       toast.error(e.message || "참여 실패");
     }
@@ -1304,37 +1310,37 @@ function ChatRoomView({ roomId }: { roomId: number }) {
           <p className="text-xs text-muted-foreground">{members?.length || 0}명 참여중</p>
         </div>
         {/* 1:1 통화 */}
-        <Button variant="ghost" size="icon" onClick={() => startCall("voice")} title="1:1 음성 통화">
+        <Button variant="ghost" size="icon" onClick={() => startCall("voice")} title={t("communityChat.t95", "1:1 음성 통화")}>
           <Phone className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => startCall("video")} title="1:1 영상 통화">
+        <Button variant="ghost" size="icon" onClick={() => startCall("video")} title={t("communityChat.t96", "1:1 영상 통화")}>
           <Video className="h-5 w-5" />
         </Button>
         {/* 그룹 통화 */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" title="그룹 통화">
+            <Button variant="ghost" size="icon" title={t("communityChat.t97", "그룹 통화")}>
               <Users className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => startGroupCall("voice")}>
-              <Phone className="h-4 w-4 mr-2" /> 그룹 음성 통화 시작
+              <Phone className="h-4 w-4 mr-2" /> {t("communityChat.t42", "그룹 음성 통화 시작")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => startGroupCall("video")}>
-              <Video className="h-4 w-4 mr-2" /> 그룹 영상 통화 시작
+              <Video className="h-4 w-4 mr-2" /> {t("communityChat.t43", "그룹 영상 통화 시작")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         {/* 번역 언어 선택 */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" title="내 언어">
+            <Button variant="ghost" size="icon" title={t("communityChat.t98", "내 언어")}>
               <Globe className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
-            <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">내 번역 언어</div>
+            <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{t("communityChat.t44", "내 번역 언어")}</div>
             {LANGUAGES.map(l => (
               <DropdownMenuItem key={l.code} onClick={() => { setMyLang(l.code); toast.success(`번역 언어: ${l.name}`); }}>
                 <span className="mr-2">{l.flag}</span> {l.name} {myLang === l.code && " ✓"}
@@ -1348,18 +1354,18 @@ function ChatRoomView({ roomId }: { roomId: number }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setShowMediaGallery(true)}>
-              <GalleryHorizontalEnd className="h-4 w-4 mr-2" /> 미디어 갤러리
+              <GalleryHorizontalEnd className="h-4 w-4 mr-2" /> {t("communityChat.t45", "미디어 갤러리")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowPinnedList(!showPinnedList)}>
               <Pin className="h-4 w-4 mr-2" /> 고정 메시지 {pinnedMessages?.length ? `(${pinnedMessages.length})` : ""}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setShowTranslator(!showTranslator)}>
-              <Languages className="h-4 w-4 mr-2" /> 통번역기
+              <Languages className="h-4 w-4 mr-2" /> {t("communityChat.t46", "통번역기")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => leaveMutation.mutate({ roomId })} className="text-red-400">
-              <LogOut className="h-4 w-4 mr-2" /> 나가기
+              <LogOut className="h-4 w-4 mr-2" /> {t("communityChat.t47", "나가기")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -1374,7 +1380,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
             <span className="text-xs text-muted-foreground ml-2">{activeGroupCall.participantCount}/{activeGroupCall.maxParticipants}명</span>
           </div>
           <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={joinExistingGroupCall}>
-            <Phone className="h-4 w-4 mr-1" /> 참여하기
+            <Phone className="h-4 w-4 mr-1" /> {t("communityChat.t48", "참여하기")}
           </Button>
         </div>
       )}
@@ -1417,7 +1423,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
         <SheetContent side="right" className="w-full sm:max-w-md p-0">
           <SheetHeader className="px-4 pt-4 pb-2">
             <SheetTitle className="flex items-center gap-2">
-              <GalleryHorizontalEnd className="h-5 w-5" /> 미디어 갤러리
+              <GalleryHorizontalEnd className="h-5 w-5" /> {t("communityChat.t49", "미디어 갤러리")}
             </SheetTitle>
           </SheetHeader>
           <div className="px-4 pb-2">
@@ -1431,17 +1437,17 @@ function ChatRoomView({ roomId }: { roomId: number }) {
           </div>
           <Tabs value={mediaFilter} onValueChange={(v) => setMediaFilter(v as any)} className="px-4">
             <TabsList className="w-full">
-              <TabsTrigger value="all" className="flex-1 text-xs">전체</TabsTrigger>
-              <TabsTrigger value="image" className="flex-1 text-xs">사진</TabsTrigger>
-              <TabsTrigger value="video" className="flex-1 text-xs">영상</TabsTrigger>
-              <TabsTrigger value="file" className="flex-1 text-xs">파일</TabsTrigger>
+              <TabsTrigger value="all" className="flex-1 text-xs">{t("communityChat.t50", "전체")}</TabsTrigger>
+              <TabsTrigger value="image" className="flex-1 text-xs">{t("communityChat.t51", "사진")}</TabsTrigger>
+              <TabsTrigger value="video" className="flex-1 text-xs">{t("communityChat.t52", "영상")}</TabsTrigger>
+              <TabsTrigger value="file" className="flex-1 text-xs">{t("communityChat.t53", "파일")}</TabsTrigger>
             </TabsList>
           </Tabs>
           <div className="overflow-y-auto flex-1 p-4" style={{ maxHeight: "calc(100vh - 180px)" }}>
             {(!mediaItems || mediaItems.length === 0) ? (
               <div className="text-center text-muted-foreground py-12">
                 <GalleryHorizontalEnd className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">공유된 미디어가 없습니다</p>
+                <p className="text-sm">{t("communityChat.t54", "공유된 미디어가 없습니다")}</p>
               </div>
             ) : (
               <div className={mediaFilter === "file" ? "space-y-2" : "grid grid-cols-3 gap-1.5"}>
@@ -1488,14 +1494,14 @@ function ChatRoomView({ roomId }: { roomId: number }) {
         <SheetContent side="right" className="w-full sm:max-w-md p-0">
           <SheetHeader className="px-4 pt-4 pb-2">
             <SheetTitle className="flex items-center gap-2">
-              <Pin className="h-5 w-5 text-amber-400" /> 고정된 메시지
+              <Pin className="h-5 w-5 text-amber-400" /> {t("communityChat.t55", "고정된 메시지")}
             </SheetTitle>
           </SheetHeader>
           <div className="overflow-y-auto flex-1 p-4 space-y-3" style={{ maxHeight: "calc(100vh - 100px)" }}>
             {(!pinnedMessages || pinnedMessages.length === 0) ? (
               <div className="text-center text-muted-foreground py-12">
                 <Pin className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">고정된 메시지가 없습니다</p>
+                <p className="text-sm">{t("communityChat.t56", "고정된 메시지가 없습니다")}</p>
               </div>
             ) : (
               pinnedMessages.map((pm: any) => (
@@ -1518,7 +1524,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
                   )}
                   {isAdmin && (
                     <Button variant="ghost" size="sm" className="mt-1 text-xs text-amber-400 h-7" onClick={() => { unpinMutation.mutate({ messageId: pm.id }); }}>
-                      <PinOff className="h-3 w-3 mr-1" /> 고정 해제
+                      <PinOff className="h-3 w-3 mr-1" /> {t("communityChat.t57", "고정 해제")}
                     </Button>
                   )}
                 </div>
@@ -1551,17 +1557,17 @@ function ChatRoomView({ roomId }: { roomId: number }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               <DropdownMenuItem onClick={() => { fileInputRef.current?.setAttribute("accept", "image/*"); fileInputRef.current?.click(); }}>
-                <Image className="h-4 w-4 mr-2" /> 사진
+                <Image className="h-4 w-4 mr-2" /> {t("communityChat.t58", "사진")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => { fileInputRef.current?.setAttribute("accept", "video/*"); fileInputRef.current?.click(); }}>
-                <Play className="h-4 w-4 mr-2" /> 영상
+                <Play className="h-4 w-4 mr-2" /> {t("communityChat.t59", "영상")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => { fileInputRef.current?.setAttribute("accept", "*/*"); fileInputRef.current?.click(); }}>
-                <Paperclip className="h-4 w-4 mr-2" /> 파일
+                <Paperclip className="h-4 w-4 mr-2" /> {t("communityChat.t60", "파일")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setShowLocationDialog(true)}>
-                <MapPin className="h-4 w-4 mr-2" /> 위치 공유
+                <MapPin className="h-4 w-4 mr-2" /> {t("communityChat.t61", "위치 공유")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -1571,7 +1577,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="메시지를 입력하세요..."
+            placeholder={t("communityChat.t91", "메시지를 입력하세요...")}
             className="flex-1"
             disabled={sendMutation.isPending || uploadMutation.isPending}
           />
@@ -1582,7 +1588,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
         {uploadMutation.isPending && (
           <div className="mt-2 text-xs text-muted-foreground flex items-center gap-2">
             <div className="animate-spin h-3 w-3 border-2 border-blue-400 border-t-transparent rounded-full" />
-            파일 업로드 중...
+            {t("communityChat.t62", "파일 업로드 중...")}
           </div>
         )}
       </div>

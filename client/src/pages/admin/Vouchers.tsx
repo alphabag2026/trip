@@ -36,7 +36,7 @@ export default function Vouchers() {
   );
   const { data: registrations } = trpc.registration.list.useQuery({ status: "approved" });
   const uploadMutation = trpc.voucher.upload.useMutation({
-    onSuccess: () => { toast.success("바우처가 업로드되었습니다"); setShowUpload(false); refetch(); },
+    onSuccess: () => { toast.success(t("admin.vouchers.t23", "바우처가 업로드되었습니다")); setShowUpload(false); refetch(); },
     onError: (e) => toast.error(e.message),
   });
   const bulkUploadMutation = trpc.voucher.bulkUpload.useMutation({
@@ -44,11 +44,11 @@ export default function Vouchers() {
     onError: (e) => toast.error(e.message),
   });
   const sendMutation = trpc.voucher.sendToParticipant.useMutation({
-    onSuccess: () => { toast.success("바우처가 전송되었습니다"); refetch(); },
+    onSuccess: () => { toast.success(t("admin.vouchers.t24", "바우처가 전송되었습니다")); refetch(); },
     onError: (e) => toast.error(e.message),
   });
   const deleteMutation = trpc.voucher.delete.useMutation({
-    onSuccess: () => { toast.success("삭제되었습니다"); refetch(); },
+    onSuccess: () => { toast.success(t("admin.vouchers.t25", "삭제되었습니다")); refetch(); },
     onError: (e) => toast.error(e.message),
   });
 
@@ -84,7 +84,7 @@ export default function Vouchers() {
 
   const handleUpload = () => {
     if (!uploadForm.registrationId || !uploadForm.fileBase64 || !uploadForm.title) {
-      toast.error("필수 항목을 입력하세요"); return;
+      toast.error(t("admin.vouchers.t26", "필수 항목을 입력하세요")); return;
     }
     uploadMutation.mutate({
       registrationId: uploadForm.registrationId,
@@ -99,7 +99,7 @@ export default function Vouchers() {
 
   const handleBulkUpload = () => {
     const validFiles = bulkFiles.filter((f) => f.registrationId > 0);
-    if (validFiles.length === 0) { toast.error("유효한 파일이 없습니다"); return; }
+    if (validFiles.length === 0) { toast.error(t("admin.vouchers.t27", "유효한 파일이 없습니다")); return; }
     bulkUploadMutation.mutate({ voucherType: bulkType as any, files: validFiles });
   };
 
@@ -108,17 +108,17 @@ export default function Vouchers() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t("admin.vouchers.title")}</h1>
-          <p className="text-muted-foreground text-sm">항공권, 숙소 바우처 업로드 및 개별 전송</p>
+          <p className="text-muted-foreground text-sm">{t("admin.vouchers.t1", "항공권, 숙소 바우처 업로드 및 개별 전송")}</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={showBulk} onOpenChange={setShowBulk}>
             <DialogTrigger asChild>
-              <Button variant="outline"><Upload className="mr-2 h-4 w-4" /> 일괄 업로드</Button>
+              <Button variant="outline"><Upload className="mr-2 h-4 w-4" /> {t("admin.vouchers.t2", "일괄 업로드")}</Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
-              <DialogHeader><DialogTitle>바우처 일괄 업로드</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{t("admin.vouchers.t3", "바우처 일괄 업로드")}</DialogTitle></DialogHeader>
               <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">파일명 앞에 신청 ID를 붙여주세요 (예: 1_항공권.pdf, 2_호텔바우처.pdf)</p>
+                <p className="text-sm text-muted-foreground">{t("admin.vouchers.t4", "파일명 앞에 신청 ID를 붙여주세요 (예: 1_항공권.pdf, 2_호텔바우처.pdf)")}</p>
                 <div>
                   <Label>{t("admin.vouchers.voucherType")}</Label>
                   <Select value={bulkType} onValueChange={setBulkType}>
@@ -129,7 +129,7 @@ export default function Vouchers() {
                   </Select>
                 </div>
                 <div>
-                  <Label>파일 선택 (복수 선택 가능)</Label>
+                  <Label>{t("admin.vouchers.t5", "파일 선택 (복수 선택 가능)")}</Label>
                   <Input type="file" multiple onChange={handleBulkFileSelect} />
                 </div>
                 {bulkFiles.length > 0 && (
@@ -137,7 +137,7 @@ export default function Vouchers() {
                     {bulkFiles.map((f, i) => (
                       <div key={i} className="flex items-center gap-2 p-2 bg-muted/50 rounded text-sm">
                         <span className="flex-1 truncate">{f.fileName}</span>
-                        <Input type="number" className="w-24" placeholder="신청ID" value={f.registrationId || ""} onChange={(e) => {
+                        <Input type="number" className="w-24" placeholder={t("admin.vouchers.t28", "신청ID")} value={f.registrationId || ""} onChange={(e) => {
                           const updated = [...bulkFiles];
                           updated[i] = { ...f, registrationId: parseInt(e.target.value) || 0 };
                           setBulkFiles(updated);
@@ -154,15 +154,15 @@ export default function Vouchers() {
           </Dialog>
           <Dialog open={showUpload} onOpenChange={setShowUpload}>
             <DialogTrigger asChild>
-              <Button><Plus className="mr-2 h-4 w-4" /> 개별 업로드</Button>
+              <Button><Plus className="mr-2 h-4 w-4" /> {t("admin.vouchers.t6", "개별 업로드")}</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>바우처 업로드</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{t("admin.vouchers.t7", "바우처 업로드")}</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label>참석자 *</Label>
+                  <Label>{t("admin.vouchers.t8", "참석자 *")}</Label>
                   <Select value={uploadForm.registrationId?.toString() || "0"} onValueChange={(v) => setUploadForm({ ...uploadForm, registrationId: parseInt(v) })}>
-                    <SelectTrigger><SelectValue placeholder="참석자 선택" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("admin.vouchers.t29", "참석자 선택")} /></SelectTrigger>
                     <SelectContent>
                       {regList.map((r) => <SelectItem key={r.id} value={r.id.toString()}>{r.name} ({r.phone})</SelectItem>)}
                     </SelectContent>
@@ -178,19 +178,19 @@ export default function Vouchers() {
                   </Select>
                 </div>
                 <div>
-                  <Label>제목 *</Label>
-                  <Input value={uploadForm.title} onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })} placeholder="예: 인천-두바이 항공권" />
+                  <Label>{t("admin.vouchers.t9", "제목 *")}</Label>
+                  <Input value={uploadForm.title} onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })} placeholder={t("admin.vouchers.t30", "예: 인천-두바이 항공권")} />
                 </div>
                 <div>
-                  <Label>파일 *</Label>
+                  <Label>{t("admin.vouchers.t10", "파일 *")}</Label>
                   <Input type="file" onChange={handleFileSelect} />
                   {uploadForm.fileName && <p className="text-xs text-muted-foreground mt-1">{uploadForm.fileName}</p>}
                 </div>
                 <div>
-                  <Label>메모</Label>
-                  <Input value={uploadForm.notes} onChange={(e) => setUploadForm({ ...uploadForm, notes: e.target.value })} placeholder="추가 메모" />
+                  <Label>{t("admin.vouchers.t11", "메모")}</Label>
+                  <Input value={uploadForm.notes} onChange={(e) => setUploadForm({ ...uploadForm, notes: e.target.value })} placeholder={t("admin.vouchers.t31", "추가 메모")} />
                 </div>
-                <Button className="w-full" onClick={handleUpload} disabled={uploadMutation.isPending}>업로드</Button>
+                <Button className="w-full" onClick={handleUpload} disabled={uploadMutation.isPending}>{t("admin.vouchers.t12", "업로드")}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -202,7 +202,7 @@ export default function Vouchers() {
         <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">전체</SelectItem>
+            <SelectItem value="all">{t("admin.vouchers.t13", "전체")}</SelectItem>
             {VOUCHER_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -215,12 +215,12 @@ export default function Vouchers() {
             <TableHeader>
               <TableRow>
                 <TableHead>ID</TableHead>
-                <TableHead>참석자</TableHead>
-                <TableHead>유형</TableHead>
-                <TableHead>제목</TableHead>
-                <TableHead>파일</TableHead>
-                <TableHead>전송 상태</TableHead>
-                <TableHead>작업</TableHead>
+                <TableHead>{t("admin.vouchers.t14", "참석자")}</TableHead>
+                <TableHead>{t("admin.vouchers.t15", "유형")}</TableHead>
+                <TableHead>{t("admin.vouchers.t16", "제목")}</TableHead>
+                <TableHead>{t("admin.vouchers.t17", "파일")}</TableHead>
+                <TableHead>{t("admin.vouchers.t18", "전송 상태")}</TableHead>
+                <TableHead>{t("admin.vouchers.t19", "작업")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -243,7 +243,7 @@ export default function Vouchers() {
                     {v.sentToParticipant ? (
                       <Badge className="bg-green-500/20 text-green-400">전송됨 ({v.sentMethod})</Badge>
                     ) : (
-                      <Badge variant="outline">미전송</Badge>
+                      <Badge variant="outline">{t("admin.vouchers.t20", "미전송")}</Badge>
                     )}
                   </TableCell>
                   <TableCell>
@@ -251,7 +251,7 @@ export default function Vouchers() {
                       {!v.sentToParticipant && (
                         <>
                           <Button variant="outline" size="sm" onClick={() => sendMutation.mutate({ voucherId: v.id, method: "web" })} disabled={sendMutation.isPending}>
-                            <Send className="h-3 w-3 mr-1" /> 웹
+                            <Send className="h-3 w-3 mr-1" /> {t("admin.vouchers.t21", "웹")}
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => sendMutation.mutate({ voucherId: v.id, method: "telegram" })} disabled={sendMutation.isPending}>
                             <Send className="h-3 w-3 mr-1" /> TG
@@ -268,7 +268,7 @@ export default function Vouchers() {
               {voucherList.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    업로드된 바우처가 없습니다
+                    {t("admin.vouchers.t22", "업로드된 바우처가 없습니다")}
                   </TableCell>
                 </TableRow>
               )}

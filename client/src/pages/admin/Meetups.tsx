@@ -21,7 +21,7 @@ export default function AdminMeetups() {
   const { data: meetups, refetch } = trpc.meetup.list.useQuery();
   const createMutation = trpc.meetup.create.useMutation({ onSuccess: () => { refetch(); setShowCreate(false); toast.success(t("admin.meetups.created")); }});
   const deleteMutation = trpc.meetup.delete.useMutation({ onSuccess: () => { refetch(); toast.success(t("admin.meetups.deleted")); }});
-  const updateMutation = trpc.meetup.update.useMutation({ onSuccess: () => { refetch(); toast.success("업데이트되었습니다."); }});
+  const updateMutation = trpc.meetup.update.useMutation({ onSuccess: () => { refetch(); toast.success(t("admin.meetups.t38", "업데이트되었습니다.")); }});
 
   // QR 코드 다이얼로그 상태
   const [qrMeetup, setQrMeetup] = useState<any>(null);
@@ -48,13 +48,13 @@ export default function AdminMeetups() {
           baggageNotice: result.data.suggestedBaggageNotice || "초과화물은 직접부담할 수 있습니다.",
         });
         setShowAiMode(false);
-        toast.success("AI가 밋업 정보를 자동으로 채웠습니다!");
+        toast.success(t("admin.meetups.t39", "AI가 밋업 정보를 자동으로 채웠습니다!"));
       } else {
         toast.error(result.error || "AI 파싱에 실패했습니다.");
       }
     },
     onError: () => {
-      toast.error("AI 처리 중 오류가 발생했습니다.");
+      toast.error(t("admin.meetups.t40", "AI 처리 중 오류가 발생했습니다."));
     },
   });
 
@@ -79,7 +79,7 @@ export default function AdminMeetups() {
 
   const handleAiParse = () => {
     if (!aiPrompt.trim()) {
-      toast.error("밋업 정보를 입력해주세요.");
+      toast.error(t("admin.meetups.t41", "밋업 정보를 입력해주세요."));
       return;
     }
     aiParseMutation.mutate({ prompt: aiPrompt });
@@ -102,7 +102,7 @@ export default function AdminMeetups() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{t("admin.meetups.title")}</h1>
-        <Button onClick={handleOpenCreate}><Plus className="h-4 w-4 mr-2" />새 밋업</Button>
+        <Button onClick={handleOpenCreate}><Plus className="h-4 w-4 mr-2" />{t("admin.meetups.t1", "새 밋업")}</Button>
       </div>
 
       <div className="grid gap-4">
@@ -153,7 +153,7 @@ export default function AdminMeetups() {
                         variant="ghost" size="icon" className="h-5 w-5 shrink-0"
                         onClick={() => {
                           navigator.clipboard.writeText(`${window.location.origin}/m/${m.shareToken}`);
-                          toast.success("공유 URL이 복사되었습니다");
+                          toast.success(t("admin.meetups.t42", "공유 URL이 복사되었습니다"));
                         }}
                       ><Copy className="h-3 w-3" /></Button>
                       <Button
@@ -181,10 +181,10 @@ export default function AdminMeetups() {
                   <Select value={m.status} onValueChange={v => updateMutation.mutate({ id: m.id, status: v as any })}>
                     <SelectTrigger className="h-8 w-[100px] text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="draft">초안</SelectItem>
-                      <SelectItem value="open">모집중</SelectItem>
-                      <SelectItem value="closed">마감</SelectItem>
-                      <SelectItem value="completed">완료</SelectItem>
+                      <SelectItem value="draft">{t("admin.meetups.t2", "초안")}</SelectItem>
+                      <SelectItem value="open">{t("admin.meetups.t3", "모집중")}</SelectItem>
+                      <SelectItem value="closed">{t("admin.meetups.t4", "마감")}</SelectItem>
+                      <SelectItem value="completed">{t("admin.meetups.t5", "완료")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
@@ -205,7 +205,7 @@ export default function AdminMeetups() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            새 밋업 생성
+            {t("admin.meetups.t6", "새 밋업 생성")}
           </DialogTitle></DialogHeader>
 
           {/* AI 프롬프트 입력 영역 */}
@@ -214,7 +214,7 @@ export default function AdminMeetups() {
               <div className="flex items-center gap-2 mb-2">
                 <Wand2 className="h-4 w-4 text-violet-500" />
                 <Label className="text-sm font-semibold text-violet-600 dark:text-violet-400">
-                  AI 자동 입력
+                  {t("admin.meetups.t7", "AI 자동 입력")}
                 </Label>
                 <Badge variant="outline" className="text-[10px] border-violet-300 text-violet-500">BETA</Badge>
               </div>
@@ -233,14 +233,14 @@ export default function AdminMeetups() {
                   className="absolute right-2 bottom-2 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-sm"
                 >
                   {aiParseMutation.isPending ? (
-                    <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />분석중</>
+                    <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />{t("admin.meetups.t8", "분석중")}</>
                   ) : (
-                    <><Sparkles className="h-3.5 w-3.5 mr-1" />자동입력</>
+                    <><Sparkles className="h-3.5 w-3.5 mr-1" />{t("admin.meetups.t9", "자동입력")}</>
                   )}
                 </Button>
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">
-                자연어로 밋업 정보를 입력하면 AI가 자동으로 모든 필드를 채워줍니다
+                {t("admin.meetups.t10", "자연어로 밋업 정보를 입력하면 AI가 자동으로 모든 필드를 채워줍니다")}
               </p>
             </div>
 
@@ -249,18 +249,18 @@ export default function AdminMeetups() {
               <div className="p-3 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">AI 분석 완료</span>
+                  <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">{t("admin.meetups.t11", "AI 분석 완료")}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-1.5 text-xs">
-                  <span className="text-muted-foreground">제목:</span>
+                  <span className="text-muted-foreground">{t("admin.meetups.t12", "제목:")}</span>
                   <span className="font-medium truncate">{aiParsedData.title}</span>
-                  <span className="text-muted-foreground">장소:</span>
+                  <span className="text-muted-foreground">{t("admin.meetups.t13", "장소:")}</span>
                   <span className="font-medium">{aiParsedData.location}</span>
-                  <span className="text-muted-foreground">기간:</span>
+                  <span className="text-muted-foreground">{t("admin.meetups.t14", "기간:")}</span>
                   <span className="font-medium">{aiParsedData.scheduleStart} ~ {aiParsedData.scheduleEnd}</span>
                   {aiParsedData.invitedCountries?.length > 0 && (
                     <>
-                      <span className="text-muted-foreground">초청국:</span>
+                      <span className="text-muted-foreground">{t("admin.meetups.t15", "초청국:")}</span>
                       <span className="font-medium flex items-center gap-1 flex-wrap">
                         {aiParsedData.invitedCountries.map((code: string) => (
                           <span key={code} className="inline-flex items-center gap-0.5">
@@ -276,7 +276,7 @@ export default function AdminMeetups() {
 
             <div className="relative flex items-center py-1">
               <div className="flex-1 border-t border-border" />
-              <span className="px-3 text-xs text-muted-foreground bg-background">또는 직접 입력</span>
+              <span className="px-3 text-xs text-muted-foreground bg-background">{t("admin.meetups.t16", "또는 직접 입력")}</span>
               <div className="flex-1 border-t border-border" />
             </div>
           </div>
@@ -294,41 +294,41 @@ export default function AdminMeetups() {
             <div><Label>{t("admin.meetups.meetupTitle")}</Label><Input value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} required /></div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>유형</Label>
+                <Label>{t("admin.meetups.t17", "유형")}</Label>
                 <Select value={form.type} onValueChange={v => setForm(p => ({...p, type: v as any}))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="meetup">밋업</SelectItem>
-                    <SelectItem value="pre_visit">사전방문</SelectItem>
-                    <SelectItem value="event">이벤트</SelectItem>
-                    <SelectItem value="meeting">미팅</SelectItem>
-                    <SelectItem value="other">기타</SelectItem>
+                    <SelectItem value="meetup">{t("admin.meetups.t18", "밋업")}</SelectItem>
+                    <SelectItem value="pre_visit">{t("admin.meetups.t19", "사전방문")}</SelectItem>
+                    <SelectItem value="event">{t("admin.meetups.t20", "이벤트")}</SelectItem>
+                    <SelectItem value="meeting">{t("admin.meetups.t21", "미팅")}</SelectItem>
+                    <SelectItem value="other">{t("admin.meetups.t22", "기타")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>구분</Label>
+                <Label>{t("admin.meetups.t23", "구분")}</Label>
                 <Select value={form.locationType} onValueChange={v => setForm(p => ({...p, locationType: v as any}))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="domestic">내륙</SelectItem>
-                    <SelectItem value="overseas">해외</SelectItem>
+                    <SelectItem value="domestic">{t("admin.meetups.t24", "내륙")}</SelectItem>
+                    <SelectItem value="overseas">{t("admin.meetups.t25", "해외")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>목적지 국가</Label>
+                <Label>{t("admin.meetups.t26", "목적지 국가")}</Label>
                 <Input
                   value={form.destinationCountry}
                   onChange={e => setForm(p => ({...p, destinationCountry: e.target.value}))}
-                  placeholder="예: TH, JP, CN"
+                  placeholder={t("admin.meetups.t45", "예: TH, JP, CN")}
                 />
               </div>
               <div>
-                <Label>장소</Label>
-                <Input value={form.location} onChange={e => setForm(p => ({...p, location: e.target.value}))} placeholder="예: Bangkok, Thailand" />
+                <Label>{t("admin.meetups.t27", "장소")}</Label>
+                <Input value={form.location} onChange={e => setForm(p => ({...p, location: e.target.value}))} placeholder={t("admin.meetups.t46", "예: Bangkok, Thailand")} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -336,20 +336,20 @@ export default function AdminMeetups() {
               <div><Label>{t("admin.meetups.endDate")}</Label><Input type="date" value={form.scheduleEnd} onChange={e => setForm(p => ({...p, scheduleEnd: e.target.value}))} /></div>
             </div>
             <div>
-              <Label>최대 참석자 수</Label>
-              <Input type="number" value={form.maxParticipants || ""} onChange={e => setForm(p => ({...p, maxParticipants: parseInt(e.target.value) || 0}))} placeholder="0 = 제한없음" />
+              <Label>{t("admin.meetups.t28", "최대 참석자 수")}</Label>
+              <Input type="number" value={form.maxParticipants || ""} onChange={e => setForm(p => ({...p, maxParticipants: parseInt(e.target.value) || 0}))} placeholder={t("admin.meetups.t47", "0 = 제한없음")} />
             </div>
             <div><Label>{t("admin.meetups.description")}</Label><Textarea value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))} rows={3} /></div>
             {/* 수화물 공지 */}
             <div>
-              <Label className="flex items-center gap-2"><Luggage className="h-4 w-4 text-amber-500" />수화물 공지</Label>
+              <Label className="flex items-center gap-2"><Luggage className="h-4 w-4 text-amber-500" />{t("admin.meetups.t29", "수화물 공지")}</Label>
               <Textarea
                 value={form.baggageNotice}
                 onChange={e => setForm(p => ({...p, baggageNotice: e.target.value}))}
-                placeholder="초과화물은 직접부담할 수 있습니다."
+                placeholder={t("admin.meetups.t48", "초과화물은 직접부담할 수 있습니다.")}
                 rows={2}
               />
-              <p className="text-xs text-muted-foreground mt-1">신청 페이지에 표시될 수화물 안내 문구입니다.</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("admin.meetups.t30", "신청 페이지에 표시될 수화물 안내 문구입니다.")}</p>
             </div>
             <Button type="submit" className="w-full" disabled={createMutation.isPending}>
               {createMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
@@ -364,7 +364,7 @@ export default function AdminMeetups() {
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle className="flex items-center gap-2">
             <QrCode className="h-5 w-5 text-primary" />
-            QR 코드 - 밋업 초대장
+            {t("admin.meetups.t31", "QR 코드 - 밋업 초대장")}
           </DialogTitle></DialogHeader>
           {qrMeetup && (
             <div className="flex flex-col items-center gap-4 py-4">
@@ -393,11 +393,11 @@ export default function AdminMeetups() {
                   className="flex-1 gap-1.5"
                   onClick={() => {
                     navigator.clipboard.writeText(`${window.location.origin}/m/${qrMeetup.shareToken}`);
-                    toast.success("URL이 복사되었습니다");
+                    toast.success(t("admin.meetups.t43", "URL이 복사되었습니다"));
                   }}
                 >
                   <Copy className="h-3.5 w-3.5" />
-                  URL 복사
+                  {t("admin.meetups.t32", "URL 복사")}
                 </Button>
                 <Button
                   className="flex-1 gap-1.5"
@@ -415,13 +415,13 @@ export default function AdminMeetups() {
                       a.download = `meetup-qr-${qrMeetup.projectCode || qrMeetup.id}.png`;
                       a.href = canvas.toDataURL('image/png');
                       a.click();
-                      toast.success("QR 코드 다운로드 완료");
+                      toast.success(t("admin.meetups.t44", "QR 코드 다운로드 완료"));
                     };
                     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
                   }}
                 >
                   <Download className="h-3.5 w-3.5" />
-                  PNG 다운로드
+                  {t("admin.meetups.t33", "PNG 다운로드")}
                 </Button>
               </div>
             </div>
@@ -432,23 +432,23 @@ export default function AdminMeetups() {
       {/* Edit Baggage Notice Dialog */}
       <Dialog open={editBaggageId !== null} onOpenChange={open => { if (!open) setEditBaggageId(null); }}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><Luggage className="h-5 w-5 text-amber-500" />수화물 공지 수정</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Luggage className="h-5 w-5 text-amber-500" />{t("admin.meetups.t34", "수화물 공지 수정")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <Textarea
               value={editBaggageText}
               onChange={e => setEditBaggageText(e.target.value)}
-              placeholder="수화물 관련 공지사항을 입력하세요"
+              placeholder={t("admin.meetups.t49", "수화물 관련 공지사항을 입력하세요")}
               rows={4}
             />
-            <p className="text-xs text-muted-foreground">참석자 신청 페이지에 표시되는 수화물 안내 문구입니다.</p>
+            <p className="text-xs text-muted-foreground">{t("admin.meetups.t35", "참석자 신청 페이지에 표시되는 수화물 안내 문구입니다.")}</p>
             <div className="flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => setEditBaggageId(null)}>취소</Button>
+              <Button variant="outline" className="flex-1" onClick={() => setEditBaggageId(null)}>{t("admin.meetups.t36", "취소")}</Button>
               <Button className="flex-1" onClick={() => {
                 if (editBaggageId) {
                   updateMutation.mutate({ id: editBaggageId, baggageNotice: editBaggageText });
                   setEditBaggageId(null);
                 }
-              }}>저장</Button>
+              }}>{t("admin.meetups.t37", "저장")}</Button>
             </div>
           </div>
         </DialogContent>

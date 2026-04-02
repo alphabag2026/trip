@@ -427,19 +427,19 @@ export default function ApiKeys() {
           {/* Date Filter */}
           <div className="flex items-end gap-3 p-3 bg-muted/30 rounded-lg">
             <div className="flex-1">
-              <label className="text-xs text-muted-foreground mb-1 block">시작일</label>
+              <label className="text-xs text-muted-foreground mb-1 block">{t("admin.apiKeys.t1", "시작일")}</label>
               <Input type="date" value={logStartDate} onChange={(e) => setLogStartDate(e.target.value)} className="h-8 text-sm" />
             </div>
             <div className="flex-1">
-              <label className="text-xs text-muted-foreground mb-1 block">종료일</label>
+              <label className="text-xs text-muted-foreground mb-1 block">{t("admin.apiKeys.t2", "종료일")}</label>
               <Input type="date" value={logEndDate} onChange={(e) => setLogEndDate(e.target.value)} className="h-8 text-sm" />
             </div>
             <Button size="sm" variant={useFiltered ? "default" : "outline"} onClick={() => { setUseFiltered(true); filteredLogsQuery.refetch(); }} disabled={!logStartDate && !logEndDate}>
-              필터 적용
+              {t("admin.apiKeys.t3", "필터 적용")}
             </Button>
             {useFiltered && (
               <Button size="sm" variant="ghost" onClick={() => { setUseFiltered(false); setLogStartDate(""); setLogEndDate(""); }}>
-                초기화
+                {t("admin.apiKeys.t4", "초기화")}
               </Button>
             )}
           </div>

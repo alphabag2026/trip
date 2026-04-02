@@ -33,7 +33,7 @@ export default function AdminBroadcast() {
       resetForm();
       setShowCompose(false);
     },
-    onError: () => toast.error("발송 중 오류가 발생했습니다."),
+    onError: () => toast.error(t("admin.broadcast.t23", "발송 중 오류가 발생했습니다.")),
   });
 
   const resetForm = () => {
@@ -46,7 +46,7 @@ export default function AdminBroadcast() {
 
   const handleSend = () => {
     if (!title.trim() || !content.trim()) {
-      toast.error("제목과 내용을 입력해주세요.");
+      toast.error(t("admin.broadcast.t24", "제목과 내용을 입력해주세요."));
       return;
     }
     if (!confirm("단체 메시지를 발송하시겠습니까?")) return;
@@ -73,22 +73,22 @@ export default function AdminBroadcast() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Megaphone className="h-6 w-6 text-primary" />
-            단체 메시지
+            {t("admin.broadcast.t1", "단체 메시지")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">전체 참석자에게 일괄 메시지를 발송합니다</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("admin.broadcast.t2", "전체 참석자에게 일괄 메시지를 발송합니다")}</p>
         </div>
         <Dialog open={showCompose} onOpenChange={setShowCompose}>
           <DialogTrigger asChild>
-            <Button><Send className="h-4 w-4 mr-2" /> 메시지 작성</Button>
+            <Button><Send className="h-4 w-4 mr-2" /> {t("admin.broadcast.t3", "메시지 작성")}</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>단체 메시지 작성</DialogTitle>
+              <DialogTitle>{t("admin.broadcast.t4", "단체 메시지 작성")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {/* Quick templates */}
               <div>
-                <Label className="mb-2 block">빠른 템플릿</Label>
+                <Label className="mb-2 block">{t("admin.broadcast.t5", "빠른 템플릿")}</Label>
                 <div className="flex flex-wrap gap-2">
                   {templates.map((t, i) => (
                     <Button
@@ -105,19 +105,19 @@ export default function AdminBroadcast() {
 
               <div>
                 <Label>{t("admin.broadcast.titleField")}</Label>
-                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="메시지 제목" />
+                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder={t("admin.broadcast.t25", "메시지 제목")} />
               </div>
               <div>
                 <Label>{t("admin.broadcast.content")}</Label>
-                <Textarea value={content} onChange={e => setContent(e.target.value)} placeholder="메시지 내용을 입력하세요..." rows={6} />
+                <Textarea value={content} onChange={e => setContent(e.target.value)} placeholder={t("admin.broadcast.t26", "메시지 내용을 입력하세요...")} rows={6} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>대상 밋업</Label>
+                  <Label>{t("admin.broadcast.t6", "대상 밋업")}</Label>
                   <Select value={meetupId} onValueChange={setMeetupId}>
-                    <SelectTrigger><SelectValue placeholder="밋업 선택" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("admin.broadcast.t27", "밋업 선택")} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">전체 밋업</SelectItem>
+                      <SelectItem value="none">{t("admin.broadcast.t7", "전체 밋업")}</SelectItem>
                       {meetups?.map(m => (
                         <SelectItem key={m.id} value={String(m.id)}>{m.title}</SelectItem>
                       ))}
@@ -129,9 +129,9 @@ export default function AdminBroadcast() {
                   <Select value={targetType} onValueChange={v => setTargetType(v as any)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">전체 참석자</SelectItem>
-                      <SelectItem value="approved_only">승인된 참석자만</SelectItem>
-                      <SelectItem value="meetup">선택 밋업만</SelectItem>
+                      <SelectItem value="all">{t("admin.broadcast.t8", "전체 참석자")}</SelectItem>
+                      <SelectItem value="approved_only">{t("admin.broadcast.t9", "승인된 참석자만")}</SelectItem>
+                      <SelectItem value="meetup">{t("admin.broadcast.t10", "선택 밋업만")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -139,8 +139,8 @@ export default function AdminBroadcast() {
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                 <Switch checked={sendViaTelegram} onCheckedChange={setSendViaTelegram} />
                 <div>
-                  <Label className="cursor-pointer">텔레그램으로 발송</Label>
-                  <p className="text-xs text-muted-foreground">텔레그램 채널에 메시지를 함께 발송합니다</p>
+                  <Label className="cursor-pointer">{t("admin.broadcast.t11", "텔레그램으로 발송")}</Label>
+                  <p className="text-xs text-muted-foreground">{t("admin.broadcast.t12", "텔레그램 채널에 메시지를 함께 발송합니다")}</p>
                 </div>
               </div>
 
@@ -148,11 +148,11 @@ export default function AdminBroadcast() {
               {(title || content) && (
                 <Card className="border-dashed">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm text-muted-foreground">미리보기</CardTitle>
+                    <CardTitle className="text-sm text-muted-foreground">{t("admin.broadcast.t13", "미리보기")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="p-3 rounded-lg bg-muted/30 text-sm">
-                      <p className="font-semibold mb-1">📢 단체 공지</p>
+                      <p className="font-semibold mb-1">{t("admin.broadcast.t14", "📢 단체 공지")}</p>
                       <p className="font-medium">{title || "(제목 없음)"}</p>
                       <p className="mt-2 whitespace-pre-wrap text-muted-foreground">{content || "(내용 없음)"}</p>
                     </div>
@@ -162,13 +162,13 @@ export default function AdminBroadcast() {
             </div>
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline">취소</Button>
+                <Button variant="outline">{t("admin.broadcast.t15", "취소")}</Button>
               </DialogClose>
               <Button onClick={handleSend} disabled={sendMutation.isPending}>
                 {sendMutation.isPending ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> 발송 중...</>
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t("admin.broadcast.t16", "발송 중...")}</>
                 ) : (
-                  <><Send className="h-4 w-4 mr-2" /> 발송</>
+                  <><Send className="h-4 w-4 mr-2" /> {t("admin.broadcast.t17", "발송")}</>
                 )}
               </Button>
             </DialogFooter>
@@ -185,7 +185,7 @@ export default function AdminBroadcast() {
             </div>
             <div>
               <p className="text-2xl font-bold">{history?.length || 0}</p>
-              <p className="text-xs text-muted-foreground">총 발송 건수</p>
+              <p className="text-xs text-muted-foreground">{t("admin.broadcast.t18", "총 발송 건수")}</p>
             </div>
           </CardContent>
         </Card>
@@ -196,7 +196,7 @@ export default function AdminBroadcast() {
             </div>
             <div>
               <p className="text-2xl font-bold">{history?.filter(h => h.sentViaTelegram).length || 0}</p>
-              <p className="text-xs text-muted-foreground">텔레그램 발송 성공</p>
+              <p className="text-xs text-muted-foreground">{t("admin.broadcast.t19", "텔레그램 발송 성공")}</p>
             </div>
           </CardContent>
         </Card>
@@ -209,7 +209,7 @@ export default function AdminBroadcast() {
               <p className="text-2xl font-bold">
                 {history?.reduce((sum, h) => sum + (h.recipientCount || 0), 0) || 0}
               </p>
-              <p className="text-xs text-muted-foreground">총 수신자 수</p>
+              <p className="text-xs text-muted-foreground">{t("admin.broadcast.t20", "총 수신자 수")}</p>
             </div>
           </CardContent>
         </Card>
@@ -220,7 +220,7 @@ export default function AdminBroadcast() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Clock className="h-4 w-4 text-primary" />
-            발송 이력
+            {t("admin.broadcast.t21", "발송 이력")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -229,7 +229,7 @@ export default function AdminBroadcast() {
           ) : !history || history.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
               <Megaphone className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>아직 발송 이력이 없습니다</p>
+              <p>{t("admin.broadcast.t22", "아직 발송 이력이 없습니다")}</p>
             </div>
           ) : (
             <div className="space-y-3">

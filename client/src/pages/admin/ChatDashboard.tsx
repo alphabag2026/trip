@@ -77,15 +77,15 @@ export default function ChatDashboard() {
       <div className="w-80 border-r border-border flex flex-col bg-card">
         <div className="p-4 border-b border-border">
           <h2 className="font-bold text-lg flex items-center gap-2">
-            <MessageCircle className="h-5 w-5" /> 소통 채널
+            <MessageCircle className="h-5 w-5" /> {t("admin.chatDashboard.t1", "소통 채널")}
           </h2>
-          <p className="text-xs text-muted-foreground mt-1">참석자, 기사, 매니저와 실시간 소통</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("admin.chatDashboard.t2", "참석자, 기사, 매니저와 실시간 소통")}</p>
         </div>
         <ScrollArea className="flex-1">
           {channelsQuery.isLoading ? (
             <div className="flex items-center justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
           ) : channels.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8 text-sm">채널이 없습니다</p>
+            <p className="text-center text-muted-foreground py-8 text-sm">{t("admin.chatDashboard.t3", "채널이 없습니다")}</p>
           ) : (
             <div className="space-y-1 p-2">
               {channels.map((ch: any) => {
@@ -129,8 +129,8 @@ export default function ChatDashboard() {
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
             <div className="text-center">
               <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-30" />
-              <p>채널을 선택하여 대화를 시작하세요</p>
-              <p className="text-sm mt-1">참석자, 기사, 매니저와 실시간으로 소통할 수 있습니다</p>
+              <p>{t("admin.chatDashboard.t4", "채널을 선택하여 대화를 시작하세요")}</p>
+              <p className="text-sm mt-1">{t("admin.chatDashboard.t5", "참석자, 기사, 매니저와 실시간으로 소통할 수 있습니다")}</p>
             </div>
           </div>
         ) : (
@@ -157,7 +157,7 @@ export default function ChatDashboard() {
               {messagesQuery.isLoading ? (
                 <div className="flex items-center justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
               ) : messages.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">아직 메시지가 없습니다</p>
+                <p className="text-center text-muted-foreground py-8">{t("admin.chatDashboard.t6", "아직 메시지가 없습니다")}</p>
               ) : (
                 <div className="space-y-3">
                   {messages.map((msg: any) => {
@@ -197,7 +197,7 @@ export default function ChatDashboard() {
                 <Input
                   value={newMessage}
                   onChange={e => setNewMessage(e.target.value)}
-                  placeholder="메시지를 입력하세요..."
+                  placeholder={t("admin.chatDashboard.t7", "메시지를 입력하세요...")}
                   onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                 />
                 <Button onClick={handleSend} disabled={!newMessage.trim() || sendMutation.isPending}>

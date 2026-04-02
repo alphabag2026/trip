@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Image, Plus, Edit, Trash2, ExternalLink, MousePointerClick, Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const positionLabels: Record<string, string> = {
   hero_top: "히어로 상단",
@@ -32,6 +33,7 @@ const emptyBanner = {
 };
 
 export default function AdBanners() {
+  const { t } = useTranslation();
   const [showDialog, setShowDialog] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyBanner);
@@ -44,7 +46,7 @@ export default function AdBanners() {
 
   const createMutation = trpc.adBanner.create.useMutation({
     onSuccess: () => {
-      toast.success("배너가 생성되었습니다");
+      toast.success(t("admin.adBanners.t27", "배너가 생성되었습니다"));
       utils.adBanner.list.invalidate();
       closeDialog();
     },
@@ -53,7 +55,7 @@ export default function AdBanners() {
 
   const updateMutation = trpc.adBanner.update.useMutation({
     onSuccess: () => {
-      toast.success("배너가 수정되었습니다");
+      toast.success(t("admin.adBanners.t28", "배너가 수정되었습니다"));
       utils.adBanner.list.invalidate();
       closeDialog();
     },
@@ -62,7 +64,7 @@ export default function AdBanners() {
 
   const deleteMutation = trpc.adBanner.delete.useMutation({
     onSuccess: () => {
-      toast.success("배너가 삭제되었습니다");
+      toast.success(t("admin.adBanners.t29", "배너가 삭제되었습니다"));
       utils.adBanner.list.invalidate();
     },
     onError: (e) => toast.error(e.message),
@@ -106,13 +108,13 @@ export default function AdBanners() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Image className="h-7 w-7 text-blue-600" />
-            광고 배너 관리
+            {t("admin.adBanners.t1", "광고 배너 관리")}
           </h1>
-          <p className="text-muted-foreground mt-1">홈페이지에 표시되는 광고 배너를 관리합니다</p>
+          <p className="text-muted-foreground mt-1">{t("admin.adBanners.t2", "홈페이지에 표시되는 광고 배너를 관리합니다")}</p>
         </div>
         <Button onClick={() => { setForm(emptyBanner); setEditingId(null); setShowDialog(true); }}>
           <Plus className="h-4 w-4 mr-1" />
-          새 배너
+          {t("admin.adBanners.t3", "새 배너")}
         </Button>
       </div>
 
@@ -120,15 +122,15 @@ export default function AdBanners() {
       <div className="flex items-center gap-3">
         <Select value={filterPosition} onValueChange={setFilterPosition}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="위치 필터" />
+            <SelectValue placeholder={t("admin.adBanners.t30", "위치 필터")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">전체 위치</SelectItem>
-            <SelectItem value="hero_top">히어로 상단</SelectItem>
-            <SelectItem value="middle_left">중간 왼쪽</SelectItem>
-            <SelectItem value="middle_right">중간 오른쪽</SelectItem>
-            <SelectItem value="bottom">하단</SelectItem>
-            <SelectItem value="sidebar">사이드바</SelectItem>
+            <SelectItem value="all">{t("admin.adBanners.t4", "전체 위치")}</SelectItem>
+            <SelectItem value="hero_top">{t("admin.adBanners.t5", "히어로 상단")}</SelectItem>
+            <SelectItem value="middle_left">{t("admin.adBanners.t6", "중간 왼쪽")}</SelectItem>
+            <SelectItem value="middle_right">{t("admin.adBanners.t7", "중간 오른쪽")}</SelectItem>
+            <SelectItem value="bottom">{t("admin.adBanners.t8", "하단")}</SelectItem>
+            <SelectItem value="sidebar">{t("admin.adBanners.t9", "사이드바")}</SelectItem>
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground">
@@ -165,11 +167,11 @@ export default function AdBanners() {
                       <Badge variant="outline">{positionLabels[banner.position] || banner.position}</Badge>
                       {banner.isActive ? (
                         <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
-                          <Eye className="h-3 w-3 mr-1" />활성
+                          <Eye className="h-3 w-3 mr-1" />{t("admin.adBanners.t10", "활성")}
                         </Badge>
                       ) : (
                         <Badge variant="secondary">
-                          <EyeOff className="h-3 w-3 mr-1" />비활성
+                          <EyeOff className="h-3 w-3 mr-1" />{t("admin.adBanners.t11", "비활성")}
                         </Badge>
                       )}
                     </div>
@@ -217,10 +219,10 @@ export default function AdBanners() {
           <Card>
             <CardContent className="py-12 text-center">
               <Image className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">등록된 배너가 없습니다</p>
+              <p className="text-muted-foreground">{t("admin.adBanners.t12", "등록된 배너가 없습니다")}</p>
               <Button className="mt-4" onClick={() => { setForm(emptyBanner); setShowDialog(true); }}>
                 <Plus className="h-4 w-4 mr-1" />
-                첫 배너 만들기
+                {t("admin.adBanners.t13", "첫 배너 만들기")}
               </Button>
             </CardContent>
           </Card>
@@ -235,28 +237,28 @@ export default function AdBanners() {
           </DialogHeader>
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
             <div>
-              <Label>위치 *</Label>
+              <Label>{t("admin.adBanners.t14", "위치 *")}</Label>
               <Select value={form.position} onValueChange={(v: any) => setForm({ ...form, position: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="hero_top">히어로 상단</SelectItem>
-                  <SelectItem value="middle_left">중간 왼쪽</SelectItem>
-                  <SelectItem value="middle_right">중간 오른쪽</SelectItem>
-                  <SelectItem value="bottom">하단</SelectItem>
-                  <SelectItem value="sidebar">사이드바</SelectItem>
+                  <SelectItem value="hero_top">{t("admin.adBanners.t15", "히어로 상단")}</SelectItem>
+                  <SelectItem value="middle_left">{t("admin.adBanners.t16", "중간 왼쪽")}</SelectItem>
+                  <SelectItem value="middle_right">{t("admin.adBanners.t17", "중간 오른쪽")}</SelectItem>
+                  <SelectItem value="bottom">{t("admin.adBanners.t18", "하단")}</SelectItem>
+                  <SelectItem value="sidebar">{t("admin.adBanners.t19", "사이드바")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>제목</Label>
-              <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="배너 제목" />
+              <Label>{t("admin.adBanners.t20", "제목")}</Label>
+              <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder={t("admin.adBanners.t31", "배너 제목")} />
             </div>
             <div>
-              <Label>설명</Label>
-              <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} placeholder="배너 설명 (선택)" />
+              <Label>{t("admin.adBanners.t21", "설명")}</Label>
+              <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} placeholder={t("admin.adBanners.t32", "배너 설명 (선택)")} />
             </div>
             <div>
-              <Label>이미지 URL *</Label>
+              <Label>{t("admin.adBanners.t22", "이미지 URL *")}</Label>
               <Input value={form.imageUrl} onChange={e => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://..." />
               {form.imageUrl && (
                 <div className="mt-2 rounded-lg overflow-hidden border">
@@ -265,16 +267,16 @@ export default function AdBanners() {
               )}
             </div>
             <div>
-              <Label>링크 URL</Label>
-              <Input value={form.linkUrl} onChange={e => setForm({ ...form, linkUrl: e.target.value })} placeholder="클릭 시 이동할 URL" />
+              <Label>{t("admin.adBanners.t23", "링크 URL")}</Label>
+              <Input value={form.linkUrl} onChange={e => setForm({ ...form, linkUrl: e.target.value })} placeholder={t("admin.adBanners.t33", "클릭 시 이동할 URL")} />
             </div>
             <div>
-              <Label>링크 텍스트</Label>
-              <Input value={form.linkText} onChange={e => setForm({ ...form, linkText: e.target.value })} placeholder="예: 자세히 보기" />
+              <Label>{t("admin.adBanners.t24", "링크 텍스트")}</Label>
+              <Input value={form.linkText} onChange={e => setForm({ ...form, linkText: e.target.value })} placeholder={t("admin.adBanners.t34", "예: 자세히 보기")} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>정렬 순서</Label>
+                <Label>{t("admin.adBanners.t25", "정렬 순서")}</Label>
                 <Input type="number" value={form.sortOrder} onChange={e => setForm({ ...form, sortOrder: Number(e.target.value) })} />
               </div>
               <div className="flex items-center gap-3 pt-6">
@@ -284,7 +286,7 @@ export default function AdBanners() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeDialog}>취소</Button>
+            <Button variant="outline" onClick={closeDialog}>{t("admin.adBanners.t26", "취소")}</Button>
             <Button
               disabled={!form.imageUrl || createMutation.isPending || updateMutation.isPending}
               onClick={handleSubmit}

@@ -88,6 +88,7 @@ function DonutChart({ data, size = 200, strokeWidth = 32 }: {
   size?: number;
   strokeWidth?: number;
 }) {
+  const { t } = useTranslation();
   const total = data.reduce((sum, d) => sum + d.value, 0);
   if (total === 0) return null;
 
@@ -126,7 +127,7 @@ function DonutChart({ data, size = 200, strokeWidth = 32 }: {
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-3xl font-bold">{total}</span>
-          <span className="text-xs text-muted-foreground">전체</span>
+          <span className="text-xs text-muted-foreground">{t("admin.platformDashboard.t1", "전체")}</span>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
@@ -206,7 +207,7 @@ export default function PlatformDashboard() {
   // 계정 생성 mutation
   const createAccountMutation = trpc.superAdmin.createOrganizerAccount.useMutation({
     onSuccess: () => {
-      toast.success("계정이 성공적으로 생성되었습니다");
+      toast.success(t("admin.platformDashboard.t138", "계정이 성공적으로 생성되었습니다"));
       utils.platform.usersWithOrgs.invalidate();
       utils.platform.stats.invalidate();
       utils.organization.list.invalidate();
@@ -218,7 +219,7 @@ export default function PlatformDashboard() {
   });
   const delegateRoleMutation = trpc.superAdmin.delegateRole.useMutation({
     onSuccess: () => {
-      toast.success("권한이 위임되었습니다");
+      toast.success(t("admin.platformDashboard.t139", "권한이 위임되었습니다"));
       utils.platform.usersWithOrgs.invalidate();
       utils.platform.auditLogs.invalidate();
     },
@@ -226,7 +227,7 @@ export default function PlatformDashboard() {
   });
   const resetPasswordMutation = trpc.superAdmin.resetPassword.useMutation({
     onSuccess: () => {
-      toast.success("비밀번호가 초기화되었습니다");
+      toast.success(t("admin.platformDashboard.t140", "비밀번호가 초기화되었습니다"));
       setResetPwDialog({ open: false, userId: 0, userName: "" });
       setNewPassword("");
     },
@@ -243,7 +244,7 @@ export default function PlatformDashboard() {
 
   const createOrgMutation = trpc.organization.create.useMutation({
     onSuccess: () => {
-      toast.success("조직이 생성되었습니다");
+      toast.success(t("admin.platformDashboard.t141", "조직이 생성되었습니다"));
       utils.organization.list.invalidate();
       utils.platform.stats.invalidate();
       closeOrgDialog();
@@ -253,7 +254,7 @@ export default function PlatformDashboard() {
 
   const updateOrgMutation = trpc.organization.update.useMutation({
     onSuccess: () => {
-      toast.success("조직 정보가 수정되었습니다");
+      toast.success(t("admin.platformDashboard.t142", "조직 정보가 수정되었습니다"));
       utils.organization.list.invalidate();
       utils.platform.stats.invalidate();
       closeOrgDialog();
@@ -263,7 +264,7 @@ export default function PlatformDashboard() {
 
   const updateRoleMutation = trpc.platform.updateUserRole.useMutation({
     onSuccess: () => {
-      toast.success("역할이 변경되었습니다");
+      toast.success(t("admin.platformDashboard.t143", "역할이 변경되었습니다"));
       utils.platform.usersWithOrgs.invalidate();
       utils.platform.auditLogs.invalidate();
       setRoleChangeConfirm({ open: false, userId: 0, userName: "", currentRole: "", newRole: "" });
@@ -281,7 +282,7 @@ export default function PlatformDashboard() {
 
   const deleteOrgMutation = trpc.organization.delete.useMutation({
     onSuccess: () => {
-      toast.success("조직이 삭제되었습니다");
+      toast.success(t("admin.platformDashboard.t144", "조직이 삭제되었습니다"));
       utils.organization.list.invalidate();
       utils.platform.stats.invalidate();
     },
@@ -290,7 +291,7 @@ export default function PlatformDashboard() {
 
   const toggleOrgActiveMutation = trpc.platform.toggleOrgActive.useMutation({
     onSuccess: () => {
-      toast.success("조직 상태가 변경되었습니다");
+      toast.success(t("admin.platformDashboard.t145", "조직 상태가 변경되었습니다"));
       utils.organization.list.invalidate();
       utils.platform.auditLogs.invalidate();
     },
@@ -299,7 +300,7 @@ export default function PlatformDashboard() {
 
   const assignUserOrgMutation = trpc.platform.assignUserOrg.useMutation({
     onSuccess: () => {
-      toast.success("조직이 배정되었습니다");
+      toast.success(t("admin.platformDashboard.t146", "조직이 배정되었습니다"));
       utils.platform.usersWithOrgs.invalidate();
       utils.platform.auditLogs.invalidate();
     },
@@ -308,7 +309,7 @@ export default function PlatformDashboard() {
 
   const addOrgMemberMutation = trpc.orgMember.add.useMutation({
     onSuccess: () => {
-      toast.success("멤버가 추가되었습니다");
+      toast.success(t("admin.platformDashboard.t147", "멤버가 추가되었습니다"));
       utils.platform.orgMembers.invalidate();
       setAddMemberDialog({ open: false, organizationId: 0, orgName: "" });
       setNewMemberUserId("");
@@ -319,7 +320,7 @@ export default function PlatformDashboard() {
 
   const removeOrgMemberMutation = trpc.orgMember.remove.useMutation({
     onSuccess: () => {
-      toast.success("멤버가 제거되었습니다");
+      toast.success(t("admin.platformDashboard.t148", "멤버가 제거되었습니다"));
       utils.platform.orgMembers.invalidate();
     },
     onError: (e) => toast.error(e.message),
@@ -327,7 +328,7 @@ export default function PlatformDashboard() {
 
   const updateOrgMemberRoleMutation = trpc.platform.updateOrgMemberRole.useMutation({
     onSuccess: () => {
-      toast.success("멤버 역할이 변경되었습니다");
+      toast.success(t("admin.platformDashboard.t149", "멤버 역할이 변경되었습니다"));
       utils.platform.orgMembers.invalidate();
       utils.platform.auditLogs.invalidate();
     },
@@ -336,7 +337,7 @@ export default function PlatformDashboard() {
 
   const transferOwnershipMutation = trpc.platform.transferOwnership.useMutation({
     onSuccess: () => {
-      toast.success("소유권이 이전되었습니다");
+      toast.success(t("admin.platformDashboard.t150", "소유권이 이전되었습니다"));
       utils.platform.orgMembers.invalidate();
       utils.platform.auditLogs.invalidate();
       setTransferDialog({ open: false, organizationId: 0, orgName: "", currentOwnerId: 0, currentOwnerName: "" });
@@ -419,9 +420,9 @@ export default function PlatformDashboard() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Globe className="h-7 w-7 text-purple-600" />
-            클라우드 플랫폼 관리
+            {t("admin.platformDashboard.t2", "클라우드 플랫폼 관리")}
           </h1>
-          <p className="text-muted-foreground mt-1">전체 플랫폼 조직, 파트너, 사용자를 관리합니다</p>
+          <p className="text-muted-foreground mt-1">{t("admin.platformDashboard.t3", "전체 플랫폼 조직, 파트너, 사용자를 관리합니다")}</p>
         </div>
       </div>
 
@@ -460,7 +461,7 @@ export default function PlatformDashboard() {
                   <div className="p-2 rounded-lg bg-purple-500/10"><Building2 className="h-5 w-5 text-purple-500" /></div>
                   <div>
                     <p className="text-2xl font-bold">{stats?.totalOrganizations || 0}</p>
-                    <p className="text-xs text-muted-foreground">조직</p>
+                    <p className="text-xs text-muted-foreground">{t("admin.platformDashboard.t4", "조직")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -471,7 +472,7 @@ export default function PlatformDashboard() {
                   <div className="p-2 rounded-lg bg-blue-500/10"><Handshake className="h-5 w-5 text-blue-500" /></div>
                   <div>
                     <p className="text-2xl font-bold">{stats?.totalPartners || 0}</p>
-                    <p className="text-xs text-muted-foreground">파트너</p>
+                    <p className="text-xs text-muted-foreground">{t("admin.platformDashboard.t5", "파트너")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -482,7 +483,7 @@ export default function PlatformDashboard() {
                   <div className="p-2 rounded-lg bg-green-500/10"><CalendarDays className="h-5 w-5 text-green-500" /></div>
                   <div>
                     <p className="text-2xl font-bold">{stats?.totalMeetups || 0}</p>
-                    <p className="text-xs text-muted-foreground">밋업</p>
+                    <p className="text-xs text-muted-foreground">{t("admin.platformDashboard.t6", "밋업")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -493,7 +494,7 @@ export default function PlatformDashboard() {
                   <div className="p-2 rounded-lg bg-amber-500/10"><UserPlus className="h-5 w-5 text-amber-500" /></div>
                   <div>
                     <p className="text-2xl font-bold">{stats?.totalRegistrations || 0}</p>
-                    <p className="text-xs text-muted-foreground">신청</p>
+                    <p className="text-xs text-muted-foreground">{t("admin.platformDashboard.t7", "신청")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -504,7 +505,7 @@ export default function PlatformDashboard() {
                   <div className="p-2 rounded-lg bg-red-500/10"><Shield className="h-5 w-5 text-red-500" /></div>
                   <div>
                     <p className="text-2xl font-bold">{stats?.totalUsers || 0}</p>
-                    <p className="text-xs text-muted-foreground">사용자</p>
+                    <p className="text-xs text-muted-foreground">{t("admin.platformDashboard.t8", "사용자")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -514,15 +515,15 @@ export default function PlatformDashboard() {
           {/* Donut Chart + Partner Categories */}
           <div className="grid md:grid-cols-2 gap-6">
             <Card>
-              <CardHeader><CardTitle className="text-base flex items-center gap-2"><TrendingUp className="h-4 w-4" /> 조직 유형별 분포</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base flex items-center gap-2"><TrendingUp className="h-4 w-4" /> {t("admin.platformDashboard.t9", "조직 유형별 분포")}</CardTitle></CardHeader>
               <CardContent className="flex justify-center">
                 {donutData.length > 0 ? (
                   <DonutChart data={donutData} size={220} strokeWidth={36} />
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-muted-foreground text-sm">등록된 조직이 없습니다</p>
+                    <p className="text-muted-foreground text-sm">{t("admin.platformDashboard.t10", "등록된 조직이 없습니다")}</p>
                     <Button size="sm" className="mt-2" onClick={() => setActiveTab("organizations")}>
-                      조직 등록하기
+                      {t("admin.platformDashboard.t11", "조직 등록하기")}
                     </Button>
                   </div>
                 )}
@@ -532,7 +533,7 @@ export default function PlatformDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Activity className="h-4 w-4" /> 파트너 카테고리
+                  <Activity className="h-4 w-4" /> {t("admin.platformDashboard.t12", "파트너 카테고리")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -547,7 +548,7 @@ export default function PlatformDashboard() {
                   </div>
                 ) : (
                   <div className="text-center py-4">
-                    <p className="text-muted-foreground text-sm mb-3">카테고리가 없습니다</p>
+                    <p className="text-muted-foreground text-sm mb-3">{t("admin.platformDashboard.t13", "카테고리가 없습니다")}</p>
                     <Button
                       size="sm"
                       onClick={() => seedCategoriesMutation.mutate()}
@@ -566,7 +567,7 @@ export default function PlatformDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Handshake className="h-4 w-4" /> 파트너 카테고리별 분포
+                  <Handshake className="h-4 w-4" /> {t("admin.platformDashboard.t14", "파트너 카테고리별 분포")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -595,16 +596,16 @@ export default function PlatformDashboard() {
               <Select value={orgFilter} onValueChange={setOrgFilter}>
                 <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">전체 유형</SelectItem>
-                  <SelectItem value="platform">클라우드 본사</SelectItem>
-                  <SelectItem value="organizer">행사/여행 주최자</SelectItem>
-                  <SelectItem value="agency">지역 에이전시</SelectItem>
-                  <SelectItem value="partner">파트너 업체</SelectItem>
+                  <SelectItem value="all">{t("admin.platformDashboard.t15", "전체 유형")}</SelectItem>
+                  <SelectItem value="platform">{t("admin.platformDashboard.t16", "클라우드 본사")}</SelectItem>
+                  <SelectItem value="organizer">{t("admin.platformDashboard.t17", "행사/여행 주최자")}</SelectItem>
+                  <SelectItem value="agency">{t("admin.platformDashboard.t18", "지역 에이전시")}</SelectItem>
+                  <SelectItem value="partner">{t("admin.platformDashboard.t19", "파트너 업체")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <Button onClick={() => { setOrgForm(emptyOrg); setEditingOrgId(null); setShowOrgDialog(true); }}>
-              <Plus className="h-4 w-4 mr-1" /> 조직 등록
+              <Plus className="h-4 w-4 mr-1" /> {t("admin.platformDashboard.t20", "조직 등록")}
             </Button>
           </div>
 
@@ -639,9 +640,9 @@ export default function PlatformDashboard() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground">등록된 조직이 없습니다</p>
+                  <p className="text-muted-foreground">{t("admin.platformDashboard.t21", "등록된 조직이 없습니다")}</p>
                   <Button className="mt-3" onClick={() => { setOrgForm(emptyOrg); setEditingOrgId(null); setShowOrgDialog(true); }}>
-                    첫 조직 등록하기
+                    {t("admin.platformDashboard.t22", "첫 조직 등록하기")}
                   </Button>
                 </CardContent>
               </Card>
@@ -659,7 +660,7 @@ export default function PlatformDashboard() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <UserPlus className="h-5 w-5 text-blue-500" />
-                  주최자/에이전시/파트너 계정 생성
+                  {t("admin.platformDashboard.t23", "주최자/에이전시/파트너 계정 생성")}
                 </CardTitle>
                 <Button size="sm" onClick={() => setShowCreateAccount(!showCreateAccount)}>
                   <Plus className="h-4 w-4 mr-1" />
@@ -671,33 +672,33 @@ export default function PlatformDashboard() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">계정 정보</h4>
-                    <div><Label>이름 *</Label><Input value={accountForm.name} onChange={e => setAccountForm({...accountForm, name: e.target.value})} placeholder="담당자 이름" /></div>
-                    <div><Label>이메일 *</Label><Input type="email" value={accountForm.email} onChange={e => setAccountForm({...accountForm, email: e.target.value})} placeholder="로그인용 이메일" /></div>
-                    <div><Label>비밀번호 *</Label><Input type="password" value={accountForm.password} onChange={e => setAccountForm({...accountForm, password: e.target.value})} placeholder="최소 6자" /></div>
+                    <h4 className="font-semibold text-sm text-muted-foreground">{t("admin.platformDashboard.t24", "계정 정보")}</h4>
+                    <div><Label>{t("admin.platformDashboard.t25", "이름 *")}</Label><Input value={accountForm.name} onChange={e => setAccountForm({...accountForm, name: e.target.value})} placeholder={t("admin.platformDashboard.t153", "담당자 이름")} /></div>
+                    <div><Label>{t("admin.platformDashboard.t26", "이메일 *")}</Label><Input type="email" value={accountForm.email} onChange={e => setAccountForm({...accountForm, email: e.target.value})} placeholder={t("admin.platformDashboard.t154", "로그인용 이메일")} /></div>
+                    <div><Label>{t("admin.platformDashboard.t27", "비밀번호 *")}</Label><Input type="password" value={accountForm.password} onChange={e => setAccountForm({...accountForm, password: e.target.value})} placeholder={t("admin.platformDashboard.t155", "최소 6자")} /></div>
                     <div>
-                      <Label>역할 *</Label>
+                      <Label>{t("admin.platformDashboard.t28", "역할 *")}</Label>
                       <Select value={accountForm.role} onValueChange={(v: any) => setAccountForm({...accountForm, role: v, organizationType: v})}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="organizer">행사/여행 주최자</SelectItem>
-                          <SelectItem value="agency">지역 에이전시</SelectItem>
-                          <SelectItem value="partner">파트너 업체</SelectItem>
+                          <SelectItem value="organizer">{t("admin.platformDashboard.t29", "행사/여행 주최자")}</SelectItem>
+                          <SelectItem value="agency">{t("admin.platformDashboard.t30", "지역 에이전시")}</SelectItem>
+                          <SelectItem value="partner">{t("admin.platformDashboard.t31", "파트너 업체")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">조직 정보</h4>
-                    <div><Label>조직명 *</Label><Input value={accountForm.organizationName} onChange={e => setAccountForm({...accountForm, organizationName: e.target.value})} placeholder="회사/단체명" /></div>
-                    <div><Label>연락처 이메일</Label><Input type="email" value={accountForm.contactEmail} onChange={e => setAccountForm({...accountForm, contactEmail: e.target.value})} /></div>
-                    <div><Label>연락처 전화</Label><Input value={accountForm.contactPhone} onChange={e => setAccountForm({...accountForm, contactPhone: e.target.value})} /></div>
-                    <div><Label>웹사이트</Label><Input value={accountForm.website} onChange={e => setAccountForm({...accountForm, website: e.target.value})} /></div>
-                    <div><Label>설명</Label><Textarea value={accountForm.description} onChange={e => setAccountForm({...accountForm, description: e.target.value})} rows={2} /></div>
+                    <h4 className="font-semibold text-sm text-muted-foreground">{t("admin.platformDashboard.t32", "조직 정보")}</h4>
+                    <div><Label>{t("admin.platformDashboard.t33", "조직명 *")}</Label><Input value={accountForm.organizationName} onChange={e => setAccountForm({...accountForm, organizationName: e.target.value})} placeholder={t("admin.platformDashboard.t156", "회사/단체명")} /></div>
+                    <div><Label>{t("admin.platformDashboard.t34", "연락처 이메일")}</Label><Input type="email" value={accountForm.contactEmail} onChange={e => setAccountForm({...accountForm, contactEmail: e.target.value})} /></div>
+                    <div><Label>{t("admin.platformDashboard.t35", "연락처 전화")}</Label><Input value={accountForm.contactPhone} onChange={e => setAccountForm({...accountForm, contactPhone: e.target.value})} /></div>
+                    <div><Label>{t("admin.platformDashboard.t36", "웹사이트")}</Label><Input value={accountForm.website} onChange={e => setAccountForm({...accountForm, website: e.target.value})} /></div>
+                    <div><Label>{t("admin.platformDashboard.t37", "설명")}</Label><Textarea value={accountForm.description} onChange={e => setAccountForm({...accountForm, description: e.target.value})} rows={2} /></div>
                   </div>
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" onClick={() => setShowCreateAccount(false)}>취소</Button>
+                  <Button variant="outline" onClick={() => setShowCreateAccount(false)}>{t("admin.platformDashboard.t38", "취소")}</Button>
                   <Button
                     disabled={!accountForm.email || !accountForm.name || !accountForm.password || !accountForm.organizationName || createAccountMutation.isPending}
                     onClick={() => createAccountMutation.mutate(accountForm)}
@@ -714,7 +715,7 @@ export default function PlatformDashboard() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Shield className="h-5 w-5 text-amber-500" />
-                권한 위임 이력
+                {t("admin.platformDashboard.t39", "권한 위임 이력")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -744,7 +745,7 @@ export default function PlatformDashboard() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground text-center py-6">권한 위임 이력이 없습니다</p>
+                  <p className="text-sm text-muted-foreground text-center py-6">{t("admin.platformDashboard.t40", "권한 위임 이력이 없습니다")}</p>
                 )}
               </div>
             </CardContent>
@@ -759,7 +760,7 @@ export default function PlatformDashboard() {
             <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-9"
-              placeholder="이름 또는 이메일로 검색..."
+              placeholder={t("admin.platformDashboard.t157", "이름 또는 이메일로 검색...")}
               value={userSearch}
               onChange={e => setUserSearch(e.target.value)}
             />
@@ -770,13 +771,13 @@ export default function PlatformDashboard() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-2 px-3">사용자</th>
-                      <th className="text-left py-2 px-3">현재 역할</th>
-                      <th className="text-left py-2 px-3">소속 조직</th>
-                      <th className="text-left py-2 px-3">역할 변경</th>
-                      <th className="text-left py-2 px-3">조직 배정</th>
-                      <th className="text-left py-2 px-3">액션</th>
-                      <th className="text-left py-2 px-3">가입일</th>
+                      <th className="text-left py-2 px-3">{t("admin.platformDashboard.t41", "사용자")}</th>
+                      <th className="text-left py-2 px-3">{t("admin.platformDashboard.t42", "현재 역할")}</th>
+                      <th className="text-left py-2 px-3">{t("admin.platformDashboard.t43", "소속 조직")}</th>
+                      <th className="text-left py-2 px-3">{t("admin.platformDashboard.t44", "역할 변경")}</th>
+                      <th className="text-left py-2 px-3">{t("admin.platformDashboard.t45", "조직 배정")}</th>
+                      <th className="text-left py-2 px-3">{t("admin.platformDashboard.t46", "액션")}</th>
+                      <th className="text-left py-2 px-3">{t("admin.platformDashboard.t47", "가입일")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -797,7 +798,7 @@ export default function PlatformDashboard() {
                               {user.orgName}
                             </Badge>
                           ) : (
-                            <span className="text-muted-foreground text-xs">미배정</span>
+                            <span className="text-muted-foreground text-xs">{t("admin.platformDashboard.t48", "미배정")}</span>
                           )}
                         </td>
                         <td className="py-2 px-3">
@@ -809,12 +810,12 @@ export default function PlatformDashboard() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="user">일반 사용자</SelectItem>
-                              <SelectItem value="admin">관리자</SelectItem>
-                              <SelectItem value="superadmin">슈퍼관리자</SelectItem>
-                              <SelectItem value="organizer">주최자</SelectItem>
-                              <SelectItem value="agency">에이전시</SelectItem>
-                              <SelectItem value="partner">파트너</SelectItem>
+                              <SelectItem value="user">{t("admin.platformDashboard.t49", "일반 사용자")}</SelectItem>
+                              <SelectItem value="admin">{t("admin.platformDashboard.t50", "관리자")}</SelectItem>
+                              <SelectItem value="superadmin">{t("admin.platformDashboard.t51", "슈퍼관리자")}</SelectItem>
+                              <SelectItem value="organizer">{t("admin.platformDashboard.t52", "주최자")}</SelectItem>
+                              <SelectItem value="agency">{t("admin.platformDashboard.t53", "에이전시")}</SelectItem>
+                              <SelectItem value="partner">{t("admin.platformDashboard.t54", "파트너")}</SelectItem>
                             </SelectContent>
                           </Select>
                         </td>
@@ -829,10 +830,10 @@ export default function PlatformDashboard() {
                             }}
                           >
                             <SelectTrigger className="w-[150px] h-8">
-                              <SelectValue placeholder="조직 선택" />
+                              <SelectValue placeholder={t("admin.platformDashboard.t158", "조직 선택")} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">미배정</SelectItem>
+                              <SelectItem value="none">{t("admin.platformDashboard.t55", "미배정")}</SelectItem>
                               {allOrgsQuery.data?.map((org: any) => (
                                 <SelectItem key={org.id} value={org.id.toString()}>
                                   {org.name}
@@ -843,7 +844,7 @@ export default function PlatformDashboard() {
                         </td>
                         <td className="py-2 px-3">
                           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setResetPwDialog({ open: true, userId: user.id, userName: user.name || "이름 없음" }); setNewPassword(""); }}>
-                            PW 초기화
+                            {t("admin.platformDashboard.t56", "PW 초기화")}
                           </Button>
                         </td>
                         <td className="py-2 px-3 text-muted-foreground">
@@ -875,14 +876,14 @@ export default function PlatformDashboard() {
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <Select value={auditFilter} onValueChange={(v) => { setAuditFilter(v); setAuditPage(0); }}>
-              <SelectTrigger className="w-[200px]"><SelectValue placeholder="전체 작업" /></SelectTrigger>
+              <SelectTrigger className="w-[200px]"><SelectValue placeholder={t("admin.platformDashboard.t159", "전체 작업")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">전체 작업</SelectItem>
-                <SelectItem value="role_change">역할 변경</SelectItem>
-                <SelectItem value="org_toggle_active">조직 활성화 변경</SelectItem>
-                <SelectItem value="member_role_change">멤버 역할 변경</SelectItem>
-                <SelectItem value="ownership_transfer">소유권 이전</SelectItem>
-                <SelectItem value="settings_change">설정 변경</SelectItem>
+                <SelectItem value="all">{t("admin.platformDashboard.t57", "전체 작업")}</SelectItem>
+                <SelectItem value="role_change">{t("admin.platformDashboard.t58", "역할 변경")}</SelectItem>
+                <SelectItem value="org_toggle_active">{t("admin.platformDashboard.t59", "조직 활성화 변경")}</SelectItem>
+                <SelectItem value="member_role_change">{t("admin.platformDashboard.t60", "멤버 역할 변경")}</SelectItem>
+                <SelectItem value="ownership_transfer">{t("admin.platformDashboard.t61", "소유권 이전")}</SelectItem>
+                <SelectItem value="settings_change">{t("admin.platformDashboard.t62", "설정 변경")}</SelectItem>
               </SelectContent>
             </Select>
             <span className="text-sm text-muted-foreground">
@@ -920,7 +921,7 @@ export default function PlatformDashboard() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-center py-8 text-muted-foreground">감사 로그가 없습니다</p>
+                  <p className="text-center py-8 text-muted-foreground">{t("admin.platformDashboard.t63", "감사 로그가 없습니다")}</p>
                 )}
               </div>
 
@@ -932,7 +933,7 @@ export default function PlatformDashboard() {
                     disabled={auditPage === 0}
                     onClick={() => setAuditPage(p => p - 1)}
                   >
-                    이전
+                    {t("admin.platformDashboard.t64", "이전")}
                   </Button>
                   <span className="text-sm text-muted-foreground">
                     {auditPage + 1} / {Math.ceil((auditLogsQuery.data?.total || 0) / 20)}
@@ -942,7 +943,7 @@ export default function PlatformDashboard() {
                     disabled={(auditPage + 1) * 20 >= (auditLogsQuery.data?.total || 0)}
                     onClick={() => setAuditPage(p => p + 1)}
                   >
-                    다음
+                    {t("admin.platformDashboard.t65", "다음")}
                   </Button>
                 </div>
               )}
@@ -959,37 +960,37 @@ export default function PlatformDashboard() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>조직명 *</Label>
-              <Input value={orgForm.name} onChange={e => setOrgForm({ ...orgForm, name: e.target.value })} placeholder="조직/업체명을 입력하세요" />
+              <Label>{t("admin.platformDashboard.t66", "조직명 *")}</Label>
+              <Input value={orgForm.name} onChange={e => setOrgForm({ ...orgForm, name: e.target.value })} placeholder={t("admin.platformDashboard.t160", "조직/업체명을 입력하세요")} />
             </div>
             <div>
-              <Label>유형 *</Label>
+              <Label>{t("admin.platformDashboard.t67", "유형 *")}</Label>
               <Select value={orgForm.type} onValueChange={(v: any) => setOrgForm({ ...orgForm, type: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="platform">클라우드 본사</SelectItem>
-                  <SelectItem value="organizer">행사/여행 주최자</SelectItem>
-                  <SelectItem value="agency">지역 에이전시</SelectItem>
-                  <SelectItem value="partner">파트너 업체</SelectItem>
+                  <SelectItem value="platform">{t("admin.platformDashboard.t68", "클라우드 본사")}</SelectItem>
+                  <SelectItem value="organizer">{t("admin.platformDashboard.t69", "행사/여행 주최자")}</SelectItem>
+                  <SelectItem value="agency">{t("admin.platformDashboard.t70", "지역 에이전시")}</SelectItem>
+                  <SelectItem value="partner">{t("admin.platformDashboard.t71", "파트너 업체")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>지역</Label><Input value={orgForm.region} onChange={e => setOrgForm({ ...orgForm, region: e.target.value })} placeholder="예: 동남아시아" /></div>
-              <div><Label>국가</Label><Input value={orgForm.country} onChange={e => setOrgForm({ ...orgForm, country: e.target.value })} placeholder="예: 태국" /></div>
+              <div><Label>{t("admin.platformDashboard.t72", "지역")}</Label><Input value={orgForm.region} onChange={e => setOrgForm({ ...orgForm, region: e.target.value })} placeholder={t("admin.platformDashboard.t161", "예: 동남아시아")} /></div>
+              <div><Label>{t("admin.platformDashboard.t73", "국가")}</Label><Input value={orgForm.country} onChange={e => setOrgForm({ ...orgForm, country: e.target.value })} placeholder={t("admin.platformDashboard.t162", "예: 태국")} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>담당자명</Label><Input value={orgForm.contactName} onChange={e => setOrgForm({ ...orgForm, contactName: e.target.value })} /></div>
-              <div><Label>연락처</Label><Input value={orgForm.contactPhone} onChange={e => setOrgForm({ ...orgForm, contactPhone: e.target.value })} /></div>
+              <div><Label>{t("admin.platformDashboard.t74", "담당자명")}</Label><Input value={orgForm.contactName} onChange={e => setOrgForm({ ...orgForm, contactName: e.target.value })} /></div>
+              <div><Label>{t("admin.platformDashboard.t75", "연락처")}</Label><Input value={orgForm.contactPhone} onChange={e => setOrgForm({ ...orgForm, contactPhone: e.target.value })} /></div>
             </div>
-            <div><Label>이메일</Label><Input value={orgForm.contactEmail} onChange={e => setOrgForm({ ...orgForm, contactEmail: e.target.value })} /></div>
-            <div><Label>주소</Label><Input value={orgForm.address} onChange={e => setOrgForm({ ...orgForm, address: e.target.value })} /></div>
-            <div><Label>웹사이트</Label><Input value={orgForm.website} onChange={e => setOrgForm({ ...orgForm, website: e.target.value })} /></div>
-            <div><Label>텔레그램 Chat ID</Label><Input value={orgForm.telegramChatId} onChange={e => setOrgForm({ ...orgForm, telegramChatId: e.target.value })} /></div>
-            <div><Label>설명</Label><Textarea value={orgForm.description} onChange={e => setOrgForm({ ...orgForm, description: e.target.value })} rows={2} /></div>
+            <div><Label>{t("admin.platformDashboard.t76", "이메일")}</Label><Input value={orgForm.contactEmail} onChange={e => setOrgForm({ ...orgForm, contactEmail: e.target.value })} /></div>
+            <div><Label>{t("admin.platformDashboard.t77", "주소")}</Label><Input value={orgForm.address} onChange={e => setOrgForm({ ...orgForm, address: e.target.value })} /></div>
+            <div><Label>{t("admin.platformDashboard.t78", "웹사이트")}</Label><Input value={orgForm.website} onChange={e => setOrgForm({ ...orgForm, website: e.target.value })} /></div>
+            <div><Label>{t("admin.platformDashboard.t79", "텔레그램 Chat ID")}</Label><Input value={orgForm.telegramChatId} onChange={e => setOrgForm({ ...orgForm, telegramChatId: e.target.value })} /></div>
+            <div><Label>{t("admin.platformDashboard.t80", "설명")}</Label><Textarea value={orgForm.description} onChange={e => setOrgForm({ ...orgForm, description: e.target.value })} rows={2} /></div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeOrgDialog}>취소</Button>
+            <Button variant="outline" onClick={closeOrgDialog}>{t("admin.platformDashboard.t81", "취소")}</Button>
             <Button
               disabled={!orgForm.name || createOrgMutation.isPending || updateOrgMutation.isPending}
               onClick={handleOrgSubmit}
@@ -1006,23 +1007,23 @@ export default function PlatformDashboard() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
-              역할 변경 확인
+              {t("admin.platformDashboard.t82", "역할 변경 확인")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground">다음 사용자의 역할을 변경하시겠습니까?</p>
+            <p className="text-sm text-muted-foreground">{t("admin.platformDashboard.t83", "다음 사용자의 역할을 변경하시겠습니까?")}</p>
             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">사용자</span>
+                <span className="text-sm text-muted-foreground">{t("admin.platformDashboard.t84", "사용자")}</span>
                 <span className="font-semibold">{roleChangeConfirm.userName}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">현재 역할</span>
+                <span className="text-sm text-muted-foreground">{t("admin.platformDashboard.t85", "현재 역할")}</span>
                 <Badge variant="outline">{roleLabels[roleChangeConfirm.currentRole] || roleChangeConfirm.currentRole}</Badge>
               </div>
               <div className="flex items-center justify-center"><span className="text-lg text-muted-foreground">↓</span></div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">변경 역할</span>
+                <span className="text-sm text-muted-foreground">{t("admin.platformDashboard.t86", "변경 역할")}</span>
                 <Badge>{roleLabels[roleChangeConfirm.newRole] || roleChangeConfirm.newRole}</Badge>
               </div>
             </div>
@@ -1030,13 +1031,13 @@ export default function PlatformDashboard() {
               <div className="flex items-start gap-2 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
                 <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
                 <p className="text-xs text-amber-700 dark:text-amber-300">
-                  관리자 이상의 권한을 부여하면 해당 사용자가 플랫폼의 주요 설정을 변경할 수 있습니다.
+                  {t("admin.platformDashboard.t87", "관리자 이상의 권한을 부여하면 해당 사용자가 플랫폼의 주요 설정을 변경할 수 있습니다.")}
                 </p>
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRoleChangeConfirm({ open: false, userId: 0, userName: "", currentRole: "", newRole: "" })}>취소</Button>
+            <Button variant="outline" onClick={() => setRoleChangeConfirm({ open: false, userId: 0, userName: "", currentRole: "", newRole: "" })}>{t("admin.platformDashboard.t88", "취소")}</Button>
             <Button onClick={confirmRoleChange} disabled={updateRoleMutation.isPending}>
               {updateRoleMutation.isPending ? "변경 중..." : "역할 변경"}
             </Button>
@@ -1052,9 +1053,9 @@ export default function PlatformDashboard() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>사용자 선택</Label>
+              <Label>{t("admin.platformDashboard.t89", "사용자 선택")}</Label>
               <Select value={newMemberUserId} onValueChange={setNewMemberUserId}>
-                <SelectTrigger><SelectValue placeholder="사용자를 선택하세요" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("admin.platformDashboard.t163", "사용자를 선택하세요")} /></SelectTrigger>
                 <SelectContent>
                   {usersQuery.data?.map((u: any) => (
                     <SelectItem key={u.id} value={u.id.toString()}>
@@ -1065,20 +1066,20 @@ export default function PlatformDashboard() {
               </Select>
             </div>
             <div>
-              <Label>역할</Label>
+              <Label>{t("admin.platformDashboard.t90", "역할")}</Label>
               <Select value={newMemberRole} onValueChange={(v: any) => setNewMemberRole(v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="owner">소유자</SelectItem>
-                  <SelectItem value="manager">관리자</SelectItem>
-                  <SelectItem value="staff">스태프</SelectItem>
-                  <SelectItem value="viewer">열람자</SelectItem>
+                  <SelectItem value="owner">{t("admin.platformDashboard.t91", "소유자")}</SelectItem>
+                  <SelectItem value="manager">{t("admin.platformDashboard.t92", "관리자")}</SelectItem>
+                  <SelectItem value="staff">{t("admin.platformDashboard.t93", "스태프")}</SelectItem>
+                  <SelectItem value="viewer">{t("admin.platformDashboard.t94", "열람자")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddMemberDialog({ open: false, organizationId: 0, orgName: "" })}>취소</Button>
+            <Button variant="outline" onClick={() => setAddMemberDialog({ open: false, organizationId: 0, orgName: "" })}>{t("admin.platformDashboard.t95", "취소")}</Button>
             <Button
               disabled={!newMemberUserId || addOrgMemberMutation.isPending}
               onClick={() => addOrgMemberMutation.mutate({
@@ -1101,12 +1102,12 @@ export default function PlatformDashboard() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>새 비밀번호</Label>
-              <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="최소 6자" />
+              <Label>{t("admin.platformDashboard.t96", "새 비밀번호")}</Label>
+              <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder={t("admin.platformDashboard.t164", "최소 6자")} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setResetPwDialog({ open: false, userId: 0, userName: "" })}>취소</Button>
+            <Button variant="outline" onClick={() => setResetPwDialog({ open: false, userId: 0, userName: "" })}>{t("admin.platformDashboard.t97", "취소")}</Button>
             <Button
               disabled={newPassword.length < 6 || resetPasswordMutation.isPending}
               onClick={() => resetPasswordMutation.mutate({ userId: resetPwDialog.userId, newPassword })}
@@ -1129,14 +1130,14 @@ export default function PlatformDashboard() {
           <div className="space-y-4 py-2">
             <div className="bg-muted/50 rounded-lg p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">현재 소유자</span>
+                <span className="text-sm text-muted-foreground">{t("admin.platformDashboard.t98", "현재 소유자")}</span>
                 <span className="font-semibold">{transferDialog.currentOwnerName}</span>
               </div>
             </div>
             <div>
-              <Label>새 소유자 선택</Label>
+              <Label>{t("admin.platformDashboard.t99", "새 소유자 선택")}</Label>
               <Select value={transferToUserId} onValueChange={setTransferToUserId}>
-                <SelectTrigger><SelectValue placeholder="사용자를 선택하세요" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("admin.platformDashboard.t165", "사용자를 선택하세요")} /></SelectTrigger>
                 <SelectContent>
                   {usersQuery.data?.filter((u: any) => u.id !== transferDialog.currentOwnerId).map((u: any) => (
                     <SelectItem key={u.id} value={u.id.toString()}>
@@ -1149,12 +1150,12 @@ export default function PlatformDashboard() {
             <div className="flex items-start gap-2 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
               <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
               <p className="text-xs text-amber-700 dark:text-amber-300">
-                소유권을 이전하면 현재 소유자는 관리자 역할로 변경됩니다. 이 작업은 되돌릴 수 없습니다.
+                {t("admin.platformDashboard.t100", "소유권을 이전하면 현재 소유자는 관리자 역할로 변경됩니다. 이 작업은 되돌릴 수 없습니다.")}
               </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTransferDialog({ open: false, organizationId: 0, orgName: "", currentOwnerId: 0, currentOwnerName: "" })}>취소</Button>
+            <Button variant="outline" onClick={() => setTransferDialog({ open: false, organizationId: 0, orgName: "", currentOwnerId: 0, currentOwnerName: "" })}>{t("admin.platformDashboard.t101", "취소")}</Button>
             <Button
               variant="destructive"
               disabled={!transferToUserId || transferOwnershipMutation.isPending}
@@ -1191,6 +1192,7 @@ function OrgCard({
   onRemoveMember: (id: number) => void;
   onUpdateMemberRole: (id: number, role: string) => void;
 }) {
+  const { t } = useTranslation();
   const membersQuery = trpc.platform.orgMembers.useQuery(
     { organizationId: org.id },
     { enabled: expanded }
@@ -1212,7 +1214,7 @@ function OrgCard({
                 <Badge className={orgTypeBadgeColors[org.type] || ""} variant="secondary">
                   {orgTypeLabels[org.type] || org.type}
                 </Badge>
-                {!org.isActive && <Badge variant="destructive">비활성</Badge>}
+                {!org.isActive && <Badge variant="destructive">{t("admin.platformDashboard.t102", "비활성")}</Badge>}
               </div>
               <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                 {(org.region || org.country) && (
@@ -1263,22 +1265,22 @@ function OrgCard({
           <div className="mt-4 pt-4 border-t space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-semibold flex items-center gap-1">
-                <UserCog className="h-4 w-4" /> 조직 멤버
+                <UserCog className="h-4 w-4" /> {t("admin.platformDashboard.t103", "조직 멤버")}
               </h4>
               <div className="flex gap-2">
                 {owner && (
                   <Button variant="outline" size="sm" className="gap-1" onClick={() => onTransferOwnership(owner.userId, owner.userName || "Unknown")}>
-                    <ArrowRightLeft className="h-3 w-3" /> 소유권 이전
+                    <ArrowRightLeft className="h-3 w-3" /> {t("admin.platformDashboard.t104", "소유권 이전")}
                   </Button>
                 )}
                 <Button size="sm" className="gap-1" onClick={onAddMember}>
-                  <UserPlus className="h-3 w-3" /> 멤버 추가
+                  <UserPlus className="h-3 w-3" /> {t("admin.platformDashboard.t105", "멤버 추가")}
                 </Button>
               </div>
             </div>
 
             {membersQuery.isLoading ? (
-              <p className="text-sm text-muted-foreground text-center py-4">로딩 중...</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("admin.platformDashboard.t106", "로딩 중...")}</p>
             ) : membersQuery.data && membersQuery.data.length > 0 ? (
               <div className="space-y-2">
                 {membersQuery.data.map((member: any) => (
@@ -1301,10 +1303,10 @@ function OrgCard({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="owner">소유자</SelectItem>
-                          <SelectItem value="manager">관리자</SelectItem>
-                          <SelectItem value="staff">스태프</SelectItem>
-                          <SelectItem value="viewer">열람자</SelectItem>
+                          <SelectItem value="owner">{t("admin.platformDashboard.t107", "소유자")}</SelectItem>
+                          <SelectItem value="manager">{t("admin.platformDashboard.t108", "관리자")}</SelectItem>
+                          <SelectItem value="staff">{t("admin.platformDashboard.t109", "스태프")}</SelectItem>
+                          <SelectItem value="viewer">{t("admin.platformDashboard.t110", "열람자")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemoveMember(member.id)}>
@@ -1315,7 +1317,7 @@ function OrgCard({
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">등록된 멤버가 없습니다</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("admin.platformDashboard.t111", "등록된 멤버가 없습니다")}</p>
             )}
           </div>
         )}
@@ -1326,6 +1328,7 @@ function OrgCard({
 
 // ════════════════════ Organizer Approvals Tab Component ════════════════════
 function OrganizerApprovalsTab() {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<string>("pending");
   const [rejectNote, setRejectNote] = useState("");
   const [rejectingId, setRejectingId] = useState<number | null>(null);
@@ -1338,7 +1341,7 @@ function OrganizerApprovalsTab() {
 
   const approveMutation = trpc.organizerApproval.approve.useMutation({
     onSuccess: () => {
-      toast.success("주최자 승인이 완료되었습니다");
+      toast.success(t("admin.platformDashboard.t151", "주최자 승인이 완료되었습니다"));
       utils.organizerApproval.list.invalidate();
     },
     onError: (err) => toast.error(err.message),
@@ -1346,7 +1349,7 @@ function OrganizerApprovalsTab() {
 
   const rejectMutation = trpc.organizerApproval.reject.useMutation({
     onSuccess: () => {
-      toast.success("주최자 신청이 거절되었습니다");
+      toast.success(t("admin.platformDashboard.t152", "주최자 신청이 거절되었습니다"));
       setRejectingId(null);
       setRejectNote("");
       utils.organizerApproval.list.invalidate();
@@ -1356,9 +1359,9 @@ function OrganizerApprovalsTab() {
 
   const statusBadge = (status: string) => {
     switch (status) {
-      case "pending": return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300"><Clock className="h-3 w-3 mr-1" />대기중</Badge>;
-      case "approved": return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"><CheckCircle2 className="h-3 w-3 mr-1" />승인됨</Badge>;
-      case "rejected": return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"><XCircle className="h-3 w-3 mr-1" />거절됨</Badge>;
+      case "pending": return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300"><Clock className="h-3 w-3 mr-1" />{t("admin.platformDashboard.t112", "대기중")}</Badge>;
+      case "approved": return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"><CheckCircle2 className="h-3 w-3 mr-1" />{t("admin.platformDashboard.t113", "승인됨")}</Badge>;
+      case "rejected": return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"><XCircle className="h-3 w-3 mr-1" />{t("admin.platformDashboard.t114", "거절됨")}</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
@@ -1378,10 +1381,10 @@ function OrganizerApprovalsTab() {
         <Select value={filter} onValueChange={setFilter}>
           <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="pending">대기중</SelectItem>
-            <SelectItem value="approved">승인됨</SelectItem>
-            <SelectItem value="rejected">거절됨</SelectItem>
-            <SelectItem value="all">전체</SelectItem>
+            <SelectItem value="pending">{t("admin.platformDashboard.t115", "대기중")}</SelectItem>
+            <SelectItem value="approved">{t("admin.platformDashboard.t116", "승인됨")}</SelectItem>
+            <SelectItem value="rejected">{t("admin.platformDashboard.t117", "거절됨")}</SelectItem>
+            <SelectItem value="all">{t("admin.platformDashboard.t118", "전체")}</SelectItem>
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground">
@@ -1391,7 +1394,7 @@ function OrganizerApprovalsTab() {
 
       <div className="space-y-3">
         {approvalsQuery.isLoading ? (
-          <Card><CardContent className="py-8 text-center text-muted-foreground">로딩 중...</CardContent></Card>
+          <Card><CardContent className="py-8 text-center text-muted-foreground">{t("admin.platformDashboard.t119", "로딩 중...")}</CardContent></Card>
         ) : approvalsQuery.data && approvalsQuery.data.length > 0 ? (
           approvalsQuery.data.map((approval: any) => (
             <Card key={approval.id} className="overflow-hidden">
@@ -1418,7 +1421,7 @@ function OrganizerApprovalsTab() {
                     </div>
                     {approval.reviewNote && (
                       <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
-                        <span className="font-medium">검토 메모:</span> {approval.reviewNote}
+                        <span className="font-medium">{t("admin.platformDashboard.t120", "검토 메모:")}</span> {approval.reviewNote}
                       </div>
                     )}
                   </div>
@@ -1426,7 +1429,7 @@ function OrganizerApprovalsTab() {
                     <div className="flex flex-col gap-2 shrink-0">
                       <div className="space-y-1">
                         <Input
-                          placeholder="승인 메모 (선택)"
+                          placeholder={t("admin.platformDashboard.t166", "승인 메모 (선택)")}
                           value={reviewNote}
                           onChange={(e) => setReviewNote(e.target.value)}
                           className="h-7 text-xs w-48"
@@ -1438,12 +1441,12 @@ function OrganizerApprovalsTab() {
                         onClick={() => approveMutation.mutate({ id: approval.id, reviewNote: reviewNote || undefined })}
                         disabled={approveMutation.isPending}
                       >
-                        <CheckCircle2 className="h-3 w-3" />승인
+                        <CheckCircle2 className="h-3 w-3" />{t("admin.platformDashboard.t121", "승인")}
                       </Button>
                       {rejectingId === approval.id ? (
                         <div className="space-y-1">
                           <Input
-                            placeholder="거절 사유 (필수)"
+                            placeholder={t("admin.platformDashboard.t167", "거절 사유 (필수)")}
                             value={rejectNote}
                             onChange={(e) => setRejectNote(e.target.value)}
                             className="h-7 text-xs w-48"
@@ -1454,13 +1457,13 @@ function OrganizerApprovalsTab() {
                               onClick={() => rejectMutation.mutate({ id: approval.id, reviewNote: rejectNote })}
                               disabled={!rejectNote.trim() || rejectMutation.isPending}
                             >
-                              확인
+                              {t("admin.platformDashboard.t122", "확인")}
                             </Button>
                             <Button
                               size="sm" variant="ghost" className="text-xs h-7"
                               onClick={() => { setRejectingId(null); setRejectNote(""); }}
                             >
-                              취소
+                              {t("admin.platformDashboard.t123", "취소")}
                             </Button>
                           </div>
                         </div>
@@ -1469,7 +1472,7 @@ function OrganizerApprovalsTab() {
                           size="sm" variant="outline" className="gap-1 text-destructive border-destructive/30"
                           onClick={() => setRejectingId(approval.id)}
                         >
-                          <XCircle className="h-3 w-3" />거절
+                          <XCircle className="h-3 w-3" />{t("admin.platformDashboard.t124", "거절")}
                         </Button>
                       )}
                     </div>
@@ -1479,7 +1482,7 @@ function OrganizerApprovalsTab() {
             </Card>
           ))
         ) : (
-          <Card><CardContent className="py-8 text-center text-muted-foreground">승인 요청이 없습니다</CardContent></Card>
+          <Card><CardContent className="py-8 text-center text-muted-foreground">{t("admin.platformDashboard.t125", "승인 요청이 없습니다")}</CardContent></Card>
         )}
       </div>
     </div>
@@ -1488,6 +1491,7 @@ function OrganizerApprovalsTab() {
 
 // ════════════════════ Analytics Tab Component ════════════════════
 function AnalyticsTab() {
+  const { t } = useTranslation();
   const kpisQuery = trpc.dashboardStats.kpis.useQuery();
   const registrationQuery = trpc.dashboardStats.registrationTrend.useQuery();
   const roleQuery = trpc.dashboardStats.roleDistribution.useQuery();
@@ -1515,7 +1519,7 @@ function AnalyticsTab() {
                 <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">전체 사용자</p>
+                <p className="text-xs text-muted-foreground">{t("admin.platformDashboard.t126", "전체 사용자")}</p>
                 <p className="text-xl font-bold">{kpisQuery.data?.totalUsers || 0}</p>
               </div>
             </div>
@@ -1528,7 +1532,7 @@ function AnalyticsTab() {
                 <Activity className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">활성 밋업</p>
+                <p className="text-xs text-muted-foreground">{t("admin.platformDashboard.t127", "활성 밋업")}</p>
                 <p className="text-xl font-bold">{kpisQuery.data?.activeMeetups || 0}</p>
               </div>
             </div>
@@ -1541,7 +1545,7 @@ function AnalyticsTab() {
                 <TrendingUp className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">신규 가입 (7일)</p>
+                <p className="text-xs text-muted-foreground">{t("admin.platformDashboard.t128", "신규 가입 (7일)")}</p>
                 <p className="text-xl font-bold">{kpisQuery.data?.newSignups || 0}</p>
               </div>
             </div>
@@ -1554,7 +1558,7 @@ function AnalyticsTab() {
                 <ClipboardCheck className="h-5 w-5 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">승인 대기</p>
+                <p className="text-xs text-muted-foreground">{t("admin.platformDashboard.t129", "승인 대기")}</p>
                 <p className="text-xl font-bold">{kpisQuery.data?.pendingApprovals || 0}</p>
               </div>
             </div>
@@ -1567,7 +1571,7 @@ function AnalyticsTab() {
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            최근 30일 가입 추이
+            {t("admin.platformDashboard.t130", "최근 30일 가입 추이")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -1594,7 +1598,7 @@ function AnalyticsTab() {
               </div>
             </div>
           ) : (
-            <p className="text-center py-8 text-muted-foreground text-sm">데이터가 없습니다</p>
+            <p className="text-center py-8 text-muted-foreground text-sm">{t("admin.platformDashboard.t131", "데이터가 없습니다")}</p>
           )}
         </CardContent>
       </Card>
@@ -1606,7 +1610,7 @@ function AnalyticsTab() {
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2">
               <PieChart className="h-4 w-4" />
-              사용자 역할 분포
+              {t("admin.platformDashboard.t132", "사용자 역할 분포")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1631,7 +1635,7 @@ function AnalyticsTab() {
                 })}
               </div>
             ) : (
-              <p className="text-center py-8 text-muted-foreground text-sm">데이터가 없습니다</p>
+              <p className="text-center py-8 text-muted-foreground text-sm">{t("admin.platformDashboard.t133", "데이터가 없습니다")}</p>
             )}
           </CardContent>
         </Card>
@@ -1641,7 +1645,7 @@ function AnalyticsTab() {
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2">
               <MousePointerClick className="h-4 w-4" />
-              광고 배너 클릭 통계
+              {t("admin.platformDashboard.t134", "광고 배너 클릭 통계")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1656,11 +1660,11 @@ function AnalyticsTab() {
                     <div className="flex items-center gap-4 text-right shrink-0">
                       <div>
                         <p className="text-sm font-bold">{Number(ad.clickCount).toLocaleString()}</p>
-                        <p className="text-[10px] text-muted-foreground">클릭</p>
+                        <p className="text-[10px] text-muted-foreground">{t("admin.platformDashboard.t135", "클릭")}</p>
                       </div>
                       <div>
                         <p className="text-sm font-bold">{Number(ad.impressionCount).toLocaleString()}</p>
-                        <p className="text-[10px] text-muted-foreground">노출</p>
+                        <p className="text-[10px] text-muted-foreground">{t("admin.platformDashboard.t136", "노출")}</p>
                       </div>
                       <div>
                         <p className="text-sm font-bold text-blue-600 dark:text-blue-400">{ad.ctr}%</p>
@@ -1671,7 +1675,7 @@ function AnalyticsTab() {
                 ))}
               </div>
             ) : (
-              <p className="text-center py-8 text-muted-foreground text-sm">광고 데이터가 없습니다</p>
+              <p className="text-center py-8 text-muted-foreground text-sm">{t("admin.platformDashboard.t137", "광고 데이터가 없습니다")}</p>
             )}
           </CardContent>
         </Card>

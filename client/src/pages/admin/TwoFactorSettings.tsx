@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Loader2, Shield, ShieldCheck, ShieldOff, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export default function TwoFactorSettings() {
+  const { t } = useTranslation();
   const { user, refresh } = useAuth();
   const [setupData, setSetupData] = useState<{ secret: string; qrDataUrl: string; uri: string } | null>(null);
   const [confirmCode, setConfirmCode] = useState("");
@@ -26,7 +28,7 @@ export default function TwoFactorSettings() {
 
   const confirm2FA = trpc.auth.confirm2FA.useMutation({
     onSuccess: () => {
-      toast.success("Google Authenticator 2차 인증이 활성화되었습니다.");
+      toast.success(t("admin.twoFactorSettings.t18", "Google Authenticator 2차 인증이 활성화되었습니다."));
       setSetupData(null);
       setConfirmCode("");
       refresh();
@@ -39,7 +41,7 @@ export default function TwoFactorSettings() {
 
   const disable2FA = trpc.auth.disable2FA.useMutation({
     onSuccess: () => {
-      toast.success("2차 인증이 비활성화되었습니다.");
+      toast.success(t("admin.twoFactorSettings.t19", "2차 인증이 비활성화되었습니다."));
       setDisableCode("");
       refresh();
     },
@@ -64,8 +66,8 @@ export default function TwoFactorSettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-white">2차 인증 (2FA)</h2>
-        <p className="text-slate-400 mt-1">Google Authenticator를 사용한 2차 인증을 관리합니다.</p>
+        <h2 className="text-2xl font-bold text-white">{t("admin.twoFactorSettings.t1", "2차 인증 (2FA)")}</h2>
+        <p className="text-slate-400 mt-1">{t("admin.twoFactorSettings.t2", "Google Authenticator를 사용한 2차 인증을 관리합니다.")}</p>
       </div>
 
       {/* Current Status */}
@@ -75,12 +77,12 @@ export default function TwoFactorSettings() {
             {is2FAEnabled ? (
               <>
                 <ShieldCheck className="w-5 h-5 text-green-400" />
-                2FA 활성화됨
+                {t("admin.twoFactorSettings.t3", "2FA 활성화됨")}
               </>
             ) : (
               <>
                 <ShieldOff className="w-5 h-5 text-yellow-400" />
-                2FA 비활성화됨
+                {t("admin.twoFactorSettings.t4", "2FA 비활성화됨")}
               </>
             )}
           </CardTitle>
@@ -96,9 +98,9 @@ export default function TwoFactorSettings() {
       {!is2FAEnabled && !setupData && (
         <Card className="border-slate-700 bg-slate-800/50">
           <CardHeader>
-            <CardTitle className="text-white">2FA 활성화</CardTitle>
+            <CardTitle className="text-white">{t("admin.twoFactorSettings.t5", "2FA 활성화")}</CardTitle>
             <CardDescription className="text-slate-400">
-              Google Authenticator 앱을 설치한 후 아래 버튼을 클릭하세요.
+              {t("admin.twoFactorSettings.t6", "Google Authenticator 앱을 설치한 후 아래 버튼을 클릭하세요.")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -110,12 +112,12 @@ export default function TwoFactorSettings() {
               {setup2FA.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  QR 코드 생성 중...
+                  {t("admin.twoFactorSettings.t7", "QR 코드 생성 중...")}
                 </>
               ) : (
                 <>
                   <Shield className="w-4 h-4 mr-2" />
-                  2FA 설정 시작
+                  {t("admin.twoFactorSettings.t8", "2FA 설정 시작")}
                 </>
               )}
             </Button>
@@ -127,9 +129,9 @@ export default function TwoFactorSettings() {
       {setupData && (
         <Card className="border-slate-700 bg-slate-800/50">
           <CardHeader>
-            <CardTitle className="text-white">QR 코드 스캔</CardTitle>
+            <CardTitle className="text-white">{t("admin.twoFactorSettings.t9", "QR 코드 스캔")}</CardTitle>
             <CardDescription className="text-slate-400">
-              Google Authenticator 앱에서 아래 QR 코드를 스캔하세요.
+              {t("admin.twoFactorSettings.t10", "Google Authenticator 앱에서 아래 QR 코드를 스캔하세요.")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -142,7 +144,7 @@ export default function TwoFactorSettings() {
 
             {/* Manual Secret */}
             <div className="space-y-2">
-              <Label className="text-slate-300">수동 입력 키 (QR 스캔이 안 될 경우)</Label>
+              <Label className="text-slate-300">{t("admin.twoFactorSettings.t11", "수동 입력 키 (QR 스캔이 안 될 경우)")}</Label>
               <div className="flex gap-2">
                 <Input
                   value={setupData.secret}
@@ -170,8 +172,8 @@ export default function TwoFactorSettings() {
               className="space-y-4"
             >
               <div className="space-y-2">
-                <Label className="text-slate-300">인증 코드 확인</Label>
-                <p className="text-xs text-slate-500">앱에 표시된 6자리 코드를 입력하여 설정을 완료하세요.</p>
+                <Label className="text-slate-300">{t("admin.twoFactorSettings.t12", "인증 코드 확인")}</Label>
+                <p className="text-xs text-slate-500">{t("admin.twoFactorSettings.t13", "앱에 표시된 6자리 코드를 입력하여 설정을 완료하세요.")}</p>
                 <Input
                   type="text"
                   inputMode="numeric"
@@ -205,7 +207,7 @@ export default function TwoFactorSettings() {
                     setConfirmCode("");
                   }}
                 >
-                  취소
+                  {t("admin.twoFactorSettings.t14", "취소")}
                 </Button>
               </div>
             </form>
@@ -217,9 +219,9 @@ export default function TwoFactorSettings() {
       {is2FAEnabled && (
         <Card className="border-red-900/50 bg-slate-800/50">
           <CardHeader>
-            <CardTitle className="text-white">2FA 비활성화</CardTitle>
+            <CardTitle className="text-white">{t("admin.twoFactorSettings.t15", "2FA 비활성화")}</CardTitle>
             <CardDescription className="text-slate-400">
-              현재 인증 코드를 입력하여 2차 인증을 비활성화할 수 있습니다.
+              {t("admin.twoFactorSettings.t16", "현재 인증 코드를 입력하여 2차 인증을 비활성화할 수 있습니다.")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -231,7 +233,7 @@ export default function TwoFactorSettings() {
               className="space-y-4"
             >
               <div className="space-y-2">
-                <Label className="text-slate-300">현재 인증 코드</Label>
+                <Label className="text-slate-300">{t("admin.twoFactorSettings.t17", "현재 인증 코드")}</Label>
                 <Input
                   type="text"
                   inputMode="numeric"

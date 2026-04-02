@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Upload, Download, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CsvColumn {
   key: string;
@@ -22,6 +23,7 @@ interface CsvBulkUploadProps {
 }
 
 export default function CsvBulkUpload({ title, description, columns, onUpload, templateFileName }: CsvBulkUploadProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [parsedRows, setParsedRows] = useState<Record<string, string>[]>([]);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
@@ -64,7 +66,7 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
     a.download = templateFileName;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("CSV 템플릿이 다운로드되었습니다");
+    toast.success(t("csvBulkUpload.t16", "CSV 템플릿이 다운로드되었습니다"));
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -157,7 +159,7 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)}>
-        <FileSpreadsheet className="w-4 h-4 mr-2" />CSV 일괄 배정
+        <FileSpreadsheet className="w-4 h-4 mr-2" />{t("csvBulkUpload.t1", "CSV 일괄 배정")}
       </Button>
 
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) handleReset(); }}>
@@ -177,7 +179,7 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Badge variant="outline">1</Badge> CSV 템플릿 다운로드
+                  <Badge variant="outline">1</Badge> {t("csvBulkUpload.t2", "CSV 템플릿 다운로드")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -186,7 +188,7 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
                     아래 버튼을 클릭하여 CSV 템플릿을 다운로드하세요. 필수 열: {columns.filter(c => c.required).map(c => c.label).join(", ")}
                   </div>
                   <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
-                    <Download className="w-4 h-4 mr-1" />템플릿 다운로드
+                    <Download className="w-4 h-4 mr-1" />{t("csvBulkUpload.t3", "템플릿 다운로드")}
                   </Button>
                 </div>
                 {/* 열 정보 테이블 */}
@@ -194,9 +196,9 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
                   <table className="w-full text-xs">
                     <thead className="bg-muted">
                       <tr>
-                        <th className="p-2 text-left font-medium">열 이름</th>
-                        <th className="p-2 text-left font-medium">설명</th>
-                        <th className="p-2 text-center font-medium">필수</th>
+                        <th className="p-2 text-left font-medium">{t("csvBulkUpload.t4", "열 이름")}</th>
+                        <th className="p-2 text-left font-medium">{t("csvBulkUpload.t5", "설명")}</th>
+                        <th className="p-2 text-center font-medium">{t("csvBulkUpload.t6", "필수")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -205,7 +207,7 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
                           <td className="p-2 font-mono">{col.key}</td>
                           <td className="p-2">{col.label}</td>
                           <td className="p-2 text-center">
-                            {col.required ? <Badge variant="destructive" className="text-[10px]">필수</Badge> : <span className="text-muted-foreground">선택</span>}
+                            {col.required ? <Badge variant="destructive" className="text-[10px]">{t("csvBulkUpload.t7", "필수")}</Badge> : <span className="text-muted-foreground">{t("csvBulkUpload.t8", "선택")}</span>}
                           </td>
                         </tr>
                       ))}
@@ -219,7 +221,7 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Badge variant="outline">2</Badge> CSV 파일 업로드
+                  <Badge variant="outline">2</Badge> {t("csvBulkUpload.t9", "CSV 파일 업로드")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -232,7 +234,7 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
                     className="hidden"
                   />
                   <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="w-4 h-4 mr-1" />CSV 파일 선택
+                    <Upload className="w-4 h-4 mr-1" />{t("csvBulkUpload.t10", "CSV 파일 선택")}
                   </Button>
                   {parsedRows.length > 0 && (
                     <span className="text-sm text-green-600 flex items-center gap-1">
@@ -246,7 +248,7 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
                 {parseErrors.length > 0 && (
                   <div className="mt-3 p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
                     <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-medium text-sm mb-1">
-                      <XCircle className="w-4 h-4" /> 파싱 오류
+                      <XCircle className="w-4 h-4" /> {t("csvBulkUpload.t11", "파싱 오류")}
                     </div>
                     <ul className="text-xs text-red-600 dark:text-red-400 space-y-0.5">
                       {parseErrors.slice(0, 10).map((err, i) => (
@@ -296,7 +298,7 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Badge variant="outline">3</Badge> 일괄 배정 실행
+                  <Badge variant="outline">3</Badge> {t("csvBulkUpload.t12", "일괄 배정 실행")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -307,7 +309,7 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
                   >
                     {uploading ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />처리 중...
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />{t("csvBulkUpload.t13", "처리 중...")}
                       </>
                     ) : (
                       <>
@@ -316,7 +318,7 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
                     )}
                   </Button>
                   {parsedRows.length > 0 && !uploading && (
-                    <Button variant="ghost" size="sm" onClick={handleReset}>초기화</Button>
+                    <Button variant="ghost" size="sm" onClick={handleReset}>{t("csvBulkUpload.t14", "초기화")}</Button>
                   )}
                 </div>
 
@@ -338,7 +340,7 @@ export default function CsvBulkUpload({ title, description, columns, onUpload, t
                     {result.errors.length > 0 && (
                       <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
                         <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-medium text-sm mb-1">
-                          <AlertTriangle className="w-4 h-4" /> 오류 상세
+                          <AlertTriangle className="w-4 h-4" /> {t("csvBulkUpload.t15", "오류 상세")}
                         </div>
                         <ul className="text-xs text-red-600 dark:text-red-400 space-y-0.5">
                           {result.errors.slice(0, 10).map((err, i) => (

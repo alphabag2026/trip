@@ -46,14 +46,14 @@ export default function MealDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">식사 / 알레르기 대시보드</h1>
-          <p className="text-muted-foreground mt-1">참석자 식사 선호도와 알레르기 정보를 한눈에 확인합니다</p>
+          <h1 className="text-2xl font-bold">{t("admin.mealDashboard.t1", "식사 / 알레르기 대시보드")}</h1>
+          <p className="text-muted-foreground mt-1">{t("admin.mealDashboard.t2", "참석자 식사 선호도와 알레르기 정보를 한눈에 확인합니다")}</p>
         </div>
         <div className="flex gap-2">
           <Select value={meetupId?.toString() || "all"} onValueChange={v => setMeetupId(v === "all" ? undefined : Number(v))}>
-            <SelectTrigger className="w-[200px]"><SelectValue placeholder="전체 밋업" /></SelectTrigger>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder={t("admin.mealDashboard.t25", "전체 밋업")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">전체 밋업</SelectItem>
+              <SelectItem value="all">{t("admin.mealDashboard.t3", "전체 밋업")}</SelectItem>
               {(meetups.data || []).map(m => (
                 <SelectItem key={m.id} value={m.id.toString()}>{m.title}</SelectItem>
               ))}
@@ -70,7 +70,7 @@ export default function MealDashboard() {
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-500/10 rounded-lg"><Users className="w-5 h-5 text-blue-500" /></div>
               <div>
-                <p className="text-sm text-muted-foreground">총 참석자</p>
+                <p className="text-sm text-muted-foreground">{t("admin.mealDashboard.t4", "총 참석자")}</p>
                 <p className="text-2xl font-bold">{data?.total || 0}명</p>
               </div>
             </div>
@@ -92,7 +92,7 @@ export default function MealDashboard() {
             <div className="flex items-center gap-3">
               <div className="p-2 bg-red-500/10 rounded-lg"><AlertTriangle className="w-5 h-5 text-red-500" /></div>
               <div>
-                <p className="text-sm text-muted-foreground">알레르기 보유</p>
+                <p className="text-sm text-muted-foreground">{t("admin.mealDashboard.t5", "알레르기 보유")}</p>
                 <p className="text-2xl font-bold">{regs.filter(r => r.allergies).length}명</p>
               </div>
             </div>
@@ -103,7 +103,7 @@ export default function MealDashboard() {
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-500/10 rounded-lg"><Wine className="w-5 h-5 text-purple-500" /></div>
               <div>
-                <p className="text-sm text-muted-foreground">음주 가능</p>
+                <p className="text-sm text-muted-foreground">{t("admin.mealDashboard.t6", "음주 가능")}</p>
                 <p className="text-2xl font-bold">{(data?.drinkAlcohol?.["yes"] || 0) + (data?.drinkAlcohol?.["sometimes"] || 0)}명</p>
               </div>
             </div>
@@ -115,8 +115,8 @@ export default function MealDashboard() {
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><UtensilsCrossed className="w-5 h-5" />식사 선호도 분포</CardTitle>
-            <CardDescription>참석자별 식사 유형 집계</CardDescription>
+            <CardTitle className="flex items-center gap-2"><UtensilsCrossed className="w-5 h-5" />{t("admin.mealDashboard.t7", "식사 선호도 분포")}</CardTitle>
+            <CardDescription>{t("admin.mealDashboard.t8", "참석자별 식사 유형 집계")}</CardDescription>
           </CardHeader>
           <CardContent>
             {data && Object.keys(data.mealPreferences).length > 0 ? (
@@ -137,15 +137,15 @@ export default function MealDashboard() {
                 })}
               </div>
             ) : (
-              <p className="text-muted-foreground text-center py-8">식사 선호도 데이터가 없습니다</p>
+              <p className="text-muted-foreground text-center py-8">{t("admin.mealDashboard.t9", "식사 선호도 데이터가 없습니다")}</p>
             )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><AlertTriangle className="w-5 h-5" />알레르기 현황</CardTitle>
-            <CardDescription>알레르기 유형별 인원 집계</CardDescription>
+            <CardTitle className="flex items-center gap-2"><AlertTriangle className="w-5 h-5" />{t("admin.mealDashboard.t10", "알레르기 현황")}</CardTitle>
+            <CardDescription>{t("admin.mealDashboard.t11", "알레르기 유형별 인원 집계")}</CardDescription>
           </CardHeader>
           <CardContent>
             {data && Object.keys(data.allergies).length > 0 ? (
@@ -157,7 +157,7 @@ export default function MealDashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground text-center py-8">알레르기 데이터가 없습니다</p>
+              <p className="text-muted-foreground text-center py-8">{t("admin.mealDashboard.t12", "알레르기 데이터가 없습니다")}</p>
             )}
           </CardContent>
         </Card>
@@ -167,7 +167,7 @@ export default function MealDashboard() {
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Wine className="w-5 h-5" />음주 현황</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Wine className="w-5 h-5" />{t("admin.mealDashboard.t13", "음주 현황")}</CardTitle>
           </CardHeader>
           <CardContent>
             {data && Object.keys(data.drinkAlcohol).length > 0 ? (
@@ -189,14 +189,14 @@ export default function MealDashboard() {
                 })}
               </div>
             ) : (
-              <p className="text-muted-foreground text-center py-8">음주 데이터가 없습니다</p>
+              <p className="text-muted-foreground text-center py-8">{t("admin.mealDashboard.t14", "음주 데이터가 없습니다")}</p>
             )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Cigarette className="w-5 h-5" />흡연 현황</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Cigarette className="w-5 h-5" />{t("admin.mealDashboard.t15", "흡연 현황")}</CardTitle>
           </CardHeader>
           <CardContent>
             {data && Object.keys(data.smoking).length > 0 ? (
@@ -218,7 +218,7 @@ export default function MealDashboard() {
                 })}
               </div>
             ) : (
-              <p className="text-muted-foreground text-center py-8">흡연 데이터가 없습니다</p>
+              <p className="text-muted-foreground text-center py-8">{t("admin.mealDashboard.t16", "흡연 데이터가 없습니다")}</p>
             )}
           </CardContent>
         </Card>
@@ -227,12 +227,12 @@ export default function MealDashboard() {
       {/* 알레르기 보유자 명단 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Search className="w-5 h-5" />알레르기 보유자 명단</CardTitle>
-          <CardDescription>알레르기 정보가 있는 참석자를 검색하고 확인합니다</CardDescription>
+          <CardTitle className="flex items-center gap-2"><Search className="w-5 h-5" />{t("admin.mealDashboard.t17", "알레르기 보유자 명단")}</CardTitle>
+          <CardDescription>{t("admin.mealDashboard.t18", "알레르기 정보가 있는 참석자를 검색하고 확인합니다")}</CardDescription>
           <div className="relative mt-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="알레르기 검색 (예: 땅콩, 갑각류...)"
+              placeholder={t("admin.mealDashboard.t26", "알레르기 검색 (예: 땅콩, 갑각류...)")}
               value={allergySearch}
               onChange={e => setAllergySearch(e.target.value)}
               className="pl-10"
@@ -245,12 +245,12 @@ export default function MealDashboard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 px-3 font-medium">이름</th>
-                    <th className="text-left py-2 px-3 font-medium">전화번호</th>
-                    <th className="text-left py-2 px-3 font-medium">식사 선호</th>
-                    <th className="text-left py-2 px-3 font-medium">알레르기</th>
-                    <th className="text-left py-2 px-3 font-medium">음주</th>
-                    <th className="text-left py-2 px-3 font-medium">흡연</th>
+                    <th className="text-left py-2 px-3 font-medium">{t("admin.mealDashboard.t19", "이름")}</th>
+                    <th className="text-left py-2 px-3 font-medium">{t("admin.mealDashboard.t20", "전화번호")}</th>
+                    <th className="text-left py-2 px-3 font-medium">{t("admin.mealDashboard.t21", "식사 선호")}</th>
+                    <th className="text-left py-2 px-3 font-medium">{t("admin.mealDashboard.t22", "알레르기")}</th>
+                    <th className="text-left py-2 px-3 font-medium">{t("admin.mealDashboard.t23", "음주")}</th>
+                    <th className="text-left py-2 px-3 font-medium">{t("admin.mealDashboard.t24", "흡연")}</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -52,13 +52,13 @@ export default function AdminTravelInfo() {
   const { data: countries, refetch } = trpc.travelInfo.list.useQuery();
   const { data: meetups } = trpc.meetup.list.useQuery({});
   const upsertMutation = trpc.travelInfo.upsert.useMutation({
-    onSuccess: () => { refetch(); setShowCreate(false); toast.success("저장되었습니다."); },
+    onSuccess: () => { refetch(); setShowCreate(false); toast.success(t("admin.travelInfo.t31", "저장되었습니다.")); },
   });
   const deleteMutation = trpc.travelInfo.delete.useMutation({
     onSuccess: () => { refetch(); toast.success(t("admin.travelInfo.deleted")); },
   });
   const generateMutation = trpc.travelInfo.generateInfo.useMutation({
-    onSuccess: () => { refetch(); toast.success("AI가 여행 정보를 자동 생성했습니다!"); },
+    onSuccess: () => { refetch(); toast.success(t("admin.travelInfo.t32", "AI가 여행 정보를 자동 생성했습니다!")); },
     onError: (e) => toast.error(`생성 실패: ${e.message}`),
   });
   const sendMutation = trpc.travelInfo.sendToParticipants.useMutation({
@@ -99,13 +99,13 @@ export default function AdminTravelInfo() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-2xl font-bold">국가별 여행 정보</h1>
+        <h1 className="text-2xl font-bold">{t("admin.travelInfo.t1", "국가별 여행 정보")}</h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => { setShowSend(true); }}>
-            <Send className="h-4 w-4 mr-2" />참석자에게 전송
+            <Send className="h-4 w-4 mr-2" />{t("admin.travelInfo.t2", "참석자에게 전송")}
           </Button>
           <Button onClick={() => { setForm(defaultForm); setShowCreate(true); }}>
-            <Plus className="h-4 w-4 mr-2" />국가 추가
+            <Plus className="h-4 w-4 mr-2" />{t("admin.travelInfo.t3", "국가 추가")}
           </Button>
         </div>
       </div>
@@ -115,10 +115,10 @@ export default function AdminTravelInfo() {
         <CardContent className="p-4">
           <h3 className="font-semibold flex items-center gap-2 mb-3">
             <Sparkles className="h-4 w-4 text-primary" />
-            AI 자동 생성 - 국가 선택
+            {t("admin.travelInfo.t4", "AI 자동 생성 - 국가 선택")}
           </h3>
           <p className="text-sm text-muted-foreground mb-3">
-            국가를 선택하면 AI가 여행 준비물, 출입국 정보, 비자, 통화, 시간대 등을 자동으로 생성합니다.
+            {t("admin.travelInfo.t5", "국가를 선택하면 AI가 여행 준비물, 출입국 정보, 비자, 통화, 시간대 등을 자동으로 생성합니다.")}
           </p>
           <div className="flex flex-wrap gap-2">
             {POPULAR_COUNTRIES.map(c => {
@@ -153,7 +153,7 @@ export default function AdminTravelInfo() {
                     {c.countryNameKo || c.countryName} ({c.countryCode})
                   </h3>
                   <div className="mt-2 flex flex-wrap gap-1">
-                    {c.visaRequired && <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400">비자 필요</span>}
+                    {c.visaRequired && <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400">{t("admin.travelInfo.t6", "비자 필요")}</span>}
                     {c.currency && <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{c.currency}</span>}
                     {c.timezone && <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{c.timezone}</span>}
                     {c.language && <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{c.language}</span>}
@@ -167,7 +167,7 @@ export default function AdminTravelInfo() {
                   )}
                   {c.immigrationUrl && (
                     <a href={c.immigrationUrl} target="_blank" rel="noopener" className="text-xs text-primary flex items-center gap-1 mt-2" onClick={e => e.stopPropagation()}>
-                      <ExternalLink className="h-3 w-3" />출입국 신청
+                      <ExternalLink className="h-3 w-3" />{t("admin.travelInfo.t7", "출입국 신청")}
                     </a>
                   )}
                 </div>
@@ -187,14 +187,14 @@ export default function AdminTravelInfo() {
           </Card>
         ))}
         {(!countries || countries.length === 0) && (
-          <div className="col-span-2 text-center py-12 text-muted-foreground">등록된 국가 정보가 없습니다. 위에서 AI 자동 생성을 사용해보세요.</div>
+          <div className="col-span-2 text-center py-12 text-muted-foreground">{t("admin.travelInfo.t8", "등록된 국가 정보가 없습니다. 위에서 AI 자동 생성을 사용해보세요.")}</div>
         )}
       </div>
 
       {/* Upsert Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>국가 여행 정보</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("admin.travelInfo.t9", "국가 여행 정보")}</DialogTitle></DialogHeader>
           <form onSubmit={e => { e.preventDefault(); upsertMutation.mutate({
             ...form,
             countryNameKo: form.countryNameKo || undefined,
@@ -209,28 +209,28 @@ export default function AdminTravelInfo() {
             additionalNotes: form.additionalNotes || undefined,
           }); }} className="space-y-4">
             <div className="grid grid-cols-3 gap-3">
-              <div><Label>국가 코드 *</Label><Input value={form.countryCode} onChange={e => setForm(p => ({...p, countryCode: e.target.value.toUpperCase()}))} placeholder="TH" required /></div>
-              <div><Label>영문명 *</Label><Input value={form.countryName} onChange={e => setForm(p => ({...p, countryName: e.target.value}))} placeholder="Thailand" required /></div>
-              <div><Label>한글명</Label><Input value={form.countryNameKo} onChange={e => setForm(p => ({...p, countryNameKo: e.target.value}))} placeholder="태국" /></div>
+              <div><Label>{t("admin.travelInfo.t10", "국가 코드 *")}</Label><Input value={form.countryCode} onChange={e => setForm(p => ({...p, countryCode: e.target.value.toUpperCase()}))} placeholder="TH" required /></div>
+              <div><Label>{t("admin.travelInfo.t11", "영문명 *")}</Label><Input value={form.countryName} onChange={e => setForm(p => ({...p, countryName: e.target.value}))} placeholder="Thailand" required /></div>
+              <div><Label>{t("admin.travelInfo.t12", "한글명")}</Label><Input value={form.countryNameKo} onChange={e => setForm(p => ({...p, countryNameKo: e.target.value}))} placeholder={t("admin.travelInfo.t33", "태국")} /></div>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <div><Label>시간대</Label><Input value={form.timezone} onChange={e => setForm(p => ({...p, timezone: e.target.value}))} placeholder="UTC+7" /></div>
-              <div><Label>통화</Label><Input value={form.currency} onChange={e => setForm(p => ({...p, currency: e.target.value}))} placeholder="THB" /></div>
-              <div><Label>언어</Label><Input value={form.language} onChange={e => setForm(p => ({...p, language: e.target.value}))} placeholder="태국어" /></div>
+              <div><Label>{t("admin.travelInfo.t13", "시간대")}</Label><Input value={form.timezone} onChange={e => setForm(p => ({...p, timezone: e.target.value}))} placeholder="UTC+7" /></div>
+              <div><Label>{t("admin.travelInfo.t14", "통화")}</Label><Input value={form.currency} onChange={e => setForm(p => ({...p, currency: e.target.value}))} placeholder="THB" /></div>
+              <div><Label>{t("admin.travelInfo.t15", "언어")}</Label><Input value={form.language} onChange={e => setForm(p => ({...p, language: e.target.value}))} placeholder={t("admin.travelInfo.t34", "태국어")} /></div>
             </div>
-            <div><Label>콘센트 타입</Label><Input value={form.plugType} onChange={e => setForm(p => ({...p, plugType: e.target.value}))} placeholder="A, B, C" /></div>
+            <div><Label>{t("admin.travelInfo.t16", "콘센트 타입")}</Label><Input value={form.plugType} onChange={e => setForm(p => ({...p, plugType: e.target.value}))} placeholder="A, B, C" /></div>
             <div className="flex items-center gap-3">
               <Switch checked={form.visaRequired} onCheckedChange={v => setForm(p => ({...p, visaRequired: v}))} />
-              <Label>비자 필요</Label>
+              <Label>{t("admin.travelInfo.t17", "비자 필요")}</Label>
             </div>
-            {form.visaRequired && <div><Label>비자 안내</Label><Textarea value={form.visaNotes} onChange={e => setForm(p => ({...p, visaNotes: e.target.value}))} rows={2} /></div>}
-            <div><Label>출입국 신청 URL</Label><Input value={form.immigrationUrl} onChange={e => setForm(p => ({...p, immigrationUrl: e.target.value}))} placeholder="https://..." /></div>
-            <div><Label>출입국 안내</Label><Textarea value={form.immigrationNotes} onChange={e => setForm(p => ({...p, immigrationNotes: e.target.value}))} rows={2} /></div>
+            {form.visaRequired && <div><Label>{t("admin.travelInfo.t18", "비자 안내")}</Label><Textarea value={form.visaNotes} onChange={e => setForm(p => ({...p, visaNotes: e.target.value}))} rows={2} /></div>}
+            <div><Label>{t("admin.travelInfo.t19", "출입국 신청 URL")}</Label><Input value={form.immigrationUrl} onChange={e => setForm(p => ({...p, immigrationUrl: e.target.value}))} placeholder="https://..." /></div>
+            <div><Label>{t("admin.travelInfo.t20", "출입국 안내")}</Label><Textarea value={form.immigrationNotes} onChange={e => setForm(p => ({...p, immigrationNotes: e.target.value}))} rows={2} /></div>
             <div>
-              <Label>여행 준비물</Label>
+              <Label>{t("admin.travelInfo.t21", "여행 준비물")}</Label>
               <div className="flex gap-2 mt-1">
-                <Input value={itemInput} onChange={e => setItemInput(e.target.value)} placeholder="항목 추가" onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addItem(); }}} />
-                <Button type="button" variant="outline" onClick={addItem}>추가</Button>
+                <Input value={itemInput} onChange={e => setItemInput(e.target.value)} placeholder={t("admin.travelInfo.t35", "항목 추가")} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addItem(); }}} />
+                <Button type="button" variant="outline" onClick={addItem}>{t("admin.travelInfo.t22", "추가")}</Button>
               </div>
               <div className="flex flex-wrap gap-1 mt-2">
                 {form.requiredItems.map((item, i) => (
@@ -241,9 +241,9 @@ export default function AdminTravelInfo() {
                 ))}
               </div>
             </div>
-            <div><Label>긴급 연락처</Label><Input value={form.emergencyContact} onChange={e => setForm(p => ({...p, emergencyContact: e.target.value}))} /></div>
-            <div><Label>추가 안내</Label><Textarea value={form.additionalNotes} onChange={e => setForm(p => ({...p, additionalNotes: e.target.value}))} rows={3} /></div>
-            <Button type="submit" className="w-full" disabled={upsertMutation.isPending}>저장</Button>
+            <div><Label>{t("admin.travelInfo.t23", "긴급 연락처")}</Label><Input value={form.emergencyContact} onChange={e => setForm(p => ({...p, emergencyContact: e.target.value}))} /></div>
+            <div><Label>{t("admin.travelInfo.t24", "추가 안내")}</Label><Textarea value={form.additionalNotes} onChange={e => setForm(p => ({...p, additionalNotes: e.target.value}))} rows={3} /></div>
+            <Button type="submit" className="w-full" disabled={upsertMutation.isPending}>{t("admin.travelInfo.t25", "저장")}</Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -251,12 +251,12 @@ export default function AdminTravelInfo() {
       {/* Send to Participants Dialog */}
       <Dialog open={showSend} onOpenChange={setShowSend}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>참석자에게 여행 정보 전송</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("admin.travelInfo.t26", "참석자에게 여행 정보 전송")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>국가 선택 *</Label>
+              <Label>{t("admin.travelInfo.t27", "국가 선택 *")}</Label>
               <Select value={sendCountryCode} onValueChange={setSendCountryCode}>
-                <SelectTrigger><SelectValue placeholder="국가 선택" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("admin.travelInfo.t36", "국가 선택")} /></SelectTrigger>
                 <SelectContent>
                   {countries?.map((c: any) => (
                     <SelectItem key={c.countryCode} value={c.countryCode}>
@@ -267,11 +267,11 @@ export default function AdminTravelInfo() {
               </Select>
             </div>
             <div>
-              <Label>밋업 선택 (선택사항)</Label>
+              <Label>{t("admin.travelInfo.t28", "밋업 선택 (선택사항)")}</Label>
               <Select value={sendMeetupId} onValueChange={setSendMeetupId}>
-                <SelectTrigger><SelectValue placeholder="전체 승인된 참석자" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("admin.travelInfo.t37", "전체 승인된 참석자")} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">전체 승인된 참석자</SelectItem>
+                  <SelectItem value="all">{t("admin.travelInfo.t29", "전체 승인된 참석자")}</SelectItem>
                   {meetups?.map((m: any) => (
                     <SelectItem key={m.id} value={String(m.id)}>{m.title}</SelectItem>
                   ))}
@@ -279,7 +279,7 @@ export default function AdminTravelInfo() {
               </Select>
             </div>
             <p className="text-sm text-muted-foreground">
-              선택한 국가의 여행 준비물, 출입국 정보, 통화, 시간대 등을 텔레그램으로 전송합니다.
+              {t("admin.travelInfo.t30", "선택한 국가의 여행 준비물, 출입국 정보, 통화, 시간대 등을 텔레그램으로 전송합니다.")}
             </p>
             <Button
               className="w-full"

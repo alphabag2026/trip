@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, X, Smartphone } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -8,6 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function PWAInstallPrompt() {
+  const { t } = useTranslation();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
@@ -72,17 +74,17 @@ export default function PWAInstallPrompt() {
             <Smartphone className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm text-foreground">Alpha Trip 앱 설치</h3>
+            <h3 className="font-semibold text-sm text-foreground">{t("pWAInstallPrompt.t1", "Alpha Trip 앱 설치")}</h3>
             <p className="text-xs text-muted-foreground mt-1">
-              홈 화면에 추가하여 앱처럼 빠르게 접근하세요
+              {t("pWAInstallPrompt.t2", "홈 화면에 추가하여 앱처럼 빠르게 접근하세요")}
             </p>
             <div className="flex items-center gap-2 mt-3">
               <Button size="sm" onClick={handleInstall} className="h-8 text-xs gap-1.5">
                 <Download className="h-3.5 w-3.5" />
-                설치하기
+                {t("pWAInstallPrompt.t3", "설치하기")}
               </Button>
               <Button size="sm" variant="ghost" onClick={handleDismiss} className="h-8 text-xs text-muted-foreground">
-                나중에
+                {t("pWAInstallPrompt.t4", "나중에")}
               </Button>
             </div>
           </div>

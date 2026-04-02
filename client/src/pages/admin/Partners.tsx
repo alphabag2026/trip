@@ -50,7 +50,7 @@ export default function PartnersPage() {
 
   const createMutation = trpc.partner.create.useMutation({
     onSuccess: () => {
-      toast.success("파트너가 등록되었습니다");
+      toast.success(t("admin.partners.t31", "파트너가 등록되었습니다"));
       utils.partner.list.invalidate();
       closeDialog();
     },
@@ -58,7 +58,7 @@ export default function PartnersPage() {
   });
   const updateMutation = trpc.partner.update.useMutation({
     onSuccess: () => {
-      toast.success("파트너 정보가 수정되었습니다");
+      toast.success(t("admin.partners.t32", "파트너 정보가 수정되었습니다"));
       utils.partner.list.invalidate();
       closeDialog();
     },
@@ -66,7 +66,7 @@ export default function PartnersPage() {
   });
   const deleteMutation = trpc.partner.delete.useMutation({
     onSuccess: () => {
-      toast.success("파트너가 삭제되었습니다");
+      toast.success(t("admin.partners.t33", "파트너가 삭제되었습니다"));
       utils.partner.list.invalidate();
     },
     onError: (e) => toast.error(e.message),
@@ -145,12 +145,12 @@ export default function PartnersPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Handshake className="h-7 w-7 text-orange-600" />
-            파트너 업체 관리
+            {t("admin.partners.t1", "파트너 업체 관리")}
           </h1>
-          <p className="text-muted-foreground mt-1">식당, 호텔, 클럽, 마사지, 여행, 크루즈, 차량, 통역 등 파트너 업체를 관리합니다</p>
+          <p className="text-muted-foreground mt-1">{t("admin.partners.t2", "식당, 호텔, 클럽, 마사지, 여행, 크루즈, 차량, 통역 등 파트너 업체를 관리합니다")}</p>
         </div>
         <Button onClick={() => { setForm(emptyForm); setEditingId(null); setShowDialog(true); }}>
-          <Plus className="h-4 w-4 mr-1" /> 파트너 등록
+          <Plus className="h-4 w-4 mr-1" /> {t("admin.partners.t3", "파트너 등록")}
         </Button>
       </div>
 
@@ -162,7 +162,7 @@ export default function PartnersPage() {
               <div className="p-2 rounded-lg bg-orange-500/10"><Handshake className="h-5 w-5 text-orange-500" /></div>
               <div>
                 <p className="text-2xl font-bold">{totalPartners}</p>
-                <p className="text-xs text-muted-foreground">전체 파트너</p>
+                <p className="text-xs text-muted-foreground">{t("admin.partners.t4", "전체 파트너")}</p>
               </div>
             </div>
           </CardContent>
@@ -173,7 +173,7 @@ export default function PartnersPage() {
               <div className="p-2 rounded-lg bg-green-500/10"><ToggleLeft className="h-5 w-5 text-green-500" /></div>
               <div>
                 <p className="text-2xl font-bold">{activePartners}</p>
-                <p className="text-xs text-muted-foreground">활성 파트너</p>
+                <p className="text-xs text-muted-foreground">{t("admin.partners.t5", "활성 파트너")}</p>
               </div>
             </div>
           </CardContent>
@@ -184,7 +184,7 @@ export default function PartnersPage() {
               <div className="p-2 rounded-lg bg-blue-500/10"><Filter className="h-5 w-5 text-blue-500" /></div>
               <div>
                 <p className="text-2xl font-bold">{categories.length}</p>
-                <p className="text-xs text-muted-foreground">카테고리</p>
+                <p className="text-xs text-muted-foreground">{t("admin.partners.t6", "카테고리")}</p>
               </div>
             </div>
           </CardContent>
@@ -195,7 +195,7 @@ export default function PartnersPage() {
               <div className="p-2 rounded-lg bg-purple-500/10"><MapPin className="h-5 w-5 text-purple-500" /></div>
               <div>
                 <p className="text-2xl font-bold">{regions.length}</p>
-                <p className="text-xs text-muted-foreground">지역</p>
+                <p className="text-xs text-muted-foreground">{t("admin.partners.t7", "지역")}</p>
               </div>
             </div>
           </CardContent>
@@ -208,7 +208,7 @@ export default function PartnersPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             className="pl-9"
-            placeholder="업체명, 담당자, 지역 검색..."
+            placeholder={t("admin.partners.t34", "업체명, 담당자, 지역 검색...")}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
@@ -216,7 +216,7 @@ export default function PartnersPage() {
         <Select value={filterCategory} onValueChange={setFilterCategory}>
           <SelectTrigger className="w-[160px]"><Filter className="h-4 w-4 mr-1" /><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">전체 카테고리</SelectItem>
+            <SelectItem value="all">{t("admin.partners.t8", "전체 카테고리")}</SelectItem>
             {categories.map((cat: any) => (
               <SelectItem key={cat.id} value={String(cat.id)}>{cat.nameKo || cat.name}</SelectItem>
             ))}
@@ -226,7 +226,7 @@ export default function PartnersPage() {
           <Select value={filterRegion || "all"} onValueChange={v => setFilterRegion(v === "all" ? "" : v)}>
             <SelectTrigger className="w-[140px]"><MapPin className="h-4 w-4 mr-1" /><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">전체 지역</SelectItem>
+              <SelectItem value="all">{t("admin.partners.t9", "전체 지역")}</SelectItem>
               {regions.map(r => <SelectItem key={r} value={r as string}>{r as string}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -239,12 +239,12 @@ export default function PartnersPage() {
             <ArrowUpDown className="h-4 w-4 mr-1" /><SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="rating-desc"><span className="flex items-center gap-1"><ArrowDown className="h-3 w-3" />평점 높은 순</span></SelectItem>
-            <SelectItem value="rating-asc"><span className="flex items-center gap-1"><ArrowUp className="h-3 w-3" />평점 낮은 순</span></SelectItem>
-            <SelectItem value="name-asc"><span className="flex items-center gap-1"><ArrowDown className="h-3 w-3" />이름순 (ㄱ-ㅎ)</span></SelectItem>
-            <SelectItem value="name-desc"><span className="flex items-center gap-1"><ArrowUp className="h-3 w-3" />이름순 (ㅎ-ㄱ)</span></SelectItem>
-            <SelectItem value="capacity-desc"><span className="flex items-center gap-1"><ArrowDown className="h-3 w-3" />수용인원 많은 순</span></SelectItem>
-            <SelectItem value="capacity-asc"><span className="flex items-center gap-1"><ArrowUp className="h-3 w-3" />수용인원 적은 순</span></SelectItem>
+            <SelectItem value="rating-desc"><span className="flex items-center gap-1"><ArrowDown className="h-3 w-3" />{t("admin.partners.t10", "평점 높은 순")}</span></SelectItem>
+            <SelectItem value="rating-asc"><span className="flex items-center gap-1"><ArrowUp className="h-3 w-3" />{t("admin.partners.t11", "평점 낮은 순")}</span></SelectItem>
+            <SelectItem value="name-asc"><span className="flex items-center gap-1"><ArrowDown className="h-3 w-3" />{t("admin.partners.t12", "이름순 (ㄱ-ㅎ)")}</span></SelectItem>
+            <SelectItem value="name-desc"><span className="flex items-center gap-1"><ArrowUp className="h-3 w-3" />{t("admin.partners.t13", "이름순 (ㅎ-ㄱ)")}</span></SelectItem>
+            <SelectItem value="capacity-desc"><span className="flex items-center gap-1"><ArrowDown className="h-3 w-3" />{t("admin.partners.t14", "수용인원 많은 순")}</span></SelectItem>
+            <SelectItem value="capacity-asc"><span className="flex items-center gap-1"><ArrowUp className="h-3 w-3" />{t("admin.partners.t15", "수용인원 적은 순")}</span></SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -358,7 +358,7 @@ export default function PartnersPage() {
             </p>
             {!searchTerm && filterCategory === "all" && !filterRegion && (
               <Button className="mt-3" onClick={() => { setForm(emptyForm); setEditingId(null); setShowDialog(true); }}>
-                첫 파트너 등록하기
+                {t("admin.partners.t16", "첫 파트너 등록하기")}
               </Button>
             )}
           </CardContent>
@@ -371,15 +371,15 @@ export default function PartnersPage() {
           <DialogHeader><DialogTitle>{editingId ? "파트너 수정" : "새 파트너 등록"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>업체명 *</Label>
-              <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="파트너 업체명" />
+              <Label>{t("admin.partners.t17", "업체명 *")}</Label>
+              <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={t("admin.partners.t35", "파트너 업체명")} />
             </div>
             <div>
-              <Label>카테고리</Label>
+              <Label>{t("admin.partners.t18", "카테고리")}</Label>
               <Select value={String(form.categoryId || "0")} onValueChange={v => setForm({ ...form, categoryId: Number(v) })}>
-                <SelectTrigger><SelectValue placeholder="카테고리 선택" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("admin.partners.t36", "카테고리 선택")} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">미분류</SelectItem>
+                  <SelectItem value="0">{t("admin.partners.t19", "미분류")}</SelectItem>
                   {categories.map((cat: any) => (
                     <SelectItem key={cat.id} value={String(cat.id)}>{cat.nameKo || cat.name}</SelectItem>
                   ))}
@@ -387,29 +387,29 @@ export default function PartnersPage() {
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>지역</Label><Input value={form.region} onChange={e => setForm({ ...form, region: e.target.value })} placeholder="예: 방콕" /></div>
-              <div><Label>국가</Label><Input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} placeholder="예: 태국" /></div>
+              <div><Label>{t("admin.partners.t20", "지역")}</Label><Input value={form.region} onChange={e => setForm({ ...form, region: e.target.value })} placeholder={t("admin.partners.t37", "예: 방콕")} /></div>
+              <div><Label>{t("admin.partners.t21", "국가")}</Label><Input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} placeholder={t("admin.partners.t38", "예: 태국")} /></div>
             </div>
-            <div><Label>주소</Label><Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} /></div>
+            <div><Label>{t("admin.partners.t22", "주소")}</Label><Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>담당자명</Label><Input value={form.contactName} onChange={e => setForm({ ...form, contactName: e.target.value })} /></div>
+              <div><Label>{t("admin.partners.t23", "담당자명")}</Label><Input value={form.contactName} onChange={e => setForm({ ...form, contactName: e.target.value })} /></div>
               <div><Label>{t("admin.partners.contact")}</Label><Input value={form.contactPhone} onChange={e => setForm({ ...form, contactPhone: e.target.value })} /></div>
             </div>
             <div><Label>{t("admin.partners.email")}</Label><Input value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} /></div>
-            <div><Label>웹사이트</Label><Input value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} /></div>
+            <div><Label>{t("admin.partners.t24", "웹사이트")}</Label><Input value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>수용 인원</Label><Input type="number" value={form.capacity || ""} onChange={e => setForm({ ...form, capacity: Number(e.target.value) })} /></div>
-              <div><Label>가격대</Label><Input value={form.priceRange} onChange={e => setForm({ ...form, priceRange: e.target.value })} placeholder="예: $$" /></div>
+              <div><Label>{t("admin.partners.t25", "수용 인원")}</Label><Input type="number" value={form.capacity || ""} onChange={e => setForm({ ...form, capacity: Number(e.target.value) })} /></div>
+              <div><Label>{t("admin.partners.t26", "가격대")}</Label><Input value={form.priceRange} onChange={e => setForm({ ...form, priceRange: e.target.value })} placeholder={t("admin.partners.t39", "예: $$")} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>영업시간</Label><Input value={form.operatingHours} onChange={e => setForm({ ...form, operatingHours: e.target.value })} placeholder="예: 10:00-22:00" /></div>
-              <div><Label>지원 언어</Label><Input value={form.languages} onChange={e => setForm({ ...form, languages: e.target.value })} placeholder="예: 한국어, 영어" /></div>
+              <div><Label>{t("admin.partners.t27", "영업시간")}</Label><Input value={form.operatingHours} onChange={e => setForm({ ...form, operatingHours: e.target.value })} placeholder={t("admin.partners.t40", "예: 10:00-22:00")} /></div>
+              <div><Label>{t("admin.partners.t28", "지원 언어")}</Label><Input value={form.languages} onChange={e => setForm({ ...form, languages: e.target.value })} placeholder={t("admin.partners.t41", "예: 한국어, 영어")} /></div>
             </div>
-            <div><Label>설명</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} /></div>
+            <div><Label>{t("admin.partners.t29", "설명")}</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} /></div>
             <div><Label>{t("admin.partners.notes")}</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeDialog}>취소</Button>
+            <Button variant="outline" onClick={closeDialog}>{t("admin.partners.t30", "취소")}</Button>
             <Button
               disabled={!form.name || createMutation.isPending || updateMutation.isPending}
               onClick={handleSubmit}

@@ -47,24 +47,24 @@ export default function AdminSurveys() {
 
   const createMutation = trpc.survey.create.useMutation({
     onSuccess: () => {
-      toast.success("설문조사가 생성되었습니다.");
+      toast.success(t("admin.surveys.t23", "설문조사가 생성되었습니다."));
       utils.survey.list.invalidate();
       resetForm();
       setShowCreate(false);
     },
-    onError: () => toast.error("생성 중 오류가 발생했습니다."),
+    onError: () => toast.error(t("admin.surveys.t24", "생성 중 오류가 발생했습니다.")),
   });
 
   const updateMutation = trpc.survey.update.useMutation({
     onSuccess: () => {
-      toast.success("설문 상태가 변경되었습니다.");
+      toast.success(t("admin.surveys.t25", "설문 상태가 변경되었습니다."));
       utils.survey.list.invalidate();
     },
   });
 
   const deleteMutation = trpc.survey.delete.useMutation({
     onSuccess: () => {
-      toast.success("설문이 삭제되었습니다.");
+      toast.success(t("admin.surveys.t26", "설문이 삭제되었습니다."));
       utils.survey.list.invalidate();
     },
   });
@@ -74,7 +74,7 @@ export default function AdminSurveys() {
       toast.success(`설문이 텔레그램으로 발송되었습니다. (대상: ${data.recipientCount}명)`);
       utils.survey.list.invalidate();
     },
-    onError: () => toast.error("발송 중 오류가 발생했습니다."),
+    onError: () => toast.error(t("admin.surveys.t27", "발송 중 오류가 발생했습니다.")),
   });
 
   const resetForm = () => {
@@ -108,7 +108,7 @@ export default function AdminSurveys() {
 
   const handleCreate = () => {
     if (!title.trim() || questions.length === 0) {
-      toast.error("제목과 최소 1개의 질문이 필요합니다.");
+      toast.error(t("admin.surveys.t28", "제목과 최소 1개의 질문이 필요합니다."));
       return;
     }
     createMutation.mutate({
@@ -123,7 +123,7 @@ export default function AdminSurveys() {
 
   const copySurveyLink = (id: number) => {
     navigator.clipboard.writeText(surveyUrl(id));
-    toast.success("설문 링크가 복사되었습니다.");
+    toast.success(t("admin.surveys.t29", "설문 링크가 복사되었습니다."));
   };
 
   // Calculate stats for a survey
@@ -170,33 +170,33 @@ export default function AdminSurveys() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <ClipboardList className="h-6 w-6 text-primary" />
-            설문조사 관리
+            {t("admin.surveys.t1", "설문조사 관리")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">참석자 만족도 설문을 생성하고 관리합니다</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("admin.surveys.t2", "참석자 만족도 설문을 생성하고 관리합니다")}</p>
         </div>
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
           <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-2" /> 설문 생성</Button>
+            <Button><Plus className="h-4 w-4 mr-2" /> {t("admin.surveys.t3", "설문 생성")}</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>새 설문조사 생성</DialogTitle>
+              <DialogTitle>{t("admin.surveys.t4", "새 설문조사 생성")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>제목 *</Label>
-                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="설문 제목" />
+                <Label>{t("admin.surveys.t5", "제목 *")}</Label>
+                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder={t("admin.surveys.t30", "설문 제목")} />
               </div>
               <div>
-                <Label>설명</Label>
-                <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="설문 설명 (선택)" rows={2} />
+                <Label>{t("admin.surveys.t6", "설명")}</Label>
+                <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder={t("admin.surveys.t31", "설문 설명 (선택)")} rows={2} />
               </div>
               <div>
-                <Label>밋업 연결</Label>
+                <Label>{t("admin.surveys.t7", "밋업 연결")}</Label>
                 <Select value={selectedMeetupId} onValueChange={setSelectedMeetupId}>
-                  <SelectTrigger><SelectValue placeholder="밋업 선택 (선택)" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("admin.surveys.t32", "밋업 선택 (선택)")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">전체 (밋업 무관)</SelectItem>
+                    <SelectItem value="none">{t("admin.surveys.t8", "전체 (밋업 무관)")}</SelectItem>
                     {meetups?.map(m => (
                       <SelectItem key={m.id} value={String(m.id)}>{m.title}</SelectItem>
                     ))}
@@ -209,7 +209,7 @@ export default function AdminSurveys() {
                 <Label className="mb-2 block">질문 목록 ({questions.length}개)</Label>
                 {questions.length === 0 && (
                   <p className="text-sm text-muted-foreground py-4 text-center border border-dashed rounded-lg">
-                    아래에서 질문을 추가하세요
+                    {t("admin.surveys.t9", "아래에서 질문을 추가하세요")}
                   </p>
                 )}
                 <div className="space-y-2">
@@ -241,13 +241,13 @@ export default function AdminSurveys() {
               <Card className="border-dashed">
                 <CardContent className="p-4 space-y-3">
                   <Label className="text-sm font-medium">{t("admin.surveys.addQuestion")}</Label>
-                  <Input value={newQText} onChange={e => setNewQText(e.target.value)} placeholder="질문 내용" />
+                  <Input value={newQText} onChange={e => setNewQText(e.target.value)} placeholder={t("admin.surveys.t33", "질문 내용")} />
                   <div className="flex gap-2">
                     <Select value={newQType} onValueChange={v => setNewQType(v as any)}>
                       <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="rating">별점 (1-5)</SelectItem>
-                        <SelectItem value="text">서술형</SelectItem>
+                        <SelectItem value="rating">{t("admin.surveys.t10", "별점 (1-5)")}</SelectItem>
+                        <SelectItem value="text">{t("admin.surveys.t11", "서술형")}</SelectItem>
                         <SelectItem value="choice">{t("admin.surveys.multipleChoice")}</SelectItem>
                       </SelectContent>
                     </Select>
@@ -255,7 +255,7 @@ export default function AdminSurveys() {
                       <Input
                         value={newQOptions}
                         onChange={e => setNewQOptions(e.target.value)}
-                        placeholder="옵션 (쉼표 구분)"
+                        placeholder={t("admin.surveys.t34", "옵션 (쉼표 구분)")}
                         className="flex-1"
                       />
                     )}
@@ -268,7 +268,7 @@ export default function AdminSurveys() {
             </div>
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline">취소</Button>
+                <Button variant="outline">{t("admin.surveys.t12", "취소")}</Button>
               </DialogClose>
               <Button onClick={handleCreate} disabled={createMutation.isPending}>
                 {createMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
@@ -286,7 +286,7 @@ export default function AdminSurveys() {
         <Card className="border-dashed">
           <CardContent className="py-12 text-center">
             <ClipboardList className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">아직 생성된 설문이 없습니다</p>
+            <p className="text-muted-foreground">{t("admin.surveys.t13", "아직 생성된 설문이 없습니다")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -303,7 +303,7 @@ export default function AdminSurveys() {
                         <Badge variant={s.status === "active" ? "default" : s.status === "closed" ? "secondary" : "outline"}>
                           {s.status === "draft" ? "초안" : s.status === "active" ? "진행중" : "종료"}
                         </Badge>
-                        {s.sentViaTelegram && <Badge variant="outline" className="text-[10px]">텔레그램 발송됨</Badge>}
+                        {s.sentViaTelegram && <Badge variant="outline" className="text-[10px]">{t("admin.surveys.t14", "텔레그램 발송됨")}</Badge>}
                       </div>
                       {s.description && <p className="text-sm text-muted-foreground mb-2">{s.description}</p>}
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -313,14 +313,14 @@ export default function AdminSurveys() {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Button variant="outline" size="sm" onClick={() => copySurveyLink(s.id)}>
-                        <Copy className="h-3 w-3 mr-1" /> 링크 복사
+                        <Copy className="h-3 w-3 mr-1" /> {t("admin.surveys.t15", "링크 복사")}
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setViewSurveyId(s.id)}
                       >
-                        <BarChart3 className="h-3 w-3 mr-1" /> 결과
+                        <BarChart3 className="h-3 w-3 mr-1" /> {t("admin.surveys.t16", "결과")}
                       </Button>
                       {s.status !== "closed" && (
                         <Button
@@ -329,7 +329,7 @@ export default function AdminSurveys() {
                           onClick={() => sendTelegramMutation.mutate({ surveyId: s.id, meetupId: s.meetupId ?? undefined })}
                           disabled={sendTelegramMutation.isPending}
                         >
-                          <Send className="h-3 w-3 mr-1" /> 텔레그램
+                          <Send className="h-3 w-3 mr-1" /> {t("admin.surveys.t17", "텔레그램")}
                         </Button>
                       )}
                       <Select
@@ -340,9 +340,9 @@ export default function AdminSurveys() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="draft">초안</SelectItem>
-                          <SelectItem value="active">진행중</SelectItem>
-                          <SelectItem value="closed">종료</SelectItem>
+                          <SelectItem value="draft">{t("admin.surveys.t18", "초안")}</SelectItem>
+                          <SelectItem value="active">{t("admin.surveys.t19", "진행중")}</SelectItem>
+                          <SelectItem value="closed">{t("admin.surveys.t20", "종료")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <Button
@@ -379,12 +379,12 @@ export default function AdminSurveys() {
           {responses && responses.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
               <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>아직 응답이 없습니다</p>
+              <p>{t("admin.surveys.t21", "아직 응답이 없습니다")}</p>
             </div>
           ) : (
             <div className="space-y-6">
               <div className="text-sm text-muted-foreground">
-                총 <strong className="text-foreground">{responses?.length || 0}</strong>건의 응답
+                총 <strong className="text-foreground">{responses?.length || 0}</strong>{t("admin.surveys.t22", "건의 응답")}
               </div>
 
               {viewSurvey && ((viewSurvey.questions as any[]) || []).map((q: any, idx: number) => (

@@ -62,15 +62,15 @@ export default function AdminSearch() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">검색 및 연관성 분석</h1>
+      <h1 className="text-2xl font-bold">{t("admin.search.t1", "검색 및 연관성 분석")}</h1>
 
       <form onSubmit={handleSearch} className="flex gap-3">
         <div className="relative flex-1">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="이름, 전화번호, 메신저, 팀명, 추천자, 지갑주소, 비고 검색..." value={query} onChange={e => setQuery(e.target.value)} />
+          <Input className="pl-9" placeholder={t("admin.search.t11", "이름, 전화번호, 메신저, 팀명, 추천자, 지갑주소, 비고 검색...")} value={query} onChange={e => setQuery(e.target.value)} />
         </div>
         <Button type="submit" disabled={isLoading}>
-          <SearchIcon className="h-4 w-4 mr-2" />검색
+          <SearchIcon className="h-4 w-4 mr-2" />{t("admin.search.t2", "검색")}
         </Button>
       </form>
 
@@ -109,14 +109,14 @@ export default function AdminSearch() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-muted-foreground">
-                      <th className="text-left py-3 px-4">이름</th>
-                      <th className="text-left py-3 px-4">구분</th>
-                      <th className="text-left py-3 px-4">전화번호</th>
-                      <th className="text-left py-3 px-4">메신저</th>
-                      <th className="text-left py-3 px-4">팀</th>
-                      <th className="text-left py-3 px-4">추천자</th>
-                      <th className="text-left py-3 px-4">지갑</th>
-                      <th className="text-left py-3 px-4">비고</th>
+                      <th className="text-left py-3 px-4">{t("admin.search.t3", "이름")}</th>
+                      <th className="text-left py-3 px-4">{t("admin.search.t4", "구분")}</th>
+                      <th className="text-left py-3 px-4">{t("admin.search.t5", "전화번호")}</th>
+                      <th className="text-left py-3 px-4">{t("admin.search.t6", "메신저")}</th>
+                      <th className="text-left py-3 px-4">{t("admin.search.t7", "팀")}</th>
+                      <th className="text-left py-3 px-4">{t("admin.search.t8", "추천자")}</th>
+                      <th className="text-left py-3 px-4">{t("admin.search.t9", "지갑")}</th>
+                      <th className="text-left py-3 px-4">{t("admin.search.t10", "비고")}</th>
                     </tr>
                   </thead>
                   <tbody>

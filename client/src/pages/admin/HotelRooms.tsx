@@ -23,11 +23,11 @@ export default function HotelRooms() {
   const meetups = trpc.meetup.list.useQuery();
   const rooms = trpc.hotelRoom.list.useQuery({ meetupId });
   const assignMut = trpc.hotelRoom.assign.useMutation({
-    onSuccess: () => { rooms.refetch(); toast.success("방 배정이 완료되었습니다"); setAssignDialog({ open: false, roomNumber: "", floor: "", notes: "" }); },
+    onSuccess: () => { rooms.refetch(); toast.success(t("admin.hotelRooms.t27", "방 배정이 완료되었습니다")); setAssignDialog({ open: false, roomNumber: "", floor: "", notes: "" }); },
     onError: (e) => toast.error(e.message),
   });
   const removeMut = trpc.hotelRoom.remove.useMutation({
-    onSuccess: () => { rooms.refetch(); toast.success("방 배정이 해제되었습니다"); },
+    onSuccess: () => { rooms.refetch(); toast.success(t("admin.hotelRooms.t28", "방 배정이 해제되었습니다")); },
     onError: (e) => toast.error(e.message),
   });
   const bulkAssignMut = trpc.hotelRoomNotify.bulkAssignCsv.useMutation({
@@ -42,7 +42,7 @@ export default function HotelRooms() {
     onError: (e: { message: string }) => toast.error(e.message),
   });
   const notifyAssignMut = trpc.hotelRoomNotify.assignAndNotify.useMutation({
-    onSuccess: () => { rooms.refetch(); toast.success("방 배정 및 텔레그램 알림 발송 완료"); setAssignDialog({ open: false, roomNumber: "", floor: "", notes: "" }); },
+    onSuccess: () => { rooms.refetch(); toast.success(t("admin.hotelRooms.t29", "방 배정 및 텔레그램 알림 발송 완료")); setAssignDialog({ open: false, roomNumber: "", floor: "", notes: "" }); },
     onError: (e: { message: string }) => toast.error(e.message),
   });
 
@@ -117,21 +117,21 @@ export default function HotelRooms() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">호텔 방 배정 관리</h1>
-          <p className="text-muted-foreground mt-1">투숙객의 방 번호를 배정하고 관리합니다</p>
+          <h1 className="text-2xl font-bold">{t("admin.hotelRooms.t1", "호텔 방 배정 관리")}</h1>
+          <p className="text-muted-foreground mt-1">{t("admin.hotelRooms.t2", "투숙객의 방 번호를 배정하고 관리합니다")}</p>
         </div>
         <div className="flex gap-2">
           <Select value={meetupId?.toString() || "all"} onValueChange={v => setMeetupId(v === "all" ? undefined : Number(v))}>
-            <SelectTrigger className="w-[200px]"><SelectValue placeholder="전체 밋업" /></SelectTrigger>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder={t("admin.hotelRooms.t30", "전체 밋업")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">전체 밋업</SelectItem>
+              <SelectItem value="all">{t("admin.hotelRooms.t3", "전체 밋업")}</SelectItem>
               {(meetups.data || []).map(m => (
                 <SelectItem key={m.id} value={m.id.toString()}>{m.title}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" onClick={exportCSV}><Download className="w-4 h-4 mr-1" />CSV</Button>
-          <Button variant="outline" size="sm" onClick={() => setShowBulkDialog(true)}><Upload className="w-4 h-4 mr-1" />일괄 배정</Button>
+          <Button variant="outline" size="sm" onClick={() => setShowBulkDialog(true)}><Upload className="w-4 h-4 mr-1" />{t("admin.hotelRooms.t4", "일괄 배정")}</Button>
 
         </div>
       </div>
@@ -143,7 +143,7 @@ export default function HotelRooms() {
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-500/10 rounded-lg"><Users className="w-5 h-5 text-blue-500" /></div>
               <div>
-                <p className="text-sm text-muted-foreground">총 참석자</p>
+                <p className="text-sm text-muted-foreground">{t("admin.hotelRooms.t5", "총 참석자")}</p>
                 <p className="text-2xl font-bold">{allRegs.length}명</p>
               </div>
             </div>
@@ -154,7 +154,7 @@ export default function HotelRooms() {
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-500/10 rounded-lg"><Hotel className="w-5 h-5 text-green-500" /></div>
               <div>
-                <p className="text-sm text-muted-foreground">배정 완료</p>
+                <p className="text-sm text-muted-foreground">{t("admin.hotelRooms.t6", "배정 완료")}</p>
                 <p className="text-2xl font-bold">{assigned.length}명</p>
               </div>
             </div>
@@ -165,7 +165,7 @@ export default function HotelRooms() {
             <div className="flex items-center gap-3">
               <div className="p-2 bg-orange-500/10 rounded-lg"><DoorOpen className="w-5 h-5 text-orange-500" /></div>
               <div>
-                <p className="text-sm text-muted-foreground">사용 객실</p>
+                <p className="text-sm text-muted-foreground">{t("admin.hotelRooms.t7", "사용 객실")}</p>
                 <p className="text-2xl font-bold">{uniqueRooms.size}실</p>
               </div>
             </div>
@@ -176,7 +176,7 @@ export default function HotelRooms() {
             <div className="flex items-center gap-3">
               <div className="p-2 bg-red-500/10 rounded-lg"><Users className="w-5 h-5 text-red-500" /></div>
               <div>
-                <p className="text-sm text-muted-foreground">미배정</p>
+                <p className="text-sm text-muted-foreground">{t("admin.hotelRooms.t8", "미배정")}</p>
                 <p className="text-2xl font-bold">{unassigned.length}명</p>
               </div>
             </div>
@@ -187,14 +187,14 @@ export default function HotelRooms() {
       {/* 검색 */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="이름, 전화번호, 방 번호로 검색..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+        <Input placeholder={t("admin.hotelRooms.t31", "이름, 전화번호, 방 번호로 검색...")} value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
       </div>
 
       {/* 배정된 방 목록 */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Hotel className="w-5 h-5" />배정된 객실 ({Object.keys(filteredGroups).length}실)</CardTitle>
-          <CardDescription>방 번호별 투숙객 현황</CardDescription>
+          <CardDescription>{t("admin.hotelRooms.t9", "방 번호별 투숙객 현황")}</CardDescription>
         </CardHeader>
         <CardContent>
           {Object.keys(filteredGroups).length > 0 ? (
@@ -234,7 +234,7 @@ export default function HotelRooms() {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-8">배정된 객실이 없습니다</p>
+            <p className="text-muted-foreground text-center py-8">{t("admin.hotelRooms.t10", "배정된 객실이 없습니다")}</p>
           )}
         </CardContent>
       </Card>
@@ -243,7 +243,7 @@ export default function HotelRooms() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Users className="w-5 h-5" />미배정 참석자 ({filteredUnassigned.length}명)</CardTitle>
-          <CardDescription>아직 방이 배정되지 않은 참석자입니다. 클릭하여 배정하세요.</CardDescription>
+          <CardDescription>{t("admin.hotelRooms.t11", "아직 방이 배정되지 않은 참석자입니다. 클릭하여 배정하세요.")}</CardDescription>
         </CardHeader>
         <CardContent>
           {filteredUnassigned.length > 0 ? (
@@ -277,22 +277,22 @@ export default function HotelRooms() {
       <Dialog open={showBulkDialog} onOpenChange={setShowBulkDialog}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><FileSpreadsheet className="w-5 h-5" /> CSV 일괄 방 배정</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><FileSpreadsheet className="w-5 h-5" /> {t("admin.hotelRooms.t12", "CSV 일괄 방 배정")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="p-3 bg-muted rounded-lg text-sm">
-              <p className="font-medium mb-1">CSV 형식:</p>
-              <code className="text-xs">이름,전화번호,방번호,층(선택),메모(선택)</code>
-              <p className="text-xs text-muted-foreground mt-1">예: 홍길동,010-1234-5678,301,3,금연실</p>
+              <p className="font-medium mb-1">{t("admin.hotelRooms.t13", "CSV 형식:")}</p>
+              <code className="text-xs">{t("admin.hotelRooms.t14", "이름,전화번호,방번호,층(선택),메모(선택)")}</code>
+              <p className="text-xs text-muted-foreground mt-1">{t("admin.hotelRooms.t15", "예: 홍길동,010-1234-5678,301,3,금연실")}</p>
             </div>
             <div>
-              <Label>CSV 파일 업로드</Label>
+              <Label>{t("admin.hotelRooms.t16", "CSV 파일 업로드")}</Label>
               <Input type="file" accept=".csv,.txt" onChange={handleCsvFileUpload} className="mt-1" />
             </div>
             <div>
-              <Label>또는 직접 입력</Label>
+              <Label>{t("admin.hotelRooms.t17", "또는 직접 입력")}</Label>
               <Textarea
-                placeholder="이름,전화번호,방번호,층,메모&#10;홍길동,010-1234-5678,301,3,금연실"
+                placeholder={t("admin.hotelRooms.t32", "이름,전화번호,방번호,층,메모&#10;홍길동,010-1234-5678,301,3,금연실")}
                 value={csvText}
                 onChange={e => { setCsvText(e.target.value); setCsvPreview(parseCsvInput(e.target.value)); }}
                 rows={5}
@@ -303,7 +303,7 @@ export default function HotelRooms() {
                 <Label>미리보기 ({csvPreview.length}건)</Label>
                 <div className="border rounded-lg max-h-40 overflow-y-auto mt-1">
                   <table className="w-full text-xs">
-                    <thead><tr className="border-b bg-muted"><th className="p-1.5 text-left">이름</th><th className="p-1.5 text-left">전화</th><th className="p-1.5 text-left">방</th><th className="p-1.5 text-left">층</th></tr></thead>
+                    <thead><tr className="border-b bg-muted"><th className="p-1.5 text-left">{t("admin.hotelRooms.t18", "이름")}</th><th className="p-1.5 text-left">{t("admin.hotelRooms.t19", "전화")}</th><th className="p-1.5 text-left">{t("admin.hotelRooms.t20", "방")}</th><th className="p-1.5 text-left">{t("admin.hotelRooms.t21", "층")}</th></tr></thead>
                     <tbody>
                       {csvPreview.map((row, i) => (
                         <tr key={i} className="border-b"><td className="p-1.5">{row.name}</td><td className="p-1.5">{row.phone}</td><td className="p-1.5">{row.roomNumber}</td><td className="p-1.5">{row.floor || "-"}</td></tr>
@@ -315,7 +315,7 @@ export default function HotelRooms() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBulkDialog(false)}>취소</Button>
+            <Button variant="outline" onClick={() => setShowBulkDialog(false)}>{t("admin.hotelRooms.t22", "취소")}</Button>
             <Button
               disabled={csvPreview.length === 0 || bulkAssignMut.isPending}
               onClick={() => bulkAssignMut.mutate({ assignments: csvPreview, sendNotification: true })}
@@ -334,32 +334,32 @@ export default function HotelRooms() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>방 번호 *</Label>
+              <Label>{t("admin.hotelRooms.t23", "방 번호 *")}</Label>
               <Input
-                placeholder="예: 301, 1205"
+                placeholder={t("admin.hotelRooms.t33", "예: 301, 1205")}
                 value={assignDialog.roomNumber}
                 onChange={e => setAssignDialog(p => ({ ...p, roomNumber: e.target.value }))}
               />
             </div>
             <div>
-              <Label>층</Label>
+              <Label>{t("admin.hotelRooms.t24", "층")}</Label>
               <Input
-                placeholder="예: 3, 12"
+                placeholder={t("admin.hotelRooms.t34", "예: 3, 12")}
                 value={assignDialog.floor}
                 onChange={e => setAssignDialog(p => ({ ...p, floor: e.target.value }))}
               />
             </div>
             <div>
-              <Label>메모</Label>
+              <Label>{t("admin.hotelRooms.t25", "메모")}</Label>
               <Textarea
-                placeholder="특이사항 (예: 금연실, 바다뷰, 장애인 편의시설 등)"
+                placeholder={t("admin.hotelRooms.t35", "특이사항 (예: 금연실, 바다뷰, 장애인 편의시설 등)")}
                 value={assignDialog.notes}
                 onChange={e => setAssignDialog(p => ({ ...p, notes: e.target.value }))}
               />
             </div>
           </div>
           <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => setAssignDialog({ open: false, roomNumber: "", floor: "", notes: "" })}>취소</Button>
+            <Button variant="outline" onClick={() => setAssignDialog({ open: false, roomNumber: "", floor: "", notes: "" })}>{t("admin.hotelRooms.t26", "취소")}</Button>
             <Button
               variant="outline"
               disabled={!assignDialog.roomNumber || assignMut.isPending}

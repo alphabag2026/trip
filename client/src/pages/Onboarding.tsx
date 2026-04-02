@@ -32,18 +32,20 @@ const LANGUAGES_LIST = [
 
 // 신뢰도 돈 표시 컴포넌트
 function ConfidenceDot({ score }: { score: number }) {
+  const { t } = useTranslation();
   const color = score >= 0.9 ? 'bg-green-400' : score >= 0.7 ? 'bg-amber-400' : 'bg-red-400';
   const label = score >= 0.9 ? '높음' : score >= 0.7 ? '보통' : '낮음';
   return (
     <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground" title={`신뢰도: ${Math.round(score * 100)}%`}>
       <span className={`w-1.5 h-1.5 rounded-full ${color}`} />
-      {score < 0.7 && <span className="text-red-400">확인 필요</span>}
+      {score < 0.7 && <span className="text-red-400">{t("onboarding.t1", "확인 필요")}</span>}
     </span>
   );
 }
 
 // 필드별 OCR 원래 값 되돌리기 버튼
 function ResetFieldBtn({ onClick }: { onClick: () => void }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
@@ -52,7 +54,7 @@ function ResetFieldBtn({ onClick }: { onClick: () => void }) {
       title="OCR 원래 값으로 되돌리기"
     >
       <RotateCcw className="h-2.5 w-2.5" />
-      <span>되돌리기</span>
+      <span>{t("onboarding.t2", "되돌리기")}</span>
     </button>
   );
 }
@@ -120,7 +122,7 @@ export default function Onboarding() {
   const scanMut = trpc.passport.scan.useMutation();
   const scanAndRegisterMut = trpc.passport.scanAndRegister.useMutation({
     onSuccess: () => {
-      toast.success("여권 스캔으로 가입이 완료되었습니다!");
+      toast.success(t("onboarding.t31", "여권 스캔으로 가입이 완료되었습니다!"));
       navigate("/");
     },
     onError: (e) => toast.error(e.message),
@@ -182,7 +184,7 @@ export default function Onboarding() {
   const handlePassportScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { toast.error("파일 크기는 10MB 이하만 가능합니다"); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error(t("onboarding.t32", "파일 크기는 10MB 이하만 가능합니다")); return; }
 
     setScanning(true);
     // 미리보기 표시
@@ -249,13 +251,13 @@ export default function Onboarding() {
           }
         } catch { /* 중복 체크 실패 무시 */ }
 
-        toast.success("여권 정보가 자동으로 인식되었습니다! 확인 후 저장해주세요.");
+        toast.success(t("onboarding.t33", "여권 정보가 자동으로 인식되었습니다! 확인 후 저장해주세요."));
         setStep(0); // 스캔 결과 확인 단계
       } else {
-        toast.error("여권 인식에 실패했습니다. 사진을 다시 촬영해주세요.");
+        toast.error(t("onboarding.t34", "여권 인식에 실패했습니다. 사진을 다시 촬영해주세요."));
       }
     } catch {
-      toast.error("여권 스캔 중 오류가 발생했습니다.");
+      toast.error(t("onboarding.t35", "여권 스캔 중 오류가 발생했습니다."));
     } finally {
       setScanning(false);
       if (e.target) e.target.value = "";
@@ -265,7 +267,7 @@ export default function Onboarding() {
   // 스캔 결과로 한번에 가입
   const handleScanAndRegister = () => {
     if (!profileForm.phone.trim()) {
-      toast.error("전화번호를 입력해주세요.");
+      toast.error(t("onboarding.t36", "전화번호를 입력해주세요."));
       return;
     }
     scanAndRegisterMut.mutate({
@@ -330,18 +332,18 @@ export default function Onboarding() {
                     </Badge>
                   </h3>
                   <p className="text-sm text-muted-foreground mb-3">
-                    여권 사진 한 장으로 프로필과 여권 정보를 자동으로 입력합니다. 전화번호만 추가로 입력하면 가입 완료!
+                    {t("onboarding.t3", "여권 사진 한 장으로 프로필과 여권 정보를 자동으로 입력합니다. 전화번호만 추가로 입력하면 가입 완료!")}
                   </p>
                   {/* 이미지 품질 가이드 */}
                   <div className="mb-3 p-3 rounded-lg bg-muted/50 border border-border/50">
                     <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                      <Info className="h-3 w-3" /> 촬영 팁 (정확도 향상)
+                      <Info className="h-3 w-3" /> {t("onboarding.t4", "촬영 팁 (정확도 향상)")}
                     </p>
                     <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
-                      <div className="flex items-center gap-1.5"><Eye className="h-3 w-3 text-green-400 shrink-0" /> 여권 정보 페이지를 평평하게 펼쳐주세요</div>
-                      <div className="flex items-center gap-1.5"><Camera className="h-3 w-3 text-green-400 shrink-0" /> 밝은 곳에서 반사 없이 촬영</div>
-                      <div className="flex items-center gap-1.5"><ScanLine className="h-3 w-3 text-green-400 shrink-0" /> 하단 MRZ 코드가 선명하게 보이도록</div>
-                      <div className="flex items-center gap-1.5"><Shield className="h-3 w-3 text-green-400 shrink-0" /> 손가락으로 정보를 가리지 마세요</div>
+                      <div className="flex items-center gap-1.5"><Eye className="h-3 w-3 text-green-400 shrink-0" /> {t("onboarding.t5", "여권 정보 페이지를 평평하게 펼쳐주세요")}</div>
+                      <div className="flex items-center gap-1.5"><Camera className="h-3 w-3 text-green-400 shrink-0" /> {t("onboarding.t6", "밝은 곳에서 반사 없이 촬영")}</div>
+                      <div className="flex items-center gap-1.5"><ScanLine className="h-3 w-3 text-green-400 shrink-0" /> {t("onboarding.t7", "하단 MRZ 코드가 선명하게 보이도록")}</div>
+                      <div className="flex items-center gap-1.5"><Shield className="h-3 w-3 text-green-400 shrink-0" /> {t("onboarding.t8", "손가락으로 정보를 가리지 마세요")}</div>
                     </div>
                   </div>
                   <div className="flex gap-2 flex-wrap">
@@ -353,17 +355,17 @@ export default function Onboarding() {
                       {scanning ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          AI가 여권을 분석 중...
+                          {t("onboarding.t9", "AI가 여권을 분석 중...")}
                         </>
                       ) : (
                         <>
                           <Camera className="h-4 w-4" />
-                          여권 사진 촬영/선택
+                          {t("onboarding.t10", "여권 사진 촬영/선택")}
                         </>
                       )}
                     </Button>
                     <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => { /* 일반 가입 진행 */ }}>
-                      직접 입력하기
+                      {t("onboarding.t11", "직접 입력하기")}
                     </Button>
                   </div>
                 </div>
@@ -389,8 +391,8 @@ export default function Onboarding() {
                   <ScanLine className="h-8 w-8 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg">여권 분석 중...</h3>
-                  <p className="text-sm text-muted-foreground mt-1">AI가 여권 정보를 읽고 있습니다</p>
+                  <h3 className="font-bold text-lg">{t("onboarding.t12", "여권 분석 중...")}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{t("onboarding.t13", "AI가 여권 정보를 읽고 있습니다")}</p>
                 </div>
                 <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-400" />
               </CardContent>
@@ -403,10 +405,10 @@ export default function Onboarding() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-amber-400">
-                <AlertCircle className="h-5 w-5" /> 중복 프로필 감지
+                <AlertCircle className="h-5 w-5" /> {t("onboarding.t14", "중복 프로필 감지")}
               </DialogTitle>
               <DialogDescription>
-                동일한 여권 정보로 등록된 사용자가 이미 있습니다.
+                {t("onboarding.t15", "동일한 여권 정보로 등록된 사용자가 이미 있습니다.")}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 py-2">
@@ -422,10 +424,10 @@ export default function Onboarding() {
             </div>
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setShowDuplicateDialog(false)}>
-                무시하고 계속
+                {t("onboarding.t16", "무시하고 계속")}
               </Button>
               <Button variant="destructive" onClick={() => { setShowDuplicateDialog(false); setStep(1); setOcrData(null); setScanImagePreview(""); }}>
-                취소하고 돌아가기
+                {t("onboarding.t17", "취소하고 돌아가기")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -463,7 +465,7 @@ export default function Onboarding() {
           <div className="space-y-4">
             <div className="flex items-center justify-center mb-4 gap-2">
               <ScanLine className="h-6 w-6 text-blue-400" />
-              <h2 className="text-xl font-bold">여권 스캔 결과 확인</h2>
+              <h2 className="text-xl font-bold">{t("onboarding.t18", "여권 스캔 결과 확인")}</h2>
             </div>
 
             {/* 스캔 이미지 미리보기 + 재스캔 버튼 */}
@@ -482,9 +484,9 @@ export default function Onboarding() {
                       className="gap-2 text-blue-400 border-blue-500/30 hover:bg-blue-500/10"
                     >
                       {scanning ? (
-                        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> 스캔 중...</>
+                        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("onboarding.t19", "스캔 중...")}</>
                       ) : (
-                        <><RefreshCw className="h-3.5 w-3.5" /> 여권 다시 스캔</>
+                        <><RefreshCw className="h-3.5 w-3.5" /> {t("onboarding.t20", "여권 다시 스캔")}</>
                       )}
                     </Button>
                     <input
@@ -559,10 +561,10 @@ export default function Onboarding() {
                       onClick={() => {
                         setPassportForm(originalOcrPassport);
                         if (originalOcrProfile) setProfileForm(originalOcrProfile);
-                        toast.info("모든 필드가 OCR 원래 값으로 복원되었습니다.");
+                        toast.info(t("onboarding.t37", "모든 필드가 OCR 원래 값으로 복원되었습니다."));
                       }}
                     >
-                      <RotateCcw className="h-3 w-3" /> 전체 원래 값으로 되돌리기
+                      <RotateCcw className="h-3 w-3" /> {t("onboarding.t21", "전체 원래 값으로 되돌리기")}
                     </Button>
                   </div>
                 )}
@@ -625,10 +627,10 @@ export default function Onboarding() {
                       )}
                     </Label>
                     <Select value={passportForm.gender} onValueChange={v => setPassportForm(p => ({ ...p, gender: v as "M" | "F" }))}>
-                      <SelectTrigger><SelectValue placeholder="성별" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t("onboarding.t38", "성별")} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="M">남성 (M)</SelectItem>
-                        <SelectItem value="F">여성 (F)</SelectItem>
+                        <SelectItem value="M">{t("onboarding.t22", "남성 (M)")}</SelectItem>
+                        <SelectItem value="F">{t("onboarding.t23", "여성 (F)")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -656,7 +658,7 @@ export default function Onboarding() {
                 {passportForm.expiryDate && new Date(passportForm.expiryDate) < new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000) && (
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive">
                     <AlertTriangle className="w-4 h-4" />
-                    <span className="text-sm">여권 만료일이 6개월 이내입니다. 갱신을 권장합니다.</span>
+                    <span className="text-sm">{t("onboarding.t24", "여권 만료일이 6개월 이내입니다. 갱신을 권장합니다.")}</span>
                   </div>
                 )}
               </CardContent>
@@ -667,21 +669,21 @@ export default function Onboarding() {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Phone className="w-4 h-4 text-green-400" /> 추가 정보 입력
-                  <Badge variant="outline" className="text-[10px] border-red-500/30 text-red-400">필수</Badge>
+                  <Badge variant="outline" className="text-[10px] border-red-500/30 text-red-400">{t("onboarding.t25", "필수")}</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs">전화번호 *</Label>
+                    <Label className="text-xs">{t("onboarding.t26", "전화번호 *")}</Label>
                     <Input placeholder="+82-10-1234-5678" value={profileForm.phone} onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))} />
                   </div>
                   <div>
-                    <Label className="text-xs">텔레그램 ID</Label>
+                    <Label className="text-xs">{t("onboarding.t27", "텔레그램 ID")}</Label>
                     <Input placeholder="@username" value={profileForm.telegramId} onChange={e => setProfileForm(p => ({ ...p, telegramId: e.target.value }))} />
                   </div>
                   <div>
-                    <Label className="text-xs">선호 언어</Label>
+                    <Label className="text-xs">{t("onboarding.t28", "선호 언어")}</Label>
                     <Select value={profileForm.preferredLanguage} onValueChange={v => setProfileForm(p => ({ ...p, preferredLanguage: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -696,11 +698,11 @@ export default function Onboarding() {
             {/* 액션 버튼 */}
             <div className="flex justify-between items-center">
               <Button variant="outline" onClick={() => { setStep(1); setOcrData(null); setScanImagePreview(""); }}>
-                <ArrowLeft className="w-4 h-4 mr-2" /> 돌아가기
+                <ArrowLeft className="w-4 h-4 mr-2" /> {t("onboarding.t29", "돌아가기")}
               </Button>
               <div className="flex gap-2">
                 <Button variant="ghost" onClick={() => setStep(1)}>
-                  직접 입력하기
+                  {t("onboarding.t30", "직접 입력하기")}
                 </Button>
                 <Button
                   size="lg"

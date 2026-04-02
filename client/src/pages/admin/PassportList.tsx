@@ -45,7 +45,7 @@ export default function AdminPassportList() {
   }, [passportList]);
 
   const handleExportCSV = () => {
-    if (!filtered.length) return toast.error("내보낼 데이터가 없습니다");
+    if (!filtered.length) return toast.error(t("admin.passportList.t41", "내보낼 데이터가 없습니다"));
     const headers = ["이름", "팀", "전화번호", "여권 영문명", "여권번호", "국적", "생년월일", "성별", "만료일", "발급국", "상태"];
     const rows = filtered.map((p: any) => [
       p.regName, p.regTeamName || "", p.regPhone, p.passportFullName || "", p.passportNumber || "",
@@ -58,7 +58,7 @@ export default function AdminPassportList() {
     const a = document.createElement("a");
     a.href = url; a.download = `passport-list-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click(); URL.revokeObjectURL(url);
-    toast.success("CSV 다운로드 완료");
+    toast.success(t("admin.passportList.t42", "CSV 다운로드 완료"));
   };
 
   const isExpiringSoon = (date: string | null) => {
@@ -72,9 +72,9 @@ export default function AdminPassportList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">출장자 여권 명단</h1>
+        <h1 className="text-2xl font-bold">{t("admin.passportList.t1", "출장자 여권 명단")}</h1>
         <Button onClick={handleExportCSV} variant="outline" size="sm">
-          <FileSpreadsheet className="w-4 h-4 mr-2" /> CSV 내보내기
+          <FileSpreadsheet className="w-4 h-4 mr-2" /> {t("admin.passportList.t2", "CSV 내보내기")}
         </Button>
       </div>
 
@@ -85,7 +85,7 @@ export default function AdminPassportList() {
             <Users className="w-8 h-8 text-blue-500" />
             <div>
               <div className="text-2xl font-bold">{stats.total}</div>
-              <div className="text-sm text-muted-foreground">전체 출장자</div>
+              <div className="text-sm text-muted-foreground">{t("admin.passportList.t3", "전체 출장자")}</div>
             </div>
           </CardContent>
         </Card>
@@ -94,7 +94,7 @@ export default function AdminPassportList() {
             <FileSpreadsheet className="w-8 h-8 text-green-500" />
             <div>
               <div className="text-2xl font-bold">{stats.withPassport}</div>
-              <div className="text-sm text-muted-foreground">여권 등록</div>
+              <div className="text-sm text-muted-foreground">{t("admin.passportList.t4", "여권 등록")}</div>
             </div>
           </CardContent>
         </Card>
@@ -103,7 +103,7 @@ export default function AdminPassportList() {
             <ShieldCheck className="w-8 h-8 text-emerald-500" />
             <div>
               <div className="text-2xl font-bold">{stats.verified}</div>
-              <div className="text-sm text-muted-foreground">인증 완료</div>
+              <div className="text-sm text-muted-foreground">{t("admin.passportList.t5", "인증 완료")}</div>
             </div>
           </CardContent>
         </Card>
@@ -112,7 +112,7 @@ export default function AdminPassportList() {
             <AlertTriangle className="w-8 h-8 text-red-500" />
             <div>
               <div className="text-2xl font-bold">{stats.expired}</div>
-              <div className="text-sm text-muted-foreground">만료됨</div>
+              <div className="text-sm text-muted-foreground">{t("admin.passportList.t6", "만료됨")}</div>
             </div>
           </CardContent>
         </Card>
@@ -122,14 +122,14 @@ export default function AdminPassportList() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="이름, 여권번호, 팀명, 전화번호 검색..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+          <Input placeholder={t("admin.passportList.t43", "이름, 여권번호, 팀명, 전화번호 검색...")} value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
         </div>
         <Select value={meetupFilter} onValueChange={setMeetupFilter}>
           <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="밋업 선택" />
+            <SelectValue placeholder={t("admin.passportList.t44", "밋업 선택")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">전체 밋업</SelectItem>
+            <SelectItem value="all">{t("admin.passportList.t7", "전체 밋업")}</SelectItem>
             {meetups?.map((m: any) => (
               <SelectItem key={m.id} value={String(m.id)}>{m.title}</SelectItem>
             ))}
@@ -144,26 +144,26 @@ export default function AdminPassportList() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 font-medium">이름</th>
-                  <th className="text-left p-3 font-medium">팀</th>
-                  <th className="text-left p-3 font-medium">여권 영문명</th>
-                  <th className="text-left p-3 font-medium">여권번호</th>
-                  <th className="text-left p-3 font-medium">국적</th>
-                  <th className="text-left p-3 font-medium">만료일</th>
-                  <th className="text-left p-3 font-medium">상태</th>
-                  <th className="text-center p-3 font-medium">상세</th>
+                  <th className="text-left p-3 font-medium">{t("admin.passportList.t8", "이름")}</th>
+                  <th className="text-left p-3 font-medium">{t("admin.passportList.t9", "팀")}</th>
+                  <th className="text-left p-3 font-medium">{t("admin.passportList.t10", "여권 영문명")}</th>
+                  <th className="text-left p-3 font-medium">{t("admin.passportList.t11", "여권번호")}</th>
+                  <th className="text-left p-3 font-medium">{t("admin.passportList.t12", "국적")}</th>
+                  <th className="text-left p-3 font-medium">{t("admin.passportList.t13", "만료일")}</th>
+                  <th className="text-left p-3 font-medium">{t("admin.passportList.t14", "상태")}</th>
+                  <th className="text-center p-3 font-medium">{t("admin.passportList.t15", "상세")}</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr><td colSpan={8} className="text-center p-8 text-muted-foreground">로딩 중...</td></tr>
+                  <tr><td colSpan={8} className="text-center p-8 text-muted-foreground">{t("admin.passportList.t16", "로딩 중...")}</td></tr>
                 ) : filtered.length === 0 ? (
-                  <tr><td colSpan={8} className="text-center p-8 text-muted-foreground">데이터가 없습니다</td></tr>
+                  <tr><td colSpan={8} className="text-center p-8 text-muted-foreground">{t("admin.passportList.t17", "데이터가 없습니다")}</td></tr>
                 ) : filtered.map((p: any) => (
                   <tr key={p.regId} className="border-b hover:bg-muted/30 transition-colors">
                     <td className="p-3 font-medium">{p.regName}</td>
                     <td className="p-3 text-muted-foreground">{p.regTeamName || "-"}</td>
-                    <td className="p-3">{p.passportFullName || <span className="text-muted-foreground">미등록</span>}</td>
+                    <td className="p-3">{p.passportFullName || <span className="text-muted-foreground">{t("admin.passportList.t18", "미등록")}</span>}</td>
                     <td className="p-3 font-mono text-xs">{p.passportNumber || <span className="text-muted-foreground">-</span>}</td>
                     <td className="p-3">{p.passportNationality || "-"}</td>
                     <td className="p-3">
@@ -175,11 +175,11 @@ export default function AdminPassportList() {
                     </td>
                     <td className="p-3">
                       {p.passportVerified ? (
-                        <Badge variant="default" className="bg-emerald-600">인증</Badge>
+                        <Badge variant="default" className="bg-emerald-600">{t("admin.passportList.t19", "인증")}</Badge>
                       ) : p.passportNumber ? (
-                        <Badge variant="secondary">미인증</Badge>
+                        <Badge variant="secondary">{t("admin.passportList.t20", "미인증")}</Badge>
                       ) : (
-                        <Badge variant="outline">미등록</Badge>
+                        <Badge variant="outline">{t("admin.passportList.t21", "미등록")}</Badge>
                       )}
                     </td>
                     <td className="p-3 text-center">
@@ -199,83 +199,83 @@ export default function AdminPassportList() {
       <Dialog open={!!selectedPerson} onOpenChange={() => setSelectedPerson(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>출장자 상세 정보</DialogTitle>
+            <DialogTitle>{t("admin.passportList.t22", "출장자 상세 정보")}</DialogTitle>
           </DialogHeader>
           {selectedPerson && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <div className="text-muted-foreground mb-1">신청자명</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t23", "신청자명")}</div>
                   <div className="font-medium">{selectedPerson.regName}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-1">팀</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t24", "팀")}</div>
                   <div className="font-medium">{selectedPerson.regTeamName || "-"}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-1">전화번호</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t25", "전화번호")}</div>
                   <div className="font-medium">{selectedPerson.regPhone}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-1">메신저 ID</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t26", "메신저 ID")}</div>
                   <div className="font-medium">{selectedPerson.regMessengerId}</div>
                 </div>
               </div>
 
               <hr />
-              <h3 className="font-semibold">여권 정보</h3>
+              <h3 className="font-semibold">{t("admin.passportList.t27", "여권 정보")}</h3>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <div className="text-muted-foreground mb-1">영문 이름</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t28", "영문 이름")}</div>
                   <div className="font-medium">{selectedPerson.passportFullName || "미등록"}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-1">여권번호</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t29", "여권번호")}</div>
                   <div className="font-mono font-medium">{selectedPerson.passportNumber || "미등록"}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-1">국적</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t30", "국적")}</div>
                   <div className="font-medium">{selectedPerson.passportNationality || "-"}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-1">발급국</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t31", "발급국")}</div>
                   <div className="font-medium">{selectedPerson.passportIssuingCountry || "-"}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-1">생년월일</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t32", "생년월일")}</div>
                   <div className="font-medium">{selectedPerson.passportBirthDate || "-"}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-1">성별</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t33", "성별")}</div>
                   <div className="font-medium">{selectedPerson.passportGender === "M" ? "남성" : selectedPerson.passportGender === "F" ? "여성" : "-"}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-1">만료일</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t34", "만료일")}</div>
                   <div className={`font-medium ${isExpiringSoon(selectedPerson.passportExpiryDate) ? "text-red-500" : ""}`}>
                     {selectedPerson.passportExpiryDate || "-"}
                     {isExpiringSoon(selectedPerson.passportExpiryDate) && " (만료 임박)"}
                   </div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-1">인증 상태</div>
-                  <div>{selectedPerson.passportVerified ? <Badge className="bg-emerald-600">인증 완료</Badge> : <Badge variant="secondary">미인증</Badge>}</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t35", "인증 상태")}</div>
+                  <div>{selectedPerson.passportVerified ? <Badge className="bg-emerald-600">{t("admin.passportList.t36", "인증 완료")}</Badge> : <Badge variant="secondary">{t("admin.passportList.t37", "미인증")}</Badge>}</div>
                 </div>
               </div>
 
               {selectedPerson.passportImageUrl && (
                 <div>
-                  <div className="text-muted-foreground mb-2 text-sm">여권 이미지</div>
+                  <div className="text-muted-foreground mb-2 text-sm">{t("admin.passportList.t38", "여권 이미지")}</div>
                   <img src={selectedPerson.passportImageUrl} alt="Passport" className="w-full rounded-lg border" />
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <div className="text-muted-foreground mb-1">소속</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t39", "소속")}</div>
                   <div className="font-medium">{selectedPerson.profileOrganization || "-"}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-1">텔레그램 ID</div>
+                  <div className="text-muted-foreground mb-1">{t("admin.passportList.t40", "텔레그램 ID")}</div>
                   <div className="font-medium">{selectedPerson.profileTelegramId || "-"}</div>
                 </div>
               </div>

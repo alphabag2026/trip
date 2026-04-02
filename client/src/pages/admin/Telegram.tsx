@@ -22,11 +22,11 @@ export default function AdminTelegram() {
     onError: (err) => toast.error(err.message),
   });
   const setupWebhookMutation = trpc.telegram.setupWebhook.useMutation({
-    onSuccess: () => { refetchWebhook(); toast.success("Webhook이 설정되었습니다"); },
+    onSuccess: () => { refetchWebhook(); toast.success(t("admin.telegram.t13", "Webhook이 설정되었습니다")); },
     onError: (err) => toast.error(err.message),
   });
   const removeWebhookMutation = trpc.telegram.removeWebhook.useMutation({
-    onSuccess: () => { refetchWebhook(); toast.success("Webhook이 해제되었습니다"); },
+    onSuccess: () => { refetchWebhook(); toast.success(t("admin.telegram.t14", "Webhook이 해제되었습니다")); },
     onError: (err) => toast.error(err.message),
   });
 
@@ -59,7 +59,7 @@ export default function AdminTelegram() {
   };
 
   const handleSetupWebhook = () => {
-    if (!webhookUrl) { toast.error("Webhook URL을 입력하세요"); return; }
+    if (!webhookUrl) { toast.error(t("admin.telegram.t15", "Webhook URL을 입력하세요")); return; }
     setupWebhookMutation.mutate({ webhookUrl });
   };
 
@@ -108,10 +108,10 @@ export default function AdminTelegram() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Webhook className="h-5 w-5 text-blue-400" />
-            Webhook 설정
+            {t("admin.telegram.t1", "Webhook 설정")}
           </CardTitle>
           <CardDescription>
-            텔레그램 봇에 Webhook을 등록하면, 관리자가 텔레그램으로 보낸 메시지가 자동으로 수신되어 여행 정보로 파싱됩니다.
+            {t("admin.telegram.t2", "텔레그램 봇에 Webhook을 등록하면, 관리자가 텔레그램으로 보낸 메시지가 자동으로 수신되어 여행 정보로 파싱됩니다.")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -120,11 +120,11 @@ export default function AdminTelegram() {
             <Globe className="h-5 w-5 text-muted-foreground" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">현재 상태:</span>
+                <span className="text-sm font-medium">{t("admin.telegram.t3", "현재 상태:")}</span>
                 {isWebhookActive ? (
-                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">활성</Badge>
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">{t("admin.telegram.t4", "활성")}</Badge>
                 ) : (
-                  <Badge variant="outline" className="text-muted-foreground">미설정</Badge>
+                  <Badge variant="outline" className="text-muted-foreground">{t("admin.telegram.t5", "미설정")}</Badge>
                 )}
               </div>
               {isWebhookActive && (
@@ -155,7 +155,7 @@ export default function AdminTelegram() {
               placeholder="https://your-domain.com/api/telegram/webhook"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              배포 후 실제 도메인 URL을 입력하세요. 현재 개발 환경에서는 HTTPS가 필요합니다.
+              {t("admin.telegram.t6", "배포 후 실제 도메인 URL을 입력하세요. 현재 개발 환경에서는 HTTPS가 필요합니다.")}
             </p>
           </div>
 
@@ -174,13 +174,13 @@ export default function AdminTelegram() {
 
           {/* How it works */}
           <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20 text-sm space-y-2">
-            <p className="font-medium text-blue-400">Webhook 작동 방식</p>
+            <p className="font-medium text-blue-400">{t("admin.telegram.t7", "Webhook 작동 방식")}</p>
             <ol className="list-decimal list-inside text-muted-foreground space-y-1 text-xs">
-              <li>위에서 Bot Token을 설정하고 저장합니다</li>
-              <li>Webhook URL을 입력하고 "Webhook 등록" 버튼을 클릭합니다</li>
-              <li>텔레그램 봇에 메시지를 보내면 자동으로 수신됩니다</li>
-              <li>수신된 메시지는 LLM이 자동 분석하여 여행 정보로 분류합니다</li>
-              <li>"텔레그램 업로드" 메뉴에서 수신된 정보를 확인/승인할 수 있습니다</li>
+              <li>{t("admin.telegram.t8", "위에서 Bot Token을 설정하고 저장합니다")}</li>
+              <li>{t("admin.telegram.t9", "Webhook URL을 입력하고 \"Webhook 등록\" 버튼을 클릭합니다")}</li>
+              <li>{t("admin.telegram.t10", "텔레그램 봇에 메시지를 보내면 자동으로 수신됩니다")}</li>
+              <li>{t("admin.telegram.t11", "수신된 메시지는 LLM이 자동 분석하여 여행 정보로 분류합니다")}</li>
+              <li>{t("admin.telegram.t12", "\"텔레그램 업로드\" 메뉴에서 수신된 정보를 확인/승인할 수 있습니다")}</li>
             </ol>
           </div>
         </CardContent>

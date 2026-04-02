@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { FileText, Copy, ChevronDown, ChevronRight, Lock, Globe, ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const METHOD_COLORS: Record<string, string> = {
   GET: "bg-green-500/20 text-green-400 border-green-500/30",
@@ -128,6 +129,7 @@ const API_SPEC: EndpointSpec[] = [
 ];
 
 function EndpointCard({ spec }: { spec: EndpointSpec }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -165,7 +167,7 @@ function EndpointCard({ spec }: { spec: EndpointSpec }) {
                           <td className="p-2 font-mono text-xs">{p.name}</td>
                           <td className="p-2"><Badge variant="outline" className="text-xs">{p.in}</Badge></td>
                           <td className="p-2 text-xs">{p.type}</td>
-                          <td className="p-2">{p.required ? <Badge className="bg-red-500/20 text-red-400 text-xs">필수</Badge> : <span className="text-xs text-muted-foreground">선택</span>}</td>
+                          <td className="p-2">{p.required ? <Badge className="bg-red-500/20 text-red-400 text-xs">{t("admin.apiDocs.t1", "필수")}</Badge> : <span className="text-xs text-muted-foreground">{t("admin.apiDocs.t2", "선택")}</span>}</td>
                           <td className="p-2 text-xs text-muted-foreground">{p.description}</td>
                         </tr>
                       ))}
@@ -193,7 +195,7 @@ function EndpointCard({ spec }: { spec: EndpointSpec }) {
                         <tr key={key} className="border-b last:border-0">
                           <td className="p-2 font-mono text-xs">{key}</td>
                           <td className="p-2 text-xs">{val.type}</td>
-                          <td className="p-2">{val.required ? <Badge className="bg-red-500/20 text-red-400 text-xs">필수</Badge> : <span className="text-xs text-muted-foreground">선택</span>}</td>
+                          <td className="p-2">{val.required ? <Badge className="bg-red-500/20 text-red-400 text-xs">{t("admin.apiDocs.t3", "필수")}</Badge> : <span className="text-xs text-muted-foreground">{t("admin.apiDocs.t4", "선택")}</span>}</td>
                           <td className="p-2 text-xs text-muted-foreground">{val.description}</td>
                         </tr>
                       ))}
@@ -239,7 +241,7 @@ function EndpointCard({ spec }: { spec: EndpointSpec }) {
                     navigator.clipboard.writeText(
                       `curl -X ${spec.method} "${window.location.origin}${spec.path}" -H "Authorization: Bearer YOUR_API_KEY" -H "Content-Type: application/json"`
                     );
-                    toast.success("cURL 복사됨");
+                    toast.success(t("admin.apiDocs.t9", "cURL 복사됨"));
                   }}
                 >
                   <Copy className="h-3 w-3" />
@@ -254,6 +256,7 @@ function EndpointCard({ spec }: { spec: EndpointSpec }) {
 }
 
 export default function ApiDocs() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const tags = Array.from(new Set(API_SPEC.map((s) => s.tag)));
 
@@ -267,9 +270,9 @@ export default function ApiDocs() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <FileText className="h-6 w-6 text-green-400" />
-            REST API 문서
+            {t("admin.apiDocs.t5", "REST API 문서")}
           </h1>
-          <p className="text-muted-foreground mt-1">외부 파트너 연동을 위한 API 레퍼런스</p>
+          <p className="text-muted-foreground mt-1">{t("admin.apiDocs.t6", "외부 파트너 연동을 위한 API 레퍼런스")}</p>
         </div>
         <Badge variant="outline" className="text-sm">v1.0.0</Badge>
       </div>
@@ -280,10 +283,9 @@ export default function ApiDocs() {
           <div className="flex items-start gap-3">
             <Lock className="h-5 w-5 text-blue-400 mt-0.5" />
             <div>
-              <h3 className="font-medium text-blue-400">인증</h3>
+              <h3 className="font-medium text-blue-400">{t("admin.apiDocs.t7", "인증")}</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                모든 API 요청에는 <code className="bg-background/50 px-1 rounded">Authorization: Bearer YOUR_API_KEY</code> 헤더가 필요합니다.
-                API 키는 백오피스 &gt; API 키 관리에서 생성할 수 있습니다.
+                {t("admin.apiDocs.t8a", "모든 API 요청에는")} <code className="bg-background/50 px-1 rounded">Authorization: Bearer YOUR_API_KEY</code> {t("admin.apiDocs.t8b", "헤더가 필요합니다. API 키는 백오피스 > API 키 관리에서 생성할 수 있습니다.")}
               </p>
               <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
                 <span>Base URL: <code className="bg-background/50 px-1 rounded">{window.location.origin}/api/v1</code></span>
@@ -297,7 +299,7 @@ export default function ApiDocs() {
 
       {/* Search */}
       <Input
-        placeholder="엔드포인트 검색..."
+        placeholder={t("admin.apiDocs.t10", "엔드포인트 검색...")}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="max-w-md"

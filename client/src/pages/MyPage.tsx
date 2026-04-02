@@ -68,13 +68,13 @@ export default function MyPage() {
     onSuccess: () => checklistQuery.refetch(),
   });
   const addCustomMut = trpc.checklist.addCustomItem.useMutation({
-    onSuccess: () => { checklistQuery.refetch(); setCustomItemTitle(""); setShowAddCustom(false); toast.success("항목이 추가되었습니다"); },
+    onSuccess: () => { checklistQuery.refetch(); setCustomItemTitle(""); setShowAddCustom(false); toast.success(t("myPage.t21", "항목이 추가되었습니다")); },
   });
   const deleteCustomMut = trpc.checklist.deleteCustomItem.useMutation({
-    onSuccess: () => { checklistQuery.refetch(); toast.success("항목이 삭제되었습니다"); },
+    onSuccess: () => { checklistQuery.refetch(); toast.success(t("myPage.t22", "항목이 삭제되었습니다")); },
   });
   const resetMut = trpc.checklist.reset.useMutation({
-    onSuccess: () => { checklistQuery.refetch(); toast.success("체크리스트가 초기화되었습니다"); },
+    onSuccess: () => { checklistQuery.refetch(); toast.success(t("myPage.t23", "체크리스트가 초기화되었습니다")); },
   });
 
   // Profile form
@@ -169,7 +169,7 @@ export default function MyPage() {
   const handlePassportScanInMyPage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { toast.error("파일 크기는 10MB 이하만 가능합니다"); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error(t("myPage.t24", "파일 크기는 10MB 이하만 가능합니다")); return; }
     setScanning(true);
     try {
       const arrayBuffer = await file.arrayBuffer();
@@ -200,12 +200,12 @@ export default function MyPage() {
         setPassportForm(newForm);
         setOriginalPassportForm(newForm);
         if (!editingPassport) setEditingPassport(true);
-        toast.success("여권 정보가 자동으로 인식되었습니다! 확인 후 저장해주세요.");
+        toast.success(t("myPage.t25", "여권 정보가 자동으로 인식되었습니다! 확인 후 저장해주세요."));
       } else {
-        toast.error("여권 인식에 실패했습니다. 사진을 다시 촬영해주세요.");
+        toast.error(t("myPage.t26", "여권 인식에 실패했습니다. 사진을 다시 촬영해주세요."));
       }
     } catch {
-      toast.error("여권 스캔 중 오류가 발생했습니다.");
+      toast.error(t("myPage.t27", "여권 스캔 중 오류가 발생했습니다."));
     } finally {
       setScanning(false);
       if (e.target) e.target.value = "";
@@ -216,13 +216,13 @@ export default function MyPage() {
   const resetPassportField = (field: string) => {
     if (originalPassportForm) {
       setPassportForm((p: any) => ({ ...p, [field]: originalPassportForm[field] }));
-      toast.info("원래 OCR 값으로 복원되었습니다.");
+      toast.info(t("myPage.t28", "원래 OCR 값으로 복원되었습니다."));
     }
   };
   const resetAllPassportFields = () => {
     if (originalPassportForm) {
       setPassportForm(originalPassportForm);
-      toast.info("모든 필드가 OCR 원래 값으로 복원되었습니다.");
+      toast.info(t("myPage.t29", "모든 필드가 OCR 원래 값으로 복원되었습니다."));
     }
   };
 
@@ -322,22 +322,22 @@ export default function MyPage() {
         <Tabs defaultValue="profile" className="space-y-4">
           <TabsList className="flex w-full overflow-x-auto no-scrollbar gap-1 h-auto flex-wrap sm:flex-nowrap">
             <TabsTrigger value="profile" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
-              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabProfile")}</span><span className="sm:hidden">프로필</span>
+              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabProfile")}</span><span className="sm:hidden">{t("myPage.t1", "프로필")}</span>
             </TabsTrigger>
             <TabsTrigger value="passport" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
-              <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabPassport")}</span><span className="sm:hidden">여권</span>
+              <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabPassport")}</span><span className="sm:hidden">{t("myPage.t2", "여권")}</span>
             </TabsTrigger>
             <TabsTrigger value="trips" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
-              <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabTrips")}</span><span className="sm:hidden">이력</span>
+              <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabTrips")}</span><span className="sm:hidden">{t("myPage.t3", "이력")}</span>
             </TabsTrigger>
             <TabsTrigger value="vouchers" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
-              <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabHotel")}</span><span className="sm:hidden">호텔</span>
+              <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabHotel")}</span><span className="sm:hidden">{t("myPage.t4", "호텔")}</span>
             </TabsTrigger>
             <TabsTrigger value="tickets" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
-              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabFlight")}</span><span className="sm:hidden">항공</span>
+              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabFlight")}</span><span className="sm:hidden">{t("myPage.t5", "항공")}</span>
             </TabsTrigger>
             <TabsTrigger value="checklist" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
-              <ClipboardCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabChecklist")}</span><span className="sm:hidden">체크</span>
+              <ClipboardCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabChecklist")}</span><span className="sm:hidden">{t("myPage.t6", "체크")}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -576,7 +576,7 @@ export default function MyPage() {
                     {originalPassportForm && (
                       <div className="flex justify-end">
                         <Button variant="ghost" size="sm" className="text-xs text-muted-foreground gap-1 h-7" onClick={resetAllPassportFields}>
-                          <RotateCcw className="h-3 w-3" /> 전체 OCR 원래 값으로 되돌리기
+                          <RotateCcw className="h-3 w-3" /> {t("myPage.t7", "전체 OCR 원래 값으로 되돌리기")}
                         </Button>
                       </div>
                     )}
@@ -586,7 +586,7 @@ export default function MyPage() {
                         <Label className="flex items-center gap-1">
                           {t("myPage.passportNumber")}
                           {originalPassportForm && passportForm.passportNumber !== originalPassportForm.passportNumber && (
-                            <button onClick={() => resetPassportField('passportNumber')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                            <button onClick={() => resetPassportField('passportNumber')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />{t("myPage.t8", "되돌리기")}</button>
                           )}
                         </Label>
                         <Input value={passportForm.passportNumber} onChange={e => setPassportForm((p: any) => ({ ...p, passportNumber: e.target.value }))} />
@@ -595,7 +595,7 @@ export default function MyPage() {
                         <Label className="flex items-center gap-1">
                           {t("myPage.fullNameEn")}
                           {originalPassportForm && passportForm.fullName !== originalPassportForm.fullName && (
-                            <button onClick={() => resetPassportField('fullName')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                            <button onClick={() => resetPassportField('fullName')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />{t("myPage.t9", "되돌리기")}</button>
                           )}
                         </Label>
                         <Input value={passportForm.fullName} onChange={e => setPassportForm((p: any) => ({ ...p, fullName: e.target.value }))} />
@@ -604,7 +604,7 @@ export default function MyPage() {
                         <Label className="flex items-center gap-1">
                           {t("myPage.issuingCountry")}
                           {originalPassportForm && passportForm.issuingCountry !== originalPassportForm.issuingCountry && (
-                            <button onClick={() => resetPassportField('issuingCountry')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                            <button onClick={() => resetPassportField('issuingCountry')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />{t("myPage.t10", "되돌리기")}</button>
                           )}
                         </Label>
                         <Select value={passportForm.issuingCountry} onValueChange={v => setPassportForm((p: any) => ({ ...p, issuingCountry: v }))}>
@@ -616,7 +616,7 @@ export default function MyPage() {
                         <Label className="flex items-center gap-1">
                           {t("myPage.nationality")}
                           {originalPassportForm && passportForm.nationality !== originalPassportForm.nationality && (
-                            <button onClick={() => resetPassportField('nationality')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                            <button onClick={() => resetPassportField('nationality')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />{t("myPage.t11", "되돌리기")}</button>
                           )}
                         </Label>
                         <Select value={passportForm.nationality} onValueChange={v => setPassportForm((p: any) => ({ ...p, nationality: v }))}>
@@ -628,7 +628,7 @@ export default function MyPage() {
                         <Label className="flex items-center gap-1">
                           {t("myPage.birthDate")}
                           {originalPassportForm && passportForm.birthDate !== originalPassportForm.birthDate && (
-                            <button onClick={() => resetPassportField('birthDate')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                            <button onClick={() => resetPassportField('birthDate')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />{t("myPage.t12", "되돌리기")}</button>
                           )}
                         </Label>
                         <Input type="date" value={passportForm.birthDate} onChange={e => setPassportForm((p: any) => ({ ...p, birthDate: e.target.value }))} />
@@ -637,7 +637,7 @@ export default function MyPage() {
                         <Label className="flex items-center gap-1">
                           {t("myPage.gender")}
                           {originalPassportForm && passportForm.gender !== originalPassportForm.gender && (
-                            <button onClick={() => resetPassportField('gender')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                            <button onClick={() => resetPassportField('gender')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />{t("myPage.t13", "되돌리기")}</button>
                           )}
                         </Label>
                         <Select value={passportForm.gender} onValueChange={v => setPassportForm((p: any) => ({ ...p, gender: v }))}>
@@ -652,7 +652,7 @@ export default function MyPage() {
                         <Label className="flex items-center gap-1">
                           {t("myPage.issueDate")}
                           {originalPassportForm && passportForm.issueDate !== originalPassportForm.issueDate && (
-                            <button onClick={() => resetPassportField('issueDate')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                            <button onClick={() => resetPassportField('issueDate')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />{t("myPage.t14", "되돌리기")}</button>
                           )}
                         </Label>
                         <Input type="date" value={passportForm.issueDate} onChange={e => setPassportForm((p: any) => ({ ...p, issueDate: e.target.value }))} />
@@ -661,7 +661,7 @@ export default function MyPage() {
                         <Label className="flex items-center gap-1">
                           {t("myPage.expiryDate")}
                           {originalPassportForm && passportForm.expiryDate !== originalPassportForm.expiryDate && (
-                            <button onClick={() => resetPassportField('expiryDate')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />되돌리기</button>
+                            <button onClick={() => resetPassportField('expiryDate')} className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300 ml-1"><RotateCcw className="h-2.5 w-2.5" />{t("myPage.t15", "되돌리기")}</button>
                           )}
                         </Label>
                         <Input type="date" value={passportForm.expiryDate} onChange={e => setPassportForm((p: any) => ({ ...p, expiryDate: e.target.value }))} />
@@ -999,7 +999,7 @@ export default function MyPage() {
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-bold text-lg flex items-center gap-2">
                         <ClipboardCheck className="w-5 h-5 text-primary" />
-                        기본 준비 상태
+                        {t("myPage.t16", "기본 준비 상태")}
                       </h3>
                       <Badge variant={doneCount === 5 ? "default" : "secondary"}>{doneCount}/5</Badge>
                     </div>
@@ -1025,13 +1025,13 @@ export default function MyPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-lg flex items-center gap-2">
                     <ListChecks className="w-5 h-5 text-primary" />
-                    국가별 입국 심사 체크리스트
+                    {t("myPage.t17", "국가별 입국 심사 체크리스트")}
                   </h3>
                 </div>
                 <div className="flex gap-2 mb-4">
                   <Select value={selectedCountry} onValueChange={setSelectedCountry}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="목적지 국가를 선택하세요" />
+                      <SelectValue placeholder={t("myPage.t30", "목적지 국가를 선택하세요")} />
                     </SelectTrigger>
                     <SelectContent>
                       {(countriesQuery.data || []).map((c: any) => (
@@ -1042,7 +1042,7 @@ export default function MyPage() {
                     </SelectContent>
                   </Select>
                   {selectedCountry && (
-                    <Button variant="outline" size="icon" onClick={() => resetMut.mutate({ countryCode: selectedCountry })} title="초기화">
+                    <Button variant="outline" size="icon" onClick={() => resetMut.mutate({ countryCode: selectedCountry })} title={t("myPage.t32", "초기화")}>
                       <RotateCw className="w-4 h-4" />
                     </Button>
                   )}
@@ -1051,7 +1051,7 @@ export default function MyPage() {
                 {!selectedCountry && (
                   <div className="text-center py-8 text-muted-foreground">
                     <Globe className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>목적지 국가를 선택하면<br />입국 시 필요한 서류와 준비물을 확인할 수 있습니다.</p>
+                    <p>목적지 국가를 선택하면<br />{t("myPage.t18", "입국 시 필요한 서류와 준비물을 확인할 수 있습니다.")}</p>
                   </div>
                 )}
 
@@ -1154,7 +1154,7 @@ export default function MyPage() {
                       {showAddCustom ? (
                         <div className="flex gap-2">
                           <Input
-                            placeholder="추가할 항목을 입력하세요"
+                            placeholder={t("myPage.t31", "추가할 항목을 입력하세요")}
                             value={customItemTitle}
                             onChange={(e) => setCustomItemTitle(e.target.value)}
                             onKeyDown={(e) => {
@@ -1171,12 +1171,12 @@ export default function MyPage() {
                             {addCustomMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "추가"}
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => { setShowAddCustom(false); setCustomItemTitle(""); }}>
-                            취소
+                            {t("myPage.t19", "취소")}
                           </Button>
                         </div>
                       ) : (
                         <Button variant="outline" className="w-full" onClick={() => setShowAddCustom(true)}>
-                          <Plus className="w-4 h-4 mr-2" /> 내 항목 추가
+                          <Plus className="w-4 h-4 mr-2" /> {t("myPage.t20", "내 항목 추가")}
                         </Button>
                       )}
                     </div>
