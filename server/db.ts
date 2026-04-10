@@ -2964,3 +2964,88 @@ export async function bulkUpdateRegistrationStatus(ids: number[], status: "appro
   if (!db) throw new Error("DB not available");
   await db.update(registrations).set({ status }).where(inArray(registrations.id, ids));
 }
+
+// ── Enhanced Statistics with Date Range ──────────────────────────────
+export async function getRegistrationStatsByMeetupWithDateRange(
+  meetupId?: number,
+  dateRange?: "week" | "month" | "quarter" | "year" | "all"
+) {
+  const db = await getDb();
+  if (!db) return { total: 0, pending: 0, approved: 0, rejected: 0, completed: 0, domestic: 0, overseas: 0, byCategory: [], byNationality: [], recentTrend: [] };
+
+  const conditions: any[] = [];
+  if (meetupId) conditions.push(eq(registrations.meetupId, meetupId));
+
+  const range = dateRange || "all";
+  if (range !== "all") {
+    const intervalMap: Record<string, string> = { week: "7 DAY", month: "30 DAY", quarter: "90 DAY", year: "365 DAY" };
+    const interval = intervalMap[range];
+    if (interval) conditions.push(gte(registrations.createdAt, sql.raw(`DATE_SUB(NOW(), INTERVAL ${interval})`)));
+  }
+
+  const where = conditions.length ? and(...conditions) : undefined;
+
+  const [total] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where);
+  const [pending] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where ? and(where, eq(registrations.status, "pending")) : eq(registrations.status, "pending"));
+  const [approved] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where ? and(where, eq(registrations.status, "approved")) : eq(registrations.status, "approved"));
+  const [rejected] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where ? and(where, eq(registrations.status, "rejected")) : eq(registrations.status, "rejected"));
+  const [completed] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where ? and(where, eq(registrations.status, "completed")) : eq(registrations.status, "completed"));
+  const [domestic] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where ? and(where, eq(registrations.locationType, "domestic")) : eq(registrations.locationType, "domestic"));
+  const [overseas] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where ? and(where, eq(registrations.locationType, "overseas")) : eq(registrations.locationType, "overseas"));
+
+  const byCategory = await db.select({ category: registrations.category, count: sql<number>`count(*)` }).from(registrations).where(where).groupBy(registrations.category);
+
+  const allRegs = await db.select({ passportOcrData: registrations.passportOcrData }).from(registrations).where(where);
+  const nationalityMap: Record<string, number> = {};
+  for (const r of allRegs) {
+    const ocr = r.passportOcrData as any;
+    const nat = ocr?.nationality || ocr?.issuingCountry || "Unknown";
+    nationalityMap[nat] = (nationalityMap[nat] || 0) + 1;
+  }
+  const byNationality = Object.entries(nationalityMap).map(([nationality, count]) => ({ nationality, count })).sort((a, b) => b.count - a.count).slice(0, 20);
+
+  const trendDays: Record<string, string> = { week: "7 DAY", month: "30 DAY", quarter: "90 DAY", year: "365 DAY", all: "365 DAY" };
+  const trendInterval = trendDays[range] || "30 DAY";
+  const trendConds: any[] = [];
+  if (meetupId) trendConds.push(eq(registrations.meetupId, meetupId));
+  trendConds.push(gte(registrations.createdAt, sql.raw(`DATE_SUB(NOW(), INTERVAL ${trendInterval})`)));
+  const recentTrend = await db.select({ date: sql<string>`DATE(createdAt)`, count: sql<number>`count(*)` }).from(registrations).where(and(...trendConds)).groupBy(sql`DATE(createdAt)`).orderBy(sql`DATE(createdAt)`);
+
+  return { total: total.count, pending: pending.count, approved: approved.count, rejected: rejected.count, completed: completed.count, domestic: domestic.count, overseas: overseas.count, byCategory, byNationality, recentTrend };
+}
+
+// ── Meetup Comparison Statistics ──────────────────────────────
+export async function getMeetupComparisonStats() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db.select({
+    meetupId: registrations.meetupId,
+    meetupTitle: meetups.title,
+    total: sql<number>`count(*)`,
+    pending: sql<number>`SUM(CASE WHEN ${registrations.status} = 'pending' THEN 1 ELSE 0 END)`,
+    approved: sql<number>`SUM(CASE WHEN ${registrations.status} = 'approved' THEN 1 ELSE 0 END)`,
+    rejected: sql<number>`SUM(CASE WHEN ${registrations.status} = 'rejected' THEN 1 ELSE 0 END)`,
+    completed: sql<number>`SUM(CASE WHEN ${registrations.status} = 'completed' THEN 1 ELSE 0 END)`,
+    domestic: sql<number>`SUM(CASE WHEN ${registrations.locationType} = 'domestic' THEN 1 ELSE 0 END)`,
+    overseas: sql<number>`SUM(CASE WHEN ${registrations.locationType} = 'overseas' THEN 1 ELSE 0 END)`,
+  }).from(registrations).leftJoin(meetups, eq(registrations.meetupId, meetups.id)).groupBy(registrations.meetupId, meetups.title).orderBy(sql`count(*) DESC`);
+
+  return result.map(r => ({ meetupId: r.meetupId, meetupTitle: r.meetupTitle || `밋업 #${r.meetupId}`, total: Number(r.total) || 0, pending: Number(r.pending) || 0, approved: Number(r.approved) || 0, rejected: Number(r.rejected) || 0, completed: Number(r.completed) || 0, domestic: Number(r.domestic) || 0, overseas: Number(r.overseas) || 0 }));
+}
+
+// ── Daily Registration Trend (multi-status) ──────────────────────────────
+export async function getDailyRegistrationTrend(days: number = 30) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db.select({
+    date: sql<string>`DATE(${registrations.createdAt})`,
+    total: sql<number>`count(*)`,
+    approved: sql<number>`SUM(CASE WHEN ${registrations.status} = 'approved' THEN 1 ELSE 0 END)`,
+    pending: sql<number>`SUM(CASE WHEN ${registrations.status} = 'pending' THEN 1 ELSE 0 END)`,
+    rejected: sql<number>`SUM(CASE WHEN ${registrations.status} = 'rejected' THEN 1 ELSE 0 END)`,
+  }).from(registrations).where(gte(registrations.createdAt, sql.raw(`DATE_SUB(NOW(), INTERVAL ${days} DAY)`))).groupBy(sql`DATE(${registrations.createdAt})`).orderBy(sql`DATE(${registrations.createdAt})`);
+
+  return result.map(r => ({ date: r.date, total: Number(r.total) || 0, approved: Number(r.approved) || 0, pending: Number(r.pending) || 0, rejected: Number(r.rejected) || 0 }));
+}

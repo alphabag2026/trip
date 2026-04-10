@@ -6892,6 +6892,17 @@ Return ONLY valid JSON. If a field is not readable, use empty string.`,
     stats: adminProcedure
       .input(z.object({ meetupId: z.number().optional() }).optional())
       .query(({ input }) => db.getRegistrationStatsByMeetup(input?.meetupId)),
+    statsWithDateRange: adminProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        dateRange: z.enum(["week", "month", "quarter", "year", "all"]).optional(),
+      }).optional())
+      .query(({ input }) => db.getRegistrationStatsByMeetupWithDateRange(input?.meetupId, input?.dateRange)),
+    meetupComparison: adminProcedure
+      .query(() => db.getMeetupComparisonStats()),
+    dailyTrend: adminProcedure
+      .input(z.object({ days: z.number().min(1).max(365).default(30) }).optional())
+      .query(({ input }) => db.getDailyRegistrationTrend(input?.days ?? 30)),
     bulkUpdateStatus: adminProcedure
       .input(z.object({
         ids: z.array(z.number()).min(1),
