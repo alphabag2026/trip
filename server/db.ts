@@ -3041,13 +3041,14 @@ export async function getDailyRegistrationTrend(days: number = 30) {
   const db = await getDb();
   if (!db) return [];
 
+  const dateExpr = sql`DATE(${registrations.createdAt})`;
   const result = await db.select({
-    date: sql<string>`DATE(${registrations.createdAt})`,
+    date: sql<string>`DATE(${registrations.createdAt})`.as("date_col"),
     total: sql<number>`count(*)`,
     approved: sql<number>`SUM(CASE WHEN ${registrations.status} = 'approved' THEN 1 ELSE 0 END)`,
     pending: sql<number>`SUM(CASE WHEN ${registrations.status} = 'pending' THEN 1 ELSE 0 END)`,
     rejected: sql<number>`SUM(CASE WHEN ${registrations.status} = 'rejected' THEN 1 ELSE 0 END)`,
-  }).from(registrations).where(gte(registrations.createdAt, sql.raw(`DATE_SUB(NOW(), INTERVAL ${days} DAY)`))).groupBy(sql`DATE(${registrations.createdAt})`).orderBy(sql`DATE(${registrations.createdAt})`);
+  }).from(registrations).where(gte(registrations.createdAt, sql.raw(`DATE_SUB(NOW(), INTERVAL ${Number(days)} DAY)`))).groupBy(sql.raw(`DATE(createdAt)`)).orderBy(sql.raw(`DATE(createdAt)`));
 
   return result.map(r => ({ date: r.date, total: Number(r.total) || 0, approved: Number(r.approved) || 0, pending: Number(r.pending) || 0, rejected: Number(r.rejected) || 0 }));
 }

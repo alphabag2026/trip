@@ -2071,6 +2071,36 @@
       "download": "다운로드",
       "share": "공유",
       "linkCopied": "이미지 링크가 복사되었습니다"
+    },
+    "sidebarGroup": {
+      "overview": "개요",
+      "meetupManage": "밋업 관리",
+      "travelOps": "여행 운영",
+      "onsite": "현장 관리",
+      "communication": "소통",
+      "documents": "문서/발급",
+      "platformAdmin": "플랫폼 관리",
+      "settings": "설정"
+    },
+    "accessDenied": "접근 권한이 없습니다",
+    "superadminOnly": "이 페이지는 슈퍼관리자만 접근할 수 있습니다.",
+    "excel": {
+      "downloadTemplate": "서식 다운로드",
+      "exportExcel": "엑셀 내보내기",
+      "downloadSuccess": "다운로드 완료",
+      "downloadError": "다운로드 실패",
+      "downloading": "다운로드 중...",
+      "exportStats": "통계 엑셀 내보내기",
+      "pickupTemplate": "차량 서식",
+      "accommodationTemplate": "숙소 서식",
+      "eventTemplate": "이벤트 서식",
+      "itineraryTemplate": "여정표 서식",
+      "attendeeTemplate": "참가자 서식",
+      "exportPickups": "차량 내보내기",
+      "exportAccommodations": "숙소 내보내기",
+      "exportEvents": "이벤트 내보내기",
+      "exportItineraries": "여정표 내보내기",
+      "exportAttendees": "참가자 내보내기"
     }
   },
   "assignments": {
@@ -2815,9 +2845,7 @@
     "double": "더블",
     "twin": "트윈",
     "suite": "스위트",
-    "floor": "층",
-    "checkIn": "체크인",
-    "checkOut": "체크아웃"
+    "floor": "층"
   },
   "nav": {
     "ai": "AI 도우미",

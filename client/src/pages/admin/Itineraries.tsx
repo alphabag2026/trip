@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Plus, Trash2, Plane, Hotel, Send, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { ExcelToolbar, fetchTrpcQuery } from "@/components/ExcelButtons";
 import AIUploader from "@/components/AIUploader";
 
 export default function AdminItineraries() {
@@ -61,9 +62,15 @@ export default function AdminItineraries() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold">{t("admin.itineraries.title")}</h1>
-        <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />{t("admin.itineraries.newItinerary")}</Button>
+        <div className="flex gap-2 flex-wrap">
+          <ExcelToolbar
+            templateFetch={() => fetchTrpcQuery("excelExport.itineraryTemplate")}
+            exportFetch={() => fetchTrpcQuery("excelExport.exportItineraries")}
+          />
+          <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />{t("admin.itineraries.newItinerary")}</Button>
+        </div>
       </div>
 
       <div className="grid gap-4">

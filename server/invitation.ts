@@ -2,11 +2,16 @@ import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 import QRCode from "qrcode";
 import { readFileSync } from "fs";
-import { join } from "path";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+// ESM-compatible __dirname
+const __filename_esm = fileURLToPath(import.meta.url);
+const __dirname_esm = dirname(__filename_esm);
 
 // Load fonts once
-const fontBold = readFileSync(join(__dirname, "fonts", "NotoSansKR-Bold.otf"));
-const fontRegular = readFileSync(join(__dirname, "fonts", "NotoSansKR-Regular.otf"));
+const fontBold = readFileSync(join(__dirname_esm, "fonts", "NotoSansKR-Bold.otf"));
+const fontRegular = readFileSync(join(__dirname_esm, "fonts", "NotoSansKR-Regular.otf"));
 
 interface InvitationData {
   meetupTitle: string;

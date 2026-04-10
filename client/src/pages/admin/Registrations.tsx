@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Search, Download, Eye, ScanLine, Trash2, FileSpreadsheet, CheckCircle2, Clock, Luggage, UtensilsCrossed, Wine, Cigarette } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { ExcelDownloadButton, fetchTrpcQuery } from "@/components/ExcelButtons";
 
 export default function AdminRegistrations() {
   const { t } = useTranslation();
@@ -97,6 +98,16 @@ export default function AdminRegistrations() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">{t("admin.registrations.title")}</h1>
         <div className="flex gap-2 flex-wrap">
+          <ExcelDownloadButton
+            icon="template"
+            fetchData={() => fetchTrpcQuery("excelExport.attendeeTemplate")}
+            label={t("admin.excel.attendeeTemplate", "참가자 서식")}
+          />
+          <ExcelDownloadButton
+            icon="export"
+            fetchData={() => fetchTrpcQuery("excelExport.exportAttendees")}
+            label={t("admin.excel.exportAttendees", "참가자 내보내기")}
+          />
           <Button variant="outline" size="sm" onClick={handleExportPassportOcr}>
             <FileSpreadsheet className="h-4 w-4 mr-2" />{t("admin.registrations.t1", "여권 OCR 엑셀")}
           </Button>

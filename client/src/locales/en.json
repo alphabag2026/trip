@@ -2071,6 +2071,36 @@
       "download": "Download",
       "share": "Share",
       "linkCopied": "Image link copied to clipboard"
+    },
+    "sidebarGroup": {
+      "overview": "Overview",
+      "meetupManage": "Meetup Management",
+      "travelOps": "Travel Operations",
+      "onsite": "On-site Management",
+      "communication": "Communication",
+      "documents": "Documents",
+      "platformAdmin": "Platform Admin",
+      "settings": "Settings"
+    },
+    "accessDenied": "Access Denied",
+    "superadminOnly": "This page is only accessible to super administrators.",
+    "excel": {
+      "downloadTemplate": "Download Template",
+      "exportExcel": "Export Excel",
+      "downloadSuccess": "Download complete",
+      "downloadError": "Download failed",
+      "downloading": "Downloading...",
+      "exportStats": "Export Stats Excel",
+      "pickupTemplate": "Pickup Template",
+      "accommodationTemplate": "Accommodation Template",
+      "eventTemplate": "Event Template",
+      "itineraryTemplate": "Itinerary Template",
+      "attendeeTemplate": "Attendee Template",
+      "exportPickups": "Export Pickups",
+      "exportAccommodations": "Export Accommodations",
+      "exportEvents": "Export Events",
+      "exportItineraries": "Export Itineraries",
+      "exportAttendees": "Export Attendees"
     }
   },
   "assignments": {
@@ -2815,9 +2845,7 @@
     "double": "Double",
     "twin": "Twin",
     "suite": "Suite",
-    "floor": "F",
-    "checkIn": "Check-in",
-    "checkOut": "Check-out"
+    "floor": "F"
   },
   "nav": {
     "ai": "AI Assistant",

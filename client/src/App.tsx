@@ -56,6 +56,7 @@ import MobileBottomNav from "./components/MobileBottomNav";
 import CommunityChat from "./pages/CommunityChat";
 import AdminTelegramUploads from "./pages/admin/TelegramUploads";
 import AdminApiDocs from "./pages/admin/ApiDocs";
+import SuperAdminGuard from "./components/SuperAdminGuard";
 import AdminPassportList from "./pages/admin/PassportList";
 import AdminExpenses from "./pages/admin/Expenses";
 import LoginPage from "./pages/LoginPage";
@@ -144,15 +145,15 @@ function AdminRouter() {
         <Route path="/baggage-checkin" component={AdminBaggageCheckin} />
         <Route path="/meal-dashboard" component={AdminMealDashboard} />
         <Route path="/hotel-rooms" component={AdminHotelRooms} />
-        <Route path="/platform" component={AdminPlatformDashboard} />
-        <Route path="/partners" component={AdminPartners} />
+        <Route path="/platform">{() => <SuperAdminGuard><AdminPlatformDashboard /></SuperAdminGuard>}</Route>
+        <Route path="/partners">{() => <SuperAdminGuard><AdminPartners /></SuperAdminGuard>}</Route>
         <Route path="/hotel-vouchers" component={AdminHotelVouchers} />
         <Route path="/flight-tickets" component={AdminFlightTickets} />
-        <Route path="/booking-search" component={AdminBookingSearch} />
-        <Route path="/affiliate-revenue" component={AdminAffiliateRevenue} />
-        <Route path="/api-keys" component={AdminApiKeys} />
-        <Route path="/telegram-uploads" component={AdminTelegramUploads} />
-        <Route path="/api-docs" component={AdminApiDocs} />
+        <Route path="/booking-search">{() => <SuperAdminGuard><AdminBookingSearch /></SuperAdminGuard>}</Route>
+        <Route path="/affiliate-revenue">{() => <SuperAdminGuard><AdminAffiliateRevenue /></SuperAdminGuard>}</Route>
+        <Route path="/api-keys">{() => <SuperAdminGuard><AdminApiKeys /></SuperAdminGuard>}</Route>
+        <Route path="/telegram-uploads">{() => <SuperAdminGuard><AdminTelegramUploads /></SuperAdminGuard>}</Route>
+        <Route path="/api-docs">{() => <SuperAdminGuard><AdminApiDocs /></SuperAdminGuard>}</Route>
         <Route path="/passport-list" component={AdminPassportList} />
         <Route path="/expenses" component={AdminExpenses} />
         <Route path="/ad-banners" component={AdminAdBanners} />

@@ -2,6 +2,7 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Plane, Clock, Globe, CheckCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { ExcelDownloadButton, fetchTrpcQuery } from "@/components/ExcelButtons";
 
 export default function AdminDashboard() {
   const { data: stats } = trpc.registration.stats.useQuery();
@@ -17,7 +18,14 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{t("admin.dashboard.title")}</h1>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="text-2xl font-bold">{t("admin.dashboard.title")}</h1>
+        <ExcelDownloadButton
+          icon="export"
+          fetchData={() => fetchTrpcQuery("excelExport.exportStats")}
+          label={t("admin.excel.exportStats", "통계 엑셀 내보내기")}
+        />
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {statCards.map((s, i) => (
           <Card key={i} className="bg-card border-border">

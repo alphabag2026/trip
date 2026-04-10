@@ -6,6 +6,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
 import { storagePut } from "./storage";
+import * as excel from "./excel";
 import { invokeLLM } from "./_core/llm";
 import { nanoid } from "nanoid";
 import bcrypt from "bcryptjs";
@@ -26,13 +27,17 @@ import {
   type HotelSearchParams,
 } from "./affiliateHelper";
 
+// adminProcedure: admin, superadmin, organizer 모두 접근 가능 (행사 운영 메뉴)
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.role !== "admin" && ctx.user.role !== "superadmin") throw new TRPCError({ code: "FORBIDDEN", message: "관리자 권한이 필요합니다" });
+  const allowed = ["admin", "superadmin", "organizer"];
+  if (!allowed.includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "관리자 또는 행사주최자 권한이 필요합니다" });
   return next({ ctx });
 });
 
+// superadminProcedure: admin, superadmin만 접근 가능 (플랫폼 관리 메뉴)
 const superadminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.role !== "superadmin" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "슈퍼관리자 권한이 필요합니다" });
+  const allowed = ["admin", "superadmin"];
+  if (!allowed.includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "슈퍼관리자 권한이 필요합니다" });
   return next({ ctx });
 });
 
@@ -7185,6 +7190,85 @@ Return ONLY valid JSON.`,
       }
       return results;
     }),
+  }),
+
+  // ── Excel Templates & Export ─────────────────────────────
+  excelExport: router({
+    // Template downloads
+    pickupTemplate: adminProcedure.query(async () => {
+      const buf = await excel.generatePickupTemplate();
+      return { base64: buf.toString("base64"), filename: "pickup_template.xlsx" };
+    }),
+    accommodationTemplate: adminProcedure.query(async () => {
+      const buf = await excel.generateAccommodationTemplate();
+      return { base64: buf.toString("base64"), filename: "accommodation_template.xlsx" };
+    }),
+    eventTemplate: adminProcedure.query(async () => {
+      const buf = await excel.generateEventTemplate();
+      return { base64: buf.toString("base64"), filename: "event_template.xlsx" };
+    }),
+    itineraryTemplate: adminProcedure.query(async () => {
+      const buf = await excel.generateItineraryTemplate();
+      return { base64: buf.toString("base64"), filename: "itinerary_template.xlsx" };
+    }),
+    attendeeTemplate: adminProcedure.query(async () => {
+      const buf = await excel.generateAttendeeTemplate();
+      return { base64: buf.toString("base64"), filename: "attendee_template.xlsx" };
+    }),
+    // Data exports
+    exportPickups: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        const data = await db.getPickupAssignments(input?.meetupId);
+        const buf = await excel.exportPickupsToExcel(data);
+        return { base64: buf.toString("base64"), filename: `pickups_export_${Date.now()}.xlsx` };
+      }),
+    exportAccommodations: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        const data = await db.getAccommodations(input?.meetupId);
+        const buf = await excel.exportAccommodationsToExcel(data);
+        return { base64: buf.toString("base64"), filename: `accommodations_export_${Date.now()}.xlsx` };
+      }),
+    exportEvents: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        const data = await db.getScheduleEvents(input?.meetupId);
+        const buf = await excel.exportEventsToExcel(data);
+        return { base64: buf.toString("base64"), filename: `events_export_${Date.now()}.xlsx` };
+      }),
+    exportItineraries: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        const data = await db.getAllItineraries();
+        const buf = await excel.exportItinerariesToExcel(data);
+        return { base64: buf.toString("base64"), filename: `itineraries_export_${Date.now()}.xlsx` };
+      }),
+    exportAttendees: adminProcedure
+      .input(z.object({ meetupId: z.number().optional(), status: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        const data = await db.getRegistrations(input);
+        const buf = await excel.exportAttendeesToExcel(data);
+        return { base64: buf.toString("base64"), filename: `attendees_export_${Date.now()}.xlsx` };
+      }),
+    exportStats: adminProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        period: z.enum(["week", "month", "quarter", "year", "all"]).default("all"),
+      }).optional())
+      .query(async ({ input }) => {
+        const stats = await db.getRegistrationStatsByMeetup(input?.meetupId);
+        const comparison = await db.getMeetupComparisonStats();
+        const periodDays = { week: 7, month: 30, quarter: 90, year: 365, all: 3650 };
+        const days = periodDays[input?.period || "all"];
+        const trend = await db.getDailyRegistrationTrend(days);
+        const buf = await excel.exportStatsToExcel({
+          kpi: stats,
+          byMeetup: comparison,
+          dailyTrend: trend,
+        });
+        return { base64: buf.toString("base64"), filename: `stats_export_${Date.now()}.xlsx` };
+      }),
   }),
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────

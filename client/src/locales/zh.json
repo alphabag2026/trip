@@ -2071,6 +2071,36 @@
       "download": "下载",
       "share": "分享",
       "linkCopied": "图片链接已复制"
+    },
+    "sidebarGroup": {
+      "overview": "概览",
+      "meetupManage": "聚会管理",
+      "travelOps": "旅行运营",
+      "onsite": "现场管理",
+      "communication": "沟通",
+      "documents": "文档/发放",
+      "platformAdmin": "平台管理",
+      "settings": "设置"
+    },
+    "accessDenied": "无访问权限",
+    "superadminOnly": "此页面仅限超级管理员访问。",
+    "excel": {
+      "downloadTemplate": "下载模板",
+      "exportExcel": "导出Excel",
+      "downloadSuccess": "下载完成",
+      "downloadError": "下载失败",
+      "downloading": "下载中...",
+      "exportStats": "导出统计Excel",
+      "pickupTemplate": "车辆模板",
+      "accommodationTemplate": "住宿模板",
+      "eventTemplate": "活动模板",
+      "itineraryTemplate": "行程模板",
+      "attendeeTemplate": "参加者模板",
+      "exportPickups": "导出车辆",
+      "exportAccommodations": "导出住宿",
+      "exportEvents": "导出活动",
+      "exportItineraries": "导出行程",
+      "exportAttendees": "导出参加者"
     }
   },
   "assignments": {
@@ -2910,9 +2940,7 @@
     "double": "双人房",
     "twin": "双床房",
     "suite": "套房",
-    "floor": "楼",
-    "checkIn": "入住",
-    "checkOut": "退房"
+    "floor": "楼"
   },
   "nav": {
     "ai": "AI助手",

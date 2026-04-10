@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Bot, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt, Shield, Image } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt, Shield, Image, ChevronDown, type LucideIcon } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -29,46 +29,116 @@ import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 import { useTranslation } from "react-i18next";
 
-// Paths are relative to /admin base (wouter nest mode)
-// Use "~/" prefix for absolute paths that escape the nested router
-const menuItemDefs = [
-  { icon: LayoutDashboard, labelKey: "admin.sidebar.dashboard", path: "/" },
-  { icon: ClipboardList, labelKey: "admin.sidebar.registrations", path: "/registrations" },
-  { icon: Plane, labelKey: "admin.sidebar.meetups", path: "/meetups" },
-  { icon: Plane, labelKey: "admin.sidebar.flights", path: "/flights" },
-  { icon: Car, labelKey: "admin.sidebar.pickups", path: "/pickups" },
-  { icon: Hotel, labelKey: "admin.sidebar.accommodations", path: "/accommodations" },
-  { icon: CalendarDays, labelKey: "admin.sidebar.scheduleEvents", path: "/schedule-events" },
-  { icon: Plane, labelKey: "admin.sidebar.itineraries", path: "/itineraries" },
-  { icon: Edit, labelKey: "admin.sidebar.modRequests", path: "/mod-requests" },
-  { icon: Globe, labelKey: "admin.sidebar.travelInfo", path: "/travel-info" },
-  { icon: Send, labelKey: "admin.sidebar.telegram", path: "/telegram" },
-  { icon: MessageCircle, labelKey: "admin.sidebar.channels", path: "/channels" },
-  { icon: MessageCircle, labelKey: "admin.sidebar.chat", path: "/chat" },
-  { icon: FileText, labelKey: "admin.sidebar.vouchers", path: "/vouchers" },
-  { icon: ClipboardList, labelKey: "admin.sidebar.surveys", path: "/surveys" },
-  { icon: Megaphone, labelKey: "admin.sidebar.broadcast", path: "/broadcast" },
-  { icon: Luggage, labelKey: "admin.sidebar.baggageCheckin", path: "/baggage-checkin" },
-  { icon: UtensilsCrossed, labelKey: "admin.sidebar.mealDashboard", path: "/meal-dashboard" },
-  { icon: DoorOpen, labelKey: "admin.sidebar.hotelRooms", path: "/hotel-rooms" },
-  { icon: Search, labelKey: "admin.sidebar.search", path: "/search" },
-  { icon: Cloud, labelKey: "admin.sidebar.platform", path: "/platform" },
-  { icon: Handshake, labelKey: "admin.sidebar.partners", path: "/partners" },
-  { icon: CreditCard, labelKey: "admin.sidebar.hotelVouchers", path: "/hotel-vouchers" },
-  { icon: Ticket, labelKey: "admin.sidebar.flightTickets", path: "/flight-tickets" },
-  { icon: ShoppingCart, labelKey: "admin.sidebar.bookingSearch", path: "/booking-search" },
-  { icon: TrendingUp, labelKey: "admin.sidebar.affiliateRevenue", path: "/affiliate-revenue" },
-  { icon: Key, labelKey: "admin.sidebar.apiKeys", path: "/api-keys" },
-  { icon: Upload, labelKey: "admin.sidebar.telegramUploads", path: "/telegram-uploads" },
-  { icon: BookOpen, labelKey: "admin.sidebar.apiDocs", path: "/api-docs" },
-  { icon: ShieldCheck, labelKey: "admin.sidebar.passportList", path: "/passport-list" },
-  { icon: Receipt, labelKey: "admin.sidebar.expenses", path: "/expenses" },
-  { icon: Image, labelKey: "admin.sidebar.adBanners", path: "/ad-banners" },
-  { icon: Users, labelKey: "admin.sidebar.attendeeDashboard", path: "/attendee-dashboard" },
-  { icon: CreditCard, labelKey: "admin.sidebar.invitation", path: "/invitation" },
-  { icon: Shield, labelKey: "admin.sidebar.2faSettings", path: "/2fa-settings" },
-  { icon: Home, labelKey: "admin.sidebar.goHome", path: "~/" },
+// ── Role-based menu definitions ──
+// roles: which user roles can see this menu item
+// "all" = visible to admin, superadmin, organizer
+type MenuItemDef = {
+  icon: LucideIcon;
+  labelKey: string;
+  path: string;
+  roles: ("admin" | "superadmin" | "organizer" | "all")[];
+};
+
+type MenuGroup = {
+  labelKey: string;
+  items: MenuItemDef[];
+  roles: ("admin" | "superadmin" | "organizer" | "all")[];
+};
+
+const menuGroups: MenuGroup[] = [
+  {
+    labelKey: "admin.sidebarGroup.overview",
+    roles: ["all"],
+    items: [
+      { icon: LayoutDashboard, labelKey: "admin.sidebar.dashboard", path: "/", roles: ["all"] },
+      { icon: Users, labelKey: "admin.sidebar.attendeeDashboard", path: "/attendee-dashboard", roles: ["all"] },
+    ],
+  },
+  {
+    labelKey: "admin.sidebarGroup.meetupManage",
+    roles: ["all"],
+    items: [
+      { icon: Plane, labelKey: "admin.sidebar.meetups", path: "/meetups", roles: ["all"] },
+      { icon: ClipboardList, labelKey: "admin.sidebar.registrations", path: "/registrations", roles: ["all"] },
+      { icon: Edit, labelKey: "admin.sidebar.modRequests", path: "/mod-requests", roles: ["all"] },
+      { icon: ClipboardList, labelKey: "admin.sidebar.surveys", path: "/surveys", roles: ["all"] },
+      { icon: CreditCard, labelKey: "admin.sidebar.invitation", path: "/invitation", roles: ["all"] },
+    ],
+  },
+  {
+    labelKey: "admin.sidebarGroup.travelOps",
+    roles: ["all"],
+    items: [
+      { icon: Plane, labelKey: "admin.sidebar.flights", path: "/flights", roles: ["all"] },
+      { icon: Car, labelKey: "admin.sidebar.pickups", path: "/pickups", roles: ["all"] },
+      { icon: Hotel, labelKey: "admin.sidebar.accommodations", path: "/accommodations", roles: ["all"] },
+      { icon: CalendarDays, labelKey: "admin.sidebar.scheduleEvents", path: "/schedule-events", roles: ["all"] },
+      { icon: Plane, labelKey: "admin.sidebar.itineraries", path: "/itineraries", roles: ["all"] },
+      { icon: Globe, labelKey: "admin.sidebar.travelInfo", path: "/travel-info", roles: ["all"] },
+    ],
+  },
+  {
+    labelKey: "admin.sidebarGroup.onsite",
+    roles: ["all"],
+    items: [
+      { icon: Luggage, labelKey: "admin.sidebar.baggageCheckin", path: "/baggage-checkin", roles: ["all"] },
+      { icon: UtensilsCrossed, labelKey: "admin.sidebar.mealDashboard", path: "/meal-dashboard", roles: ["all"] },
+      { icon: DoorOpen, labelKey: "admin.sidebar.hotelRooms", path: "/hotel-rooms", roles: ["all"] },
+      { icon: ShieldCheck, labelKey: "admin.sidebar.passportList", path: "/passport-list", roles: ["all"] },
+      { icon: Receipt, labelKey: "admin.sidebar.expenses", path: "/expenses", roles: ["all"] },
+    ],
+  },
+  {
+    labelKey: "admin.sidebarGroup.communication",
+    roles: ["all"],
+    items: [
+      { icon: MessageCircle, labelKey: "admin.sidebar.channels", path: "/channels", roles: ["all"] },
+      { icon: MessageCircle, labelKey: "admin.sidebar.chat", path: "/chat", roles: ["all"] },
+      { icon: Send, labelKey: "admin.sidebar.telegram", path: "/telegram", roles: ["all"] },
+      { icon: Megaphone, labelKey: "admin.sidebar.broadcast", path: "/broadcast", roles: ["all"] },
+    ],
+  },
+  {
+    labelKey: "admin.sidebarGroup.documents",
+    roles: ["all"],
+    items: [
+      { icon: FileText, labelKey: "admin.sidebar.vouchers", path: "/vouchers", roles: ["all"] },
+      { icon: CreditCard, labelKey: "admin.sidebar.hotelVouchers", path: "/hotel-vouchers", roles: ["all"] },
+      { icon: Ticket, labelKey: "admin.sidebar.flightTickets", path: "/flight-tickets", roles: ["all"] },
+      { icon: Image, labelKey: "admin.sidebar.adBanners", path: "/ad-banners", roles: ["all"] },
+    ],
+  },
+  {
+    labelKey: "admin.sidebarGroup.platformAdmin",
+    roles: ["admin", "superadmin"],
+    items: [
+      { icon: Cloud, labelKey: "admin.sidebar.platform", path: "/platform", roles: ["admin", "superadmin"] },
+      { icon: Handshake, labelKey: "admin.sidebar.partners", path: "/partners", roles: ["admin", "superadmin"] },
+      { icon: ShoppingCart, labelKey: "admin.sidebar.bookingSearch", path: "/booking-search", roles: ["admin", "superadmin"] },
+      { icon: TrendingUp, labelKey: "admin.sidebar.affiliateRevenue", path: "/affiliate-revenue", roles: ["admin", "superadmin"] },
+      { icon: Key, labelKey: "admin.sidebar.apiKeys", path: "/api-keys", roles: ["admin", "superadmin"] },
+      { icon: Upload, labelKey: "admin.sidebar.telegramUploads", path: "/telegram-uploads", roles: ["admin", "superadmin"] },
+      { icon: BookOpen, labelKey: "admin.sidebar.apiDocs", path: "/api-docs", roles: ["admin", "superadmin"] },
+    ],
+  },
+  {
+    labelKey: "admin.sidebarGroup.settings",
+    roles: ["all"],
+    items: [
+      { icon: Search, labelKey: "admin.sidebar.search", path: "/search", roles: ["all"] },
+      { icon: Shield, labelKey: "admin.sidebar.2faSettings", path: "/2fa-settings", roles: ["all"] },
+      { icon: Home, labelKey: "admin.sidebar.goHome", path: "~/", roles: ["all"] },
+    ],
+  },
 ];
+
+// Flatten for activeMenuItem lookup
+const allMenuItems = menuGroups.flatMap(g => g.items);
+
+function canSee(roles: ("admin" | "superadmin" | "organizer" | "all")[], userRole: string): boolean {
+  if (roles.includes("all")) return true;
+  return roles.includes(userRole as any);
+}
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
@@ -153,11 +223,24 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const userRole = (user as any)?.role || "user";
 
-  // location is relative to /admin base (e.g., "/", "/platform", "/registrations")
-  // For "~/" paths (absolute), we need special handling for isActive
-  const activeMenuItem = menuItemDefs.find(item => {
-    if (item.path.startsWith("~/")) return false; // absolute paths are never "active" in admin context
+  // Track collapsed groups
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    const saved = localStorage.getItem("sidebar-collapsed-groups");
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  useEffect(() => {
+    localStorage.setItem("sidebar-collapsed-groups", JSON.stringify(collapsedGroups));
+  }, [collapsedGroups]);
+
+  const toggleGroup = (key: string) => {
+    setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const activeMenuItem = allMenuItems.find(item => {
+    if (item.path.startsWith("~/")) return false;
     return location === item.path;
   });
 
@@ -229,29 +312,54 @@ function DashboardLayoutContent({
             </div>
           </SidebarHeader>
 
-          <SidebarContent className="gap-0">
-            <SidebarMenu className="px-2 py-1">
-              {menuItemDefs.map(item => {
-                // For absolute paths (~/), never mark as active
-                const isActive = item.path.startsWith("~/") ? false : location === item.path;
-                const label = t(item.labelKey);
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      isActive={isActive}
-                      onClick={() => setLocation(item.path)}
-                      tooltip={label}
-                      className={`h-10 transition-all font-normal`}
+          <SidebarContent className="gap-0 overflow-y-auto">
+            {menuGroups.map((group) => {
+              if (!canSee(group.roles, userRole)) return null;
+              const visibleItems = group.items.filter(item => canSee(item.roles, userRole));
+              if (visibleItems.length === 0) return null;
+              const groupKey = group.labelKey;
+              const isGroupCollapsed = collapsedGroups[groupKey] ?? false;
+
+              return (
+                <div key={groupKey} className="px-2">
+                  {/* Group header - collapsible */}
+                  {!isCollapsed && (
+                    <button
+                      onClick={() => toggleGroup(groupKey)}
+                      className="flex items-center justify-between w-full px-2 py-2 mt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-muted-foreground transition-colors"
                     >
-                      <item.icon
-                        className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
-                      />
-                      <span>{label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
+                      <span>{t(groupKey)}</span>
+                      <ChevronDown className={`h-3 w-3 transition-transform ${isGroupCollapsed ? "-rotate-90" : ""}`} />
+                    </button>
+                  )}
+
+                  {/* Group items */}
+                  {(!isGroupCollapsed || isCollapsed) && (
+                    <SidebarMenu className="py-0.5">
+                      {visibleItems.map(item => {
+                        const isActive = item.path.startsWith("~/") ? false : location === item.path;
+                        const label = t(item.labelKey);
+                        return (
+                          <SidebarMenuItem key={item.path}>
+                            <SidebarMenuButton
+                              isActive={isActive}
+                              onClick={() => setLocation(item.path)}
+                              tooltip={label}
+                              className="h-9 transition-all font-normal"
+                            >
+                              <item.icon
+                                className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
+                              />
+                              <span>{label}</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenu>
+                  )}
+                </div>
+              );
+            })}
           </SidebarContent>
 
           <SidebarFooter className="p-3">
@@ -273,7 +381,7 @@ function DashboardLayoutContent({
                       {user?.name || "-"}
                     </p>
                     <p className="text-xs text-muted-foreground truncate mt-1.5">
-                      {user?.email || "-"}
+                      {user?.role === "superadmin" || user?.role === "admin" ? "Super Admin" : user?.role === "organizer" ? "Organizer" : user?.role || "-"}
                     </p>
                   </div>
                 </button>

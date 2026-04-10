@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { CalendarDays, Plus, Trash2, Bell, MapPin, Clock, Send, Sparkles, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AIUploader from "@/components/AIUploader";
+import { ExcelToolbar, fetchTrpcQuery } from "@/components/ExcelButtons";
 
 export default function AdminScheduleEvents() {
   const { t } = useTranslation();
@@ -79,7 +80,11 @@ export default function AdminScheduleEvents() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><CalendarDays className="h-6 w-6 text-primary" /> {t("admin.scheduleEvents.title")}</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <ExcelToolbar
+            templateFetch={() => fetchTrpcQuery("excelExport.eventTemplate")}
+            exportFetch={() => fetchTrpcQuery("excelExport.exportEvents", { meetupId: selectedMeetup })}
+          />
           <select value={selectedMeetup || ""} onChange={e => setSelectedMeetup(e.target.value ? Number(e.target.value) : undefined)}
             className="h-9 rounded-md border border-input bg-background px-3 text-sm">
             <option value="">{t("admin.scheduleEvents.selectMeetup")}</option>

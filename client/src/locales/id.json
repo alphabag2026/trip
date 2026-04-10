@@ -1059,6 +1059,24 @@
     "vouchers": {
       "title": "Voucher Management",
       "voucherType": "Voucher Type"
+    },
+    "excel": {
+      "downloadTemplate": "Download Template",
+      "exportExcel": "Export Excel",
+      "downloadSuccess": "Download complete",
+      "downloadError": "Download failed",
+      "downloading": "Downloading...",
+      "exportStats": "Export Stats Excel",
+      "pickupTemplate": "Pickup Template",
+      "accommodationTemplate": "Accommodation Template",
+      "eventTemplate": "Event Template",
+      "itineraryTemplate": "Itinerary Template",
+      "attendeeTemplate": "Attendee Template",
+      "exportPickups": "Export Pickups",
+      "exportAccommodations": "Export Accommodations",
+      "exportEvents": "Export Events",
+      "exportItineraries": "Export Itineraries",
+      "exportAttendees": "Export Attendees"
     }
   },
   "assignments": {
