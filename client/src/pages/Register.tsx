@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle, Clock, UtensilsCrossed, Wine, Cigarette, Train, Car, Check, Sparkles, ScanLine, Camera, Loader2 } from "lucide-react";
+import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle, Clock, UtensilsCrossed, Wine, Cigarette, Train, Car, Check, Sparkles, ScanLine, Camera, Loader2, Mail, Lock, UserCheck, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
@@ -36,7 +36,12 @@ export default function Register() {
   const [aiPromptText, setAiPromptText] = useState("");
   const [isAiParsing, setIsAiParsing] = useState(false);
   const [isPassportScanning, setIsPassportScanning] = useState(false);
+  const [passportValidation, setPassportValidation] = useState<{ valid: boolean; warnings: string[]; errors: string[] } | null>(null);
   const passportInputRef = useRef<HTMLInputElement>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailCheckResult, setEmailCheckResult] = useState<{ exists: boolean; userName: string | null } | null>(null);
+  const [emailCheckTimeout, setEmailCheckTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [form, setForm] = useState({
     name: "", phone: "", messengerId: "",
     scheduleStart: "", scheduleEnd: "",
@@ -54,6 +59,17 @@ export default function Register() {
     transportType: "" as "" | "flight" | "ktx" | "none" | "other",
     transportNotes: "",
   });
+
+  // v12.3: 이메일 중복 확인 (디바운스)
+  const checkEmailQuery = trpc.registration.checkEmail.useQuery(
+    { email },
+    { enabled: email.includes("@") && email.includes("."), retry: false, refetchOnWindowFocus: false }
+  );
+  useEffect(() => {
+    if (checkEmailQuery.data) {
+      setEmailCheckResult(checkEmailQuery.data);
+    }
+  }, [checkEmailQuery.data]);
 
   const { data: meetups } = trpc.meetup.list.useQuery({ status: "open" });
   const { data: selectedMeetup } = trpc.meetup.getById.useQuery(
@@ -76,8 +92,28 @@ export default function Register() {
         phone: prev.phone || profileData.phone || "",
         messengerId: prev.messengerId || profileData.telegramId || "",
       }));
+      if (user?.email) setEmail(user.email);
     }
   }, [profileData, user]);
+
+  // v12.3: 추천코드 URL에서 날짜 기본값 설정
+  useEffect(() => {
+    if (selectedMeetup) {
+      const start = selectedMeetup.scheduleStart;
+      const end = selectedMeetup.scheduleEnd;
+      if (start && !form.scheduleStart) {
+        const startDate = new Date(start);
+        setForm(prev => ({
+          ...prev,
+          scheduleStart: prev.scheduleStart || startDate.toISOString().split('T')[0],
+          scheduleEnd: prev.scheduleEnd || (end ? new Date(end).toISOString().split('T')[0] : ''),
+        }));
+      }
+      if (selectedMeetup.locationType) {
+        setLocationType(selectedMeetup.locationType as "domestic" | "overseas");
+      }
+    }
+  }, [selectedMeetup]);
 
   const createMutation = trpc.registration.create.useMutation();
   const uploadPassportMutation = trpc.registration.uploadPassport.useMutation();
@@ -155,6 +191,13 @@ export default function Register() {
               // 해외 여권이면 자동으로 overseas 설정
               setLocationType("overseas");
             }
+            // v12.3: 여권 유효성 검사 결과 저장
+            if (result.validation) {
+              setPassportValidation(result.validation);
+              if (!result.validation.valid) {
+                toast.warning(t("register.passportValidationWarning", "여권 유효성 검사에서 문제가 발견되었습니다"));
+              }
+            }
             toast.success(t("register.passportScanSuccess", "여권 정보가 자동으로 채워졌습니다"));
           } else {
             toast.error(result.error || t("register.passportScanFail", "여권 스캔 실패"));
@@ -182,6 +225,8 @@ export default function Register() {
         ...form,
         meetupId,
         locationType,
+        email: email || undefined,
+        password: password || undefined,
         scheduleStart: form.scheduleStart || undefined,
         scheduleEnd: form.scheduleEnd || undefined,
         walletAddress: form.walletAddress || undefined,
@@ -513,6 +558,57 @@ export default function Register() {
                 <Label htmlFor="messengerId">{t("register.messengerId")} *</Label>
                 <Input id="messengerId" value={form.messengerId} onChange={e => handleChange("messengerId", e.target.value)} placeholder={t("register.messengerIdPh")} required />
               </div>
+
+              {/* v12.3: 이메일/비밀번호 입력 + 기존 회원 감지 */}
+              <div className="border-t border-border pt-4 mt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Mail className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">{t("register.accountSection", "계정 정보 (선택)")}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">{t("register.accountDesc", "이메일과 비밀번호를 입력하면 자동으로 회원가입되어 다음 이용이 편리합니다.")}</p>
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="email" className="flex items-center gap-1">
+                      <Mail className="h-3.5 w-3.5" />
+                      {t("register.email", "이메일")}
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="example@email.com"
+                    />
+                    {emailCheckResult && email && (
+                      <div className={`mt-1 flex items-center gap-1 text-xs ${
+                        emailCheckResult.exists ? 'text-blue-500' : 'text-green-500'
+                      }`}>
+                        {emailCheckResult.exists ? (
+                          <><UserCheck className="h-3 w-3" /> {t("register.existingMember", "기존 회원입니다")} {emailCheckResult.userName && `(${emailCheckResult.userName})`}</>
+                        ) : (
+                          <><CheckCircle className="h-3 w-3" /> {t("register.newMember", "신규 회원으로 자동 가입됩니다")}</>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {email && !emailCheckResult?.exists && (
+                    <div>
+                      <Label htmlFor="password" className="flex items-center gap-1">
+                        <Lock className="h-3.5 w-3.5" />
+                        {t("register.password", "비밀번호")}
+                      </Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        placeholder={t("register.passwordPh", "4자리 이상")}
+                        minLength={4}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -691,6 +787,32 @@ export default function Register() {
                   </label>
                   {passportFile && <p className="mt-3 text-sm text-primary">{passportFile.name}</p>}
                 </div>
+                {/* v12.3: 여권 유효성 검사 결과 표시 */}
+                {passportValidation && (
+                  <div className={`mt-4 rounded-lg p-4 border ${
+                    passportValidation.valid
+                      ? 'bg-green-500/10 border-green-500/30'
+                      : 'bg-red-500/10 border-red-500/30'
+                  }`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      {passportValidation.valid ? (
+                        <><ShieldCheck className="h-5 w-5 text-green-500" /><span className="text-sm font-medium text-green-500">{t("register.passportValid", "여권 유효성 확인 완료")}</span></>
+                      ) : (
+                        <><ShieldAlert className="h-5 w-5 text-red-500" /><span className="text-sm font-medium text-red-500">{t("register.passportInvalid", "여권 유효성 문제 발견")}</span></>
+                      )}
+                    </div>
+                    {passportValidation.errors.length > 0 && (
+                      <ul className="text-xs text-red-400 space-y-1 ml-7">
+                        {passportValidation.errors.map((err, i) => <li key={i}>❌ {err}</li>)}
+                      </ul>
+                    )}
+                    {passportValidation.warnings.length > 0 && (
+                      <ul className="text-xs text-amber-400 space-y-1 ml-7 mt-1">
+                        {passportValidation.warnings.map((w, i) => <li key={i}>⚠️ {w}</li>)}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

@@ -654,10 +654,47 @@ export const appRouter = router({
         smoking: z.enum(["yes", "no"]).optional(),
         transportType: z.enum(["flight", "ktx", "none", "other"]).optional(),
         transportNotes: z.string().optional(),
+        email: z.string().email().optional(),
+        password: z.string().min(4).optional(),
       }))
       .mutation(async ({ input }) => {
+        // v12.3: 이메일+비밀번호 입력 시 자동 회원가입
+        let autoUserId: number | undefined;
+        if (input.email && input.password) {
+          try {
+            const existingUser = await db.getUserByEmail(input.email);
+            if (existingUser) {
+              autoUserId = existingUser.id;
+            } else {
+              const bcrypt = await import("bcryptjs");
+              const passwordHash = await bcrypt.hash(input.password, 10);
+              const newUser = await db.createUserWithPassword({
+                email: input.email,
+                passwordHash,
+                name: input.name,
+              });
+              if (newUser) autoUserId = newUser.id;
+              // 환영 이메일 발송
+              try {
+                const { buildWelcomeEmail } = await import("./email");
+                const { sendEmail } = await import("./email");
+                const welcomeEmail = buildWelcomeEmail({
+                  userName: input.name,
+                  loginUrl: "https://alphatrip.org/login",
+                });
+                await sendEmail({ to: input.email, subject: welcomeEmail.subject, html: welcomeEmail.html });
+              } catch (emailErr) {
+                console.error("[WelcomeEmail] Failed:", emailErr);
+              }
+            }
+          } catch (e) {
+            console.error("[AutoRegister] Failed:", e);
+          }
+        }
+        const { password: _pw, ...regInput } = input;
         const id = await db.createRegistration({
-          ...input,
+          ...regInput,
+          userId: autoUserId,
           scheduleStart: input.scheduleStart ? new Date(input.scheduleStart) : undefined,
           scheduleEnd: input.scheduleEnd ? new Date(input.scheduleEnd) : undefined,
         });
@@ -713,6 +750,12 @@ export const appRouter = router({
         const { id, ...data } = input;
         await db.updateRegistration(id, data);
         return { success: true };
+      }),
+    checkEmail: publicProcedure
+      .input(z.object({ email: z.string().email() }))
+      .query(async ({ input }) => {
+        const user = await db.getUserByEmail(input.email);
+        return { exists: !!user, userName: user?.name || null };
       }),
     delete: adminProcedure.input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => { await db.deleteRegistration(input.id); return { success: true }; }),
@@ -6788,6 +6831,40 @@ Return ONLY valid JSON. If a field is not readable, use empty string.`,
           if (typeof ocrContent === "string") {
             const jsonMatch = ocrContent.match(/\{[\s\S]*\}/);
             const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+            // v12.3: 여권 유효성 검사
+            const validation: { valid: boolean; warnings: string[]; errors: string[] } = { valid: true, warnings: [], errors: [] };
+            // 만료일 검사
+            if (parsed.expiryDate) {
+              const expiry = new Date(parsed.expiryDate);
+              const now = new Date();
+              const sixMonthsLater = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+              if (expiry < now) {
+                validation.valid = false;
+                validation.errors.push("여권이 만료되었습니다. 갱신이 필요합니다.");
+              } else if (expiry < sixMonthsLater) {
+                validation.warnings.push("여권 만료일이 6개월 이내입니다. 입국 거부될 수 있습니다.");
+              }
+            } else {
+              validation.warnings.push("여권 만료일을 읽을 수 없습니다. 직접 확인해주세요.");
+            }
+            // MRZ 검증 (MRZ 라인이 있는 경우)
+            if (parsed.mrzLine2 && parsed.mrzLine2.length >= 44) {
+              const mrzResult = parseMrzLine2(parsed.mrzLine2);
+              if (!mrzResult.allChecksValid) {
+                validation.warnings.push("MRZ 체크디짓 검증 실패 - 여권 정보를 다시 확인해주세요.");
+              }
+              if (!mrzResult.passportNumberValid) {
+                validation.warnings.push("여권번호 MRZ 검증 실패");
+              }
+            }
+            // 이름 검사
+            if (!parsed.fullName && !parsed.firstName) {
+              validation.warnings.push("이름을 읽을 수 없습니다. 직접 입력해주세요.");
+            }
+            // 여권번호 검사
+            if (!parsed.passportNumber) {
+              validation.warnings.push("여권번호를 읽을 수 없습니다.");
+            }
             return {
               success: true,
               data: {
@@ -6801,6 +6878,7 @@ Return ONLY valid JSON. If a field is not readable, use empty string.`,
                 issuingCountry: parsed.issuingCountry || "",
                 phone: parsed.phone || "",
               },
+              validation,
             };
           }
           return { success: false, data: null, error: "OCR 응답 없음" };

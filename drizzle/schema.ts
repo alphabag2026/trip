@@ -87,6 +87,8 @@ export const registrations = mysqlTable("registrations", {
   hotelRoomNumber: varchar("hotelRoomNumber", { length: 50 }),
   hotelFloor: varchar("hotelFloor", { length: 20 }),
   hotelNotes: text("hotelNotes"),
+  email: varchar("email", { length: 320 }),
+  userId: int("userId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

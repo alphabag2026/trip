@@ -232,6 +232,13 @@
       "when": 1775070161605,
       "tag": "0032_shocking_ego",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "5",
+      "when": 1775835990319,
+      "tag": "0033_loose_lake",
+      "breakpoints": true
     }
   ]
 }
