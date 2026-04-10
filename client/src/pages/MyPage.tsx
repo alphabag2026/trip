@@ -22,6 +22,8 @@ import { Link } from "wouter";
 import LanguageSelector from "@/components/LanguageSelector";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useTranslation } from "react-i18next";
+import { downloadVoucherPdf, downloadTicketPdf } from "@/lib/pdfDownload";
+import { Download } from "lucide-react";
 
 const NATIONALITIES = [
   "한국", "미국", "일본", "중국", "영국", "독일", "프랑스", "캐나다", "호주",
@@ -867,6 +869,12 @@ export default function MyPage() {
                     }}>
                       <Copy className="w-4 h-4 mr-1" />{t("myPage.copyInfo")}
                     </Button>
+                    <Button variant="outline" size="sm" className="text-blue-600 border-blue-300" onClick={() => {
+                      toast.info("PDF 생성 중...");
+                      downloadVoucherPdf(v).then(() => toast.success("바우처 PDF가 다운로드되었습니다.")).catch(() => toast.error("PDF 생성에 실패했습니다."));
+                    }}>
+                      <Download className="w-4 h-4 mr-1" />PDF 저장
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -967,7 +975,15 @@ export default function MyPage() {
                     </div>
                   )}
 
-                  <div className="text-xs text-muted-foreground border-t pt-2">
+                  <div className="flex flex-wrap gap-2 pt-2 border-t">
+                    <Button variant="outline" size="sm" className="text-blue-600 border-blue-300" onClick={() => {
+                      toast.info("PDF 생성 중...");
+                      downloadTicketPdf(t_ticket).then(() => toast.success("항공권 PDF가 다운로드되었습니다.")).catch(() => toast.error("PDF 생성에 실패했습니다."));
+                    }}>
+                      <Download className="w-4 h-4 mr-1" />PDF 저장
+                    </Button>
+                  </div>
+                  <div className="text-xs text-muted-foreground pt-2">
                     {t("myPage.eTicketNote")}
                   </div>
                 </CardContent>
