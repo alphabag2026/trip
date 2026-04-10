@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { CalendarDays, Plus, Edit, Trash2, Bell, MapPin, Clock, Send } from "lucide-react";
+import { CalendarDays, Plus, Trash2, Bell, MapPin, Clock, Send, Sparkles, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import AIUploader from "@/components/AIUploader";
 
 export default function AdminScheduleEvents() {
   const { t } = useTranslation();
@@ -17,6 +18,7 @@ export default function AdminScheduleEvents() {
   const [selectedMeetup, setSelectedMeetup] = useState<number | undefined>();
   const { data: events = [], refetch } = trpc.schedule.list.useQuery({ meetupId: selectedMeetup! }, { enabled: !!selectedMeetup });
   const [createOpen, setCreateOpen] = useState(false);
+  const [batchEvents, setBatchEvents] = useState<any[]>([]);
 
   const createMut = trpc.schedule.create.useMutation({ onSuccess: () => { refetch(); setCreateOpen(false); toast.success(t("admin.scheduleEvents.created")); } });
   const updateMut = trpc.schedule.update.useMutation({ onSuccess: () => { refetch(); toast.success(t("admin.scheduleEvents.updated")); } });
@@ -32,6 +34,47 @@ export default function AdminScheduleEvents() {
     arrival: t("admin.scheduleEvents.typeArrival"), other: t("admin.scheduleEvents.typeOther"),
   };
 
+  const handleAIExtracted = (data: any) => {
+    if (data.events && Array.isArray(data.events)) {
+      // 다건 이벤트 추출
+      setBatchEvents(data.events);
+      toast.success(`AI가 ${data.events.length}건의 이벤트를 추출했습니다.`);
+    } else {
+      // 단건 이벤트
+      setForm(prev => ({
+        ...prev,
+        title: data.title || prev.title,
+        description: data.description || prev.description,
+        location: data.location || prev.location,
+        eventTime: data.eventTime ? formatDatetimeLocal(data.eventTime) : prev.eventTime,
+        eventType: data.eventType || prev.eventType,
+      }));
+    }
+  };
+
+  const handleBatchCreate = async () => {
+    if (!selectedMeetup || batchEvents.length === 0) return;
+    let created = 0;
+    for (const evt of batchEvents) {
+      try {
+        await createMut.mutateAsync({
+          title: evt.title || "이벤트",
+          description: evt.description ? `[${evt.eventType || "other"}] ${evt.description}` : `[${evt.eventType || "other"}]`,
+          location: evt.location || "",
+          eventTime: evt.eventTime ? new Date(evt.eventTime).toISOString() : new Date().toISOString(),
+          meetupId: selectedMeetup,
+          notifyBefore: 10,
+        });
+        created++;
+      } catch (e) {
+        console.error("Batch create error:", e);
+      }
+    }
+    toast.success(`${created}건의 이벤트가 등록되었습니다.`);
+    setBatchEvents([]);
+    refetch();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -43,11 +86,47 @@ export default function AdminScheduleEvents() {
             {meetups.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
           </select>
           {selectedMeetup && (
-            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <Dialog open={createOpen} onOpenChange={v => { setCreateOpen(v); if (!v) setBatchEvents([]); }}>
               <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> {t("admin.scheduleEvents.addEvent")}</Button></DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
                 <DialogHeader><DialogTitle>{t("admin.scheduleEvents.createTitle")}</DialogTitle></DialogHeader>
-                <div className="space-y-3">
+
+                {/* AI 업로더 */}
+                <AIUploader
+                  context="event"
+                  onExtracted={handleAIExtracted}
+                  compact
+                />
+
+                {/* 다건 이벤트 일괄 등록 */}
+                {batchEvents.length > 0 && (
+                  <div className="space-y-3 border border-primary/20 rounded-lg p-3 bg-primary/5">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        AI 추출 이벤트 ({batchEvents.length}건)
+                      </h4>
+                      <Button size="sm" onClick={handleBatchCreate} disabled={createMut.isPending}>
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1" />일괄 등록
+                      </Button>
+                    </div>
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                      {batchEvents.map((evt, i) => (
+                        <div key={i} className="flex items-center justify-between p-2 rounded bg-card border border-border text-sm">
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium">{evt.title}</span>
+                            {evt.eventTime && <span className="text-xs text-muted-foreground ml-2">{new Date(evt.eventTime).toLocaleString("ko-KR")}</span>}
+                          </div>
+                          <Badge variant="outline" className="text-[10px] shrink-0 ml-2">{eventTypeLabels[evt.eventType] || evt.eventType}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 수동 입력 폼 */}
+                <div className="space-y-3 border-t border-border pt-3">
+                  <p className="text-xs text-muted-foreground">또는 수동으로 입력:</p>
                   <div><Label>{t("admin.scheduleEvents.eventTitle")} *</Label><Input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} className="mt-1" /></div>
                   <div className="grid grid-cols-2 gap-3">
                     <div><Label>{t("admin.scheduleEvents.eventType")}</Label>
@@ -61,7 +140,9 @@ export default function AdminScheduleEvents() {
                   <div><Label>{t("admin.scheduleEvents.description")}</Label><Textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} className="mt-1" /></div>
                   <div><Label>{t("admin.scheduleEvents.notifyBefore")}</Label><Input type="number" value={form.notifyBefore} onChange={e => setForm(p => ({ ...p, notifyBefore: Number(e.target.value) }))} className="mt-1" /></div>
                   <Button className="w-full" disabled={!form.title || !form.eventTime || createMut.isPending} onClick={() => createMut.mutate({
-                    ...form, meetupId: selectedMeetup!, eventTime: new Date(form.eventTime).toISOString(),
+                    title: form.title, description: form.description, location: form.location,
+                    meetupId: selectedMeetup!, eventTime: new Date(form.eventTime).toISOString(),
+                    notifyBefore: form.notifyBefore,
                   })}>{createMut.isPending ? "..." : t("admin.scheduleEvents.register")}</Button>
                 </div>
               </DialogContent>
@@ -115,4 +196,12 @@ export default function AdminScheduleEvents() {
       )}
     </div>
   );
+}
+
+function formatDatetimeLocal(isoStr: string): string {
+  try {
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0, 16);
+  } catch { return ""; }
 }

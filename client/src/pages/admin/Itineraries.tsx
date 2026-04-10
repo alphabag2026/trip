@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, Plane, Hotel, Send } from "lucide-react";
+import { Plus, Trash2, Plane, Hotel, Send, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import AIUploader from "@/components/AIUploader";
 
 export default function AdminItineraries() {
   const { t } = useTranslation();
@@ -23,6 +23,10 @@ export default function AdminItineraries() {
   const updateMutation = trpc.itinerary.update.useMutation({
     onSuccess: () => { refetch(); toast.success(t("admin.itineraries.sentUpdated")); },
   });
+  const hotelSyncMut = trpc.hotelSync.syncFromItinerary.useMutation({
+    onSuccess: (data) => { toast.success(`숙소 ${data.updated}건 동기화 완료`); },
+    onError: (e) => toast.error(e.message),
+  });
 
   const [form, setForm] = useState({
     registrationId: 0, title: "",
@@ -32,6 +36,28 @@ export default function AdminItineraries() {
     returnArrivalAirport: "", returnArrivalTime: "",
     hotelName: "", hotelAddress: "", hotelCheckIn: "", hotelCheckOut: "",
   });
+
+  const handleAIExtracted = (data: any) => {
+    setForm(prev => ({
+      ...prev,
+      title: data.title || prev.title,
+      departureFlightNo: data.departureFlightNo || prev.departureFlightNo,
+      departureAirport: data.departureAirport || prev.departureAirport,
+      departureTime: data.departureTime ? fmtDT(data.departureTime) : prev.departureTime,
+      arrivalFlightNo: data.arrivalFlightNo || prev.arrivalFlightNo,
+      arrivalAirport: data.arrivalAirport || prev.arrivalAirport,
+      arrivalTime: data.arrivalTime ? fmtDT(data.arrivalTime) : prev.arrivalTime,
+      returnFlightNo: data.returnFlightNo || prev.returnFlightNo,
+      returnDepartureAirport: data.returnDepartureAirport || prev.returnDepartureAirport,
+      returnDepartureTime: data.returnDepartureTime ? fmtDT(data.returnDepartureTime) : prev.returnDepartureTime,
+      returnArrivalAirport: data.returnArrivalAirport || prev.returnArrivalAirport,
+      returnArrivalTime: data.returnArrivalTime ? fmtDT(data.returnArrivalTime) : prev.returnArrivalTime,
+      hotelName: data.hotelName || prev.hotelName,
+      hotelAddress: data.hotelAddress || prev.hotelAddress,
+      hotelCheckIn: data.hotelCheckIn ? fmtDT(data.hotelCheckIn) : prev.hotelCheckIn,
+      hotelCheckOut: data.hotelCheckOut ? fmtDT(data.hotelCheckOut) : prev.hotelCheckOut,
+    }));
+  };
 
   return (
     <div className="space-y-6">
@@ -45,28 +71,28 @@ export default function AdminItineraries() {
           <Card key={it.id} className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
-                <div className="space-y-2">
+                <div className="space-y-2 flex-1 min-w-0">
                   <h3 className="font-semibold">{it.title}</h3>
                   <p className="text-xs text-muted-foreground">{t("admin.itineraries.regId")}: {it.registrationId}</p>
                   {it.departureFlightNo && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Plane className="h-3 w-3 text-primary" />
-                      <span>{t("admin.itineraries.departure")}: {it.departureFlightNo} ({it.departureAirport})</span>
+                      <Plane className="h-3 w-3 text-primary shrink-0" />
+                      <span className="truncate">{t("admin.itineraries.departure")}: {it.departureFlightNo} ({it.departureAirport})</span>
                     </div>
                   )}
                   {it.returnFlightNo && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Plane className="h-3 w-3 text-primary rotate-180" />
-                      <span>{t("admin.itineraries.returnFlight")}: {it.returnFlightNo} ({it.returnDepartureAirport})</span>
+                      <Plane className="h-3 w-3 text-primary rotate-180 shrink-0" />
+                      <span className="truncate">{t("admin.itineraries.returnFlight")}: {it.returnFlightNo} ({it.returnDepartureAirport})</span>
                     </div>
                   )}
                   {it.hotelName && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Hotel className="h-3 w-3 text-primary" />
-                      <span>{it.hotelName}</span>
+                      <Hotel className="h-3 w-3 text-primary shrink-0" />
+                      <span className="truncate">{it.hotelName}</span>
                     </div>
                   )}
-                  <div className="flex gap-2 text-xs">
+                  <div className="flex gap-2 text-xs flex-wrap">
                     <span className={`px-2 py-0.5 rounded ${it.sentViaWeb ? "bg-green-500/20 text-green-400" : "bg-muted text-muted-foreground"}`}>
                       {t("admin.itineraries.web")} {it.sentViaWeb ? t("admin.itineraries.sent") : t("admin.itineraries.notSent")}
                     </span>
@@ -75,9 +101,15 @@ export default function AdminItineraries() {
                     </span>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => updateMutation.mutate({ id: it.id, sentViaWeb: true })}>
-                    <Send className="h-3 w-3 mr-1" />{t("admin.itineraries.send")}
+                <div className="flex gap-1 shrink-0">
+                  {it.hotelName && (
+                    <Button variant="ghost" size="icon" className="h-8 w-8" title="숙소 동기화"
+                      onClick={() => hotelSyncMut.mutate({ itineraryId: it.id, hotelName: it.hotelName, hotelCheckIn: it.hotelCheckIn, hotelCheckOut: it.hotelCheckOut })}>
+                      <RefreshCw className="h-3.5 w-3.5 text-primary" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateMutation.mutate({ id: it.id, sentViaWeb: true })}>
+                    <Send className="h-3.5 w-3.5" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteMutation.mutate({ id: it.id })}>
                     <Trash2 className="h-4 w-4" />
@@ -93,8 +125,16 @@ export default function AdminItineraries() {
       </div>
 
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{t("admin.itineraries.createTitle")}</DialogTitle></DialogHeader>
+
+          {/* AI 업로더 */}
+          <AIUploader
+            context="itinerary"
+            onExtracted={handleAIExtracted}
+            compact
+          />
+
           <form onSubmit={e => { e.preventDefault(); createMutation.mutate({
             ...form,
             registrationId: Number(form.registrationId),
@@ -113,7 +153,8 @@ export default function AdminItineraries() {
             hotelAddress: form.hotelAddress || undefined,
             hotelCheckIn: form.hotelCheckIn || undefined,
             hotelCheckOut: form.hotelCheckOut || undefined,
-          }); }} className="space-y-4">
+          }); }} className="space-y-4 border-t border-border pt-3">
+            <p className="text-xs text-muted-foreground">또는 수동으로 입력:</p>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>{t("admin.itineraries.regId")} *</Label><Input type="number" value={form.registrationId || ""} onChange={e => setForm(p => ({...p, registrationId: Number(e.target.value)}))} required /></div>
               <div><Label>{t("admin.itineraries.itineraryTitle")} *</Label><Input value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} required /></div>
@@ -145,4 +186,12 @@ export default function AdminItineraries() {
       </Dialog>
     </div>
   );
+}
+
+function fmtDT(isoStr: string): string {
+  try {
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0, 16);
+  } catch { return ""; }
 }

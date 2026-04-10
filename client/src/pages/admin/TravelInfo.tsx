@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, Globe, ExternalLink, Sparkles, Send, Loader2 } from "lucide-react";
+import { Plus, Trash2, Globe, ExternalLink, Sparkles, Send, Loader2, Eye, Clock, DollarSign, Languages, Plug, Phone, Shield, AlertTriangle, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
@@ -46,9 +47,11 @@ export default function AdminTravelInfo() {
   const { t } = useTranslation();
   const [showCreate, setShowCreate] = useState(false);
   const [showSend, setShowSend] = useState(false);
+  const [showDetail, setShowDetail] = useState<any>(null);
   const [sendCountryCode, setSendCountryCode] = useState("");
   const [sendMeetupId, setSendMeetupId] = useState<string>("");
   const [itemInput, setItemInput] = useState("");
+  const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
   const { data: countries, refetch } = trpc.travelInfo.list.useQuery();
   const { data: meetups } = trpc.meetup.list.useQuery({});
   const upsertMutation = trpc.travelInfo.upsert.useMutation({
@@ -94,6 +97,14 @@ export default function AdminTravelInfo() {
     if (confirm(`${country.name} 여행 정보를 AI로 자동 생성하시겠습니까?`)) {
       generateMutation.mutate({ countryCode: country.code, countryName: country.name });
     }
+  };
+
+  const toggleExpand = (id: number) => {
+    setExpandedCards(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
   };
 
   return (
@@ -142,54 +153,205 @@ export default function AdminTravelInfo() {
         </CardContent>
       </Card>
 
+      {/* 국가 카드 그리드 - 개선된 레이아웃 */}
       <div className="grid gap-4 md:grid-cols-2">
-        {countries?.map((c: any) => (
-          <Card key={c.id} className="bg-card border-border cursor-pointer hover:border-primary/30 transition-colors" onClick={() => openEdit(c)}>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-primary" />
-                    {c.countryNameKo || c.countryName} ({c.countryCode})
-                  </h3>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {c.visaRequired && <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400">{t("admin.travelInfo.t6", "비자 필요")}</span>}
-                    {c.currency && <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{c.currency}</span>}
-                    {c.timezone && <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{c.timezone}</span>}
-                    {c.language && <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{c.language}</span>}
-                    {c.plugType && <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">🔌 {c.plugType}</span>}
+        {countries?.map((c: any) => {
+          const items = (c.requiredItems as string[]) || [];
+          const isExpanded = expandedCards.has(c.id);
+          return (
+            <Card key={c.id} className="bg-card border-border overflow-hidden">
+              <CardContent className="p-0">
+                {/* 카드 헤더 */}
+                <div className="p-4 pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold flex items-center gap-2 text-base">
+                        <Globe className="h-4 w-4 text-primary shrink-0" />
+                        <span className="truncate">{c.countryNameKo || c.countryName}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">({c.countryCode})</span>
+                      </h3>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowDetail(c)}>
+                        <Eye className="h-3.5 w-3.5 text-primary" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(c)}>
+                        <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+                        setSendCountryCode(c.countryCode); setShowSend(true);
+                      }}><Send className="h-3.5 w-3.5 text-primary" /></Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+                        if (confirm("삭제하시겠습니까?")) deleteMutation.mutate({ id: c.id });
+                      }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                    </div>
                   </div>
-                  {(c.requiredItems as string[])?.length > 0 && (
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      준비물: {(c.requiredItems as string[]).slice(0, 5).join(", ")}
-                      {(c.requiredItems as string[]).length > 5 && ` 외 ${(c.requiredItems as string[]).length - 5}건`}
+
+                  {/* 핵심 정보 뱃지 */}
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {c.visaRequired && <Badge variant="destructive" className="text-[10px]">비자 필요</Badge>}
+                    {c.timezone && <Badge variant="outline" className="text-[10px]"><Clock className="h-2.5 w-2.5 mr-0.5" />{c.timezone}</Badge>}
+                    {c.currency && <Badge variant="outline" className="text-[10px]"><DollarSign className="h-2.5 w-2.5 mr-0.5" />{c.currency}</Badge>}
+                    {c.language && <Badge variant="outline" className="text-[10px]"><Languages className="h-2.5 w-2.5 mr-0.5" />{c.language}</Badge>}
+                    {c.plugType && <Badge variant="outline" className="text-[10px]"><Plug className="h-2.5 w-2.5 mr-0.5" />{c.plugType}</Badge>}
+                  </div>
+
+                  {/* 준비물 요약 */}
+                  {items.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs text-muted-foreground mb-1">준비물 ({items.length}건)</p>
+                      <div className="flex flex-wrap gap-1">
+                        {items.slice(0, isExpanded ? items.length : 4).map((item, i) => (
+                          <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">{item}</span>
+                        ))}
+                        {!isExpanded && items.length > 4 && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">+{items.length - 4}</span>
+                        )}
+                      </div>
                     </div>
                   )}
-                  {c.immigrationUrl && (
-                    <a href={c.immigrationUrl} target="_blank" rel="noopener" className="text-xs text-primary flex items-center gap-1 mt-2" onClick={e => e.stopPropagation()}>
-                      <ExternalLink className="h-3 w-3" />{t("admin.travelInfo.t7", "출입국 신청")}
-                    </a>
-                  )}
                 </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={e => {
-                    e.stopPropagation();
-                    setSendCountryCode(c.countryCode);
-                    setShowSend(true);
-                  }}><Send className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={e => {
-                    e.stopPropagation();
-                    if (confirm("삭제하시겠습니까?")) deleteMutation.mutate({ id: c.id });
-                  }}><Trash2 className="h-4 w-4" /></Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+
+                {/* 확장 영역 */}
+                {isExpanded && (
+                  <div className="px-4 pb-3 space-y-2 border-t border-border pt-3">
+                    {c.immigrationNotes && (
+                      <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20">
+                        <p className="text-[11px] font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1 mb-0.5">
+                          <AlertTriangle className="h-3 w-3" />출입국 안내
+                        </p>
+                        <p className="text-xs text-muted-foreground line-clamp-3">{c.immigrationNotes}</p>
+                      </div>
+                    )}
+                    {c.visaNotes && (
+                      <div className="p-2 rounded bg-blue-500/10 border border-blue-500/20">
+                        <p className="text-[11px] font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1 mb-0.5">
+                          <Shield className="h-3 w-3" />비자 안내
+                        </p>
+                        <p className="text-xs text-muted-foreground line-clamp-3">{c.visaNotes}</p>
+                      </div>
+                    )}
+                    {c.emergencyContact && (
+                      <div className="flex items-center gap-2 p-2 rounded bg-red-500/10 border border-red-500/20">
+                        <Phone className="h-3 w-3 text-red-500 shrink-0" />
+                        <span className="text-xs">긴급: {c.emergencyContact}</span>
+                      </div>
+                    )}
+                    {c.additionalNotes && (
+                      <div className="p-2 rounded bg-accent/50">
+                        <p className="text-[11px] font-medium mb-0.5 flex items-center gap-1"><Info className="h-3 w-3" />추가 정보</p>
+                        <p className="text-xs text-muted-foreground line-clamp-4">{c.additionalNotes}</p>
+                      </div>
+                    )}
+                    {c.immigrationUrl && (
+                      <a href={c.immigrationUrl} target="_blank" rel="noopener" className="text-xs text-primary flex items-center gap-1 hover:underline" onClick={e => e.stopPropagation()}>
+                        <ExternalLink className="h-3 w-3" />출입국 신청 사이트
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* 펼치기/접기 버튼 */}
+                <button
+                  onClick={() => toggleExpand(c.id)}
+                  className="w-full py-1.5 text-center text-xs text-muted-foreground hover:bg-accent/50 transition-colors border-t border-border flex items-center justify-center gap-1"
+                >
+                  {isExpanded ? <><ChevronUp className="h-3 w-3" />접기</> : <><ChevronDown className="h-3 w-3" />상세보기</>}
+                </button>
+              </CardContent>
+            </Card>
+          );
+        })}
         {(!countries || countries.length === 0) && (
           <div className="col-span-2 text-center py-12 text-muted-foreground">{t("admin.travelInfo.t8", "등록된 국가 정보가 없습니다. 위에서 AI 자동 생성을 사용해보세요.")}</div>
         )}
       </div>
+
+      {/* 상세보기 다이얼로그 */}
+      <Dialog open={!!showDetail} onOpenChange={open => { if (!open) setShowDetail(null); }}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          {showDetail && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-primary" />
+                  {showDetail.countryNameKo || showDetail.countryName} ({showDetail.countryCode})
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="grid gap-2">
+                {[
+                  { icon: Clock, label: "시간대", value: showDetail.timezone },
+                  { icon: DollarSign, label: "통화", value: showDetail.currency },
+                  { icon: Languages, label: "언어", value: showDetail.language },
+                  { icon: Plug, label: "콘센트", value: showDetail.plugType },
+                  { icon: Phone, label: "긴급연락처", value: showDetail.emergencyContact },
+                ].filter(r => r.value).map((row, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-accent/50">
+                    <row.icon className="h-4 w-4 text-primary shrink-0" />
+                    <span className="text-sm text-muted-foreground w-20 shrink-0">{row.label}</span>
+                    <span className="text-sm font-medium flex-1 break-words">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {showDetail.visaRequired && showDetail.visaNotes && (
+                <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <p className="text-sm font-medium flex items-center gap-1.5 text-blue-600 dark:text-blue-400 mb-1">
+                    <Shield className="h-3.5 w-3.5" />비자 안내
+                  </p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-line">{showDetail.visaNotes}</p>
+                </div>
+              )}
+
+              {showDetail.immigrationNotes && (
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <p className="text-sm font-medium flex items-center gap-1.5 text-amber-600 dark:text-amber-400 mb-1">
+                    <AlertTriangle className="h-3.5 w-3.5" />출입국 안내
+                  </p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-line">{showDetail.immigrationNotes}</p>
+                </div>
+              )}
+
+              {((showDetail.requiredItems as string[]) || []).length > 0 && (
+                <div>
+                  <p className="text-sm font-medium mb-2">여행 준비물</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(showDetail.requiredItems as string[]).map((item: string, i: number) => (
+                      <Badge key={i} variant="outline" className="text-xs">{item}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {showDetail.additionalNotes && (
+                <div className="p-3 rounded-lg bg-accent/50">
+                  <p className="text-sm font-medium mb-1">추가 정보</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-line">{showDetail.additionalNotes}</p>
+                </div>
+              )}
+
+              {showDetail.immigrationUrl && (
+                <a href={showDetail.immigrationUrl} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-primary hover:underline">
+                  <ExternalLink className="h-4 w-4" />출입국 관리 사이트 바로가기
+                </a>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button className="flex-1" onClick={() => { openEdit(showDetail); setShowDetail(null); }}>
+                  <Sparkles className="h-4 w-4 mr-2" />수정
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={() => {
+                  setSendCountryCode(showDetail.countryCode); setShowSend(true); setShowDetail(null);
+                }}>
+                  <Send className="h-4 w-4 mr-2" />전송
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Upsert Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
@@ -211,12 +373,12 @@ export default function AdminTravelInfo() {
             <div className="grid grid-cols-3 gap-3">
               <div><Label>{t("admin.travelInfo.t10", "국가 코드 *")}</Label><Input value={form.countryCode} onChange={e => setForm(p => ({...p, countryCode: e.target.value.toUpperCase()}))} placeholder="TH" required /></div>
               <div><Label>{t("admin.travelInfo.t11", "영문명 *")}</Label><Input value={form.countryName} onChange={e => setForm(p => ({...p, countryName: e.target.value}))} placeholder="Thailand" required /></div>
-              <div><Label>{t("admin.travelInfo.t12", "한글명")}</Label><Input value={form.countryNameKo} onChange={e => setForm(p => ({...p, countryNameKo: e.target.value}))} placeholder={t("admin.travelInfo.t33", "태국")} /></div>
+              <div><Label>{t("admin.travelInfo.t12", "한글명")}</Label><Input value={form.countryNameKo} onChange={e => setForm(p => ({...p, countryNameKo: e.target.value}))} placeholder="태국" /></div>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div><Label>{t("admin.travelInfo.t13", "시간대")}</Label><Input value={form.timezone} onChange={e => setForm(p => ({...p, timezone: e.target.value}))} placeholder="UTC+7" /></div>
               <div><Label>{t("admin.travelInfo.t14", "통화")}</Label><Input value={form.currency} onChange={e => setForm(p => ({...p, currency: e.target.value}))} placeholder="THB" /></div>
-              <div><Label>{t("admin.travelInfo.t15", "언어")}</Label><Input value={form.language} onChange={e => setForm(p => ({...p, language: e.target.value}))} placeholder={t("admin.travelInfo.t34", "태국어")} /></div>
+              <div><Label>{t("admin.travelInfo.t15", "언어")}</Label><Input value={form.language} onChange={e => setForm(p => ({...p, language: e.target.value}))} placeholder="태국어" /></div>
             </div>
             <div><Label>{t("admin.travelInfo.t16", "콘센트 타입")}</Label><Input value={form.plugType} onChange={e => setForm(p => ({...p, plugType: e.target.value}))} placeholder="A, B, C" /></div>
             <div className="flex items-center gap-3">
@@ -229,7 +391,7 @@ export default function AdminTravelInfo() {
             <div>
               <Label>{t("admin.travelInfo.t21", "여행 준비물")}</Label>
               <div className="flex gap-2 mt-1">
-                <Input value={itemInput} onChange={e => setItemInput(e.target.value)} placeholder={t("admin.travelInfo.t35", "항목 추가")} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addItem(); }}} />
+                <Input value={itemInput} onChange={e => setItemInput(e.target.value)} placeholder="항목 추가" onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addItem(); }}} />
                 <Button type="button" variant="outline" onClick={addItem}>{t("admin.travelInfo.t22", "추가")}</Button>
               </div>
               <div className="flex flex-wrap gap-1 mt-2">
@@ -256,7 +418,7 @@ export default function AdminTravelInfo() {
             <div>
               <Label>{t("admin.travelInfo.t27", "국가 선택 *")}</Label>
               <Select value={sendCountryCode} onValueChange={setSendCountryCode}>
-                <SelectTrigger><SelectValue placeholder={t("admin.travelInfo.t36", "국가 선택")} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="국가 선택" /></SelectTrigger>
                 <SelectContent>
                   {countries?.map((c: any) => (
                     <SelectItem key={c.countryCode} value={c.countryCode}>
@@ -269,7 +431,7 @@ export default function AdminTravelInfo() {
             <div>
               <Label>{t("admin.travelInfo.t28", "밋업 선택 (선택사항)")}</Label>
               <Select value={sendMeetupId} onValueChange={setSendMeetupId}>
-                <SelectTrigger><SelectValue placeholder={t("admin.travelInfo.t37", "전체 승인된 참석자")} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="전체 승인된 참석자" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t("admin.travelInfo.t29", "전체 승인된 참석자")}</SelectItem>
                   {meetups?.map((m: any) => (

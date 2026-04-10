@@ -162,9 +162,11 @@ export async function getRegistrations(filters?: {
   category?: string; status?: string; locationType?: string;
   meetupId?: number; search?: string;
   dateFrom?: string; dateTo?: string; country?: string;
+  userId?: number;
 }) {
   const db = await getDb(); if (!db) return [];
   const conditions = [];
+  if (filters?.userId) conditions.push(eq(registrations.userId, filters.userId));
   if (filters?.category) conditions.push(eq(registrations.category, filters.category as any));
   if (filters?.status) conditions.push(eq(registrations.status, filters.status as any));
   if (filters?.locationType) conditions.push(eq(registrations.locationType, filters.locationType as any));

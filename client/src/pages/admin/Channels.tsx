@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle, Plus, Trash2, ExternalLink, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import AIUploader from "@/components/AIUploader";
 
 const CHANNEL_TYPES = [
   { value: "pickup_driver", label: "픽업 기사" },
@@ -44,6 +45,17 @@ export default function Channels() {
 
   const resetForm = () => setForm({ channelName: "", channelType: "general", description: "", assignedTo: "", assignedPhone: "", meetupId: undefined });
 
+  const handleAIExtracted = (data: any) => {
+    setForm(prev => ({
+      ...prev,
+      channelName: data.channelName || prev.channelName,
+      channelType: CHANNEL_TYPES.find(ct => ct.value === data.channelType) ? data.channelType : prev.channelType,
+      assignedTo: data.assignedTo || prev.assignedTo,
+      assignedPhone: data.assignedPhone || prev.assignedPhone,
+      description: data.description || prev.description,
+    }));
+  };
+
   const handleCreate = () => {
     if (!form.channelName.trim()) { toast.error(t("admin.channels.t16", "채널명을 입력하세요")); return; }
     createMutation.mutate({
@@ -69,49 +81,59 @@ export default function Channels() {
           <h1 className="text-2xl font-bold">{t("admin.channels.t1", "소통 채널 관리")}</h1>
           <p className="text-muted-foreground text-sm">{t("admin.channels.t2", "픽업 기사, 매니저, 호텔 체크인 담당자와의 소통 채널")}</p>
         </div>
-        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <Dialog open={showCreate} onOpenChange={v => { setShowCreate(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
             <Button><Plus className="mr-2 h-4 w-4" /> {t("admin.channels.t3", "채널 생성")}</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{t("admin.channels.t4", "새 소통 채널")}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label>{t("admin.channels.channelName")}</Label>
-                <Input value={form.channelName} onChange={(e) => setForm({ ...form, channelName: e.target.value })} placeholder={t("admin.channels.t18", "예: 두바이 밋업 - 공항 픽업")} />
+              {/* AI 업로더 */}
+              <AIUploader
+                context="channel"
+                onExtracted={handleAIExtracted}
+                compact
+              />
+
+              <div className="border-t border-border pt-3 space-y-4">
+                <p className="text-xs text-muted-foreground">또는 수동으로 입력:</p>
+                <div>
+                  <Label>{t("admin.channels.channelName")}</Label>
+                  <Input value={form.channelName} onChange={(e) => setForm({ ...form, channelName: e.target.value })} placeholder={t("admin.channels.t18", "예: 두바이 밋업 - 공항 픽업")} />
+                </div>
+                <div>
+                  <Label>{t("admin.channels.t5", "채널 유형")}</Label>
+                  <Select value={form.channelType} onValueChange={(v) => setForm({ ...form, channelType: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {CHANNEL_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>{t("admin.channels.t6", "연결 밋업")}</Label>
+                  <Select value={form.meetupId?.toString() || "none"} onValueChange={(v) => setForm({ ...form, meetupId: v === "none" ? undefined : parseInt(v) })}>
+                    <SelectTrigger><SelectValue placeholder={t("admin.channels.t19", "선택 안함")} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{t("admin.channels.t7", "선택 안함")}</SelectItem>
+                      {(meetups ?? []).map((m) => <SelectItem key={m.id} value={m.id.toString()}>{m.title}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>{t("admin.channels.t8", "담당자 이름")}</Label>
+                  <Input value={form.assignedTo} onChange={(e) => setForm({ ...form, assignedTo: e.target.value })} placeholder={t("admin.channels.t20", "담당자 이름")} />
+                </div>
+                <div>
+                  <Label>{t("admin.channels.t9", "담당자 전화번호")}</Label>
+                  <Input value={form.assignedPhone} onChange={(e) => setForm({ ...form, assignedPhone: e.target.value })} placeholder="010-0000-0000" />
+                </div>
+                <div>
+                  <Label>{t("admin.channels.t10", "설명")}</Label>
+                  <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t("admin.channels.t21", "채널 설명")} />
+                </div>
+                <Button className="w-full" onClick={handleCreate} disabled={createMutation.isPending}>{t("admin.channels.t11", "생성")}</Button>
               </div>
-              <div>
-                <Label>{t("admin.channels.t5", "채널 유형")}</Label>
-                <Select value={form.channelType} onValueChange={(v) => setForm({ ...form, channelType: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {CHANNEL_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>{t("admin.channels.t6", "연결 밋업")}</Label>
-                <Select value={form.meetupId?.toString() || "none"} onValueChange={(v) => setForm({ ...form, meetupId: v === "none" ? undefined : parseInt(v) })}>
-                  <SelectTrigger><SelectValue placeholder={t("admin.channels.t19", "선택 안함")} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">{t("admin.channels.t7", "선택 안함")}</SelectItem>
-                    {(meetups ?? []).map((m) => <SelectItem key={m.id} value={m.id.toString()}>{m.title}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>{t("admin.channels.t8", "담당자 이름")}</Label>
-                <Input value={form.assignedTo} onChange={(e) => setForm({ ...form, assignedTo: e.target.value })} placeholder={t("admin.channels.t20", "담당자 이름")} />
-              </div>
-              <div>
-                <Label>{t("admin.channels.t9", "담당자 전화번호")}</Label>
-                <Input value={form.assignedPhone} onChange={(e) => setForm({ ...form, assignedPhone: e.target.value })} placeholder="010-0000-0000" />
-              </div>
-              <div>
-                <Label>{t("admin.channels.t10", "설명")}</Label>
-                <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t("admin.channels.t21", "채널 설명")} />
-              </div>
-              <Button className="w-full" onClick={handleCreate} disabled={createMutation.isPending}>{t("admin.channels.t11", "생성")}</Button>
             </div>
           </DialogContent>
         </Dialog>

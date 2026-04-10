@@ -239,6 +239,13 @@
       "when": 1775835990319,
       "tag": "0033_loose_lake",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "5",
+      "when": 1775841079619,
+      "tag": "0034_colossal_jackpot",
+      "breakpoints": true
     }
   ]
 }

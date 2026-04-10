@@ -914,6 +914,8 @@ export const appRouter = router({
         driverPhone: z.string().optional(), pickupLocation: z.string().optional(),
         pickupTime: z.string().optional(), assignedRegistrationIds: z.array(z.number()).optional(),
         notes: z.string().optional(),
+        vehiclePlateNumber: z.string().optional(), vehicleColor: z.string().optional(),
+        vehicleType: z.string().optional(), vehiclePhotoUrl: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const id = await db.createPickupAssignment({
@@ -930,6 +932,8 @@ export const appRouter = router({
         assignedRegistrationIds: z.array(z.number()).optional(),
         status: z.enum(["pending", "en_route", "waiting", "picked_up", "completed"]).optional(),
         notes: z.string().optional(), pickupPhotoUrl: z.string().optional(),
+        vehiclePlateNumber: z.string().optional(), vehicleColor: z.string().optional(),
+        vehicleType: z.string().optional(), vehiclePhotoUrl: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
@@ -1005,6 +1009,7 @@ export const appRouter = router({
         roomNumber: z.string().optional(), roomType: z.enum(["single", "double", "twin", "suite"]).default("twin"),
         assignedRegistrationIds: z.array(z.number()).optional(),
         checkIn: z.string().optional(), checkOut: z.string().optional(), notes: z.string().optional(),
+        accommodationPhotoUrl: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const id = await db.createAccommodation({
@@ -1020,6 +1025,7 @@ export const appRouter = router({
         roomType: z.enum(["single", "double", "twin", "suite"]).optional(),
         assignedRegistrationIds: z.array(z.number()).optional(),
         checkIn: z.string().optional(), checkOut: z.string().optional(), notes: z.string().optional(),
+        accommodationPhotoUrl: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
@@ -6943,6 +6949,242 @@ Return ONLY valid JSON. If a field is not readable, use empty string.`,
         const { url } = await storagePut(key, pngBuffer, "image/png");
         return { url, meetupTitle: meetup.title };
       }),
+  }),
+
+  // ── AI 이미지/PDF 자동 인식 (v12.6) ─────────────────
+  aiExtract: router({
+    // 공통 AI 이미지/PDF 분석: 차량, 숙소, 이벤트, 여정표
+    analyzeImage: adminProcedure
+      .input(z.object({
+        imageBase64: z.string(),
+        mimeType: z.string().default("image/jpeg"),
+        context: z.enum(["vehicle", "accommodation", "event", "itinerary", "channel"]),
+      }))
+      .mutation(async ({ input }) => {
+        // S3에 이미지 업로드
+        const buffer = Buffer.from(input.imageBase64, "base64");
+        const ext = input.mimeType.includes("png") ? "png" : input.mimeType.includes("pdf") ? "pdf" : "jpg";
+        const key = `ai-extract/${input.context}-${nanoid(12)}.${ext}`;
+        const { url } = await storagePut(key, buffer, input.mimeType);
+
+        const prompts: Record<string, string> = {
+          vehicle: `You are a vehicle information extractor. Analyze this image and extract:
+- vehicleName: vehicle model/name (e.g. "Toyota Alphard", "Grab Car")
+- vehiclePlateNumber: license plate number
+- vehicleColor: vehicle color
+- vehicleType: vehicle type (sedan, SUV, van, bus, etc.)
+- vehicleCapacity: estimated passenger capacity (number)
+- driverName: driver name if visible
+- driverPhone: driver phone if visible
+Return ONLY valid JSON.`,
+          accommodation: `You are a hotel/accommodation information extractor. Analyze this image and extract:
+- hotelName: hotel or accommodation name
+- roomNumber: room number
+- roomType: room type (single/double/twin/suite)
+- floorNumber: floor number
+- checkIn: check-in date/time (ISO format YYYY-MM-DDTHH:mm)
+- checkOut: check-out date/time (ISO format YYYY-MM-DDTHH:mm)
+- address: hotel address
+- notes: any additional notes
+Return ONLY valid JSON.`,
+          event: `You are a schedule/event information extractor. Analyze this image (could be a schedule table, excel screenshot, or event poster) and extract ALL events found.
+Return JSON array format: { "events": [{ "title": "event name", "eventTime": "ISO datetime", "endTime": "ISO datetime or null", "location": "location", "description": "description", "eventType": "meetup|transfer|meal|meeting|free_time|departure|arrival|other" }] }
+If multiple events are found (e.g. from a table/spreadsheet), extract ALL of them.
+Return ONLY valid JSON.`,
+          itinerary: `You are a travel itinerary information extractor. Analyze this image and extract:
+- title: itinerary title or trip name
+- departureFlightNo: departure flight number
+- departureAirport: departure airport code
+- departureTime: departure time (ISO format)
+- arrivalFlightNo: arrival flight number  
+- arrivalAirport: arrival airport code
+- arrivalTime: arrival time (ISO format)
+- returnFlightNo: return flight number
+- returnDepartureAirport: return departure airport
+- returnDepartureTime: return departure time (ISO format)
+- returnArrivalAirport: return arrival airport
+- returnArrivalTime: return arrival time (ISO format)
+- hotelName: hotel name
+- hotelAddress: hotel address
+- hotelCheckIn: check-in (ISO format)
+- hotelCheckOut: check-out (ISO format)
+- scheduleDetails: array of schedule items [{time, activity, location}]
+Return ONLY valid JSON.`,
+        };
+
+        try {
+          const response = await invokeLLM({
+            messages: [
+              { role: "system", content: prompts[input.context] || prompts.vehicle },
+              { role: "user", content: [
+                { type: "text", text: "Extract information from this image:" },
+                { type: "image_url", image_url: { url, detail: "high" } },
+              ]},
+            ],
+          });
+          const rawContent = response.choices?.[0]?.message?.content;
+          const text = typeof rawContent === "string" ? rawContent : "{}";
+          let extracted;
+          try {
+            const jsonMatch = text.match(/[\[\{][\s\S]*[\]\}]/);
+            extracted = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+          } catch { extracted = { raw: text }; }
+          return { imageUrl: url, extracted, success: true };
+        } catch (e) {
+          console.error("[AI Extract] Error:", e);
+          return { imageUrl: url, extracted: {}, success: false };
+        }
+      }),
+
+    // AI 프롬포트 기반 자동 입력
+    analyzePrompt: adminProcedure
+      .input(z.object({
+        prompt: z.string().min(1),
+        context: z.enum(["vehicle", "accommodation", "event", "itinerary", "channel"]),
+      }))
+      .mutation(async ({ input }) => {
+        const prompts: Record<string, string> = {
+          vehicle: `Parse this vehicle/pickup information and return JSON:
+- vehicleName, vehiclePlateNumber, vehicleColor, vehicleType, vehicleCapacity (number), driverName, driverPhone, pickupLocation, pickupTime (ISO format)
+Return ONLY valid JSON.`,
+          accommodation: `Parse this accommodation information and return JSON:
+- hotelName, roomNumber, roomType (single/double/twin/suite), floorNumber, checkIn (ISO), checkOut (ISO), address, notes
+Return ONLY valid JSON.`,
+          event: `Parse this event/schedule information and return JSON array:
+{ "events": [{ "title", "eventTime" (ISO), "endTime" (ISO or null), "location", "description", "eventType" (meetup|transfer|meal|meeting|free_time|departure|arrival|other) }] }
+Extract ALL events mentioned. Return ONLY valid JSON.`,
+          itinerary: `Parse this travel itinerary information and return JSON:
+- title, departureFlightNo, departureAirport, departureTime (ISO), arrivalFlightNo, arrivalAirport, arrivalTime (ISO),
+  returnFlightNo, returnDepartureAirport, returnDepartureTime (ISO), returnArrivalAirport, returnArrivalTime (ISO),
+  hotelName, hotelAddress, hotelCheckIn (ISO), hotelCheckOut (ISO),
+  scheduleDetails: [{time, activity, location}]
+Return ONLY valid JSON.`,
+          channel: `Parse this communication channel information and return JSON:
+- channelName: channel name/title
+- channelType: one of pickup_driver|manager|hotel_checkin|transfer|general
+- assignedTo: person name in charge
+- assignedPhone: phone number
+- description: channel description
+Return ONLY valid JSON.`,
+        };
+        try {
+          const response = await invokeLLM({
+            messages: [
+              { role: "system", content: prompts[input.context] || prompts.vehicle },
+              { role: "user", content: input.prompt },
+            ],
+          });
+          const rawContent = response.choices?.[0]?.message?.content;
+          const text = typeof rawContent === "string" ? rawContent : "{}";
+          let extracted;
+          try {
+            const jsonMatch = text.match(/[\[\{][\s\S]*[\]\}]/);
+            extracted = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+          } catch { extracted = { raw: text }; }
+          return { extracted, success: true };
+        } catch (e) {
+          console.error("[AI Prompt] Error:", e);
+          return { extracted: {}, success: false };
+        }
+      }),
+  }),
+
+  // ── 숙소↔여정표 호텔 양방향 연동 (v12.6) ────────
+  hotelSync: router({
+    // 숙소 등록/수정 시 여정표 호텔 정보 동기화
+    syncFromAccommodation: adminProcedure
+      .input(z.object({
+        accommodationId: z.number(),
+        hotelName: z.string(),
+        checkIn: z.string().optional(),
+        checkOut: z.string().optional(),
+        roomNumber: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // 해당 숙소에 배정된 참가자들의 여정표 업데이트
+        const acc = await db.getAccommodationById(input.accommodationId);
+        if (!acc) return { updated: 0 };
+        const regIds = acc.assignedRegistrationIds as number[] | null;
+        if (!regIds || regIds.length === 0) return { updated: 0 };
+        let updated = 0;
+        for (const regId of regIds) {
+          const itineraries = await db.getItinerariesByRegistration(regId);
+          for (const it of itineraries) {
+            await db.updateItinerary(it.id, {
+              hotelName: input.hotelName,
+              hotelCheckIn: input.checkIn ? new Date(input.checkIn) : undefined,
+              hotelCheckOut: input.checkOut ? new Date(input.checkOut) : undefined,
+            });
+            updated++;
+          }
+        }
+        return { updated };
+      }),
+
+    // 여정표 호텔 수정 시 숙소 정보 동기화
+    syncFromItinerary: adminProcedure
+      .input(z.object({
+        itineraryId: z.number(),
+        hotelName: z.string(),
+        hotelCheckIn: z.string().optional(),
+        hotelCheckOut: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const itinerary = await db.getItineraryById(input.itineraryId);
+        if (!itinerary) return { updated: 0 };
+        // 해당 참가자가 배정된 숙소 찾기
+        const allAccommodations = await db.getAccommodations();
+        let updated = 0;
+        for (const acc of allAccommodations) {
+          const regIds = acc.assignedRegistrationIds as number[] | null;
+          if (regIds && regIds.includes(itinerary.registrationId)) {
+            await db.updateAccommodation(acc.id, {
+              hotelName: input.hotelName,
+              checkIn: input.hotelCheckIn ? new Date(input.hotelCheckIn) : undefined,
+              checkOut: input.hotelCheckOut ? new Date(input.hotelCheckOut) : undefined,
+            });
+            updated++;
+          }
+        }
+        return { updated };
+      }),
+  }),
+
+  // ── 고객용 차량/숙소 정보 조회 (v12.6) ─────────────
+  myTravel: router({
+    // 내 차량 배정 정보 조회
+    myPickups: protectedProcedure.query(async ({ ctx }) => {
+      const regs = await db.getRegistrations({ userId: ctx.user.id });
+      if (!regs.length) return [];
+      const regIds = regs.map(r => r.id);
+      const allPickups = await db.getPickupAssignments();
+      return allPickups.filter(p => {
+        const assigned = p.assignedRegistrationIds as number[] | null;
+        return assigned && assigned.some(id => regIds.includes(id));
+      });
+    }),
+    // 내 숙소 배정 정보 조회
+    myAccommodations: protectedProcedure.query(async ({ ctx }) => {
+      const regs = await db.getRegistrations({ userId: ctx.user.id });
+      if (!regs.length) return [];
+      const regIds = regs.map(r => r.id);
+      const allAccom = await db.getAccommodations();
+      return allAccom.filter(a => {
+        const assigned = a.assignedRegistrationIds as number[] | null;
+        return assigned && assigned.some(id => regIds.includes(id));
+      });
+    }),
+    // 내 여정표 조회
+    myItineraries: protectedProcedure.query(async ({ ctx }) => {
+      const regs = await db.getRegistrations({ userId: ctx.user.id });
+      if (!regs.length) return [];
+      const results: any[] = [];
+      for (const reg of regs) {
+        const its = await db.getItinerariesByRegistration(reg.id);
+        results.push(...its);
+      }
+      return results;
+    }),
   }),
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────
