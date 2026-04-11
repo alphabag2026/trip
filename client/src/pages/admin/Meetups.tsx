@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, MapPin, Calendar, Luggage, Edit, Sparkles, Loader2, Wand2, CheckCircle2, Globe, Copy, Link2, Share2, ExternalLink, QrCode, Download } from "lucide-react";
+import { Plus, Trash2, MapPin, Calendar, Luggage, Edit, Sparkles, Loader2, Wand2, CheckCircle2, Globe, Copy, Link2, Share2, ExternalLink, QrCode, Download, Pencil, Users } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -18,6 +18,14 @@ export default function AdminMeetups() {
   const [showCreate, setShowCreate] = useState(false);
   const [editBaggageId, setEditBaggageId] = useState<number | null>(null);
   const [editBaggageText, setEditBaggageText] = useState("");
+  // 밋업 상세 수정 상태
+  const [editMeetup, setEditMeetup] = useState<any>(null);
+  const [editForm, setEditForm] = useState({
+    title: "", type: "meetup" as const, locationType: "domestic" as const,
+    destinationCountry: "", location: "", description: "",
+    scheduleStart: "", scheduleEnd: "", maxParticipants: 0,
+    baggageNotice: "",
+  });
   const { data: meetups, refetch } = trpc.meetup.list.useQuery();
   const createMutation = trpc.meetup.create.useMutation({ onSuccess: () => { refetch(); setShowCreate(false); toast.success(t("admin.meetups.created")); }});
   const deleteMutation = trpc.meetup.delete.useMutation({ onSuccess: () => { refetch(); toast.success(t("admin.meetups.deleted")); }});
@@ -83,6 +91,22 @@ export default function AdminMeetups() {
       return;
     }
     aiParseMutation.mutate({ prompt: aiPrompt });
+  };
+
+  const handleOpenEdit = (m: any) => {
+    setEditForm({
+      title: m.title || "",
+      type: m.type || "meetup",
+      locationType: m.locationType || "domestic",
+      destinationCountry: m.destinationCountry || "",
+      location: m.location || "",
+      description: m.description || "",
+      scheduleStart: m.scheduleStart ? new Date(m.scheduleStart).toISOString().split("T")[0] : "",
+      scheduleEnd: m.scheduleEnd ? new Date(m.scheduleEnd).toISOString().split("T")[0] : "",
+      maxParticipants: m.maxParticipants || 0,
+      baggageNotice: m.baggageNotice || "",
+    });
+    setEditMeetup(m);
   };
 
   const handleOpenCreate = () => {
@@ -160,13 +184,20 @@ export default function AdminMeetups() {
                         variant="ghost" size="icon" className="h-5 w-5 shrink-0"
                         onClick={() => window.open(`/m/${m.shareToken}`, "_blank")}
                       ><ExternalLink className="h-3 w-3" /></Button>
-                      <Button
-                        variant="ghost" size="icon" className="h-5 w-5 shrink-0"
+                  <Button
+                      variant="ghost" size="icon" className="h-5 w-5 shrink-0"
                         onClick={() => setQrMeetup(m)}
                         title="QR 코드"
                       ><QrCode className="h-3 w-3" /></Button>
                     </div>
                   )}
+                  {/* 밋업 상세 수정 버튼 */}
+                  <div className="mt-1">
+                    <Button
+                      variant="outline" size="sm" className="h-6 text-[11px] gap-1 px-2"
+                      onClick={() => handleOpenEdit(m)}
+                    ><Pencil className="h-3 w-3" />{t("admin.meetups.editMeetup", "밋업 수정")}</Button>
+                  </div>
                   {/* 수화물 공지 표시 */}
                   <div className="flex items-center gap-2 mt-2">
                     <Luggage className="h-3 w-3 text-amber-500 shrink-0" />
@@ -426,6 +457,89 @@ export default function AdminMeetups() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Meetup Dialog */}
+      <Dialog open={!!editMeetup} onOpenChange={open => { if (!open) setEditMeetup(null); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="flex items-center gap-2">
+            <Pencil className="h-5 w-5 text-primary" />
+            {t("admin.meetups.editMeetupTitle", "밋업 정보 수정")}
+          </DialogTitle></DialogHeader>
+          <form onSubmit={e => { e.preventDefault(); if (!editMeetup) return;
+            updateMutation.mutate({
+              id: editMeetup.id,
+              title: editForm.title || undefined,
+              type: editForm.type || undefined,
+              locationType: editForm.locationType || undefined,
+              destinationCountry: editForm.destinationCountry || undefined,
+              location: editForm.location || undefined,
+              description: editForm.description || undefined,
+              scheduleStart: editForm.scheduleStart || undefined,
+              scheduleEnd: editForm.scheduleEnd || undefined,
+              maxParticipants: editForm.maxParticipants || undefined,
+              baggageNotice: editForm.baggageNotice || undefined,
+            });
+            setEditMeetup(null);
+          }} className="space-y-4">
+            <div><Label>{t("admin.meetups.meetupTitle")}</Label><Input value={editForm.title} onChange={e => setEditForm(p => ({...p, title: e.target.value}))} required /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>{t("admin.meetups.t17", "유형")}</Label>
+                <Select value={editForm.type} onValueChange={v => setEditForm(p => ({...p, type: v as any}))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="meetup">{t("admin.meetups.t18", "밋업")}</SelectItem>
+                    <SelectItem value="pre_visit">{t("admin.meetups.t19", "사전방문")}</SelectItem>
+                    <SelectItem value="event">{t("admin.meetups.t20", "이벤트")}</SelectItem>
+                    <SelectItem value="meeting">{t("admin.meetups.t21", "미팅")}</SelectItem>
+                    <SelectItem value="other">{t("admin.meetups.t22", "기타")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>{t("admin.meetups.t23", "구분")}</Label>
+                <Select value={editForm.locationType} onValueChange={v => setEditForm(p => ({...p, locationType: v as any}))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="domestic">{t("admin.meetups.t24", "내륙")}</SelectItem>
+                    <SelectItem value="overseas">{t("admin.meetups.t25", "해외")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>{t("admin.meetups.t26", "목적지 국가")}</Label>
+                <Input value={editForm.destinationCountry} onChange={e => setEditForm(p => ({...p, destinationCountry: e.target.value}))} placeholder="예: TH, JP, CN" />
+              </div>
+              <div>
+                <Label>{t("admin.meetups.t27", "장소")}</Label>
+                <Input value={editForm.location} onChange={e => setEditForm(p => ({...p, location: e.target.value}))} placeholder="예: Bangkok, Thailand" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>{t("admin.meetups.startDate")}</Label><Input type="date" value={editForm.scheduleStart} onChange={e => setEditForm(p => ({...p, scheduleStart: e.target.value}))} /></div>
+              <div><Label>{t("admin.meetups.endDate")}</Label><Input type="date" value={editForm.scheduleEnd} onChange={e => setEditForm(p => ({...p, scheduleEnd: e.target.value}))} /></div>
+            </div>
+            <div>
+              <Label className="flex items-center gap-2"><Users className="h-4 w-4" />{t("admin.meetups.t28", "최대 참석자 수")}</Label>
+              <Input type="number" value={editForm.maxParticipants || ""} onChange={e => setEditForm(p => ({...p, maxParticipants: parseInt(e.target.value) || 0}))} placeholder="0 = 제한없음" />
+            </div>
+            <div><Label>{t("admin.meetups.description")}</Label><Textarea value={editForm.description} onChange={e => setEditForm(p => ({...p, description: e.target.value}))} rows={3} /></div>
+            <div>
+              <Label className="flex items-center gap-2"><Luggage className="h-4 w-4 text-amber-500" />{t("admin.meetups.t29", "수화물 공지")}</Label>
+              <Textarea value={editForm.baggageNotice} onChange={e => setEditForm(p => ({...p, baggageNotice: e.target.value}))} rows={2} />
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setEditMeetup(null)}>{t("admin.meetups.t36", "취소")}</Button>
+              <Button type="submit" className="flex-1" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Pencil className="h-4 w-4 mr-2" />}
+                {t("admin.meetups.saveChanges", "변경 저장")}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
