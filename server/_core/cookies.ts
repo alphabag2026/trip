@@ -24,23 +24,17 @@ function isSecureRequest(req: Request) {
 export function getSessionCookieOptions(
   req: Request
 ): Pick<CookieOptions, "domain" | "httpOnly" | "path" | "sameSite" | "secure"> {
-  const hostname = req.hostname;
-  const isLocal = LOCAL_HOSTS.has(hostname) || isIpAddress(hostname);
   const secure = isSecureRequest(req);
 
-  // For production domains, set domain to allow cookie sharing across subdomains
-  // For local development, omit domain
-  const domain = !isLocal && hostname
-    ? (hostname.startsWith(".") ? hostname : `.${hostname}`)
-    : undefined;
-
+  // Do NOT set domain explicitly. When domain is omitted, the browser
+  // automatically binds the cookie to the exact origin domain the user
+  // is visiting. This avoids mismatches caused by reverse proxies
+  // (Cloud Run, nginx, etc.) where req.hostname returns the internal
+  // container hostname instead of the public-facing domain.
   return {
     httpOnly: true,
     path: "/",
-    // Use "lax" for same-site navigation (most common case)
-    // "none" requires Secure and can cause issues with some browsers
     sameSite: secure ? "lax" : "lax",
     secure,
-    ...(domain ? { domain } : {}),
   };
 }

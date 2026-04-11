@@ -32,6 +32,8 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 
 async function startServer() {
   const app = express();
+  // Trust proxy headers (Cloud Run, nginx, etc.) so req.hostname reflects the public domain
+  app.set("trust proxy", true);
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
