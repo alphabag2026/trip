@@ -675,6 +675,51 @@ export const appRouter = router({
         if (!meetup) throw new TRPCError({ code: "NOT_FOUND", message: "밋업을 찾을 수 없습니다" });
         return meetup;
       }),
+    // 밋업 복제 (Clone)
+    clone: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const original = await db.getMeetupById(input.id);
+        if (!original) throw new TRPCError({ code: "NOT_FOUND", message: "밋업을 찾을 수 없습니다" });
+        const genCode = () => {
+          const p = () => Math.floor(Math.random() * 900 + 100);
+          return `${p()}.${p()}.${p()}`;
+        };
+        const projectCode = genCode();
+        const shareToken = nanoid(16);
+        const newTitle = `${original.title} (복사본)`;
+        const id = await db.createMeetup({
+          title: newTitle,
+          type: original.type || "meetup",
+          locationType: original.locationType || "domestic",
+          destinationCountry: original.destinationCountry || undefined,
+          location: original.location || undefined,
+          description: original.description || undefined,
+          maxParticipants: original.maxParticipants || undefined,
+          baggageNotice: original.baggageNotice || "초과화물은 직접부담할 수 있습니다.",
+          invitedCountries: original.invitedCountries || [],
+          createdBy: ctx.user.id,
+          projectCode,
+          shareToken,
+          status: "draft",
+        });
+        // 전용 채팅방 자동 생성
+        const defaultRooms = [
+          { name: `📢 ${newTitle} - 공지`, roomType: "announcement" as const, description: "밋업 공지사항을 안내하는 채널입니다." },
+          { name: `💬 ${newTitle} - 일반`, roomType: "general" as const, description: "참가자들의 자유로운 소통 채널입니다." },
+          { name: `❓ ${newTitle} - 문의`, roomType: "support" as const, description: "밋업 관련 문의사항을 남기는 채널입니다." },
+        ];
+        for (const room of defaultRooms) {
+          try {
+            const roomId = await db.createChatRoom({
+              meetupId: id, name: room.name, roomType: room.roomType,
+              description: room.description, createdBy: ctx.user.id, autoTranslate: true,
+            });
+            await db.addChatRoomMember({ roomId, userId: ctx.user.id, memberRole: "admin" });
+          } catch (e) { /* ignore */ }
+        }
+        return { id, projectCode, shareToken };
+      }),
   }),
 
   // ── Registrations ────────────────────────────────
