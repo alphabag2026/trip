@@ -2080,7 +2080,11 @@
       "communication": "沟通",
       "documents": "文档/发放",
       "platformAdmin": "平台管理",
-      "settings": "设置"
+      "settings": "设置",
+      "meetupParticipants": "聚会 & 参与者",
+      "transportAccom": "交通 & 住宿",
+      "scheduleItinerary": "日程 & 行程",
+      "commNotify": "沟通 & 通知"
     },
     "accessDenied": "无访问权限",
     "superadminOnly": "此页面仅限超级管理员访问。",

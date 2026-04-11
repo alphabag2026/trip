@@ -1077,6 +1077,12 @@
       "exportEvents": "Export Events",
       "exportItineraries": "Export Itineraries",
       "exportAttendees": "Export Attendees"
+    },
+    "sidebarGroup": {
+      "meetupParticipants": "MEETUP & MGA KALAHOK",
+      "transportAccom": "TRANSPORTASYON & TIRAHAN",
+      "scheduleItinerary": "ISKEDYUL & ITINERARYO",
+      "commNotify": "KOMUNIKASYON & ABISO"
     }
   },
   "assignments": {

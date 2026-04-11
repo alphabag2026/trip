@@ -2080,7 +2080,11 @@
       "communication": "Communication",
       "documents": "Documents",
       "platformAdmin": "Platform Admin",
-      "settings": "Settings"
+      "settings": "Settings",
+      "meetupParticipants": "MEETUP & PARTICIPANTS",
+      "transportAccom": "TRANSPORT & ACCOMMODATION",
+      "scheduleItinerary": "SCHEDULE & ITINERARY",
+      "commNotify": "COMMUNICATION & NOTIFY"
     },
     "accessDenied": "Access Denied",
     "superadminOnly": "This page is only accessible to super administrators.",

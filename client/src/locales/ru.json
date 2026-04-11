@@ -1077,6 +1077,12 @@
       "exportEvents": "Export Events",
       "exportItineraries": "Export Itineraries",
       "exportAttendees": "Export Attendees"
+    },
+    "sidebarGroup": {
+      "meetupParticipants": "ВСТРЕЧА И УЧАСТНИКИ",
+      "transportAccom": "ТРАНСПОРТ И ПРОЖИВАНИЕ",
+      "scheduleItinerary": "РАСПИСАНИЕ И МАРШРУТ",
+      "commNotify": "ОБЩЕНИЕ И УВЕДОМЛЕНИЯ"
     }
   },
   "assignments": {

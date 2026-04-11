@@ -1077,6 +1077,12 @@
       "exportEvents": "Export Events",
       "exportItineraries": "Export Itineraries",
       "exportAttendees": "Export Attendees"
+    },
+    "sidebarGroup": {
+      "meetupParticipants": "MEETUP & PARTICIPANTS",
+      "transportAccom": "TRANSPORT & HÉBERGEMENT",
+      "scheduleItinerary": "PROGRAMME & ITINÉRAIRE",
+      "commNotify": "COMMUNICATION & NOTIFICATION"
     }
   },
   "assignments": {

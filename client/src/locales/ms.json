@@ -1077,6 +1077,12 @@
       "exportEvents": "Export Events",
       "exportItineraries": "Export Itineraries",
       "exportAttendees": "Export Attendees"
+    },
+    "sidebarGroup": {
+      "meetupParticipants": "MEETUP & PESERTA",
+      "transportAccom": "PENGANGKUTAN & PENGINAPAN",
+      "scheduleItinerary": "JADUAL & JADUAL PERJALANAN",
+      "commNotify": "KOMUNIKASI & PEMBERITAHUAN"
     }
   },
   "assignments": {

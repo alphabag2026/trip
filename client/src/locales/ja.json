@@ -1077,6 +1077,12 @@
       "exportEvents": "Export Events",
       "exportItineraries": "Export Itineraries",
       "exportAttendees": "Export Attendees"
+    },
+    "sidebarGroup": {
+      "meetupParticipants": "ミートアップ & 参加者",
+      "transportAccom": "交通 & 宿泊",
+      "scheduleItinerary": "スケジュール & 旅程",
+      "commNotify": "コミュニケーション & 通知"
     }
   },
   "assignments": {

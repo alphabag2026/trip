@@ -1077,6 +1077,12 @@
       "exportEvents": "Export Events",
       "exportItineraries": "Export Itineraries",
       "exportAttendees": "Export Attendees"
+    },
+    "sidebarGroup": {
+      "meetupParticipants": "มีทอัพ & ผู้เข้าร่วม",
+      "transportAccom": "การเดินทาง & ที่พัก",
+      "scheduleItinerary": "ตารางเวลา & แผนการเดินทาง",
+      "commNotify": "การสื่อสาร & แจ้งเตือน"
     }
   },
   "assignments": {

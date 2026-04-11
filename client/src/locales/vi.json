@@ -1077,6 +1077,12 @@
       "exportEvents": "Export Events",
       "exportItineraries": "Export Itineraries",
       "exportAttendees": "Export Attendees"
+    },
+    "sidebarGroup": {
+      "meetupParticipants": "MEETUP & NGƯỜI THAM GIA",
+      "transportAccom": "GIAO THÔNG & CHỖ Ở",
+      "scheduleItinerary": "LỊCH TRÌNH & HÀNH TRÌNH",
+      "commNotify": "GIAO TIẾP & THÔNG BÁO"
     }
   },
   "assignments": {

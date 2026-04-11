@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt, Shield, Image, ChevronDown, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt, Shield, Image, ChevronDown, MapPin, type LucideIcon } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -45,7 +45,11 @@ type MenuGroup = {
   roles: ("admin" | "superadmin" | "organizer" | "all")[];
 };
 
+// ────────────────────────────────────────────────────────────────
+// 대메뉴 / 소메뉴 구조로 재정렬 (편리성 기준)
+// ────────────────────────────────────────────────────────────────
 const menuGroups: MenuGroup[] = [
+  // ─── 1. 대시보드 ───
   {
     labelKey: "admin.sidebarGroup.overview",
     roles: ["all"],
@@ -54,8 +58,9 @@ const menuGroups: MenuGroup[] = [
       { icon: Users, labelKey: "admin.sidebar.attendeeDashboard", path: "/attendee-dashboard", roles: ["all"] },
     ],
   },
+  // ─── 2. 밋업 & 참가자 ───
   {
-    labelKey: "admin.sidebarGroup.meetupManage",
+    labelKey: "admin.sidebarGroup.meetupParticipants",
     roles: ["all"],
     items: [
       { icon: Plane, labelKey: "admin.sidebar.meetups", path: "/meetups", roles: ["all"] },
@@ -65,18 +70,27 @@ const menuGroups: MenuGroup[] = [
       { icon: CreditCard, labelKey: "admin.sidebar.invitation", path: "/invitation", roles: ["all"] },
     ],
   },
+  // ─── 3. 교통 & 숙소 ───
   {
-    labelKey: "admin.sidebarGroup.travelOps",
+    labelKey: "admin.sidebarGroup.transportAccom",
     roles: ["all"],
     items: [
       { icon: Plane, labelKey: "admin.sidebar.flights", path: "/flights", roles: ["all"] },
       { icon: Car, labelKey: "admin.sidebar.pickups", path: "/pickups", roles: ["all"] },
       { icon: Hotel, labelKey: "admin.sidebar.accommodations", path: "/accommodations", roles: ["all"] },
+    ],
+  },
+  // ─── 4. 일정 & 여정 ───
+  {
+    labelKey: "admin.sidebarGroup.scheduleItinerary",
+    roles: ["all"],
+    items: [
       { icon: CalendarDays, labelKey: "admin.sidebar.scheduleEvents", path: "/schedule-events", roles: ["all"] },
-      { icon: Plane, labelKey: "admin.sidebar.itineraries", path: "/itineraries", roles: ["all"] },
+      { icon: MapPin, labelKey: "admin.sidebar.itineraries", path: "/itineraries", roles: ["all"] },
       { icon: Globe, labelKey: "admin.sidebar.travelInfo", path: "/travel-info", roles: ["all"] },
     ],
   },
+  // ─── 5. 현장 운영 ───
   {
     labelKey: "admin.sidebarGroup.onsite",
     roles: ["all"],
@@ -88,8 +102,9 @@ const menuGroups: MenuGroup[] = [
       { icon: Receipt, labelKey: "admin.sidebar.expenses", path: "/expenses", roles: ["all"] },
     ],
   },
+  // ─── 6. 소통 & 알림 ───
   {
-    labelKey: "admin.sidebarGroup.communication",
+    labelKey: "admin.sidebarGroup.commNotify",
     roles: ["all"],
     items: [
       { icon: MessageCircle, labelKey: "admin.sidebar.channels", path: "/channels", roles: ["all"] },
@@ -98,6 +113,7 @@ const menuGroups: MenuGroup[] = [
       { icon: Megaphone, labelKey: "admin.sidebar.broadcast", path: "/broadcast", roles: ["all"] },
     ],
   },
+  // ─── 7. 문서 & 발급 ───
   {
     labelKey: "admin.sidebarGroup.documents",
     roles: ["all"],
@@ -105,9 +121,9 @@ const menuGroups: MenuGroup[] = [
       { icon: FileText, labelKey: "admin.sidebar.vouchers", path: "/vouchers", roles: ["all"] },
       { icon: CreditCard, labelKey: "admin.sidebar.hotelVouchers", path: "/hotel-vouchers", roles: ["all"] },
       { icon: Ticket, labelKey: "admin.sidebar.flightTickets", path: "/flight-tickets", roles: ["all"] },
-      { icon: Image, labelKey: "admin.sidebar.adBanners", path: "/ad-banners", roles: ["all"] },
     ],
   },
+  // ─── 8. 플랫폼 관리 (슈퍼관리자 전용) ───
   {
     labelKey: "admin.sidebarGroup.platformAdmin",
     roles: ["admin", "superadmin"],
@@ -116,11 +132,13 @@ const menuGroups: MenuGroup[] = [
       { icon: Handshake, labelKey: "admin.sidebar.partners", path: "/partners", roles: ["admin", "superadmin"] },
       { icon: ShoppingCart, labelKey: "admin.sidebar.bookingSearch", path: "/booking-search", roles: ["admin", "superadmin"] },
       { icon: TrendingUp, labelKey: "admin.sidebar.affiliateRevenue", path: "/affiliate-revenue", roles: ["admin", "superadmin"] },
+      { icon: Image, labelKey: "admin.sidebar.adBanners", path: "/ad-banners", roles: ["admin", "superadmin"] },
       { icon: Key, labelKey: "admin.sidebar.apiKeys", path: "/api-keys", roles: ["admin", "superadmin"] },
       { icon: Upload, labelKey: "admin.sidebar.telegramUploads", path: "/telegram-uploads", roles: ["admin", "superadmin"] },
       { icon: BookOpen, labelKey: "admin.sidebar.apiDocs", path: "/api-docs", roles: ["admin", "superadmin"] },
     ],
   },
+  // ─── 9. 설정 ───
   {
     labelKey: "admin.sidebarGroup.settings",
     roles: ["all"],
@@ -289,7 +307,7 @@ function DashboardLayoutContent({
           disableTransition={isResizing}
         >
           <SidebarHeader className="h-16 justify-center">
-            <div className="flex items-center gap-3 px-2 transition-all w-full">
+            <div className="flex items-center gap-3 px-2">
               <button
                 onClick={toggleSidebar}
                 className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
