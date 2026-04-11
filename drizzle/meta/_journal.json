@@ -253,6 +253,20 @@
       "when": 1775921561108,
       "tag": "0035_volatile_salo",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "5",
+      "when": 1775940017490,
+      "tag": "0036_exotic_omega_red",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "5",
+      "when": 1775942922877,
+      "tag": "0037_serious_mimic",
+      "breakpoints": true
     }
   ]
 }
