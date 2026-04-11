@@ -1,24 +1,21 @@
+import fs from 'fs';
 import mysql from 'mysql2/promise';
 
 async function run() {
   const conn = await mysql.createConnection(process.env.DATABASE_URL);
-  const sqls = [
-    "ALTER TABLE `accommodation_assignments` ADD `accommodationPhotoUrl` varchar(1000)",
-    "ALTER TABLE `accommodation_assignments` ADD `floorNumber` varchar(20)",
-    "ALTER TABLE `pickup_assignments` ADD `vehiclePhotoUrl` varchar(1000)",
-    "ALTER TABLE `pickup_assignments` ADD `vehiclePlateNumber` varchar(100)",
-    "ALTER TABLE `pickup_assignments` ADD `vehicleColor` varchar(50)",
-    "ALTER TABLE `pickup_assignments` ADD `vehicleType` varchar(100)"
-  ];
-  for (const sql of sqls) {
-    try { 
-      await conn.execute(sql); 
-      console.log('OK:', sql.substring(0, 80)); 
-    } catch(e) { 
-      console.log('SKIP (already exists?):', e.message.substring(0, 100)); 
+  const sql = fs.readFileSync('drizzle/0036_exotic_omega_red.sql', 'utf8');
+  try {
+    await conn.execute(sql);
+    console.log('Migration applied successfully!');
+  } catch (e) {
+    if (e.code === 'ER_TABLE_EXISTS_ERROR') {
+      console.log('Table already exists, skipping...');
+    } else {
+      throw e;
     }
+  } finally {
+    await conn.end();
   }
-  await conn.end();
   console.log('Migration complete!');
 }
-run();
+run().catch(e => { console.error(e); process.exit(1); });

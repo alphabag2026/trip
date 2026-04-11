@@ -7430,6 +7430,241 @@ Return ONLY valid JSON.`,
         return { base64: buf.toString("base64"), filename: `stats_export_${Date.now()}.xlsx` };
       }),
   }),
+
+  // ── Calendar Integration (캘린더 연동) ──────────────────────
+  calendar: router({
+    // .ics 파일 데이터 생성 (Google/Apple Calendar 추가용)
+    generateIcs: publicProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        const meetup = await db.getMeetupById(input.meetupId);
+        if (!meetup) throw new TRPCError({ code: "NOT_FOUND", message: "밋업을 찾을 수 없습니다" });
+        const formatDate = (d: Date | string | null) => {
+          if (!d) return "";
+          const date = new Date(d);
+          return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+        };
+        const start = formatDate(meetup.scheduleStart);
+        const end = formatDate(meetup.scheduleEnd || meetup.scheduleStart);
+        const uid = `meetup-${meetup.id}-${meetup.projectCode}@alphatrip.org`;
+        const ics = [
+          "BEGIN:VCALENDAR",
+          "VERSION:2.0",
+          "PRODID:-//AlphaTrip//Meetup//KO",
+          "CALSCALE:GREGORIAN",
+          "METHOD:PUBLISH",
+          "BEGIN:VEVENT",
+          `UID:${uid}`,
+          `DTSTART:${start}`,
+          `DTEND:${end}`,
+          `SUMMARY:${(meetup.title || "").replace(/[\n,;]/g, " ")}`,
+          `DESCRIPTION:${(meetup.description || "").replace(/\n/g, "\\n").replace(/[,;]/g, " ")}`,
+          `LOCATION:${(meetup.location || "").replace(/[\n,;]/g, " ")}`,
+          `URL:https://alphatrip.org/m/${meetup.shareToken}`,
+          "STATUS:CONFIRMED",
+          "END:VEVENT",
+          "END:VCALENDAR",
+        ].join("\r\n");
+        // Google Calendar URL
+        const gcalStart = start.replace("Z", "");
+        const gcalEnd = end.replace("Z", "");
+        const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(meetup.title || "")}&dates=${gcalStart}/${gcalEnd}&details=${encodeURIComponent(meetup.description || "")}&location=${encodeURIComponent(meetup.location || "")}&sf=true&output=xml`;
+        return { ics, gcalUrl, meetup: { title: meetup.title, start: meetup.scheduleStart, end: meetup.scheduleEnd, location: meetup.location } };
+      }),
+    // 교통/식사 일정의 캘린더 데이터 생성
+    generateScheduleIcs: publicProcedure
+      .input(z.object({ scheduleId: z.number() }))
+      .query(async ({ input }) => {
+        const schedule = await db.getMeetupScheduleById(input.scheduleId);
+        if (!schedule) throw new TRPCError({ code: "NOT_FOUND", message: "일정을 찾을 수 없습니다" });
+        const formatDate = (d: Date | string | null) => {
+          if (!d) return "";
+          const date = new Date(d);
+          return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+        };
+        const start = formatDate(schedule.eventDate);
+        const end = formatDate(schedule.endTime || schedule.eventDate);
+        const uid = `schedule-${schedule.id}@alphatrip.org`;
+        const loc = schedule.location || schedule.pickupLocation || schedule.restaurantName || "";
+        const ics = [
+          "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//AlphaTrip//Schedule//KO",
+          "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
+          `UID:${uid}`, `DTSTART:${start}`, `DTEND:${end}`,
+          `SUMMARY:${(schedule.title || "").replace(/[\n,;]/g, " ")}`,
+          `DESCRIPTION:${(schedule.description || "").replace(/\n/g, "\\n").replace(/[,;]/g, " ")}`,
+          `LOCATION:${loc.replace(/[\n,;]/g, " ")}`,
+          "STATUS:CONFIRMED", "END:VEVENT", "END:VCALENDAR",
+        ].join("\r\n");
+        const gcalStart = start.replace("Z", "");
+        const gcalEnd = end.replace("Z", "");
+        const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(schedule.title || "")}&dates=${gcalStart}/${gcalEnd}&details=${encodeURIComponent(schedule.description || "")}&location=${encodeURIComponent(loc)}&sf=true&output=xml`;
+        return { ics, gcalUrl, schedule };
+      }),
+  }),
+
+  // ── Meetup Schedules (교통/식사/관광 일정 관리) ──────────────
+  meetupSchedule: router({
+    list: publicProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        scheduleType: z.enum(["transport", "meal", "tour", "meeting", "free", "other"]).optional(),
+        status: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        return db.getMeetupSchedules(input.meetupId, input.scheduleType, input.status);
+      }),
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const row = await db.getMeetupScheduleById(input.id);
+        if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "일정을 찾을 수 없습니다" });
+        return row;
+      }),
+    create: adminProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        scheduleType: z.enum(["transport", "meal", "tour", "meeting", "free", "other"]),
+        title: z.string().min(1),
+        description: z.string().optional(),
+        location: z.string().optional(),
+        locationUrl: z.string().optional(),
+        eventDate: z.string(),
+        endTime: z.string().optional(),
+        vehicleInfo: z.string().optional(),
+        driverName: z.string().optional(),
+        driverPhone: z.string().optional(),
+        pickupLocation: z.string().optional(),
+        dropoffLocation: z.string().optional(),
+        restaurantName: z.string().optional(),
+        cuisineType: z.string().optional(),
+        reservationName: z.string().optional(),
+        reservationPhone: z.string().optional(),
+        menuInfo: z.string().optional(),
+        costPerPerson: z.string().optional(),
+        maxParticipants: z.number().optional(),
+        isAllParticipants: z.boolean().optional(),
+        assignedRegistrationIds: z.array(z.number()).optional(),
+        notes: z.string().optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const cols = [
+          "meetupId", "scheduleType", "title", "description", "location", "locationUrl",
+          "eventDate", "endTime", "vehicleInfo", "driverName", "driverPhone",
+          "pickupLocation", "dropoffLocation", "restaurantName", "cuisineType",
+          "reservationName", "reservationPhone", "menuInfo", "costPerPerson",
+          "maxParticipants", "isAllParticipants", "assignedRegistrationIds", "notes", "sortOrder", "createdBy",
+        ];
+        const vals = [
+          input.meetupId, input.scheduleType, input.title, input.description || null,
+          input.location || null, input.locationUrl || null,
+          new Date(input.eventDate), input.endTime ? new Date(input.endTime) : null,
+          input.vehicleInfo || null, input.driverName || null, input.driverPhone || null,
+          input.pickupLocation || null, input.dropoffLocation || null,
+          input.restaurantName || null, input.cuisineType || null,
+          input.reservationName || null, input.reservationPhone || null,
+          input.menuInfo || null, input.costPerPerson || null,
+          input.maxParticipants || null, input.isAllParticipants ?? true,
+          input.assignedRegistrationIds ? JSON.stringify(input.assignedRegistrationIds) : null,
+          input.notes || null, input.sortOrder || 0, ctx.user.id,
+        ];
+        const insertData: any = {};
+        cols.forEach((col, i) => { insertData[col] = vals[i]; });
+        const insertId = await db.createMeetupSchedule(insertData);
+        return { id: insertId };
+      }),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        scheduleType: z.enum(["transport", "meal", "tour", "meeting", "free", "other"]).optional(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        location: z.string().optional(),
+        locationUrl: z.string().optional(),
+        eventDate: z.string().optional(),
+        endTime: z.string().optional(),
+        vehicleInfo: z.string().optional(),
+        driverName: z.string().optional(),
+        driverPhone: z.string().optional(),
+        pickupLocation: z.string().optional(),
+        dropoffLocation: z.string().optional(),
+        restaurantName: z.string().optional(),
+        cuisineType: z.string().optional(),
+        reservationName: z.string().optional(),
+        reservationPhone: z.string().optional(),
+        menuInfo: z.string().optional(),
+        costPerPerson: z.string().optional(),
+        maxParticipants: z.number().optional(),
+        isAllParticipants: z.boolean().optional(),
+        assignedRegistrationIds: z.array(z.number()).optional(),
+        notes: z.string().optional(),
+        sortOrder: z.number().optional(),
+        status: z.enum(["scheduled", "confirmed", "in_progress", "completed", "cancelled"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        const sets: string[] = [];
+        const vals: any[] = [];
+        for (const [key, val] of Object.entries(data)) {
+          if (val === undefined) continue;
+          if (key === "eventDate" || key === "endTime") {
+            sets.push(`${key} = ?`); vals.push(new Date(val as string));
+          } else if (key === "assignedRegistrationIds") {
+            sets.push(`${key} = ?`); vals.push(JSON.stringify(val));
+          } else {
+            sets.push(`${key} = ?`); vals.push(val);
+          }
+        }
+        if (sets.length === 0) return { success: true };
+        const updateData: any = {};
+        for (const [key, val] of Object.entries(data)) {
+          if (val === undefined) continue;
+          if (key === "eventDate" || key === "endTime") updateData[key] = new Date(val as string);
+          else updateData[key] = val;
+        }
+        await db.updateMeetupSchedule(id, updateData);
+        return { success: true };
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteMeetupSchedule(input.id);
+        return { success: true };
+      }),
+    // 참가자에게 일정 알림 보내기 (공지 채널에 전송)
+    notify: adminProcedure
+      .input(z.object({ id: z.number(), meetupId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const schedule = await db.getMeetupScheduleById(input.id);
+        if (!schedule) throw new TRPCError({ code: "NOT_FOUND", message: "일정을 찾을 수 없습니다" });
+        const typeLabels: Record<string, string> = { transport: "🚗 교통", meal: "🍽️ 식사", tour: "🗺️ 관광", meeting: "📋 미팅", free: "🆓 자유시간", other: "📌 기타" };
+        const typeLabel = typeLabels[schedule.scheduleType] || "📌 일정";
+        const eventDate = new Date(schedule.eventDate);
+        const dateStr = eventDate.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" });
+        let msg = `${typeLabel} 안내\n\n📌 ${schedule.title}\n🕐 ${dateStr}`;
+        if (schedule.location) msg += `\n📍 ${schedule.location}`;
+        if (schedule.restaurantName) msg += `\n🍽️ ${schedule.restaurantName}`;
+        if (schedule.pickupLocation) msg += `\n🚗 픽업: ${schedule.pickupLocation}`;
+        if (schedule.driverName) msg += `\n👤 기사: ${schedule.driverName} ${schedule.driverPhone || ""}`;
+        if (schedule.menuInfo) msg += `\n📋 메뉴: ${schedule.menuInfo}`;
+        if (schedule.notes) msg += `\n\n${schedule.notes}`;
+        // 공지 채널에 전송
+        const rooms = await db.getChatRooms({ meetupId: input.meetupId, isActive: true });
+        const announcementRoom = rooms.find((r: any) => r.roomType === "announcement");
+        if (announcementRoom) {
+          await db.createChatMessage({
+            roomId: announcementRoom.id, userId: ctx.user.id,
+            senderName: ctx.user.name || "관리자", senderRole: "admin",
+            content: msg, messageType: "announcement",
+          });
+        }
+        // 알림 상태 업데이트
+        await db.updateMeetupSchedule(input.id, { notified: true, notifiedAt: new Date() });
+        // 텔레그램 알림
+        try { await sendTelegram(msg.substring(0, 500)); } catch { /* ignore */ }
+        return { success: true };
+      }),
+  }),
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────
 async function parseTravelInfoWithLLM(text: string, fileType: string) {

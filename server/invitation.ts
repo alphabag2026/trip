@@ -1,7 +1,7 @@
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 import QRCode from "qrcode";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -9,9 +9,37 @@ import { fileURLToPath } from "url";
 const __filename_esm = fileURLToPath(import.meta.url);
 const __dirname_esm = dirname(__filename_esm);
 
-// Load fonts once
-const fontBold = readFileSync(join(__dirname_esm, "fonts", "NotoSansKR-Bold.otf"));
-const fontRegular = readFileSync(join(__dirname_esm, "fonts", "NotoSansKR-Regular.otf"));
+// Font CDN URLs (fallback if local files not available)
+const FONT_BOLD_CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/NotoSansKR-Bold_d6b7c374.otf";
+const FONT_REGULAR_CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/NotoSansKR-Regular_4e67125a.otf";
+
+// Load fonts - try local first, then CDN
+let fontBold: Buffer;
+let fontRegular: Buffer;
+const localBold = join(__dirname_esm, "fonts", "NotoSansKR-Bold.otf");
+const localRegular = join(__dirname_esm, "fonts", "NotoSansKR-Regular.otf");
+
+if (existsSync(localBold) && existsSync(localRegular)) {
+  fontBold = readFileSync(localBold);
+  fontRegular = readFileSync(localRegular);
+} else {
+  // Will be loaded lazily from CDN
+  fontBold = Buffer.alloc(0);
+  fontRegular = Buffer.alloc(0);
+  (async () => {
+    try {
+      const [boldRes, regularRes] = await Promise.all([
+        fetch(FONT_BOLD_CDN).then(r => r.arrayBuffer()),
+        fetch(FONT_REGULAR_CDN).then(r => r.arrayBuffer()),
+      ]);
+      fontBold = Buffer.from(boldRes);
+      fontRegular = Buffer.from(regularRes);
+      console.log("[Fonts] Loaded from CDN");
+    } catch (e) {
+      console.error("[Fonts] Failed to load from CDN:", e);
+    }
+  })();
+}
 
 interface InvitationData {
   meetupTitle: string;

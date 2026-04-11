@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plane, MapPin, Calendar, Users, ArrowLeft, Sparkles, ScanLine,
   Loader2, MessageCircle, Send, Clock, Globe, Share2, Copy, CheckCircle,
-  FileText, Info, AlertTriangle
+  FileText, Info, AlertTriangle, Download, ExternalLink
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { QRCodeSVG } from "qrcode.react";
@@ -212,6 +212,9 @@ export default function MeetupPortal() {
               </CardContent>
             </Card>
 
+            {/* 캘린더 연동 */}
+            <CalendarButtons meetupId={meetup.id} />
+
             {/* 공유 URL + QR 코드 */}
             <Card className="border-primary/20 bg-primary/5">
               <CardContent className="p-4">
@@ -389,5 +392,70 @@ function MeetupChat({ meetupId, meetupTitle, isAuthenticated }: { meetupId: numb
         </Link>
       ))}
     </div>
+  );
+}
+
+// 캘린더 연동 버튼 컴포넌트
+function CalendarButtons({ meetupId }: { meetupId: number }) {
+  const { t } = useTranslation();
+  const { data, isLoading } = trpc.calendar.generateIcs.useQuery(
+    { meetupId },
+    { enabled: !!meetupId }
+  );
+
+  const handleDownloadIcs = () => {
+    if (!data?.ics) return;
+    const blob = new Blob([data.ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `meetup-${meetupId}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(t("meetupPortal.icsDownloaded", "캘린더 파일이 다운로드되었습니다"));
+  };
+
+  const handleGoogleCalendar = () => {
+    if (!data?.gcalUrl) return;
+    window.open(data.gcalUrl, "_blank");
+  };
+
+  if (isLoading) return null;
+  if (!data) return null;
+
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Calendar className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium">{t("meetupPortal.addToCalendar", "캘린더에 추가")}</span>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 flex-1"
+            onClick={handleGoogleCalendar}
+          >
+            <ExternalLink className="h-4 w-4" />
+            Google Calendar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 flex-1"
+            onClick={handleDownloadIcs}
+          >
+            <Download className="h-4 w-4" />
+            Apple Calendar (.ics)
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          {t("meetupPortal.calendarDesc", "밋업 일정을 내 캘린더에 바로 추가할 수 있습니다.")}
+        </p>
+      </CardContent>
+    </Card>
   );
 }

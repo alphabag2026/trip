@@ -720,6 +720,7 @@ export default function MyPage() {
                               {trip.accommodationConfirmed && <Badge variant="outline" className="text-xs"><Hotel className="w-3 h-3 mr-1" />{t("myPage.hotelConfirmed")}</Badge>}
                               {trip.hotelRoom && <Badge variant="secondary" className="text-xs">{t("myPage.room", { room: trip.hotelRoom })}</Badge>}
                             </div>
+                            {trip.meetupId && <TripCalendarButtons meetupId={trip.meetupId} />}
                           </div>
                           <Badge variant={
                             trip.status === "completed" ? "default" :
@@ -1417,5 +1418,48 @@ function EmailVerificationCard({ user }: { user: any }) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// 밋업 캘린더 추가 버튼 (마이페이지 출장 이력용)
+function TripCalendarButtons({ meetupId }: { meetupId: number }) {
+  const { t } = useTranslation();
+  const { data, isLoading } = trpc.calendar.generateIcs.useQuery(
+    { meetupId },
+    { enabled: !!meetupId }
+  );
+
+  const handleDownloadIcs = () => {
+    if (!data?.ics) return;
+    const blob = new Blob([data.ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `meetup-${meetupId}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(t("myPage.icsDownloaded", "캘린더 파일이 다운로드되었습니다"));
+  };
+
+  const handleGoogleCalendar = () => {
+    if (!data?.gcalUrl) return;
+    window.open(data.gcalUrl, "_blank");
+  };
+
+  if (isLoading || !data) return null;
+
+  return (
+    <div className="flex items-center gap-1 mt-2">
+      <Calendar className="w-3 h-3 text-muted-foreground" />
+      <span className="text-xs text-muted-foreground mr-1">{t("myPage.addToCalendar", "캘린더:")}</span>
+      <Button variant="ghost" size="sm" className="h-6 text-xs gap-1 px-1.5" onClick={handleGoogleCalendar}>
+        <ExternalLink className="w-3 h-3" /> Google
+      </Button>
+      <Button variant="ghost" size="sm" className="h-6 text-xs gap-1 px-1.5" onClick={handleDownloadIcs}>
+        <Download className="w-3 h-3" /> .ics
+      </Button>
+    </div>
   );
 }

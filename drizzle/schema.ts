@@ -1816,3 +1816,48 @@ export const translationRequests = mysqlTable("translation_requests", {
 });
 export type TranslationRequest = typeof translationRequests.$inferSelect;
 export type InsertTranslationRequest = typeof translationRequests.$inferInsert;
+
+// ══════════════════════════════════════════════════════════
+// v12.15 - 교통/식사 일정 관리
+// ══════════════════════════════════════════════════════════
+
+// ── Meetup Schedules (밋업 교통/식사/관광 일정) ──────────────
+export const meetupSchedules = mysqlTable("meetup_schedules", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  scheduleType: mysqlEnum("scheduleType", ["transport", "meal", "tour", "meeting", "free", "other"]).default("other").notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description"),
+  location: varchar("location", { length: 500 }),
+  locationUrl: varchar("locationUrl", { length: 1000 }), // 구글맵 링크
+  eventDate: timestamp("eventDate").notNull(),
+  endTime: timestamp("endTime"),
+  // 교통 관련
+  vehicleInfo: varchar("vehicleInfo", { length: 255 }), // 차량번호/차종
+  driverName: varchar("driverName", { length: 255 }),
+  driverPhone: varchar("driverPhone", { length: 50 }),
+  pickupLocation: varchar("pickupLocation", { length: 500 }),
+  dropoffLocation: varchar("dropoffLocation", { length: 500 }),
+  // 식사 관련
+  restaurantName: varchar("restaurantName", { length: 255 }),
+  cuisineType: varchar("cuisineType", { length: 100 }), // 한식/양식/일식 등
+  reservationName: varchar("reservationName", { length: 255 }),
+  reservationPhone: varchar("reservationPhone", { length: 50 }),
+  menuInfo: text("menuInfo"),
+  costPerPerson: varchar("costPerPerson", { length: 100 }),
+  // 공통
+  maxParticipants: int("maxParticipants"),
+  assignedRegistrationIds: json("assignedRegistrationIds").$type<number[]>(), // 특정 참가자만 해당
+  isAllParticipants: boolean("isAllParticipants").default(true), // true면 전체 참가자 대상
+  notified: boolean("notified").default(false),
+  notifiedAt: timestamp("notifiedAt"),
+  sortOrder: int("sortOrder").default(0),
+  status: mysqlEnum("status", ["scheduled", "confirmed", "in_progress", "completed", "cancelled"]).default("scheduled").notNull(),
+  notes: text("notes"),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MeetupSchedule = typeof meetupSchedules.$inferSelect;
+export type InsertMeetupSchedule = typeof meetupSchedules.$inferInsert;

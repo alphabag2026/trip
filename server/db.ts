@@ -57,6 +57,7 @@ import {
   notes, InsertNote,
   teamSchedules, InsertTeamSchedule,
   translationRequests, InsertTranslationRequest,
+  meetupSchedules, InsertMeetupSchedule,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -3051,4 +3052,32 @@ export async function getDailyRegistrationTrend(days: number = 30) {
   }).from(registrations).where(gte(registrations.createdAt, sql.raw(`DATE_SUB(NOW(), INTERVAL ${Number(days)} DAY)`))).groupBy(sql.raw(`DATE(createdAt)`)).orderBy(sql.raw(`DATE(createdAt)`));
 
   return result.map(r => ({ date: r.date, total: Number(r.total) || 0, approved: Number(r.approved) || 0, pending: Number(r.pending) || 0, rejected: Number(r.rejected) || 0 }));
+}
+
+
+// ── Meetup Schedules CRUD ──────────────────────────────────
+export async function getMeetupSchedules(meetupId: number, scheduleType?: string, status?: string) {
+  const db = await getDb(); if (!db) return [];
+  let conditions = [eq(meetupSchedules.meetupId, meetupId)];
+  if (scheduleType) conditions.push(eq(meetupSchedules.scheduleType, scheduleType as any));
+  if (status) conditions.push(eq(meetupSchedules.status, status as any));
+  return db.select().from(meetupSchedules).where(and(...conditions)).orderBy(asc(meetupSchedules.eventDate), asc(meetupSchedules.sortOrder));
+}
+export async function getMeetupScheduleById(id: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(meetupSchedules).where(eq(meetupSchedules.id, id)).limit(1);
+  return result[0];
+}
+export async function createMeetupSchedule(data: InsertMeetupSchedule) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(meetupSchedules).values(data);
+  return result[0].insertId;
+}
+export async function updateMeetupSchedule(id: number, data: Partial<InsertMeetupSchedule>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(meetupSchedules).set(data).where(eq(meetupSchedules.id, id));
+}
+export async function deleteMeetupSchedule(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(meetupSchedules).where(eq(meetupSchedules.id, id));
 }
