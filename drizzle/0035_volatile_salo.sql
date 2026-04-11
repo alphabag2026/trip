@@ -1,0 +1,1 @@
+ALTER TABLE `meetups` MODIFY COLUMN `status` enum('draft','open','closed','completed','cancelled') NOT NULL DEFAULT 'open';

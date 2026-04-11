@@ -593,7 +593,7 @@ export const appRouter = router({
         destinationCountry: z.string().optional(), location: z.string().optional(),
         scheduleStart: z.string().optional(), scheduleEnd: z.string().optional(),
         description: z.string().optional(), maxParticipants: z.number().optional(),
-        status: z.enum(["draft", "open", "closed", "completed"]).optional(),
+        status: z.enum(["draft", "open", "closed", "completed", "cancelled"]).optional(),
         baggageNotice: z.string().optional(),
         invitedCountries: z.array(z.string()).optional(),
       }))
@@ -605,6 +605,57 @@ export const appRouter = router({
           scheduleEnd: data.scheduleEnd ? new Date(data.scheduleEnd) : undefined,
         });
         return { success: true };
+      }),
+    // 밋업 취소 (cancelled 상태로 변경 + 공지 채널에 취소 메시지 전송)
+    cancel: adminProcedure
+      .input(z.object({ id: z.number(), reason: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        const meetup = await db.getMeetupById(input.id);
+        if (!meetup) throw new TRPCError({ code: "NOT_FOUND", message: "밋업을 찾을 수 없습니다" });
+        await db.updateMeetup(input.id, { status: "cancelled" });
+        // 공지 채널에 취소 메시지 자동 전송
+        try {
+          const rooms = await db.getChatRooms({ meetupId: input.id, isActive: true });
+          const announcementRoom = rooms.find((r: any) => r.roomType === "announcement");
+          if (announcementRoom) {
+            await db.createChatMessage({
+              roomId: announcementRoom.id,
+              userId: ctx.user.id,
+              senderName: ctx.user.name || "관리자",
+              senderRole: "admin",
+              content: `⚠️ [밋업 취소 안내]\n\n"${meetup.title}" 밋업이 취소되었습니다.${input.reason ? `\n\n사유: ${input.reason}` : ""}\n\n불편을 드려 죄송합니다.`,
+              messageType: "announcement",
+            });
+          }
+          // 텔레그램 알림
+          await sendTelegram(`⚠️ 밋업 취소: ${meetup.title}${input.reason ? ` (사유: ${input.reason})` : ""}`);
+        } catch (e) { console.error("[MeetupCancel] Notification failed:", e); }
+        return { success: true };
+      }),
+    // 참가자에게 공지 보내기 (밋업의 공지 채널에 메시지 전송)
+    sendAnnouncement: adminProcedure
+      .input(z.object({ meetupId: z.number(), title: z.string().min(1), content: z.string().min(1) }))
+      .mutation(async ({ input, ctx }) => {
+        const meetup = await db.getMeetupById(input.meetupId);
+        if (!meetup) throw new TRPCError({ code: "NOT_FOUND", message: "밋업을 찾을 수 없습니다" });
+        // 공지 채널 찾기
+        const rooms = await db.getChatRooms({ meetupId: input.meetupId, isActive: true });
+        const announcementRoom = rooms.find((r: any) => r.roomType === "announcement");
+        if (!announcementRoom) throw new TRPCError({ code: "NOT_FOUND", message: "공지 채널이 없습니다. 밋업에 공지 채널을 먼저 생성해주세요." });
+        // 공지 메시지 전송
+        const msgId = await db.createChatMessage({
+          roomId: announcementRoom.id,
+          userId: ctx.user.id,
+          senderName: ctx.user.name || "관리자",
+          senderRole: "admin",
+          content: `📢 ${input.title}\n\n${input.content}`,
+          messageType: "announcement",
+        });
+        // 텔레그램 알림
+        try {
+          await sendTelegram(`📢 공지 [${meetup.title}]\n${input.title}\n${input.content.substring(0, 200)}`);
+        } catch { /* ignore */ }
+        return { success: true, messageId: msgId };
       }),
     delete: adminProcedure.input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => { await db.deleteMeetup(input.id); return { success: true }; }),
@@ -6895,6 +6946,70 @@ Return ONLY valid JSON. If a field is not readable, use empty string.`,
           return { success: false, data: null, error: "OCR 응답 없음" };
         } catch (e: any) {
           return { success: false, data: null, error: e.message || "OCR 실패" };
+        }
+      }),
+
+    // 명함 OCR - 명함 사진에서 참가자 정보 자동 추출
+    scanBusinessCard: publicProcedure
+      .input(z.object({ imageBase64: z.string(), mimeType: z.string().default("image/jpeg") }))
+      .mutation(async ({ input }) => {
+        try {
+          const ocrResponse = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content: `You are a business card OCR system. Extract contact information from the business card image and return JSON:
+{
+  "name": "string - full name (Korean name preferred if available)",
+  "nameEn": "string - English name if available",
+  "phone": "string - mobile phone number (format: 010-XXXX-XXXX or international)",
+  "email": "string - email address",
+  "company": "string - company/organization name",
+  "position": "string - job title/position",
+  "department": "string - department",
+  "address": "string - office address",
+  "website": "string - website URL",
+  "messengerId": "string - telegram/kakao/wechat ID if visible",
+  "walletAddress": "string - crypto wallet address if visible"
+}
+Return ONLY valid JSON. If a field is not readable or not present, use empty string.
+Prioritize Korean text for name if both Korean and English are present.
+For phone numbers, prefer mobile numbers (starting with 010, +82, etc.).`,
+              },
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: "Extract contact information from this business card image for meetup registration:" },
+                  { type: "image_url", image_url: { url: `data:${input.mimeType};base64,${input.imageBase64}`, detail: "high" } },
+                ],
+              },
+            ],
+            response_format: { type: "json_object" },
+          });
+          const ocrContent = ocrResponse.choices[0]?.message?.content;
+          if (typeof ocrContent === "string") {
+            const jsonMatch = ocrContent.match(/\{[\s\S]*\}/);
+            const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+            return {
+              success: true,
+              data: {
+                name: parsed.name || parsed.nameEn || "",
+                nameEn: parsed.nameEn || "",
+                phone: parsed.phone || "",
+                email: parsed.email || "",
+                company: parsed.company || "",
+                position: parsed.position || "",
+                department: parsed.department || "",
+                address: parsed.address || "",
+                website: parsed.website || "",
+                messengerId: parsed.messengerId || "",
+                walletAddress: parsed.walletAddress || "",
+              },
+            };
+          }
+          return { success: false, data: null, error: "OCR 응답 없음" };
+        } catch (e: any) {
+          return { success: false, data: null, error: e.message || "명함 OCR 실패" };
         }
       }),
   }),

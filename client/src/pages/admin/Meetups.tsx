@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, MapPin, Calendar, Luggage, Edit, Sparkles, Loader2, Wand2, CheckCircle2, Globe, Copy, Link2, Share2, ExternalLink, QrCode, Download, Pencil, Users } from "lucide-react";
+import { Plus, Trash2, MapPin, Calendar, Luggage, Edit, Sparkles, Loader2, Wand2, CheckCircle2, Globe, Copy, Link2, Share2, ExternalLink, QrCode, Download, Pencil, Users, XCircle, Megaphone, AlertTriangle } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -26,10 +26,26 @@ export default function AdminMeetups() {
     scheduleStart: "", scheduleEnd: "", maxParticipants: 0,
     baggageNotice: "",
   });
+  // 밋업 취소 상태
+  const [cancelMeetup, setCancelMeetup] = useState<any>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  // 공지 보내기 상태
+  const [announceMeetup, setAnnounceMeetup] = useState<any>(null);
+  const [announceTitle, setAnnounceTitle] = useState("");
+  const [announceContent, setAnnounceContent] = useState("");
+
   const { data: meetups, refetch } = trpc.meetup.list.useQuery();
   const createMutation = trpc.meetup.create.useMutation({ onSuccess: () => { refetch(); setShowCreate(false); toast.success(t("admin.meetups.created")); }});
   const deleteMutation = trpc.meetup.delete.useMutation({ onSuccess: () => { refetch(); toast.success(t("admin.meetups.deleted")); }});
   const updateMutation = trpc.meetup.update.useMutation({ onSuccess: () => { refetch(); toast.success(t("admin.meetups.t38", "업데이트되었습니다.")); }});
+  const cancelMutation = trpc.meetup.cancel.useMutation({
+    onSuccess: () => { refetch(); setCancelMeetup(null); setCancelReason(""); toast.success("밋업이 취소되었습니다."); },
+    onError: (err) => toast.error(err.message),
+  });
+  const announceMutation = trpc.meetup.sendAnnouncement.useMutation({
+    onSuccess: () => { setAnnounceMeetup(null); setAnnounceTitle(""); setAnnounceContent(""); toast.success("공지가 전송되었습니다."); },
+    onError: (err) => toast.error(err.message),
+  });
 
   // QR 코드 다이얼로그 상태
   const [qrMeetup, setQrMeetup] = useState<any>(null);
@@ -42,7 +58,6 @@ export default function AdminMeetups() {
     onSuccess: (result) => {
       if (result.success && result.data) {
         setAiParsedData(result.data);
-        // 폼에 자동 채우기
         setForm({
           title: result.data.title || "",
           type: (result.data.type || "meetup") as any,
@@ -75,6 +90,14 @@ export default function AdminMeetups() {
 
   const typeLabels: Record<string, string> = {
     meetup: "밋업", pre_visit: "사전방문", event: "이벤트", meeting: "미팅", other: "기타"
+  };
+
+  const statusLabels: Record<string, { label: string; color: string }> = {
+    draft: { label: "초안", color: "bg-gray-500/20 text-gray-400" },
+    open: { label: "모집중", color: "bg-green-500/20 text-green-400" },
+    closed: { label: "마감", color: "bg-orange-500/20 text-orange-400" },
+    completed: { label: "완료", color: "bg-blue-500/20 text-blue-400" },
+    cancelled: { label: "취소됨", color: "bg-red-500/20 text-red-400" },
   };
 
   const COUNTRY_FLAGS: Record<string, string> = {
@@ -131,11 +154,16 @@ export default function AdminMeetups() {
 
       <div className="grid gap-4">
         {meetups?.map((m: any) => (
-          <Card key={m.id} className="bg-card border-border">
+          <Card key={m.id} className={`bg-card border-border ${m.status === "cancelled" ? "opacity-60" : ""}`}>
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="space-y-1 flex-1 min-w-0">
-                  <h3 className="font-semibold text-lg">{m.title}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className={`font-semibold text-lg ${m.status === "cancelled" ? "line-through text-muted-foreground" : ""}`}>{m.title}</h3>
+                    {m.status === "cancelled" && (
+                      <Badge variant="destructive" className="text-[10px]">취소됨</Badge>
+                    )}
+                  </div>
                   <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                     <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{m.location || "미정"}</span>
                     <span className="text-xs px-2 py-0.5 rounded bg-primary/20 text-primary">{typeLabels[m.type]}</span>
@@ -184,19 +212,29 @@ export default function AdminMeetups() {
                         variant="ghost" size="icon" className="h-5 w-5 shrink-0"
                         onClick={() => window.open(`/m/${m.shareToken}`, "_blank")}
                       ><ExternalLink className="h-3 w-3" /></Button>
-                  <Button
-                      variant="ghost" size="icon" className="h-5 w-5 shrink-0"
+                      <Button
+                        variant="ghost" size="icon" className="h-5 w-5 shrink-0"
                         onClick={() => setQrMeetup(m)}
                         title="QR 코드"
                       ><QrCode className="h-3 w-3" /></Button>
                     </div>
                   )}
-                  {/* 밋업 상세 수정 버튼 */}
-                  <div className="mt-1">
+                  {/* 액션 버튼 그룹 */}
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <Button
                       variant="outline" size="sm" className="h-6 text-[11px] gap-1 px-2"
                       onClick={() => handleOpenEdit(m)}
                     ><Pencil className="h-3 w-3" />{t("admin.meetups.editMeetup", "밋업 수정")}</Button>
+                    <Button
+                      variant="outline" size="sm" className="h-6 text-[11px] gap-1 px-2 border-blue-500/30 text-blue-500 hover:bg-blue-500/10"
+                      onClick={() => { setAnnounceMeetup(m); setAnnounceTitle(""); setAnnounceContent(""); }}
+                    ><Megaphone className="h-3 w-3" />공지 보내기</Button>
+                    {m.status !== "cancelled" && (
+                      <Button
+                        variant="outline" size="sm" className="h-6 text-[11px] gap-1 px-2 border-red-500/30 text-red-500 hover:bg-red-500/10"
+                        onClick={() => { setCancelMeetup(m); setCancelReason(""); }}
+                      ><XCircle className="h-3 w-3" />밋업 취소</Button>
+                    )}
                   </div>
                   {/* 수화물 공지 표시 */}
                   <div className="flex items-center gap-2 mt-2">
@@ -216,6 +254,7 @@ export default function AdminMeetups() {
                       <SelectItem value="open">{t("admin.meetups.t3", "모집중")}</SelectItem>
                       <SelectItem value="closed">{t("admin.meetups.t4", "마감")}</SelectItem>
                       <SelectItem value="completed">{t("admin.meetups.t5", "완료")}</SelectItem>
+                      <SelectItem value="cancelled">취소됨</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
@@ -540,6 +579,91 @@ export default function AdminMeetups() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Meetup Dialog */}
+      <Dialog open={!!cancelMeetup} onOpenChange={open => { if (!open) setCancelMeetup(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle className="flex items-center gap-2 text-red-500">
+            <AlertTriangle className="h-5 w-5" />
+            밋업 취소
+          </DialogTitle></DialogHeader>
+          {cancelMeetup && (
+            <div className="space-y-4">
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+                <p className="text-sm font-medium mb-1">"{cancelMeetup.title}" 밋업을 취소하시겠습니까?</p>
+                <p className="text-xs text-muted-foreground">취소 시 공지 채널에 자동으로 취소 안내 메시지가 전송됩니다.</p>
+              </div>
+              <div>
+                <Label>취소 사유 (선택)</Label>
+                <Textarea
+                  value={cancelReason}
+                  onChange={e => setCancelReason(e.target.value)}
+                  placeholder="취소 사유를 입력하세요..."
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setCancelMeetup(null)}>돌아가기</Button>
+                <Button
+                  variant="destructive" className="flex-1"
+                  disabled={cancelMutation.isPending}
+                  onClick={() => cancelMutation.mutate({ id: cancelMeetup.id, reason: cancelReason || undefined })}
+                >
+                  {cancelMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
+                  밋업 취소 확인
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Announcement Dialog */}
+      <Dialog open={!!announceMeetup} onOpenChange={open => { if (!open) setAnnounceMeetup(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle className="flex items-center gap-2 text-blue-500">
+            <Megaphone className="h-5 w-5" />
+            참가자에게 공지 보내기
+          </DialogTitle></DialogHeader>
+          {announceMeetup && (
+            <div className="space-y-4">
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground">대상 밋업</p>
+                <p className="text-sm font-medium">{announceMeetup.title}</p>
+              </div>
+              <div>
+                <Label>공지 제목</Label>
+                <Input
+                  value={announceTitle}
+                  onChange={e => setAnnounceTitle(e.target.value)}
+                  placeholder="예: 일정 변경 안내"
+                />
+              </div>
+              <div>
+                <Label>공지 내용</Label>
+                <Textarea
+                  value={announceContent}
+                  onChange={e => setAnnounceContent(e.target.value)}
+                  placeholder="참가자들에게 전달할 공지 내용을 입력하세요..."
+                  rows={5}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">공지 채널과 텔레그램으로 동시에 전송됩니다.</p>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setAnnounceMeetup(null)}>취소</Button>
+                <Button
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  disabled={announceMutation.isPending || !announceTitle.trim() || !announceContent.trim()}
+                  onClick={() => announceMutation.mutate({ meetupId: announceMeetup.id, title: announceTitle, content: announceContent })}
+                >
+                  {announceMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Megaphone className="h-4 w-4 mr-2" />}
+                  공지 전송
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

@@ -34,7 +34,7 @@ export const meetups = mysqlTable("meetups", {
   scheduleEnd: timestamp("scheduleEnd"),
   description: text("description"),
   maxParticipants: int("maxParticipants"),
-  status: mysqlEnum("status", ["draft", "open", "closed", "completed"]).default("open").notNull(),
+  status: mysqlEnum("status", ["draft", "open", "closed", "completed", "cancelled"]).default("open").notNull(),
   baggageNotice: text("baggageNotice").default("초과화물은 직접부담할 수 있습니다."),
   projectCode: varchar("projectCode", { length: 50 }),
   shareToken: varchar("shareToken", { length: 100 }),

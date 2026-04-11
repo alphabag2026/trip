@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Download, Eye, ScanLine, Trash2, FileSpreadsheet, CheckCircle2, Clock, Luggage, UtensilsCrossed, Wine, Cigarette } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Search, Download, Eye, ScanLine, Trash2, FileSpreadsheet, CheckCircle2, Clock, Luggage, UtensilsCrossed, Wine, Cigarette, User, Phone, MessageSquare, Wallet, MapPin, Plane, Hotel, Car, Calendar, Mail, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ExcelDownloadButton, fetchTrpcQuery } from "@/components/ExcelButtons";
@@ -18,6 +19,8 @@ export default function AdminRegistrations() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [selectedReg, setSelectedReg] = useState<any>(null);
+  // 참가자 상세 프로필 다이얼로그
+  const [profileReg, setProfileReg] = useState<any>(null);
 
   const { data: regs, refetch } = trpc.registration.list.useQuery({
     search: search || undefined,
@@ -33,7 +36,7 @@ export default function AdminRegistrations() {
     onSuccess: () => { refetch(); toast.success(t("admin.registrations.t31", "상태가 업데이트되었습니다.")); },
   });
   const deleteMutation = trpc.registration.delete.useMutation({
-    onSuccess: () => { refetch(); toast.success(t("admin.registrations.t32", "삭제되었습니다.")); },
+    onSuccess: () => { refetch(); setProfileReg(null); toast.success(t("admin.registrations.t32", "삭제되었습니다.")); },
   });
   const ocrMutation = trpc.registration.ocrPassport.useMutation({
     onSuccess: () => { refetch(); toast.success(t("admin.registrations.t33", "OCR 처리 완료")); },
@@ -91,6 +94,13 @@ export default function AdminRegistrations() {
 
   const categoryLabels: Record<string, string> = {
     meetup: "밋업", pre_visit: "사전방문", event: "이벤트", meeting: "미팅", other: "기타"
+  };
+
+  const statusColors: Record<string, string> = {
+    pending: "bg-yellow-500/20 text-yellow-500",
+    approved: "bg-green-500/20 text-green-500",
+    rejected: "bg-red-500/20 text-red-500",
+    completed: "bg-blue-500/20 text-blue-500",
   };
 
   return (
@@ -171,8 +181,14 @@ export default function AdminRegistrations() {
               </thead>
               <tbody>
                 {regs?.map((r: any) => (
-                  <tr key={r.id} className="border-b border-border/50 hover:bg-secondary/30">
-                    <td className="py-3 px-4 font-medium">{r.name}</td>
+                  <tr
+                    key={r.id}
+                    className="border-b border-border/50 hover:bg-secondary/30 cursor-pointer transition-colors"
+                    onClick={() => setProfileReg(r)}
+                  >
+                    <td className="py-3 px-4 font-medium">
+                      <span className="text-primary hover:underline">{r.name}</span>
+                    </td>
                     <td className="py-3 px-4">
                       <span className={`text-xs px-2 py-0.5 rounded ${r.locationType === "overseas" ? "bg-cyan-500/20 text-cyan-400" : "bg-purple-500/20 text-purple-400"}`}>
                         {r.locationType === "overseas" ? t("admin.registrations.overseas") : t("admin.registrations.domestic")}
@@ -182,7 +198,7 @@ export default function AdminRegistrations() {
                     <td className="py-3 px-4">{r.phone}</td>
                     <td className="py-3 px-4">{r.messengerId}</td>
                     <td className="py-3 px-4 text-muted-foreground">{r.referrerName || "-"}</td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4" onClick={e => e.stopPropagation()}>
                       <Select value={r.status} onValueChange={v => updateMutation.mutate({ id: r.id, status: v as any })}>
                         <SelectTrigger className="h-7 w-[90px] text-xs">
                           <SelectValue />
@@ -216,7 +232,7 @@ export default function AdminRegistrations() {
                         </span>
                       ) : <span className="text-xs text-muted-foreground">-</span>}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4" onClick={e => e.stopPropagation()}>
                       {r.passportImageUrl ? (
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedReg(r)}>
@@ -228,7 +244,7 @@ export default function AdminRegistrations() {
                         </div>
                       ) : <span className="text-xs text-muted-foreground">-</span>}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4" onClick={e => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => {
                         if (confirm("정말 삭제하시겠습니까?")) deleteMutation.mutate({ id: r.id });
                       }}>
@@ -245,6 +261,311 @@ export default function AdminRegistrations() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Participant Detail Profile Dialog */}
+      <Dialog open={!!profileReg} onOpenChange={open => { if (!open) setProfileReg(null); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="flex items-center gap-2">
+            <User className="h-5 w-5 text-primary" />
+            참가자 상세 프로필
+          </DialogTitle></DialogHeader>
+          {profileReg && (
+            <div className="space-y-4">
+              {/* 기본 정보 */}
+              <div className="bg-primary/5 border border-primary/10 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-bold">{profileReg.name}</h3>
+                  <Badge className={statusColors[profileReg.status] || "bg-gray-500/20 text-gray-500"}>
+                    {profileReg.status === "pending" ? "대기" : profileReg.status === "approved" ? "승인" : profileReg.status === "rejected" ? "거절" : "완료"}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-1 gap-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-muted-foreground w-20">전화번호</span>
+                    <span className="font-medium">{profileReg.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-muted-foreground w-20">메신저</span>
+                    <span className="font-medium">{profileReg.messengerId}</span>
+                  </div>
+                  {profileReg.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground w-20">이메일</span>
+                      <span className="font-medium">{profileReg.email}</span>
+                    </div>
+                  )}
+                  {profileReg.walletAddress && (
+                    <div className="flex items-center gap-2">
+                      <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground w-20">지갑</span>
+                      <span className="font-medium text-xs font-mono truncate">{profileReg.walletAddress}</span>
+                    </div>
+                  )}
+                  {profileReg.referrerName && (
+                    <div className="flex items-center gap-2">
+                      <User className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground w-20">추천자</span>
+                      <span className="font-medium">{profileReg.referrerName}</span>
+                    </div>
+                  )}
+                  {profileReg.teamName && (
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground w-20">팀</span>
+                      <span className="font-medium">{profileReg.teamName}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 일정 정보 */}
+              <div className="bg-blue-500/5 border border-blue-500/10 rounded-lg p-4">
+                <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
+                  <Calendar className="h-4 w-4 text-blue-500" />일정 및 유형
+                </h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground text-xs">유형</span>
+                    <p className="font-medium">
+                      <span className={`text-xs px-2 py-0.5 rounded ${profileReg.locationType === "overseas" ? "bg-cyan-500/20 text-cyan-400" : "bg-purple-500/20 text-purple-400"}`}>
+                        {profileReg.locationType === "overseas" ? "해외" : "내륙"}
+                      </span>
+                      <span className="ml-2 text-xs px-2 py-0.5 rounded bg-primary/20 text-primary">{categoryLabels[profileReg.category] || profileReg.category}</span>
+                    </p>
+                  </div>
+                  {profileReg.scheduleStart && (
+                    <div>
+                      <span className="text-muted-foreground text-xs">일정</span>
+                      <p className="font-medium text-xs">
+                        {new Date(profileReg.scheduleStart).toLocaleDateString("ko-KR")}
+                        {profileReg.scheduleEnd && ` ~ ${new Date(profileReg.scheduleEnd).toLocaleDateString("ko-KR")}`}
+                      </p>
+                    </div>
+                  )}
+                  {profileReg.preferredDepartureTime && (
+                    <div>
+                      <span className="text-muted-foreground text-xs">출발 희망</span>
+                      <p className="font-medium text-xs">{profileReg.preferredDepartureTime}</p>
+                    </div>
+                  )}
+                  {profileReg.roommatePreference && (
+                    <div>
+                      <span className="text-muted-foreground text-xs">룸메이트</span>
+                      <p className="font-medium text-xs">{profileReg.roommatePreference}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 배치 확정 상태 */}
+              <div className="bg-green-500/5 border border-green-500/10 rounded-lg p-4">
+                <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />배치 확정 상태
+                </h4>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Plane className={`h-4 w-4 ${profileReg.flightConfirmed ? "text-green-500" : "text-muted-foreground"}`} />
+                    <span className={profileReg.flightConfirmed ? "text-green-500 font-medium" : "text-muted-foreground"}>
+                      항공 {profileReg.flightConfirmed ? "확정" : "미확정"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Hotel className={`h-4 w-4 ${profileReg.accommodationConfirmed ? "text-blue-500" : "text-muted-foreground"}`} />
+                    <span className={profileReg.accommodationConfirmed ? "text-blue-500 font-medium" : "text-muted-foreground"}>
+                      숙소 {profileReg.accommodationConfirmed ? "확정" : "미확정"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Car className={`h-4 w-4 ${profileReg.pickupConfirmed ? "text-amber-500" : "text-muted-foreground"}`} />
+                    <span className={profileReg.pickupConfirmed ? "text-amber-500 font-medium" : "text-muted-foreground"}>
+                      픽업 {profileReg.pickupConfirmed ? "확정" : "미확정"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 교통수단 정보 */}
+              {profileReg.transportType && (
+                <div className="bg-indigo-500/5 border border-indigo-500/10 rounded-lg p-4">
+                  <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
+                    <Plane className="h-4 w-4 text-indigo-500" />교통수단
+                  </h4>
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">교통수단: </span>
+                    <span className="font-medium">
+                      {profileReg.transportType === "flight" ? "비행기" : profileReg.transportType === "ktx" ? "고속철도" : profileReg.transportType === "none" ? "없음" : "기타"}
+                    </span>
+                    {profileReg.transportNotes && (
+                      <p className="text-xs text-muted-foreground mt-1">{profileReg.transportNotes}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 식사 및 생활 정보 */}
+              {(profileReg.mealPreference || profileReg.allergies || profileReg.drinkAlcohol || profileReg.smoking) && (
+                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-4">
+                  <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
+                    <UtensilsCrossed className="h-4 w-4 text-emerald-500" />식사 및 생활 정보
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {profileReg.mealPreference && (
+                      <div>
+                        <span className="text-muted-foreground text-xs">식사 선호</span>
+                        <p className="font-medium">{profileReg.mealPreference}</p>
+                      </div>
+                    )}
+                    {profileReg.allergies && (
+                      <div>
+                        <span className="text-muted-foreground text-xs">알레르기</span>
+                        <p className="font-medium text-red-400">{profileReg.allergies}</p>
+                      </div>
+                    )}
+                    {profileReg.drinkAlcohol && (
+                      <div className="flex items-center gap-1">
+                        <Wine className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs">{profileReg.drinkAlcohol === "yes" ? "음주" : profileReg.drinkAlcohol === "sometimes" ? "가끔 음주" : "비음주"}</span>
+                      </div>
+                    )}
+                    {profileReg.smoking && (
+                      <div className="flex items-center gap-1">
+                        <Cigarette className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs">{profileReg.smoking === "yes" ? "흡연" : "비흡연"}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 수화물 정보 */}
+              {profileReg.checkedBagRequest && (
+                <div className="bg-amber-500/5 border border-amber-500/10 rounded-lg p-4">
+                  <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
+                    <Luggage className="h-4 w-4 text-amber-500" />위탁수화물
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground text-xs">수량</span>
+                      <p className="font-medium">{profileReg.checkedBagCount || 0}개</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground text-xs">무게</span>
+                      <p className="font-medium">{profileReg.checkedBagWeight || "-"}</p>
+                    </div>
+                    {profileReg.checkedBagNotes && (
+                      <div className="col-span-2">
+                        <span className="text-muted-foreground text-xs">메모</span>
+                        <p className="font-medium text-xs">{profileReg.checkedBagNotes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 숙소 정보 */}
+              {(profileReg.hotelRoomNumber || profileReg.hotelFloor || profileReg.hotelNotes) && (
+                <div className="bg-violet-500/5 border border-violet-500/10 rounded-lg p-4">
+                  <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
+                    <Hotel className="h-4 w-4 text-violet-500" />숙소 배정
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {profileReg.hotelRoomNumber && (
+                      <div>
+                        <span className="text-muted-foreground text-xs">방번호</span>
+                        <p className="font-medium">{profileReg.hotelRoomNumber}</p>
+                      </div>
+                    )}
+                    {profileReg.hotelFloor && (
+                      <div>
+                        <span className="text-muted-foreground text-xs">층</span>
+                        <p className="font-medium">{profileReg.hotelFloor}층</p>
+                      </div>
+                    )}
+                    {profileReg.hotelNotes && (
+                      <div className="col-span-2">
+                        <span className="text-muted-foreground text-xs">메모</span>
+                        <p className="font-medium text-xs">{profileReg.hotelNotes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 여권 OCR 정보 */}
+              {profileReg.passportOcrData && (
+                <div className="bg-secondary/50 rounded-lg p-4">
+                  <h4 className="font-semibold text-sm mb-2">여권 OCR 정보</h4>
+                  <div className="grid grid-cols-2 gap-1.5 text-sm">
+                    {Object.entries(profileReg.passportOcrData).map(([k, v]) => (
+                      <div key={k} className="flex justify-between">
+                        <span className="text-muted-foreground text-xs">{k}</span>
+                        <span className="text-xs font-medium">{String(v)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 비고 */}
+              {(profileReg.notes || profileReg.teamIntro) && (
+                <div className="bg-secondary/30 rounded-lg p-4">
+                  {profileReg.teamIntro && (
+                    <div className="mb-2">
+                      <span className="text-xs text-muted-foreground">팀 소개</span>
+                      <p className="text-sm">{profileReg.teamIntro}</p>
+                    </div>
+                  )}
+                  {profileReg.notes && (
+                    <div>
+                      <span className="text-xs text-muted-foreground">비고</span>
+                      <p className="text-sm">{profileReg.notes}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 신청일 */}
+              <div className="text-xs text-muted-foreground text-right">
+                신청일: {new Date(profileReg.createdAt).toLocaleDateString("ko-KR")} {new Date(profileReg.createdAt).toLocaleTimeString("ko-KR")}
+              </div>
+
+              {/* 하단 액션 버튼 */}
+              <div className="flex gap-2 pt-2 border-t border-border">
+                <Select
+                  value={profileReg.status}
+                  onValueChange={v => {
+                    updateMutation.mutate({ id: profileReg.id, status: v as any });
+                    setProfileReg({ ...profileReg, status: v });
+                  }}
+                >
+                  <SelectTrigger className="flex-1 h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">대기</SelectItem>
+                    <SelectItem value="approved">승인</SelectItem>
+                    <SelectItem value="rejected">거절</SelectItem>
+                    <SelectItem value="completed">완료</SelectItem>
+                  </SelectContent>
+                </Select>
+                {profileReg.passportImageUrl && (
+                  <Button variant="outline" size="sm" onClick={() => { setSelectedReg(profileReg); setProfileReg(null); }}>
+                    <Eye className="h-4 w-4 mr-1" />여권
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" className="text-destructive" onClick={() => {
+                  if (confirm("정말 삭제하시겠습니까?")) deleteMutation.mutate({ id: profileReg.id });
+                }}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Passport Detail Dialog */}
       {selectedReg && (

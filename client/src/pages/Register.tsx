@@ -36,6 +36,8 @@ export default function Register() {
   const [aiPromptText, setAiPromptText] = useState("");
   const [isAiParsing, setIsAiParsing] = useState(false);
   const [isPassportScanning, setIsPassportScanning] = useState(false);
+  const [isBusinessCardScanning, setIsBusinessCardScanning] = useState(false);
+  const businessCardInputRef = useRef<HTMLInputElement>(null);
   const [passportValidation, setPassportValidation] = useState<{ valid: boolean; warnings: string[]; errors: string[] } | null>(null);
   const passportInputRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState("");
@@ -119,6 +121,7 @@ export default function Register() {
   const uploadPassportMutation = trpc.registration.uploadPassport.useMutation();
   const aiParseMutation = trpc.aiRegistration.parsePrompt.useMutation();
   const passportScanMutation = trpc.aiRegistration.scanPassport.useMutation();
+  const businessCardScanMutation = trpc.aiRegistration.scanBusinessCard.useMutation();
 
   const handleChange = useCallback((field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -164,6 +167,46 @@ export default function Register() {
       toast.error(err.message || t("register.aiParseFail", "AI 파싱 실패"));
     } finally {
       setIsAiParsing(false);
+    }
+  };
+
+  // 명함 OCR 자동 채움
+  const handleBusinessCardScan = async (file: File) => {
+    setIsBusinessCardScanning(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(",")[1];
+        try {
+          const result = await businessCardScanMutation.mutateAsync({
+            imageBase64: base64,
+            mimeType: file.type,
+          });
+          if (result.success && result.data) {
+            const d = result.data;
+            setForm(prev => ({
+              ...prev,
+              name: d.name || prev.name,
+              phone: d.phone || prev.phone,
+              messengerId: d.messengerId || prev.messengerId,
+              walletAddress: d.walletAddress || prev.walletAddress,
+              teamName: d.company || prev.teamName,
+              teamIntro: d.position ? `${d.position}${d.department ? ` / ${d.department}` : ""}` : prev.teamIntro,
+            }));
+            if (d.email) setEmail(d.email);
+            toast.success(t("register.businessCardSuccess", "명함 정보가 자동으로 채워졌습니다"));
+          } else {
+            toast.error(result.error || t("register.businessCardFail", "명함 스캔 실패"));
+          }
+        } catch (err: any) {
+          toast.error(err.message || t("register.businessCardFail", "명함 스캔 실패"));
+        } finally {
+          setIsBusinessCardScanning(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setIsBusinessCardScanning(false);
     }
   };
 
@@ -316,6 +359,20 @@ export default function Register() {
             type="button"
             variant="outline"
             className="flex-1 gap-2"
+            onClick={() => businessCardInputRef.current?.click()}
+            disabled={isBusinessCardScanning}
+          >
+            {isBusinessCardScanning ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Camera className="h-4 w-4" />
+            )}
+            {t("register.businessCardScan", "명함 스캔")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 gap-2"
             onClick={() => passportInputRef.current?.click()}
             disabled={isPassportScanning}
           >
@@ -326,6 +383,17 @@ export default function Register() {
             )}
             {t("register.passportScan", "여권 스캔")}
           </Button>
+          <input
+            ref={businessCardInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) handleBusinessCardScan(file);
+            }}
+          />
           <input
             ref={passportInputRef}
             type="file"
@@ -385,6 +453,19 @@ export default function Register() {
                     </>
                   )}
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 명함 스캔 진행 중 표시 */}
+        {isBusinessCardScanning && (
+          <Card className="mb-6 border-purple-500/30 bg-purple-500/5">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-purple-500" />
+              <div>
+                <p className="text-sm font-medium text-purple-500">{t("register.businessCardScanning", "명함 스캔 중...")}</p>
+                <p className="text-xs text-muted-foreground">{t("register.businessCardScanningDesc", "AI가 명함 정보를 읽고 있습니다")}</p>
               </div>
             </CardContent>
           </Card>
