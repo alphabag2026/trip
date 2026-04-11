@@ -9,6 +9,7 @@ import { serveStatic, setupVite } from "./vite";
 import { createExternalApiRouter } from "../externalApi";
 import { createTelegramWebhookRouter } from "../telegramWebhook";
 import { kakaoRouter } from "../kakaoAuth";
+import { googleRouter } from "../googleAuth";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -41,6 +42,8 @@ async function startServer() {
   });
   // Kakao OAuth routes
   app.use(kakaoRouter);
+  // Google OAuth routes
+  app.use(googleRouter);
   // External REST API (v1)
   app.use("/api/v1", createExternalApiRouter());
   // Telegram Bot Webhook

@@ -1728,3 +1728,47 @@
 
 ### 테스트
 - [x] vitest 테스트 검증 (24건 통과)
+
+## v12.11 - 명함 이미지 AI OCR 자동 입력 기능
+
+### 백엔드
+- [ ] 명함 이미지 업로드 + S3 저장 API
+- [ ] LLM 기반 명함 OCR 추출 API (이름, 전화번호, 이메일, 소속, 직책 등)
+
+### 프론트엔드
+- [ ] 신청 폼 상단에 명함 업로드 UI (카메라/갤러리 선택)
+- [ ] 명함 이미지 미리보기
+- [ ] AI 추출 결과를 폼 필드에 자동 채우기
+- [ ] 추출 중 로딩 상태 표시
+- [ ] 추출 실패 시 에러 처리
+
+### 다국어
+- [ ] 23개 언어 번역 파일에 명함 OCR 관련 키 추가
+
+### 테스트
+- [ ] vitest 테스트 작성
+
+## v12.12 - Google OAuth 로그인 기능 추가
+### 백엔드
+- [ ] Google OAuth 콜백 엔드포인트 구현
+- [ ] Google 사용자 정보로 users 테이블 조회/생성 로직
+- [ ] JWT 세션 발급 (기존 인증 시스템과 통합)
+
+### 프론트엔드
+- [ ] 로그인 페이지에 Google 로그인 버튼 추가
+- [ ] Google OAuth 콜백 페이지 구현
+- [ ] 다국어 번역 키 추가
+
+### 설정
+- [ ] Google Cloud Console에서 OAuth 클라이언트 ID/Secret 발급
+- [ ] 프로덕션 서버에 환경변수 설정
+
+### 테스트
+- [ ] vitest 테스트 작성/검증
+
+## Google OAuth 설정
+- [x] Google Cloud Console에서 OAuth 동의 화면 설정
+- [x] Google Cloud Console에서 OAuth 클라이언트 ID 생성
+- [x] Manus 개발 서버에 GOOGLE_CLIENT_ID 환경변수 설정
+- [x] Manus 개발 서버에 GOOGLE_CLIENT_SECRET 환경변수 설정
+- [x] Google OAuth 환경변수 검증 테스트 통과
