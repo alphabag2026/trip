@@ -927,7 +927,9 @@
       "vouchers": "Ваучеры",
       "2faSettings": "2FA Settings",
       "locationTracker": "Отслеживание местоположения",
-      "meetupSchedules": "Schedule Management"
+      "meetupSchedules": "Schedule Management",
+      "geofence": "Geofencing",
+      "locationHistory": "Location History"
     },
     "survey": {
       "addQuestion": "Add Question",

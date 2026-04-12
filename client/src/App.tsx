@@ -67,6 +67,8 @@ import AdminAttendeeDashboard from "./pages/admin/AttendeeDashboard";
 import AdminInvitationGenerator from "./pages/admin/InvitationGenerator";
 import AdminMeetupSchedules from "./pages/admin/MeetupSchedules";
 import AdminLocationTracker from "./pages/admin/LocationTracker";
+import AdminGeofenceManager from "./pages/admin/GeofenceManager";
+import AdminLocationHistory from "./pages/admin/LocationHistory";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -164,6 +166,8 @@ function AdminRouter() {
         <Route path="/meetup-schedules" component={AdminMeetupSchedules} />
         <Route path="/schedules" component={AdminMeetupSchedules} />
         <Route path="/location-tracker" component={AdminLocationTracker} />
+        <Route path="/geofence" component={AdminGeofenceManager} />
+        <Route path="/location-history" component={AdminLocationHistory} />
         <Route path="/2fa-settings" component={TwoFactorSettings} />
         <Route component={NotFound} />
       </Switch>

@@ -1470,7 +1470,9 @@
       "attendeeDashboard": "参与者仪表板",
       "invitation": "邀请函生成",
       "locationTracker": "实时位置追踪",
-      "meetupSchedules": "Schedule Management"
+      "meetupSchedules": "Schedule Management",
+      "geofence": "地理围栏",
+      "locationHistory": "位置历史"
     },
     "survey": {
       "addQuestion": "Add Question",

@@ -927,7 +927,9 @@
       "vouchers": "Bonos",
       "2faSettings": "2FA Settings",
       "locationTracker": "Rastreador de ubicación",
-      "meetupSchedules": "Schedule Management"
+      "meetupSchedules": "Schedule Management",
+      "geofence": "Geofencing",
+      "locationHistory": "Location History"
     },
     "survey": {
       "addQuestion": "Add Question",

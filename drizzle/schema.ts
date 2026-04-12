@@ -1919,3 +1919,57 @@ export const userLocations = mysqlTable("user_locations", {
 
 export type UserLocation = typeof userLocations.$inferSelect;
 export type InsertUserLocation = typeof userLocations.$inferInsert;
+
+// ── Geofences (지오펜스 영역) ──────────────────────────
+export const geofences = mysqlTable("geofences", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  radius: int("radius").notNull(), // 반경 (미터)
+  type: mysqlEnum("type", ["poi", "hotel", "airport", "restaurant", "venue", "custom"]).default("custom").notNull(),
+  notifyOnEnter: boolean("notifyOnEnter").default(true).notNull(),
+  notifyOnExit: boolean("notifyOnExit").default(true).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Geofence = typeof geofences.$inferSelect;
+export type InsertGeofence = typeof geofences.$inferInsert;
+
+// ── Geofence Events (지오펜스 진입/이탈 이벤트) ──────────
+export const geofenceEvents = mysqlTable("geofence_events", {
+  id: int("id").autoincrement().primaryKey(),
+  geofenceId: int("geofenceId").notNull(),
+  userId: int("userId").notNull(),
+  eventType: mysqlEnum("eventType", ["enter", "exit"]).notNull(),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  notified: boolean("notified").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type GeofenceEvent = typeof geofenceEvents.$inferSelect;
+export type InsertGeofenceEvent = typeof geofenceEvents.$inferInsert;
+
+// ── Location History (위치 이력) ──────────────────────────
+export const locationHistory = mysqlTable("location_history", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  meetupId: int("meetupId"),
+  roomId: int("roomId"),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  accuracy: decimal("accuracy", { precision: 8, scale: 2 }),
+  altitude: decimal("altitude", { precision: 10, scale: 2 }),
+  heading: decimal("heading", { precision: 6, scale: 2 }),
+  speed: decimal("speed", { precision: 8, scale: 2 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LocationHistory = typeof locationHistory.$inferSelect;
+export type InsertLocationHistory = typeof locationHistory.$inferInsert;

@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
-  MapPin, Navigation, Battery, Wifi, WifiOff, Users, RefreshCw, Locate,
+  MapPin, Navigation, Battery, Wifi, WifiOff, Users, RefreshCw, Locate, Search, X,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 // ── 타입 정의 ──────────────────────────────────────────
 interface LocationData {
@@ -212,6 +213,14 @@ export function ChatRoomLocationMap({
           onMapReady={(map) => {
             mapRef.current = map;
           }}
+        />
+
+        {/* 사용자 검색 오버레이 */}
+        <UserSearchOverlay
+          roomId={roomId}
+          mapRef={mapRef}
+          markersRef={markersRef}
+          members={members}
         />
 
         {/* 참여자 목록 오버레이 */}
@@ -439,6 +448,135 @@ export function MeetupLocationTracker({
             <p className="text-xs text-muted-foreground mt-1">참가자가 채팅방에서 위치 공유를 시작하면 여기에 표시됩니다</p>
           </CardContent>
         </Card>
+      )}
+    </div>
+  );
+}
+
+// ── 사용자 검색 오버레이 ──────────────────────────────────
+function UserSearchOverlay({
+  roomId,
+  meetupId,
+  mapRef,
+  markersRef,
+  members,
+}: {
+  roomId?: number;
+  meetupId?: number;
+  mapRef: React.MutableRefObject<google.maps.Map | null>;
+  markersRef: React.MutableRefObject<Map<number, google.maps.marker.AdvancedMarkerElement>>;
+  members?: UserInfo[];
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [debouncedTerm, setDebouncedTerm] = useState("");
+  const highlightMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+
+  // 디바운스
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedTerm(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const { data: searchResults } = trpc.liveLocation.searchUser.useQuery(
+    { searchTerm: debouncedTerm, roomId, meetupId },
+    { enabled: debouncedTerm.length >= 1 }
+  );
+
+  const handleSelectUser = (result: any) => {
+    if (!mapRef.current) return;
+
+    // 기존 하이라이트 제거
+    if (highlightMarkerRef.current) {
+      highlightMarkerRef.current.map = null;
+      highlightMarkerRef.current = null;
+    }
+
+    // 지도 이동
+    mapRef.current.setCenter({ lat: result.latitude, lng: result.longitude });
+    mapRef.current.setZoom(17);
+
+    // 하이라이트 마커
+    const el = document.createElement("div");
+    el.className = "flex flex-col items-center animate-bounce";
+    el.innerHTML = `
+      <div class="px-3 py-1.5 rounded-lg text-xs font-bold bg-yellow-400 text-black shadow-lg border-2 border-yellow-500" style="white-space:nowrap;">
+        🔍 ${result.userName || `User #${result.userId}`}
+      </div>
+      <div class="w-4 h-4 rounded-full bg-yellow-400 border-3 border-white shadow-lg mt-1 ring-4 ring-yellow-400/30"></div>
+    `;
+
+    const marker = new google.maps.marker.AdvancedMarkerElement({
+      map: mapRef.current,
+      position: { lat: result.latitude, lng: result.longitude },
+      content: el,
+      zIndex: 9999,
+    });
+
+    highlightMarkerRef.current = marker;
+
+    // 5초 후 하이라이트 제거
+    setTimeout(() => {
+      if (highlightMarkerRef.current === marker) {
+        marker.map = null;
+        highlightMarkerRef.current = null;
+      }
+    }, 5000);
+
+    setIsOpen(false);
+    setSearchTerm("");
+    toast.success(`${result.userName || `User #${result.userId}`}의 위치로 이동했습니다`);
+  };
+
+  return (
+    <div className="absolute top-4 left-4 z-10">
+      {isOpen ? (
+        <Card className="bg-background/95 backdrop-blur shadow-xl w-64">
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1 mb-2">
+              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Input
+                autoFocus
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="사용자 이름 검색..."
+                className="h-8 text-xs"
+              />
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setIsOpen(false); setSearchTerm(""); }}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            {searchResults && searchResults.length > 0 ? (
+              <div className="max-h-40 overflow-y-auto space-y-1">
+                {searchResults.map((r: any) => (
+                  <div
+                    key={r.userId}
+                    className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-accent cursor-pointer text-xs"
+                    onClick={() => handleSelectUser(r)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="font-medium">{r.userName || `User #${r.userId}`}</span>
+                    </div>
+                    <Locate className="h-3 w-3 text-muted-foreground" />
+                  </div>
+                ))}
+              </div>
+            ) : debouncedTerm.length >= 1 ? (
+              <p className="text-xs text-muted-foreground text-center py-2">검색 결과가 없습니다</p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : (
+        <Button
+          variant="secondary"
+          size="icon"
+          className="shadow-lg"
+          onClick={() => setIsOpen(true)}
+          title="사용자 검색"
+        >
+          <Search className="h-4 w-4" />
+        </Button>
       )}
     </div>
   );

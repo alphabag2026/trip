@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt, Shield, Image, ChevronDown, MapPin, Navigation, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt, Shield, Image, ChevronDown, MapPin, Navigation, Route, Target, type LucideIcon } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -101,6 +101,8 @@ const menuGroups: MenuGroup[] = [
       { icon: ShieldCheck, labelKey: "admin.sidebar.passportList", path: "/passport-list", roles: ["all"] },
       { icon: Receipt, labelKey: "admin.sidebar.expenses", path: "/expenses", roles: ["all"] },
       { icon: Navigation, labelKey: "admin.sidebar.locationTracker", path: "/location-tracker", roles: ["all"] },
+      { icon: Target, labelKey: "admin.sidebar.geofence", path: "/geofence", roles: ["all"] },
+      { icon: Route, labelKey: "admin.sidebar.locationHistory", path: "/location-history", roles: ["all"] },
     ],
   },
   // ─── 6. 소통 & 알림 ───

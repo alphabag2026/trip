@@ -61,6 +61,9 @@ import {
   scheduleReminders, InsertScheduleReminder,
   scheduleRsvps, InsertScheduleRsvp,
   userLocations, InsertUserLocation,
+  geofences, InsertGeofence,
+  geofenceEvents, InsertGeofenceEvent,
+  locationHistory, InsertLocationHistory,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -3232,4 +3235,148 @@ export async function stopSharingLocationInChatRoom(userId: number, chatRoomId: 
       eq(userLocations.userId, userId),
       eq(userLocations.roomId, chatRoomId),
     ));
+}
+
+// ── Geofence DB Helpers ──────────────────────────────────
+
+export async function createGeofence(data: InsertGeofence) {
+  const db = await getDb();
+  const result = await db!.insert(geofences).values(data);
+  return result[0].insertId;
+}
+
+export async function updateGeofence(id: number, data: Partial<InsertGeofence>) {
+  const db = await getDb();
+  await db!.update(geofences).set(data).where(eq(geofences.id, id));
+}
+
+export async function deleteGeofence(id: number) {
+  const db = await getDb();
+  await db!.delete(geofences).where(eq(geofences.id, id));
+}
+
+export async function getGeofenceById(id: number) {
+  const db = await getDb();
+  const rows = await db!.select().from(geofences).where(eq(geofences.id, id)).limit(1);
+  return rows[0] || null;
+}
+
+export async function listGeofencesByMeetup(meetupId: number) {
+  const db = await getDb();
+  return db!.select().from(geofences)
+    .where(eq(geofences.meetupId, meetupId))
+    .orderBy(desc(geofences.createdAt));
+}
+
+export async function getActiveGeofencesByMeetup(meetupId: number) {
+  const db = await getDb();
+  return db!.select().from(geofences)
+    .where(and(
+      eq(geofences.meetupId, meetupId),
+      eq(geofences.isActive, true),
+    ))
+    .orderBy(desc(geofences.createdAt));
+}
+
+export async function createGeofenceEvent(data: InsertGeofenceEvent) {
+  const db = await getDb();
+  const result = await db!.insert(geofenceEvents).values(data);
+  return result[0].insertId;
+}
+
+export async function listGeofenceEvents(geofenceId: number, limit = 50) {
+  const db = await getDb();
+  return db!.select().from(geofenceEvents)
+    .where(eq(geofenceEvents.geofenceId, geofenceId))
+    .orderBy(desc(geofenceEvents.createdAt))
+    .limit(limit);
+}
+
+export async function listGeofenceEventsByMeetup(meetupId: number, limit = 100) {
+  const db = await getDb();
+  return db!.select({
+    event: geofenceEvents,
+    geofence: geofences,
+  }).from(geofenceEvents)
+    .innerJoin(geofences, eq(geofenceEvents.geofenceId, geofences.id))
+    .where(eq(geofences.meetupId, meetupId))
+    .orderBy(desc(geofenceEvents.createdAt))
+    .limit(limit);
+}
+
+export async function getRecentGeofenceEventForUser(userId: number, geofenceId: number) {
+  const db = await getDb();
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+  const rows = await db!.select().from(geofenceEvents)
+    .where(and(
+      eq(geofenceEvents.userId, userId),
+      eq(geofenceEvents.geofenceId, geofenceId),
+      gte(geofenceEvents.createdAt, fiveMinAgo),
+    ))
+    .orderBy(desc(geofenceEvents.createdAt))
+    .limit(1);
+  return rows[0] || null;
+}
+
+// ── Location History DB Helpers ──────────────────────────
+
+export async function saveLocationHistory(data: InsertLocationHistory) {
+  const db = await getDb();
+  await db!.insert(locationHistory).values(data);
+}
+
+export async function getLocationHistoryByUser(userId: number, options?: { meetupId?: number; startTime?: Date; endTime?: Date; limit?: number }) {
+  const db = await getDb();
+  const conditions = [eq(locationHistory.userId, userId)];
+  if (options?.meetupId) conditions.push(eq(locationHistory.meetupId, options.meetupId));
+  if (options?.startTime) conditions.push(gte(locationHistory.createdAt, options.startTime));
+  if (options?.endTime) conditions.push(lte(locationHistory.createdAt, options.endTime));
+
+  return db!.select().from(locationHistory)
+    .where(and(...conditions))
+    .orderBy(asc(locationHistory.createdAt))
+    .limit(options?.limit || 1000);
+}
+
+export async function getLocationHistoryByMeetup(meetupId: number, options?: { startTime?: Date; endTime?: Date; limit?: number }) {
+  const db = await getDb();
+  const conditions = [eq(locationHistory.meetupId, meetupId)];
+  if (options?.startTime) conditions.push(gte(locationHistory.createdAt, options.startTime));
+  if (options?.endTime) conditions.push(lte(locationHistory.createdAt, options.endTime));
+
+  return db!.select().from(locationHistory)
+    .where(and(...conditions))
+    .orderBy(asc(locationHistory.createdAt))
+    .limit(options?.limit || 5000);
+}
+
+// ── Location User Search ─────────────────────────────────
+
+export async function searchActiveLocationsByName(searchTerm: string, roomId?: number, meetupId?: number) {
+  const db = await getDb();
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+
+  const conditions = [
+    eq(userLocations.isSharing, true),
+    gte(userLocations.updatedAt, fiveMinAgo),
+  ];
+  if (roomId) conditions.push(eq(userLocations.roomId, roomId));
+  if (meetupId) conditions.push(eq(userLocations.meetupId, meetupId));
+
+  const locations = await db!.select({
+    location: userLocations,
+    user: {
+      id: users.id,
+      name: users.name,
+      email: users.email,
+    },
+  }).from(userLocations)
+    .innerJoin(users, eq(userLocations.userId, users.id))
+    .where(and(
+      ...conditions,
+      like(users.name, `%${searchTerm}%`),
+    ))
+    .orderBy(desc(userLocations.updatedAt));
+
+  return locations;
 }

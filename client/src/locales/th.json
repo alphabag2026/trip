@@ -927,7 +927,9 @@
       "vouchers": "บัตรกำนัล",
       "2faSettings": "2FA Settings",
       "locationTracker": "ติดตามตำแหน่งแบบเรียลไทม์",
-      "meetupSchedules": "Schedule Management"
+      "meetupSchedules": "Schedule Management",
+      "geofence": "จีโอเฟนซิง",
+      "locationHistory": "ประวัติตำแหน่ง"
     },
     "survey": {
       "addQuestion": "Add Question",

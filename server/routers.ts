@@ -7852,6 +7852,68 @@ Return ONLY valid JSON.`,
           batteryLevel: input.batteryLevel || null,
           isSharing: true,
         });
+
+        // 위치 이력 저장
+        await db.saveLocationHistory({
+          userId: ctx.user.id,
+          meetupId: input.meetupId || null,
+          roomId: input.roomId || null,
+          latitude: String(input.latitude),
+          longitude: String(input.longitude),
+          accuracy: input.accuracy ? String(input.accuracy) : null,
+          altitude: input.altitude ? String(input.altitude) : null,
+          heading: input.heading ? String(input.heading) : null,
+          speed: input.speed ? String(input.speed) : null,
+        });
+
+        // 지오펜스 체크 (밋업이 있는 경우)
+        if (input.meetupId) {
+          try {
+            const activeGeofences = await db.getActiveGeofencesByMeetup(input.meetupId);
+            for (const fence of activeGeofences) {
+              const distance = getDistanceFromLatLon(
+                input.latitude, input.longitude,
+                Number(fence.latitude), Number(fence.longitude)
+              );
+              const isInside = distance <= fence.radius;
+
+              const recentEvent = await db.getRecentGeofenceEventForUser(ctx.user.id, fence.id);
+              const wasInside = recentEvent?.eventType === 'enter';
+
+              if (isInside && !wasInside && fence.notifyOnEnter) {
+                await db.createGeofenceEvent({
+                  geofenceId: fence.id,
+                  userId: ctx.user.id,
+                  eventType: 'enter',
+                  latitude: String(input.latitude),
+                  longitude: String(input.longitude),
+                  notified: true,
+                });
+                // 관리자 알림
+                try {
+                  const userName = ctx.user.name || 'Unknown';
+                  const { notifyOwner } = await import("./_core/notification");
+                  await notifyOwner({ title: `[지오펜스] ${userName} 도착`, content: `${userName}님이 "${fence.name}" 영역에 도착했습니다.` });
+                } catch (_) {}
+              } else if (!isInside && wasInside && fence.notifyOnExit) {
+                await db.createGeofenceEvent({
+                  geofenceId: fence.id,
+                  userId: ctx.user.id,
+                  eventType: 'exit',
+                  latitude: String(input.latitude),
+                  longitude: String(input.longitude),
+                  notified: true,
+                });
+                try {
+                  const userName = ctx.user.name || 'Unknown';
+                  const { notifyOwner } = await import("./_core/notification");
+                  await notifyOwner({ title: `[지오펜스] ${userName} 이탈`, content: `${userName}님이 "${fence.name}" 영역에서 이탈했습니다.` });
+                } catch (_) {}
+              }
+            }
+          } catch (_) { /* 지오펜스 체크 실패해도 위치 업데이트는 성공 */ }
+        }
+
         return { success: true };
       }),
 
@@ -7928,8 +7990,199 @@ Return ONLY valid JSON.`,
         updatedAt: loc.updatedAt,
       }));
     }),
+
+    // 사용자 이름으로 위치 검색
+    searchUser: protectedProcedure
+      .input(z.object({
+        searchTerm: z.string().min(1),
+        roomId: z.number().optional(),
+        meetupId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const results = await db.searchActiveLocationsByName(input.searchTerm, input.roomId, input.meetupId);
+        return results.map(r => ({
+          userId: r.user.id,
+          userName: r.user.name,
+          email: r.user.email,
+          latitude: Number(r.location.latitude),
+          longitude: Number(r.location.longitude),
+          accuracy: r.location.accuracy ? Number(r.location.accuracy) : null,
+          heading: r.location.heading ? Number(r.location.heading) : null,
+          speed: r.location.speed ? Number(r.location.speed) : null,
+          shareType: r.location.shareType,
+          batteryLevel: r.location.batteryLevel,
+          updatedAt: r.location.updatedAt,
+        }));
+      }),
+  }),
+
+  // ── Geofence Router ──────────────────────────────────
+  geofence: router({
+    create: protectedProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        name: z.string().min(1),
+        description: z.string().optional(),
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        radius: z.number().min(10).max(50000),
+        type: z.enum(['poi', 'hotel', 'airport', 'restaurant', 'venue', 'custom']).optional(),
+        notifyOnEnter: z.boolean().optional(),
+        notifyOnExit: z.boolean().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.createGeofence({
+          meetupId: input.meetupId,
+          name: input.name,
+          description: input.description || null,
+          latitude: String(input.latitude),
+          longitude: String(input.longitude),
+          radius: input.radius,
+          type: input.type || 'custom',
+          notifyOnEnter: input.notifyOnEnter ?? true,
+          notifyOnExit: input.notifyOnExit ?? true,
+          isActive: true,
+          createdBy: ctx.user.id,
+        });
+        return { id };
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        radius: z.number().optional(),
+        type: z.enum(['poi', 'hotel', 'airport', 'restaurant', 'venue', 'custom']).optional(),
+        notifyOnEnter: z.boolean().optional(),
+        notifyOnExit: z.boolean().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        const updateData: Record<string, any> = {};
+        if (data.name !== undefined) updateData.name = data.name;
+        if (data.description !== undefined) updateData.description = data.description;
+        if (data.latitude !== undefined) updateData.latitude = String(data.latitude);
+        if (data.longitude !== undefined) updateData.longitude = String(data.longitude);
+        if (data.radius !== undefined) updateData.radius = data.radius;
+        if (data.type !== undefined) updateData.type = data.type;
+        if (data.notifyOnEnter !== undefined) updateData.notifyOnEnter = data.notifyOnEnter;
+        if (data.notifyOnExit !== undefined) updateData.notifyOnExit = data.notifyOnExit;
+        if (data.isActive !== undefined) updateData.isActive = data.isActive;
+        await db.updateGeofence(id, updateData);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteGeofence(input.id);
+        return { success: true };
+      }),
+
+    list: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        const fences = await db.listGeofencesByMeetup(input.meetupId);
+        return fences.map((f: any) => ({
+          ...f,
+          latitude: Number(f.latitude),
+          longitude: Number(f.longitude),
+        }));
+      }),
+
+    events: protectedProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        limit: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const events = await db.listGeofenceEventsByMeetup(input.meetupId, input.limit || 100);
+        return events.map((e: any) => ({
+          id: e.event.id,
+          geofenceId: e.event.geofenceId,
+          geofenceName: e.geofence.name,
+          geofenceType: e.geofence.type,
+          userId: e.event.userId,
+          eventType: e.event.eventType,
+          latitude: Number(e.event.latitude),
+          longitude: Number(e.event.longitude),
+          notified: e.event.notified,
+          createdAt: e.event.createdAt,
+        }));
+      }),
+  }),
+
+  // ── Location History Router ──────────────────────────
+  locationHistory: router({
+    getByUser: protectedProcedure
+      .input(z.object({
+        userId: z.number(),
+        meetupId: z.number().optional(),
+        startTime: z.number().optional(), // unix ms
+        endTime: z.number().optional(),
+        limit: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const history = await db.getLocationHistoryByUser(input.userId, {
+          meetupId: input.meetupId,
+          startTime: input.startTime ? new Date(input.startTime) : undefined,
+          endTime: input.endTime ? new Date(input.endTime) : undefined,
+          limit: input.limit,
+        });
+        return history.map((h: any) => ({
+          id: h.id,
+          userId: h.userId,
+          latitude: Number(h.latitude),
+          longitude: Number(h.longitude),
+          accuracy: h.accuracy ? Number(h.accuracy) : null,
+          altitude: h.altitude ? Number(h.altitude) : null,
+          heading: h.heading ? Number(h.heading) : null,
+          speed: h.speed ? Number(h.speed) : null,
+          createdAt: h.createdAt,
+        }));
+      }),
+    getByMeetup: protectedProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        startTime: z.number().optional(),
+        endTime: z.number().optional(),
+        limit: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const history = await db.getLocationHistoryByMeetup(input.meetupId, {
+          startTime: input.startTime ? new Date(input.startTime) : undefined,
+          endTime: input.endTime ? new Date(input.endTime) : undefined,
+          limit: input.limit,
+        });
+        return history.map((h: any) => ({
+          id: h.id,
+          userId: h.userId,
+          latitude: Number(h.latitude),
+          longitude: Number(h.longitude),
+          accuracy: h.accuracy ? Number(h.accuracy) : null,
+          heading: h.heading ? Number(h.heading) : null,
+          speed: h.speed ? Number(h.speed) : null,
+          createdAt: h.createdAt,
+        }));
+      }),
   }),
 });
+
+// ── Haversine 거리 계산 (미터) ─────────────────────────────
+function getDistanceFromLatLon(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000; // 지구 반경 (미터)
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────
 async function parseTravelInfoWithLLM(text: string, fileType: string) {
   try {

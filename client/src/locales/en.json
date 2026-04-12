@@ -1470,7 +1470,9 @@
       "attendeeDashboard": "Attendee Dashboard",
       "invitation": "Invitation Generator",
       "locationTracker": "Location Tracker",
-      "meetupSchedules": "Schedule Management"
+      "meetupSchedules": "Schedule Management",
+      "geofence": "Geofencing",
+      "locationHistory": "Location History"
     },
     "survey": {
       "addQuestion": "Add Question",
