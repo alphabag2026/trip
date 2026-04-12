@@ -58,6 +58,8 @@ import {
   teamSchedules, InsertTeamSchedule,
   translationRequests, InsertTranslationRequest,
   meetupSchedules, InsertMeetupSchedule,
+  scheduleReminders, InsertScheduleReminder,
+  scheduleRsvps, InsertScheduleRsvp,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -3080,4 +3082,78 @@ export async function updateMeetupSchedule(id: number, data: Partial<InsertMeetu
 export async function deleteMeetupSchedule(id: number) {
   const db = await getDb(); if (!db) throw new Error("DB not available");
   await db.delete(meetupSchedules).where(eq(meetupSchedules.id, id));
+}
+
+
+// ── Schedule Reminders ──────────────────────────────────
+export async function getScheduleReminders(scheduleId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(scheduleReminders).where(eq(scheduleReminders.scheduleId, scheduleId)).orderBy(asc(scheduleReminders.scheduledAt));
+}
+export async function getPendingReminders() {
+  const db = await getDb(); if (!db) return [];
+  const now = new Date();
+  return db.select().from(scheduleReminders)
+    .where(and(
+      eq(scheduleReminders.status, "pending"),
+      lte(scheduleReminders.scheduledAt, now)
+    ))
+    .orderBy(asc(scheduleReminders.scheduledAt));
+}
+export async function createScheduleReminder(data: InsertScheduleReminder) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(scheduleReminders).values(data);
+  return result[0].insertId;
+}
+export async function updateScheduleReminder(id: number, data: Partial<InsertScheduleReminder>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(scheduleReminders).set(data).where(eq(scheduleReminders.id, id));
+}
+export async function deleteScheduleReminder(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(scheduleReminders).where(eq(scheduleReminders.id, id));
+}
+export async function deleteScheduleRemindersByScheduleId(scheduleId: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(scheduleReminders).where(eq(scheduleReminders.scheduleId, scheduleId));
+}
+
+// ── Schedule RSVPs ──────────────────────────────────────
+export async function getScheduleRsvps(scheduleId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(scheduleRsvps).where(eq(scheduleRsvps.scheduleId, scheduleId)).orderBy(desc(scheduleRsvps.respondedAt));
+}
+export async function getScheduleRsvpStats(scheduleId: number) {
+  const db = await getDb(); if (!db) return { attending: 0, not_attending: 0, maybe: 0, total: 0 };
+  const rows = await db.select().from(scheduleRsvps).where(eq(scheduleRsvps.scheduleId, scheduleId));
+  const attending = rows.filter(r => r.response === "attending").length;
+  const not_attending = rows.filter(r => r.response === "not_attending").length;
+  const maybe = rows.filter(r => r.response === "maybe").length;
+  return { attending, not_attending, maybe, total: rows.length };
+}
+export async function getScheduleRsvpByUser(scheduleId: number, registrationId: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(scheduleRsvps)
+    .where(and(eq(scheduleRsvps.scheduleId, scheduleId), eq(scheduleRsvps.registrationId, registrationId)))
+    .limit(1);
+  return result[0];
+}
+export async function upsertScheduleRsvp(data: InsertScheduleRsvp) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const existing = await getScheduleRsvpByUser(data.scheduleId, data.registrationId);
+  if (existing) {
+    await db.update(scheduleRsvps).set({
+      response: data.response,
+      note: data.note,
+      respondedAt: new Date(),
+    }).where(eq(scheduleRsvps.id, existing.id));
+    return existing.id;
+  } else {
+    const result = await db.insert(scheduleRsvps).values(data);
+    return result[0].insertId;
+  }
+}
+export async function getMeetupRsvpSummary(meetupId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(scheduleRsvps).where(eq(scheduleRsvps.meetupId, meetupId));
 }

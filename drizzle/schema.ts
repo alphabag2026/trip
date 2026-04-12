@@ -1861,3 +1861,38 @@ export const meetupSchedules = mysqlTable("meetup_schedules", {
 
 export type MeetupSchedule = typeof meetupSchedules.$inferSelect;
 export type InsertMeetupSchedule = typeof meetupSchedules.$inferInsert;
+
+// ── Schedule Reminders (일정 알림 자동화) ──────────────────
+export const scheduleReminders = mysqlTable("schedule_reminders", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduleId: int("scheduleId").notNull(),
+  meetupId: int("meetupId").notNull(),
+  reminderMinutes: int("reminderMinutes").notNull(), // 일정 시작 전 몇 분 (60, 30, 15 등)
+  reminderType: mysqlEnum("reminderType", ["telegram", "chat", "both"]).default("both").notNull(),
+  status: mysqlEnum("status", ["pending", "sent", "failed", "cancelled"]).default("pending").notNull(),
+  scheduledAt: timestamp("scheduledAt").notNull(), // 실제 알림 발송 예정 시각
+  sentAt: timestamp("sentAt"),
+  errorMessage: text("errorMessage"),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ScheduleReminder = typeof scheduleReminders.$inferSelect;
+export type InsertScheduleReminder = typeof scheduleReminders.$inferInsert;
+
+// ── Schedule RSVPs (참가자 일정 참석 여부 응답) ──────────────
+export const scheduleRsvps = mysqlTable("schedule_rsvps", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduleId: int("scheduleId").notNull(),
+  meetupId: int("meetupId").notNull(),
+  registrationId: int("registrationId").notNull(),
+  userId: int("userId"),
+  response: mysqlEnum("response", ["attending", "not_attending", "maybe"]).default("maybe").notNull(),
+  respondedAt: timestamp("respondedAt").defaultNow().notNull(),
+  note: text("note"), // 참가자 메모 (불참 사유 등)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ScheduleRsvp = typeof scheduleRsvps.$inferSelect;
+export type InsertScheduleRsvp = typeof scheduleRsvps.$inferInsert;

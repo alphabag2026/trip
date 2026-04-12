@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Bell, Calendar, Car, UtensilsCrossed, MapPin, Users, Clock, Phone, ChevronDown, ChevronUp, ExternalLink, Download } from "lucide-react";
+import { Plus, Edit, Trash2, Bell, Calendar, Car, UtensilsCrossed, MapPin, Users, Clock, Phone, ChevronDown, ChevronUp, ExternalLink, Download, Timer, CheckCircle, XCircle, HelpCircle, Send, BarChart3 } from "lucide-react";
 
 const TYPE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
   transport: { label: "교통", icon: "🚗", color: "bg-blue-100 text-blue-800" },
@@ -285,6 +285,10 @@ export default function MeetupSchedules() {
                               {s.maxParticipants && ` (최대 ${s.maxParticipants}명)`}
                             </div>
                             <ScheduleCalendarButtons scheduleId={s.id} />
+                            {/* 리마인더 설정 */}
+                            <ScheduleReminderSection scheduleId={s.id} meetupId={selectedMeetupId!} />
+                            {/* RSVP 현황 */}
+                            <ScheduleRsvpSection scheduleId={s.id} meetupId={selectedMeetupId!} />
                           </div>
                         )}
                       </CardContent>
@@ -451,6 +455,150 @@ function ScheduleCalendarButtons({ scheduleId }: { scheduleId: number }) {
       <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 px-2" onClick={handleDownloadIcs}>
         <Download className="w-3 h-3" /> .ics
       </Button>
+    </div>
+  );
+}
+
+
+// 리마인더 설정 섹션
+function ScheduleReminderSection({ scheduleId, meetupId }: { scheduleId: number; meetupId: number }) {
+  const [showAdd, setShowAdd] = useState(false);
+  const [minutes, setMinutes] = useState(60);
+  const utils = trpc.useUtils();
+  const reminders = trpc.scheduleReminder.list.useQuery({ scheduleId });
+  const createReminder = trpc.scheduleReminder.create.useMutation({
+    onSuccess: () => { utils.scheduleReminder.list.invalidate(); setShowAdd(false); toast.success("리마인더가 설정되었습니다"); },
+    onError: (e) => toast.error(e.message),
+  });
+  const deleteReminder = trpc.scheduleReminder.delete.useMutation({
+    onSuccess: () => { utils.scheduleReminder.list.invalidate(); toast.success("리마인더가 삭제되었습니다"); },
+  });
+  const sendNow = trpc.scheduleReminder.sendNow.useMutation({
+    onSuccess: () => toast.success("리마인더가 전송되었습니다"),
+    onError: (e) => toast.error(e.message),
+  });
+
+  return (
+    <div className="pt-2 border-t border-border/30 space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Timer className="w-3.5 h-3.5" /> 리마인더
+          {reminders.data && reminders.data.length > 0 && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0">{reminders.data.length}개</Badge>
+          )}
+        </div>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={() => sendNow.mutate({ scheduleId, meetupId })} disabled={sendNow.isPending}>
+            <Send className="w-3 h-3 mr-1" /> 즉시 전송
+          </Button>
+          <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={() => setShowAdd(!showAdd)}>
+            <Plus className="w-3 h-3 mr-1" /> 추가
+          </Button>
+        </div>
+      </div>
+      {showAdd && (
+        <div className="flex items-center gap-2 bg-muted/30 p-2 rounded">
+          <Select value={minutes.toString()} onValueChange={(v) => setMinutes(Number(v))}>
+            <SelectTrigger className="w-[140px] h-7 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="15">15분 전</SelectItem>
+              <SelectItem value="30">30분 전</SelectItem>
+              <SelectItem value="60">1시간 전</SelectItem>
+              <SelectItem value="120">2시간 전</SelectItem>
+              <SelectItem value="1440">1일 전</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button size="sm" className="h-7 text-xs" onClick={() => createReminder.mutate({ scheduleId, meetupId, reminderMinutes: minutes })} disabled={createReminder.isPending}>
+            설정
+          </Button>
+        </div>
+      )}
+      {reminders.data && reminders.data.length > 0 && (
+        <div className="space-y-1">
+          {reminders.data.map((r: any) => (
+            <div key={r.id} className="flex items-center justify-between text-xs bg-muted/20 px-2 py-1 rounded">
+              <span>
+                {r.reminderMinutes >= 1440 ? `${Math.floor(r.reminderMinutes / 1440)}일 전` : r.reminderMinutes >= 60 ? `${Math.floor(r.reminderMinutes / 60)}시간 전` : `${r.reminderMinutes}분 전`}
+                <Badge variant="outline" className={`ml-1.5 text-[9px] px-1 py-0 ${r.status === "sent" ? "bg-green-50 text-green-700" : r.status === "failed" ? "bg-red-50 text-red-700" : "bg-yellow-50 text-yellow-700"}`}>
+                  {r.status === "sent" ? "전송됨" : r.status === "failed" ? "실패" : "대기"}
+                </Badge>
+              </span>
+              <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => deleteReminder.mutate({ id: r.id })}>
+                <Trash2 className="w-3 h-3 text-destructive" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// RSVP 현황 섹션
+function ScheduleRsvpSection({ scheduleId, meetupId }: { scheduleId: number; meetupId: number }) {
+  const stats = trpc.scheduleRsvp.stats.useQuery({ scheduleId });
+  const rsvpList = trpc.scheduleRsvp.list.useQuery({ scheduleId });
+  const [showDetail, setShowDetail] = useState(false);
+  const utils = trpc.useUtils();
+  const sendRsvpReminder = trpc.scheduleReminder.sendRsvpReminder.useMutation({
+    onSuccess: (data) => toast.success(`미응답자 ${data.noResponseCount}명에게 리마인더를 전송했습니다`),
+    onError: (e) => toast.error(e.message),
+  });
+
+  const s = stats.data;
+  if (!s || s.total === 0) {
+    return (
+      <div className="pt-2 border-t border-border/30">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <BarChart3 className="w-3.5 h-3.5" /> RSVP 현황: 아직 응답 없음
+          </div>
+          <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={() => sendRsvpReminder.mutate({ scheduleId, meetupId })} disabled={sendRsvpReminder.isPending}>
+            <Send className="w-3 h-3 mr-1" /> 응답 요청
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pt-2 border-t border-border/30 space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3 text-xs">
+          <span className="flex items-center gap-1 text-muted-foreground"><BarChart3 className="w-3.5 h-3.5" /> RSVP</span>
+          <span className="flex items-center gap-1 text-green-600"><CheckCircle className="w-3 h-3" /> {s.attending}</span>
+          <span className="flex items-center gap-1 text-red-500"><XCircle className="w-3 h-3" /> {s.not_attending}</span>
+          <span className="flex items-center gap-1 text-yellow-600"><HelpCircle className="w-3 h-3" /> {s.maybe}</span>
+        </div>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={() => setShowDetail(!showDetail)}>
+            {showDetail ? "접기" : "상세"}
+          </Button>
+          <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={() => sendRsvpReminder.mutate({ scheduleId, meetupId })} disabled={sendRsvpReminder.isPending}>
+            <Send className="w-3 h-3 mr-1" /> 미응답 알림
+          </Button>
+        </div>
+      </div>
+      {/* 진행 바 */}
+      <div className="flex h-2 rounded-full overflow-hidden bg-muted">
+        {s.attending > 0 && <div className="bg-green-500" style={{ width: `${(s.attending / s.total) * 100}%` }} />}
+        {s.not_attending > 0 && <div className="bg-red-400" style={{ width: `${(s.not_attending / s.total) * 100}%` }} />}
+        {s.maybe > 0 && <div className="bg-yellow-400" style={{ width: `${(s.maybe / s.total) * 100}%` }} />}
+      </div>
+      {showDetail && rsvpList.data && (
+        <div className="space-y-1 max-h-40 overflow-y-auto">
+          {rsvpList.data.map((r: any) => (
+            <div key={r.id} className="flex items-center justify-between text-xs bg-muted/20 px-2 py-1 rounded">
+              <span>참가자 #{r.registrationId}</span>
+              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${r.response === "attending" ? "bg-green-50 text-green-700" : r.response === "not_attending" ? "bg-red-50 text-red-700" : "bg-yellow-50 text-yellow-700"}`}>
+                {r.response === "attending" ? "참석" : r.response === "not_attending" ? "불참" : "미정"}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plane, MapPin, Calendar, Users, ArrowLeft, Sparkles, ScanLine,
   Loader2, MessageCircle, Send, Clock, Globe, Share2, Copy, CheckCircle,
-  FileText, Info, AlertTriangle, Download, ExternalLink
+  FileText, Info, AlertTriangle, Download, ExternalLink, Car, UtensilsCrossed,
+  XCircle, HelpCircle
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { QRCodeSVG } from "qrcode.react";
@@ -211,6 +212,9 @@ export default function MeetupPortal() {
                 )}
               </CardContent>
             </Card>
+
+            {/* 교통/식사 일정 + RSVP */}
+            <ScheduleListWithRsvp meetupId={meetup.id} />
 
             {/* 캘린더 연동 */}
             <CalendarButtons meetupId={meetup.id} />
@@ -457,5 +461,162 @@ function CalendarButtons({ meetupId }: { meetupId: number }) {
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+
+// 교통/식사 일정 목록 + RSVP 응답 (참가자용)
+function ScheduleListWithRsvp({ meetupId }: { meetupId: number }) {
+  const { t } = useTranslation();
+  const schedules = trpc.meetupSchedule.list.useQuery({ meetupId }, { enabled: !!meetupId });
+
+  if (!schedules.data || schedules.data.length === 0) return null;
+
+  const TYPE_ICONS: Record<string, { icon: string; label: string }> = {
+    transport: { icon: "🚗", label: "교통" },
+    meal: { icon: "🍽️", label: "식사" },
+    tour: { icon: "🗺️", label: "관광" },
+    meeting: { icon: "📋", label: "미팅" },
+    free: { icon: "🆓", label: "자유시간" },
+    other: { icon: "📌", label: "기타" },
+  };
+
+  // 날짜별 그룹핑
+  const grouped = useMemo(() => {
+    const g: Record<string, any[]> = {};
+    for (const s of schedules.data || []) {
+      const dateKey = new Date(s.eventDate).toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" });
+      if (!g[dateKey]) g[dateKey] = [];
+      g[dateKey].push(s);
+    }
+    return g;
+  }, [schedules.data]);
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Calendar className="h-4 w-4" />
+          {t("meetupPortal.schedules", "교통/식사 일정")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {Object.entries(grouped).map(([dateKey, items]) => (
+          <div key={dateKey}>
+            <p className="text-xs font-semibold text-muted-foreground mb-2">{dateKey}</p>
+            <div className="space-y-2">
+              {items.map((s: any) => {
+                const typeInfo = TYPE_ICONS[s.scheduleType] || TYPE_ICONS.other;
+                const time = new Date(s.eventDate).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+                const endTime = s.endTime ? new Date(s.endTime).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }) : null;
+                return (
+                  <div key={s.id} className="border rounded-lg p-3 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <span className="text-lg">{typeInfo.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{s.title}</p>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
+                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {time}{endTime ? ` ~ ${endTime}` : ""}</span>
+                          {s.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {s.location}</span>}
+                        </div>
+                        {/* 교통 상세 */}
+                        {s.scheduleType === "transport" && (s.pickupLocation || s.driverName) && (
+                          <div className="mt-1.5 text-xs space-y-0.5 text-muted-foreground">
+                            {s.pickupLocation && <p className="flex items-center gap-1"><Car className="w-3 h-3" /> 픽업: {s.pickupLocation}</p>}
+                            {s.dropoffLocation && <p className="ml-4">→ 하차: {s.dropoffLocation}</p>}
+                            {s.driverName && <p>기사: {s.driverName} {s.driverPhone || ""}</p>}
+                            {s.vehicleInfo && <p>차량: {s.vehicleInfo}</p>}
+                          </div>
+                        )}
+                        {/* 식사 상세 */}
+                        {s.scheduleType === "meal" && (s.restaurantName || s.menuInfo) && (
+                          <div className="mt-1.5 text-xs space-y-0.5 text-muted-foreground">
+                            {s.restaurantName && <p className="flex items-center gap-1"><UtensilsCrossed className="w-3 h-3" /> {s.restaurantName} {s.cuisineType ? `(${s.cuisineType})` : ""}</p>}
+                            {s.menuInfo && <p>메뉴: {s.menuInfo}</p>}
+                            {s.costPerPerson && <p>1인 비용: {s.costPerPerson}</p>}
+                          </div>
+                        )}
+                        {s.description && <p className="text-xs text-muted-foreground mt-1">{s.description}</p>}
+                        {s.notes && <p className="text-xs text-muted-foreground/70 mt-1 italic">{s.notes}</p>}
+                        {s.locationUrl && (
+                          <a href={s.locationUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline flex items-center gap-1 mt-1">
+                            <MapPin className="w-3 h-3" /> 지도 보기
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    {/* RSVP 응답 */}
+                    <ScheduleRsvpResponder scheduleId={s.id} meetupId={meetupId} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+// 참가자 RSVP 응답 컴포넌트
+function ScheduleRsvpResponder({ scheduleId, meetupId }: { scheduleId: number; meetupId: number }) {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const stats = trpc.scheduleRsvp.stats.useQuery({ scheduleId });
+  const utils = trpc.useUtils();
+  const respondMut = trpc.scheduleRsvp.respond.useMutation({
+    onSuccess: () => {
+      utils.scheduleRsvp.stats.invalidate({ scheduleId });
+      toast.success(t("meetupPortal.rsvpSaved", "참석 여부가 저장되었습니다"));
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  // 참가자가 아닌 경우 통계만 표시
+  const s = stats.data;
+
+  return (
+    <div className="pt-2 border-t border-border/30">
+      {/* RSVP 통계 */}
+      {s && s.total > 0 && (
+        <div className="flex items-center gap-3 text-xs mb-2">
+          <span className="flex items-center gap-1 text-green-600"><CheckCircle className="w-3 h-3" /> {s.attending}</span>
+          <span className="flex items-center gap-1 text-red-500"><XCircle className="w-3 h-3" /> {s.not_attending}</span>
+          <span className="flex items-center gap-1 text-yellow-600"><HelpCircle className="w-3 h-3" /> {s.maybe}</span>
+        </div>
+      )}
+      {/* 응답 버튼 (로그인한 사용자만) */}
+      {user && (
+        <div className="flex gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs gap-1 flex-1 hover:bg-green-50 hover:text-green-700 hover:border-green-300"
+            onClick={() => respondMut.mutate({ scheduleId, meetupId, registrationId: 0, response: "attending" })}
+            disabled={respondMut.isPending}
+          >
+            <CheckCircle className="w-3 h-3" /> {t("meetupPortal.attending", "참석")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs gap-1 flex-1 hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-300"
+            onClick={() => respondMut.mutate({ scheduleId, meetupId, registrationId: 0, response: "maybe" })}
+            disabled={respondMut.isPending}
+          >
+            <HelpCircle className="w-3 h-3" /> {t("meetupPortal.maybe", "미정")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs gap-1 flex-1 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+            onClick={() => respondMut.mutate({ scheduleId, meetupId, registrationId: 0, response: "not_attending" })}
+            disabled={respondMut.isPending}
+          >
+            <XCircle className="w-3 h-3" /> {t("meetupPortal.notAttending", "불참")}
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }

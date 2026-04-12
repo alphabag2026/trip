@@ -7665,6 +7665,162 @@ Return ONLY valid JSON.`,
         return { success: true };
       }),
   }),
+
+  // ── Schedule Reminders (일정 알림 자동화) ──────────────────
+  scheduleReminder: router({
+    list: adminProcedure
+      .input(z.object({ scheduleId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getScheduleReminders(input.scheduleId);
+      }),
+    create: adminProcedure
+      .input(z.object({
+        scheduleId: z.number(),
+        meetupId: z.number(),
+        reminderMinutes: z.number().min(1),
+        reminderType: z.enum(["telegram", "chat", "both"]).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // 일정 정보 가져와서 알림 시각 계산
+        const schedule = await db.getMeetupScheduleById(input.scheduleId);
+        if (!schedule) throw new TRPCError({ code: "NOT_FOUND", message: "일정을 찾을 수 없습니다" });
+        const eventDate = new Date(schedule.eventDate);
+        const scheduledAt = new Date(eventDate.getTime() - input.reminderMinutes * 60 * 1000);
+        if (scheduledAt <= new Date()) throw new TRPCError({ code: "BAD_REQUEST", message: "알림 시간이 이미 지났습니다" });
+        const id = await db.createScheduleReminder({
+          scheduleId: input.scheduleId,
+          meetupId: input.meetupId,
+          reminderMinutes: input.reminderMinutes,
+          reminderType: input.reminderType || "both",
+          scheduledAt,
+          createdBy: ctx.user.id,
+        });
+        return { id };
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteScheduleReminder(input.id);
+        return { success: true };
+      }),
+    // 수동으로 리마인더 전송 트리거
+    sendNow: adminProcedure
+      .input(z.object({ scheduleId: z.number(), meetupId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const schedule = await db.getMeetupScheduleById(input.scheduleId);
+        if (!schedule) throw new TRPCError({ code: "NOT_FOUND", message: "일정을 찾을 수 없습니다" });
+        const typeLabels: Record<string, string> = { transport: "🚗 교통", meal: "🍽️ 식사", tour: "🗺️ 관광", meeting: "📋 미팅", free: "🆓 자유시간", other: "📌 기타" };
+        const typeLabel = typeLabels[schedule.scheduleType] || "📌 일정";
+        const eventDate = new Date(schedule.eventDate);
+        const now = new Date();
+        const diffMin = Math.round((eventDate.getTime() - now.getTime()) / 60000);
+        let timeStr = "";
+        if (diffMin > 60) timeStr = `${Math.round(diffMin / 60)}시간 후`;
+        else if (diffMin > 0) timeStr = `${diffMin}분 후`;
+        else timeStr = "곧";
+        const dateStr = eventDate.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" });
+        let msg = `⏰ 리마인더: ${typeLabel}\n\n📌 ${schedule.title}\n🕐 ${dateStr} (${timeStr} 시작)`;
+        if (schedule.location) msg += `\n📍 ${schedule.location}`;
+        if (schedule.restaurantName) msg += `\n🍽️ ${schedule.restaurantName}`;
+        if (schedule.pickupLocation) msg += `\n🚗 픽업: ${schedule.pickupLocation}`;
+        if (schedule.driverName) msg += `\n👤 기사: ${schedule.driverName} ${schedule.driverPhone || ""}`;
+        if (schedule.notes) msg += `\n\n${schedule.notes}`;
+        // 공지 채널에 전송
+        const rooms = await db.getChatRooms({ meetupId: input.meetupId, isActive: true });
+        const announcementRoom = rooms.find((r: any) => r.roomType === "announcement");
+        if (announcementRoom) {
+          await db.createChatMessage({
+            roomId: announcementRoom.id, userId: ctx.user.id,
+            senderName: ctx.user.name || "시스템", senderRole: "admin",
+            content: msg, messageType: "announcement",
+          });
+        }
+        // 텔레그램 알림
+        try { await sendTelegram(msg.substring(0, 500)); } catch { /* ignore */ }
+        return { success: true };
+      }),
+    // 미응답자에게 RSVP 리마인더 전송
+    sendRsvpReminder: adminProcedure
+      .input(z.object({ scheduleId: z.number(), meetupId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const schedule = await db.getMeetupScheduleById(input.scheduleId);
+        if (!schedule) throw new TRPCError({ code: "NOT_FOUND", message: "일정을 찾을 수 없습니다" });
+        const rsvps = await db.getScheduleRsvps(input.scheduleId);
+        const respondedRegIds = new Set(rsvps.map(r => r.registrationId));
+        // 전체 참가자 목록 가져오기
+        const allRegs = await db.getRegistrations({ meetupId: input.meetupId, status: "approved" });
+        const noResponseRegs = allRegs.filter((r: any) => !respondedRegIds.has(r.id));
+        const dateStr = new Date(schedule.eventDate).toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" });
+        const msg = `📋 참석 여부 확인 요청\n\n📌 ${schedule.title}\n🕐 ${dateStr}\n\n아직 참석 여부를 응답하지 않으셨습니다. 밋업 포털에서 응답해 주세요!\n미응답자: ${noResponseRegs.length}명`;
+        // 공지 채널에 전송
+        const rooms = await db.getChatRooms({ meetupId: input.meetupId, isActive: true });
+        const announcementRoom = rooms.find((r: any) => r.roomType === "announcement");
+        if (announcementRoom) {
+          await db.createChatMessage({
+            roomId: announcementRoom.id, userId: ctx.user.id,
+            senderName: ctx.user.name || "시스템", senderRole: "admin",
+            content: msg, messageType: "announcement",
+          });
+        }
+        try { await sendTelegram(msg.substring(0, 500)); } catch { /* ignore */ }
+        return { success: true, noResponseCount: noResponseRegs.length };
+      }),
+  }),
+
+  // ── Schedule RSVPs (참가자 일정 참석 여부) ──────────────────
+  scheduleRsvp: router({
+    // 특정 일정의 RSVP 목록 (관리자)
+    list: adminProcedure
+      .input(z.object({ scheduleId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getScheduleRsvps(input.scheduleId);
+      }),
+    // 특정 일정의 RSVP 통계
+    stats: publicProcedure
+      .input(z.object({ scheduleId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getScheduleRsvpStats(input.scheduleId);
+      }),
+    // 밋업 전체 RSVP 요약
+    meetupSummary: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getMeetupRsvpSummary(input.meetupId);
+      }),
+    // 내 RSVP 조회 (참가자)
+    myResponse: protectedProcedure
+      .input(z.object({ scheduleId: z.number(), registrationId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getScheduleRsvpByUser(input.scheduleId, input.registrationId);
+      }),
+    // RSVP 응답 (참가자)
+    respond: protectedProcedure
+      .input(z.object({
+        scheduleId: z.number(),
+        meetupId: z.number(),
+        registrationId: z.number(),
+        response: z.enum(["attending", "not_attending", "maybe"]),
+        note: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.upsertScheduleRsvp({
+          scheduleId: input.scheduleId,
+          meetupId: input.meetupId,
+          registrationId: input.registrationId,
+          userId: ctx.user.id,
+          response: input.response,
+          note: input.note || null,
+        });
+        return { id, success: true };
+      }),
+    // 밋업 일정 전체의 내 RSVP 목록 (참가자)
+    myMeetupResponses: protectedProcedure
+      .input(z.object({ meetupId: z.number(), registrationId: z.number() }))
+      .query(async ({ input }) => {
+        const allRsvps = await db.getMeetupRsvpSummary(input.meetupId);
+        return allRsvps.filter(r => r.registrationId === input.registrationId);
+      }),
+  }),
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────
 async function parseTravelInfoWithLLM(text: string, fileType: string) {
