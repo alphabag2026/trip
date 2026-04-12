@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { nanoid } from "nanoid";
-import { getDb } from "./db";
+import { getDb, setUserEmailVerified, updateOnboardingStep } from "./db";
 import { users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { sdk } from "./_core/sdk";
@@ -140,6 +140,14 @@ kakaoRouter.get("/api/auth/kakao/callback", async (req: Request, res: Response) 
       });
       userId = Number(result[0].insertId);
       isNewUser = true;
+    }
+
+    // Auto-verify email for Kakao OAuth users (Kakao already verified the email)
+    try {
+      await setUserEmailVerified(userId, true);
+      await updateOnboardingStep(userId, "emailVerified", true);
+    } catch (e) {
+      console.error("[Kakao] Auto email verify failed:", e);
     }
 
     // Create session token using sdk (same as email login)

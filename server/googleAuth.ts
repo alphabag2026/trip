@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { getDb } from "./db";
+import { getDb, setUserEmailVerified, updateOnboardingStep } from "./db";
 import { users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { sdk } from "./_core/sdk";
@@ -151,6 +151,14 @@ googleRouter.get("/api/auth/google/callback", async (req: Request, res: Response
       });
       userId = Number(result[0].insertId);
       isNewUser = true;
+    }
+
+    // Auto-verify email for Google OAuth users (Google already verified the email)
+    try {
+      await setUserEmailVerified(userId, true);
+      await updateOnboardingStep(userId, "emailVerified", true);
+    } catch (e) {
+      console.error("[Google] Auto email verify failed:", e);
     }
 
     // Create session token using sdk (same as email/kakao login)
