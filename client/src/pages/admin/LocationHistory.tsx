@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  Route, MapPin, Clock, Gauge, ArrowRight, Calendar, User, Search,
+  Route, MapPin, Clock, Gauge, ArrowRight, Calendar, User, Search, Download, Loader2,
 } from "lucide-react";
 
 interface HistoryPoint {
@@ -234,7 +234,7 @@ export default function LocationHistoryPage() {
       {/* 필터 */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <Label className="text-xs">밋업</Label>
               <Select
@@ -274,6 +274,17 @@ export default function LocationHistoryPage() {
               <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
           </div>
+          {/* CSV 다운로드 버튼 */}
+          {selectedMeetupId && (
+            <div className="flex items-end">
+              <CsvDownloadButton
+                meetupId={selectedMeetupId}
+                userId={userIdNum}
+                startTime={startTimeMs}
+                endTime={endTimeMs}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -354,5 +365,55 @@ export default function LocationHistoryPage() {
         </Card>
       )}
     </div>
+  );
+}
+
+function CsvDownloadButton({ meetupId, userId, startTime, endTime }: {
+  meetupId: number;
+  userId?: number;
+  startTime?: number;
+  endTime?: number;
+}) {
+  const exportMut = trpc.locationExport.exportCsv.useMutation();
+
+  const handleDownload = async () => {
+    try {
+      const result = await exportMut.mutateAsync({ meetupId, userId, startTime, endTime });
+      if (result.count === 0) {
+        toast.info("내보낼 이력 데이터가 없습니다.");
+        return;
+      }
+      // CSV 파일 다운로드
+      const blob = new Blob([result.csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const now = new Date().toISOString().slice(0, 10);
+      a.download = `location-history-meetup${meetupId}${userId ? `-user${userId}` : ""}-${now}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`${result.count}건의 이력 데이터를 CSV로 다운로드했습니다.`);
+    } catch (err: any) {
+      toast.error(err.message || "CSV 내보내기에 실패했습니다.");
+    }
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleDownload}
+      disabled={exportMut.isPending}
+      className="mt-4"
+    >
+      {exportMut.isPending ? (
+        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+      ) : (
+        <Download className="h-4 w-4 mr-1" />
+      )}
+      CSV 다운로드
+    </Button>
   );
 }

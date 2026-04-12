@@ -7894,6 +7894,21 @@ Return ONLY valid JSON.`,
                   const userName = ctx.user.name || 'Unknown';
                   const { notifyOwner } = await import("./_core/notification");
                   await notifyOwner({ title: `[지오펜스] ${userName} 도착`, content: `${userName}님이 "${fence.name}" 영역에 도착했습니다.` });
+                  // 웹 푸시 알림 발송
+                  try {
+                    const webpush = require("web-push");
+                    const vPub = process.env.VAPID_PUBLIC_KEY || "";
+                    const vPri = process.env.VAPID_PRIVATE_KEY || "";
+                    if (vPub && vPri) {
+                      webpush.setVapidDetails("mailto:admin@meetup-travel.1page.to", vPub, vPri);
+                      const adminSubs = await db.getAdminPushSubscriptions();
+                      for (const sub of adminSubs) {
+                        try {
+                          await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, JSON.stringify({ title: `📍 ${userName} 도착`, body: `${userName}님이 "${fence.name}" 영역에 도착했습니다.`, icon: "/favicon.ico" }));
+                        } catch (pe: any) { if (pe.statusCode === 410 || pe.statusCode === 404) await db.deletePushSubscription(sub.endpoint); }
+                      }
+                    }
+                  } catch (_pushErr) {}
                 } catch (_) {}
               } else if (!isInside && wasInside && fence.notifyOnExit) {
                 await db.createGeofenceEvent({
@@ -7908,6 +7923,21 @@ Return ONLY valid JSON.`,
                   const userName = ctx.user.name || 'Unknown';
                   const { notifyOwner } = await import("./_core/notification");
                   await notifyOwner({ title: `[지오펜스] ${userName} 이탈`, content: `${userName}님이 "${fence.name}" 영역에서 이탈했습니다.` });
+                  // 웹 푸시 알림 발송
+                  try {
+                    const webpush = require("web-push");
+                    const vPub = process.env.VAPID_PUBLIC_KEY || "";
+                    const vPri = process.env.VAPID_PRIVATE_KEY || "";
+                    if (vPub && vPri) {
+                      webpush.setVapidDetails("mailto:admin@meetup-travel.1page.to", vPub, vPri);
+                      const adminSubs = await db.getAdminPushSubscriptions();
+                      for (const sub of adminSubs) {
+                        try {
+                          await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, JSON.stringify({ title: `🚨 ${userName} 이탈`, body: `${userName}님이 "${fence.name}" 영역에서 이탈했습니다.`, icon: "/favicon.ico" }));
+                        } catch (pe: any) { if (pe.statusCode === 410 || pe.statusCode === 404) await db.deletePushSubscription(sub.endpoint); }
+                      }
+                    }
+                  } catch (_pushErr) {}
                 } catch (_) {}
               }
             }
@@ -8168,6 +8198,67 @@ Return ONLY valid JSON.`,
           speed: h.speed ? Number(h.speed) : null,
           createdAt: h.createdAt,
         }));
+      }),
+  }),
+
+  // ── Push Notifications ─────────────────────────────────────────────
+  pushNotification: router({
+    getVapidPublicKey: publicProcedure.query(() => {
+      return { publicKey: process.env.VAPID_PUBLIC_KEY || "" };
+    }),
+    subscribe: protectedProcedure
+      .input(z.object({ endpoint: z.string(), p256dh: z.string(), auth: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await db.savePushSubscription({ userId: ctx.user.id, endpoint: input.endpoint, p256dh: input.p256dh, auth: input.auth });
+        return { success: !!result };
+      }),
+    unsubscribe: protectedProcedure
+      .input(z.object({ endpoint: z.string() }))
+      .mutation(async ({ input }) => {
+        await db.deletePushSubscription(input.endpoint);
+        return { success: true };
+      }),
+    getMySubscriptions: protectedProcedure.query(async ({ ctx }) => {
+      const subs = await db.getPushSubscriptionsByUserId(ctx.user.id);
+      return subs.map((s: any) => ({ id: s.id, endpoint: s.endpoint, createdAt: s.createdAt }));
+    }),
+    testPush: protectedProcedure.mutation(async ({ ctx }) => {
+      const webpush = require("web-push");
+      const vapidPublic = process.env.VAPID_PUBLIC_KEY || "";
+      const vapidPrivate = process.env.VAPID_PRIVATE_KEY || "";
+      if (!vapidPublic || !vapidPrivate) return { success: false, error: "VAPID keys not configured" };
+      webpush.setVapidDetails("mailto:admin@meetup-travel.1page.to", vapidPublic, vapidPrivate);
+      const subs = await db.getPushSubscriptionsByUserId(ctx.user.id);
+      let sent = 0;
+      for (const sub of subs) {
+        try {
+          await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, JSON.stringify({ title: "푸시 알림 테스트", body: "웹 푸시 알림이 정상적으로 동작합니다!", icon: "/favicon.ico" }));
+          sent++;
+        } catch (e: any) {
+          if (e.statusCode === 410 || e.statusCode === 404) await db.deletePushSubscription(sub.endpoint);
+        }
+      }
+      return { success: true, sent };
+    }),
+  }),
+
+  // ── Location History CSV Export ──────────────────────────────────
+  locationExport: router({
+    exportCsv: protectedProcedure
+      .input(z.object({ meetupId: z.number(), userId: z.number().optional(), startTime: z.number().optional(), endTime: z.number().optional() }))
+      .mutation(async ({ input }) => {
+        const history = await db.getLocationHistoryForExport(input.meetupId, {
+          userId: input.userId,
+          startTime: input.startTime ? new Date(input.startTime) : undefined,
+          endTime: input.endTime ? new Date(input.endTime) : undefined,
+        });
+        const header = "사용자ID,사용자명,위도,경도,정확도(m),속도(m/s),방향,시간";
+        const rows = history.map((h: any) => {
+          const time = h.createdAt ? new Date(h.createdAt).toISOString() : "";
+          return [h.userId, (h.userName || "").replace(/,/g, " "), Number(h.latitude).toFixed(7), Number(h.longitude).toFixed(7), h.accuracy ? Number(h.accuracy).toFixed(2) : "", h.speed ? Number(h.speed).toFixed(2) : "", h.heading ? Number(h.heading).toFixed(2) : "", time].join(",");
+        });
+        const csv = "\uFEFF" + header + "\n" + rows.join("\n");
+        return { csv, count: history.length };
       }),
   }),
 });

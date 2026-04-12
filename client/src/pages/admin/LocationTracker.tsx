@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MeetupLocationTracker } from "@/components/LiveLocationMap";
 import { Navigation, MapPin, Users, AlertCircle } from "lucide-react";
+import { PushNotificationToggle } from "@/components/PushNotificationToggle";
 
 export default function AdminLocationTracker() {
   const { user } = useAuth();
@@ -52,6 +53,13 @@ export default function AdminLocationTracker() {
           총 {totalActive}명 활성
         </Badge>
       </div>
+
+      {/* 푸시 알림 설정 */}
+      <Card>
+        <CardContent className="p-4">
+          <PushNotificationToggle />
+        </CardContent>
+      </Card>
 
       {/* 통계 카드 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

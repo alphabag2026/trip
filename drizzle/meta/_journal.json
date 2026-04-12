@@ -281,6 +281,13 @@
       "when": 1775998214989,
       "tag": "0039_petite_proemial_gods",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "5",
+      "when": 1776000450557,
+      "tag": "0040_dazzling_rockslide",
+      "breakpoints": true
     }
   ]
 }

@@ -1973,3 +1973,15 @@ export const locationHistory = mysqlTable("location_history", {
 
 export type LocationHistory = typeof locationHistory.$inferSelect;
 export type InsertLocationHistory = typeof locationHistory.$inferInsert;
+
+// ── 웹 푸시 구독 ─────────────────────────────────────────────
+export const pushSubscriptions = mysqlTable("push_subscriptions", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  endpoint: text("endpoint").notNull(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type PushSubscriptionRow = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscriptionRow = typeof pushSubscriptions.$inferInsert;

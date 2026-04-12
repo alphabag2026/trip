@@ -2049,4 +2049,25 @@
 - [x] 사용자 검색 API vitest 테스트 (포함)
 
 ### 프로덕션 배포
-- [ ] AWS Lightsail 서버 배포
+- [x] AWS Lightsail 서버 배포 (meetup-travel.1page.to, 포트 3032)
+
+## v6.3 - 웹 푸시 알림 + 위치 이력 CSV 다운로드
+
+### 1. 웹 푸시 알림 (관리자 모바일 즉시 알림)
+- [x] DB 스키마: push_subscriptions 테이블 (사용자, endpoint, keys, 생성일)
+- [x] 서버 API: pushNotification.subscribe - 푸시 구독 등록
+- [x] 서버 API: pushNotification.unsubscribe - 푸시 구독 해제
+- [x] 서버 API: pushNotification.send - 웹 푸시 발송 (web-push 라이브러리)
+- [x] 지오펜싱 진입/이탈 시 관리자에게 웹 푸시 자동 발송
+- [x] Service Worker 등록 (push 이벤트 수신)
+- [x] 프론트엔드: 관리자 대시보드에 푸시 알림 구독/해제 토글 UI
+
+### 2. 위치 이력 CSV 다운로드
+- [x] 서버 API: locationExport.exportCsv - 참가자 이동 경로 CSV 생성
+- [x] 프론트엔드: 위치 이력 페이지에 CSV 다운로드 버튼 추가
+- [x] CSV 포맷: ID, UserID, Latitude, Longitude, Accuracy, Altitude, Heading, Speed, Timestamp
+
+### 테스트 & 배포
+- [x] vitest 테스트 작성 (11건 통과)
+- [ ] 체크포인트 저장
+- [ ] AWS Lightsail 프로덕션 배포

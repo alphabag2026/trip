@@ -64,6 +64,7 @@ import {
   geofences, InsertGeofence,
   geofenceEvents, InsertGeofenceEvent,
   locationHistory, InsertLocationHistory,
+  pushSubscriptions, InsertPushSubscriptionRow,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -3379,4 +3380,66 @@ export async function searchActiveLocationsByName(searchTerm: string, roomId?: n
     .orderBy(desc(userLocations.updatedAt));
 
   return locations;
+}
+
+
+// ── Push Subscriptions ─────────────────────────────────────
+export async function savePushSubscription(data: { userId: number; endpoint: string; p256dh: string; auth: string }) {
+  const db = await getDb();
+  if (!db) return null;
+  // 기존 동일 endpoint 삭제 후 새로 저장
+  await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, data.endpoint));
+  const [result] = await db.insert(pushSubscriptions).values(data).$returningId();
+  return result;
+}
+
+export async function deletePushSubscription(endpoint: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+}
+
+export async function getPushSubscriptionsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
+}
+
+export async function getAdminPushSubscriptions() {
+  const db = await getDb();
+  if (!db) return [];
+  // 관리자 역할 사용자의 푸시 구독 조회
+  return db.select({
+    id: pushSubscriptions.id,
+    userId: pushSubscriptions.userId,
+    endpoint: pushSubscriptions.endpoint,
+    p256dh: pushSubscriptions.p256dh,
+    auth: pushSubscriptions.auth,
+  }).from(pushSubscriptions)
+    .innerJoin(users, eq(pushSubscriptions.userId, users.id))
+    .where(or(eq(users.role, "admin"), eq(users.role, "superadmin")));
+}
+
+export async function getLocationHistoryForExport(meetupId: number, opts?: { userId?: number; startTime?: Date; endTime?: Date }) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions: any[] = [eq(locationHistory.meetupId, meetupId)];
+  if (opts?.userId) conditions.push(eq(locationHistory.userId, opts.userId));
+  if (opts?.startTime) conditions.push(gte(locationHistory.createdAt, opts.startTime));
+  if (opts?.endTime) conditions.push(lte(locationHistory.createdAt, opts.endTime));
+  
+  return db.select({
+    id: locationHistory.id,
+    userId: locationHistory.userId,
+    userName: users.name,
+    latitude: locationHistory.latitude,
+    longitude: locationHistory.longitude,
+    accuracy: locationHistory.accuracy,
+    speed: locationHistory.speed,
+    heading: locationHistory.heading,
+    createdAt: locationHistory.createdAt,
+  }).from(locationHistory)
+    .leftJoin(users, eq(locationHistory.userId, users.id))
+    .where(and(...conditions))
+    .orderBy(asc(locationHistory.createdAt));
 }
