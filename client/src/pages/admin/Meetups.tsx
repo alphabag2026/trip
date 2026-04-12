@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, MapPin, Calendar, Luggage, Edit, Sparkles, Loader2, Wand2, CheckCircle2, Globe, Copy, Link2, Share2, ExternalLink, QrCode, Download, Pencil, Users, XCircle, Megaphone, AlertTriangle, CopyPlus, MessageCircle, Send } from "lucide-react";
+import { Plus, Trash2, MapPin, Calendar, Luggage, Edit, Sparkles, Loader2, Wand2, CheckCircle2, Globe, Copy, Link2, Share2, ExternalLink, QrCode, Download, Pencil, Users, XCircle, Megaphone, AlertTriangle, CopyPlus, MessageCircle, Send, LayoutGrid, List, ChevronDown, ChevronUp, Search, Filter } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -54,6 +55,16 @@ export default function AdminMeetups() {
   const [cloneForm, setCloneForm] = useState({ title: "", scheduleStart: "", scheduleEnd: "" });
   // SNS 공유 팝업 상태
   const [shareMeetup, setShareMeetup] = useState<any>(null);
+  // 뷰 모드 상태 (card: 상세보기, compact: 간단히 보기)
+  const [viewMode, setViewMode] = useState<"card" | "compact">(() => {
+    return (localStorage.getItem("meetup-view-mode") as "card" | "compact") || "card";
+  });
+  // 검색/필터 상태
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  // 정렬 상태
+  const [sortField, setSortField] = useState<"title" | "date" | "status" | "location">("date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   // AI 프롬프트 상태
   const [aiPrompt, setAiPrompt] = useState("");
@@ -150,15 +161,220 @@ export default function AdminMeetups() {
     setShowCreate(true);
   };
 
+  const toggleViewMode = (mode: "card" | "compact") => {
+    setViewMode(mode);
+    localStorage.setItem("meetup-view-mode", mode);
+  };
+
+  // 필터링 + 정렬 로직
+  const filteredMeetups = useMemo(() => {
+    if (!meetups) return [];
+    let list = [...meetups];
+    // 상태 필터
+    if (statusFilter !== "all") {
+      list = list.filter((m: any) => m.status === statusFilter);
+    }
+    // 검색
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter((m: any) =>
+        (m.title || "").toLowerCase().includes(q) ||
+        (m.location || "").toLowerCase().includes(q) ||
+        (m.projectCode || "").toLowerCase().includes(q) ||
+        (m.destinationCountry || "").toLowerCase().includes(q)
+      );
+    }
+    // 정렬
+    list.sort((a: any, b: any) => {
+      let cmp = 0;
+      if (sortField === "title") cmp = (a.title || "").localeCompare(b.title || "");
+      else if (sortField === "date") cmp = new Date(a.scheduleStart || 0).getTime() - new Date(b.scheduleStart || 0).getTime();
+      else if (sortField === "status") cmp = (a.status || "").localeCompare(b.status || "");
+      else if (sortField === "location") cmp = (a.location || "").localeCompare(b.location || "");
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return list;
+  }, [meetups, statusFilter, searchQuery, sortField, sortDir]);
+
+  const handleSort = (field: typeof sortField) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+
+  const SortIcon = ({ field }: { field: typeof sortField }) => {
+    if (sortField !== field) return <ChevronDown className="h-3 w-3 opacity-30" />;
+    return sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />;
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* 헤더: 제목 + 뷰 토글 + 새 밋업 */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{t("admin.meetups.title")}</h1>
-        <Button onClick={handleOpenCreate}><Plus className="h-4 w-4 mr-2" />{t("admin.meetups.t1", "새 밋업")}</Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center border border-border rounded-lg overflow-hidden">
+            <button
+              className={`p-1.5 transition-colors ${viewMode === "card" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              onClick={() => toggleViewMode("card")}
+              title="상세 보기"
+            ><LayoutGrid className="h-4 w-4" /></button>
+            <button
+              className={`p-1.5 transition-colors ${viewMode === "compact" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              onClick={() => toggleViewMode("compact")}
+              title="간단히 보기"
+            ><List className="h-4 w-4" /></button>
+          </div>
+          <Button onClick={handleOpenCreate}><Plus className="h-4 w-4 mr-2" />{t("admin.meetups.t1", "새 밋업")}</Button>
+        </div>
       </div>
 
+      {/* 검색 + 필터 바 */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="밋업 검색 (제목, 장소, 코드)..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-9 h-8 text-sm"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-8 w-[120px] text-xs">
+            <Filter className="h-3 w-3 mr-1" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">전체</SelectItem>
+            <SelectItem value="draft">초안</SelectItem>
+            <SelectItem value="open">모집중</SelectItem>
+            <SelectItem value="closed">마감</SelectItem>
+            <SelectItem value="completed">완료</SelectItem>
+            <SelectItem value="cancelled">취소됨</SelectItem>
+          </SelectContent>
+        </Select>
+        <span className="text-xs text-muted-foreground">
+          {filteredMeetups.length}개{meetups && filteredMeetups.length !== meetups.length ? ` / 전체 ${meetups.length}개` : ""}
+        </span>
+      </div>
+
+      {/* 컴팩트 뷰 (테이블 형태) */}
+      {viewMode === "compact" ? (
+        <div className="border border-border rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="w-[40px] text-center">#</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("title")}>
+                  <span className="flex items-center gap-1">제목 <SortIcon field="title" /></span>
+                </TableHead>
+                <TableHead className="cursor-pointer select-none w-[100px]" onClick={() => handleSort("location")}>
+                  <span className="flex items-center gap-1">장소 <SortIcon field="location" /></span>
+                </TableHead>
+                <TableHead className="w-[70px]">유형</TableHead>
+                <TableHead className="cursor-pointer select-none w-[90px]" onClick={() => handleSort("date")}>
+                  <span className="flex items-center gap-1">일정 <SortIcon field="date" /></span>
+                </TableHead>
+                <TableHead className="cursor-pointer select-none w-[80px]" onClick={() => handleSort("status")}>
+                  <span className="flex items-center gap-1">상태 <SortIcon field="status" /></span>
+                </TableHead>
+                <TableHead className="w-[60px] text-center">코드</TableHead>
+                <TableHead className="w-[120px] text-right">액션</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredMeetups.map((m: any, idx: number) => (
+                <TableRow
+                  key={m.id}
+                  className={`hover:bg-muted/30 transition-colors ${m.status === "cancelled" ? "opacity-50" : ""}`}
+                >
+                  <TableCell className="text-center text-xs text-muted-foreground">{idx + 1}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`font-medium text-sm truncate max-w-[250px] ${m.status === "cancelled" ? "line-through text-muted-foreground" : ""}`}>
+                        {m.title}
+                      </span>
+                      {m.locationType === "overseas" && (
+                        <span className="text-[10px] px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-500 shrink-0">해외</span>
+                      )}
+                      {m.invitedCountries && Array.isArray(m.invitedCountries) && (m.invitedCountries as string[]).length > 0 && (
+                        <span className="flex items-center gap-0.5 shrink-0">
+                          {(m.invitedCountries as string[]).slice(0, 3).map((code: string) => (
+                            <span key={code} className="text-xs">{COUNTRY_FLAGS[code] || code}</span>
+                          ))}
+                          {(m.invitedCountries as string[]).length > 3 && <span className="text-[10px] text-muted-foreground">+{(m.invitedCountries as string[]).length - 3}</span>}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground truncate max-w-[100px]">{m.location || "-"}</TableCell>
+                  <TableCell>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary">{typeLabels[m.type] || m.type}</span>
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                    {m.scheduleStart ? new Date(m.scheduleStart).toLocaleDateString("ko-KR", { month: "short", day: "numeric" }) : "-"}
+                    {m.scheduleEnd && <span className="text-muted-foreground/50">~{new Date(m.scheduleEnd).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}</span>}
+                  </TableCell>
+                  <TableCell>
+                    <Select value={m.status} onValueChange={v => updateMutation.mutate({ id: m.id, status: v as any })}>
+                      <SelectTrigger className="h-6 w-[75px] text-[10px] px-1.5">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">초안</SelectItem>
+                        <SelectItem value="open">모집중</SelectItem>
+                        <SelectItem value="closed">마감</SelectItem>
+                        <SelectItem value="completed">완료</SelectItem>
+                        <SelectItem value="cancelled">취소됨</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {m.projectCode ? (
+                      <span className="text-[10px] font-mono text-muted-foreground">#{m.projectCode?.toString().slice(0, 7)}</span>
+                    ) : "-"}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-0.5">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleOpenEdit(m)} title="수정">
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      {m.shareToken && (
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                          navigator.clipboard.writeText(`${window.location.origin}/m/${m.shareToken}`);
+                          toast.success("공유 URL 복사됨");
+                        }} title="URL 복사">
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      )}
+                      {m.shareToken && (
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => window.open(`/m/${m.shareToken}`, "_blank")} title="열기">
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => {
+                        if (confirm("삭제하시겠습니까?")) deleteMutation.mutate({ id: m.id });
+                      }} title="삭제">
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filteredMeetups.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    {searchQuery || statusFilter !== "all" ? "검색 결과가 없습니다" : t("admin.meetups.empty")}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+      /* 상세 보기 (기존 카드 뷰) */
       <div className="grid gap-4">
-        {meetups?.map((m: any) => (
+        {filteredMeetups.map((m: any) => (
           <Card key={m.id} className={`bg-card border-border ${m.status === "cancelled" ? "opacity-60" : ""}`}>
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
@@ -286,10 +502,13 @@ export default function AdminMeetups() {
             </CardContent>
           </Card>
         ))}
-        {(!meetups || meetups.length === 0) && (
-          <div className="text-center py-12 text-muted-foreground">{t("admin.meetups.empty")}</div>
+        {filteredMeetups.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            {searchQuery || statusFilter !== "all" ? "검색 결과가 없습니다" : t("admin.meetups.empty")}
+          </div>
         )}
       </div>
+      )}
 
       {/* Create Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
