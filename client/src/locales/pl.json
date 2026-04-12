@@ -925,7 +925,9 @@
       "telegramUploads": "Telegram Uploads",
       "travelInfo": "Informacje podróżne",
       "vouchers": "Vouchery",
-      "2faSettings": "2FA Settings"
+      "2faSettings": "2FA Settings",
+      "locationTracker": "Śledzenie lokalizacji",
+      "meetupSchedules": "Schedule Management"
     },
     "survey": {
       "addQuestion": "Add Question",

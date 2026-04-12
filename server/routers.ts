@@ -7821,6 +7821,114 @@ Return ONLY valid JSON.`,
         return allRsvps.filter(r => r.registrationId === input.registrationId);
       }),
   }),
+  // ── Live Location (실시간 위치 공유) ──────────────────────────
+  liveLocation: router({
+    // 위치 업데이트 (참가자가 주기적으로 호출)
+    update: protectedProcedure
+      .input(z.object({
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        accuracy: z.number().optional(),
+        heading: z.number().optional(),
+        speed: z.number().optional(),
+        altitude: z.number().optional(),
+        meetupId: z.number().optional(),
+        roomId: z.number().optional(),
+        shareType: z.enum(["room", "meetup", "both"]).optional(),
+        batteryLevel: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await db.upsertUserLocation({
+          userId: ctx.user.id,
+          latitude: String(input.latitude),
+          longitude: String(input.longitude),
+          accuracy: input.accuracy ? String(input.accuracy) : null,
+          heading: input.heading ? String(input.heading) : null,
+          speed: input.speed ? String(input.speed) : null,
+          altitude: input.altitude ? String(input.altitude) : null,
+          meetupId: input.meetupId || null,
+          roomId: input.roomId || null,
+          shareType: input.shareType || "both",
+          batteryLevel: input.batteryLevel || null,
+          isSharing: true,
+        });
+        return { success: true };
+      }),
+
+    // 위치 공유 중지
+    stopSharing: protectedProcedure
+      .input(z.object({ roomId: z.number().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        if (input.roomId) {
+          await db.stopSharingLocationInChatRoom(ctx.user.id, input.roomId);
+        } else {
+          await db.stopSharingLocation(ctx.user.id);
+        }
+        return { success: true };
+      }),
+
+    // 내 위치 조회
+    myLocation: protectedProcedure.query(async ({ ctx }) => {
+      return db.getUserLocation(ctx.user.id);
+    }),
+
+    // 채팅방 참여자들의 실시간 위치 조회
+    getChatRoomLocations: protectedProcedure
+      .input(z.object({ roomId: z.number() }))
+      .query(async ({ input }) => {
+        const locations = await db.getActiveLocationsByChatRoom(input.roomId);
+        return locations.map(loc => ({
+          userId: loc.userId,
+          latitude: Number(loc.latitude),
+          longitude: Number(loc.longitude),
+          accuracy: loc.accuracy ? Number(loc.accuracy) : null,
+          heading: loc.heading ? Number(loc.heading) : null,
+          speed: loc.speed ? Number(loc.speed) : null,
+          shareType: loc.shareType,
+          batteryLevel: loc.batteryLevel,
+          updatedAt: loc.updatedAt,
+        }));
+      }),
+
+    // 밋업 전체 참가자 위치 조회 (관리자용)
+    getMeetupLocations: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        const locations = await db.getActiveLocationsByMeetup(input.meetupId);
+        return locations.map(loc => ({
+          userId: loc.userId,
+          latitude: Number(loc.latitude),
+          longitude: Number(loc.longitude),
+          accuracy: loc.accuracy ? Number(loc.accuracy) : null,
+          heading: loc.heading ? Number(loc.heading) : null,
+          speed: loc.speed ? Number(loc.speed) : null,
+          altitude: loc.altitude ? Number(loc.altitude) : null,
+          shareType: loc.shareType,
+          batteryLevel: loc.batteryLevel,
+          meetupId: loc.meetupId,
+          roomId: loc.roomId,
+          updatedAt: loc.updatedAt,
+        }));
+      }),
+
+    // 전체 활성 위치 조회 (슈퍼관리자용)
+    getAllActiveLocations: protectedProcedure.query(async () => {
+      const locations = await db.getAllActiveLocations();
+      return locations.map(loc => ({
+        userId: loc.userId,
+        latitude: Number(loc.latitude),
+        longitude: Number(loc.longitude),
+        accuracy: loc.accuracy ? Number(loc.accuracy) : null,
+        heading: loc.heading ? Number(loc.heading) : null,
+        speed: loc.speed ? Number(loc.speed) : null,
+        shareType: loc.shareType,
+        batteryLevel: loc.batteryLevel,
+        meetupId: loc.meetupId,
+        roomId: loc.roomId,
+        updatedAt: loc.updatedAt,
+      }));
+    }),
+  }),
 });
 // ── LLM 여행정보 파싱 헬퍼 ───────────────────────────────────
 async function parseTravelInfoWithLLM(text: string, fileType: string) {

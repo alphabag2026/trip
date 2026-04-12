@@ -267,6 +267,13 @@
       "when": 1775965676521,
       "tag": "0037_wild_master_mold",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "5",
+      "when": 1775996666554,
+      "tag": "0038_groovy_terrax",
+      "breakpoints": true
     }
   ]
 }

@@ -925,7 +925,9 @@
       "telegramUploads": "Telegram Uploads",
       "travelInfo": "ข้อมูลการเดินทาง",
       "vouchers": "บัตรกำนัล",
-      "2faSettings": "2FA Settings"
+      "2faSettings": "2FA Settings",
+      "locationTracker": "ติดตามตำแหน่งแบบเรียลไทม์",
+      "meetupSchedules": "Schedule Management"
     },
     "survey": {
       "addQuestion": "Add Question",

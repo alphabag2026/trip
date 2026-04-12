@@ -1896,3 +1896,26 @@ export const scheduleRsvps = mysqlTable("schedule_rsvps", {
 
 export type ScheduleRsvp = typeof scheduleRsvps.$inferSelect;
 export type InsertScheduleRsvp = typeof scheduleRsvps.$inferInsert;
+
+// ── User Locations (실시간 위치 공유) ──────────────────────
+export const userLocations = mysqlTable("user_locations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  meetupId: int("meetupId"),
+  roomId: int("roomId"), // 채팅방 위치 공유 시
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  accuracy: decimal("accuracy", { precision: 8, scale: 2 }), // 미터 단위
+  altitude: decimal("altitude", { precision: 10, scale: 2 }),
+  heading: decimal("heading", { precision: 6, scale: 2 }), // 방향 (도)
+  speed: decimal("speed", { precision: 8, scale: 2 }), // m/s
+  isSharing: boolean("isSharing").default(true).notNull(),
+  shareType: mysqlEnum("shareType", ["room", "meetup", "both"]).default("both").notNull(),
+  batteryLevel: int("batteryLevel"), // 배터리 잔량 (%)
+  lastActiveAt: timestamp("lastActiveAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserLocation = typeof userLocations.$inferSelect;
+export type InsertUserLocation = typeof userLocations.$inferInsert;

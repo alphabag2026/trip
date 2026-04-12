@@ -1468,7 +1468,9 @@
       "2faSettings": "两步验证设置",
       "adBanners": "广告横幅",
       "attendeeDashboard": "参与者仪表板",
-      "invitation": "邀请函生成"
+      "invitation": "邀请函生成",
+      "locationTracker": "实时位置追踪",
+      "meetupSchedules": "Schedule Management"
     },
     "survey": {
       "addQuestion": "Add Question",

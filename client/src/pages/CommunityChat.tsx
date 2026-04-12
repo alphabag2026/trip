@@ -16,13 +16,14 @@ import {
   Image, MoreVertical, LogOut, Trash2, Reply, MapPin, Phone, Video, Globe,
   Paperclip, X, Play, Mic, MicOff, VideoOff, PhoneOff, Languages, Camera,
   UserPlus, Settings, Volume2, FileText, Pin, PinOff, GalleryHorizontalEnd, Download,
-  Grid3X3, Film, File,
+  Grid3X3, Film, File, Navigation,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useParams, useLocation } from "wouter";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "react-i18next";
+import { ChatRoomLocationMap } from "@/components/LiveLocationMap";
 
 // ── 상수 ──────────────────────────────────────────────
 const ROOM_TYPE_MAP: Record<string, { label: string; icon: any; color: string }> = {
@@ -1064,6 +1065,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const [myLang, setMyLang] = useState("ko");
   const [activeCall, setActiveCall] = useState<{ callId: string; callType: "voice" | "video"; callerName: string; isOutgoing: boolean } | null>(null);
   const [groupCall, setGroupCall] = useState<{ callId: string; callType: "voice" | "video" } | null>(null);
+  const [showLiveLocationMap, setShowLiveLocationMap] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1418,6 +1420,17 @@ function ChatRoomView({ roomId }: { roomId: number }) {
       {/* 위치 공유 다이얼로그 */}
       <LocationShareDialog open={showLocationDialog} onClose={() => setShowLocationDialog(false)} onSend={handleLocationSend} />
 
+      {/* 실시간 위치 공유 지도 */}
+      {showLiveLocationMap && (
+        <div className="absolute inset-0 z-50 bg-background">
+          <ChatRoomLocationMap
+            roomId={roomId}
+            members={members?.map((m: any) => ({ id: m.userId, name: m.userName, displayName: m.displayName || m.userName }))}
+            onClose={() => setShowLiveLocationMap(false)}
+          />
+        </div>
+      )}
+
       {/* 미디어 갤러리 Sheet */}
       <Sheet open={showMediaGallery} onOpenChange={setShowMediaGallery}>
         <SheetContent side="right" className="w-full sm:max-w-md p-0">
@@ -1568,6 +1581,9 @@ function ChatRoomView({ roomId }: { roomId: number }) {
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setShowLocationDialog(true)}>
                 <MapPin className="h-4 w-4 mr-2" /> {t("communityChat.t61", "위치 공유")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowLiveLocationMap(true)}>
+                <Navigation className="h-4 w-4 mr-2" /> {t("communityChat.t92", "실시간 위치 지도")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -925,7 +925,9 @@
       "telegramUploads": "Telegram Uploads",
       "travelInfo": "旅行情報",
       "vouchers": "バウチャー",
-      "2faSettings": "2段階認証設定"
+      "2faSettings": "2段階認証設定",
+      "locationTracker": "リアルタイム位置追跡",
+      "meetupSchedules": "Schedule Management"
     },
     "survey": {
       "addQuestion": "Add Question",

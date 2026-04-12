@@ -1468,7 +1468,9 @@
       "adBanners": "광고 배너 관리",
       "2faSettings": "2차 인증 설정",
       "attendeeDashboard": "참가자 대시보드",
-      "invitation": "초대장 생성"
+      "invitation": "초대장 생성",
+      "locationTracker": "실시간 위치 추적",
+      "meetupSchedules": "일정 관리"
     },
     "survey": {
       "addQuestion": "질문 추가",

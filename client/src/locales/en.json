@@ -1468,7 +1468,9 @@
       "adBanners": "Ad Banners",
       "2faSettings": "2FA Settings",
       "attendeeDashboard": "Attendee Dashboard",
-      "invitation": "Invitation Generator"
+      "invitation": "Invitation Generator",
+      "locationTracker": "Location Tracker",
+      "meetupSchedules": "Schedule Management"
     },
     "survey": {
       "addQuestion": "Add Question",

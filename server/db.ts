@@ -60,6 +60,7 @@ import {
   meetupSchedules, InsertMeetupSchedule,
   scheduleReminders, InsertScheduleReminder,
   scheduleRsvps, InsertScheduleRsvp,
+  userLocations, InsertUserLocation,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -3156,4 +3157,79 @@ export async function upsertScheduleRsvp(data: InsertScheduleRsvp) {
 export async function getMeetupRsvpSummary(meetupId: number) {
   const db = await getDb(); if (!db) return [];
   return db.select().from(scheduleRsvps).where(eq(scheduleRsvps.meetupId, meetupId));
+}
+
+// ── User Locations (실시간 위치 공유) ──────────────────────
+export async function upsertUserLocation(data: InsertUserLocation) {
+  const db = await getDb(); if (!db) return;
+  await db.insert(userLocations).values(data).onDuplicateKeyUpdate({
+    set: {
+      latitude: data.latitude,
+      longitude: data.longitude,
+      accuracy: data.accuracy,
+      heading: data.heading,
+      speed: data.speed,
+      altitude: data.altitude,
+      isSharing: data.isSharing,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+export async function getUserLocation(userId: number) {
+  const db = await getDb(); if (!db) return null;
+  const rows = await db.select().from(userLocations).where(eq(userLocations.userId, userId)).limit(1);
+  return rows[0] || null;
+}
+
+export async function getActiveLocationsByMeetup(meetupId: number) {
+  const db = await getDb(); if (!db) return [];
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+  return db.select().from(userLocations)
+    .where(and(
+      eq(userLocations.meetupId, meetupId),
+      eq(userLocations.isSharing, true),
+      gte(userLocations.updatedAt, fiveMinAgo),
+    ))
+    .orderBy(desc(userLocations.updatedAt));
+}
+
+export async function getActiveLocationsByChatRoom(chatRoomId: number) {
+  const db = await getDb(); if (!db) return [];
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+  return db.select().from(userLocations)
+    .where(and(
+      eq(userLocations.roomId, chatRoomId),
+      eq(userLocations.isSharing, true),
+      gte(userLocations.updatedAt, fiveMinAgo),
+    ))
+    .orderBy(desc(userLocations.updatedAt));
+}
+
+export async function getAllActiveLocations() {
+  const db = await getDb(); if (!db) return [];
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+  return db.select().from(userLocations)
+    .where(and(
+      eq(userLocations.isSharing, true),
+      gte(userLocations.updatedAt, fiveMinAgo),
+    ))
+    .orderBy(desc(userLocations.updatedAt));
+}
+
+export async function stopSharingLocation(userId: number) {
+  const db = await getDb(); if (!db) return;
+  await db.update(userLocations)
+    .set({ isSharing: false, updatedAt: new Date() })
+    .where(eq(userLocations.userId, userId));
+}
+
+export async function stopSharingLocationInChatRoom(userId: number, chatRoomId: number) {
+  const db = await getDb(); if (!db) return;
+  await db.update(userLocations)
+    .set({ isSharing: false, updatedAt: new Date() })
+    .where(and(
+      eq(userLocations.userId, userId),
+      eq(userLocations.roomId, chatRoomId),
+    ));
 }

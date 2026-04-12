@@ -1933,3 +1933,75 @@
 - [x] 버그: 구글로 회원가입 후 이메일 인증을 다시 요구하는 문제
 - [x] 소셜 로그인(구글/카카오) 사용자는 이메일 인증 건너뛰기 로직 적용
 - [ ] VPS 프로덕션 재배포
+
+## 프로덕션 서버 버그 수정 (2026-04-12)
+
+- [x] AI 챗봇 LLM API 404 에러 수정 (docker-compose.yml 환경변수 충돌 제거)
+- [x] passportList 프로시저 확인 (getByMeetup으로 정상 존재 - 테스트 오류)
+- [x] docker-compose.yml에서 .env.production과 충돌하는 환경변수 정리
+
+## v12.19 - WebRTC 그룹 영상통화
+
+### DB 스키마 (메모리 기반 시그널링 저장소로 구현 - 서버 최소화 방식)
+- [x] video_calls - globalThis.__webrtcSignals (메모리 기반, 60초 자동 정리)
+- [x] video_call_participants - globalThis.__groupCalls (메모리 기반, 5분 자동 정리)
+
+### 서버 - 시그널링 API (webrtc 라우터)
+- [x] 영상통화 시작 API (webrtc.initiateCall / webrtc.createGroupCall)
+- [x] 영상통화 참여 API (webrtc.joinGroupCall)
+- [x] 영상통화 종료 API (webrtc.endCall / webrtc.leaveGroupCall)
+- [x] 시그널링 메시지 교환 API (webrtc.sendOffer/sendAnswer/sendCandidate/addIceCandidate)
+- [x] 활성 통화 조회 API (webrtc.getActiveGroupCall)
+- [x] 참여자 목록 조회 API (webrtc.getGroupCallState)
+
+### 클라이언트 - WebRTC 컴포넌트 (CommunityChat.tsx)
+- [x] CallOverlay 컴포넌트 (1:1 음성/영상 통화 UI)
+- [x] GroupCallOverlay 컴포넌트 (그룹 영상/음성 통화 UI, Mesh 방식)
+- [x] WebRTC 피어 연결 관리 (mesh 토폴로지)
+- [x] 카메라/마이크 제어 (on/off 토글)
+- [ ] 화면 공유 기능 (향후 추가 가능)
+- [x] 참여자 그리드 레이아웃 (반응형)
+- [x] 통화 중 채팅 오버레이 (채팅방과 통합)
+
+### 채팅 UI 통합
+- [x] 채팅방에 영상통화 시작 버튼 추가 (1:1 + 그룹)
+- [x] 영상통화 수신 알림 (pollIncoming + confirm 다이얼로그)
+- [x] 통화 중 상태 표시 (활성 그룹 통화 배너)
+- [x] 다국어 번역 키 추가 (communityChat.t42~t97)
+
+### 테스트
+- [x] WebRTC 시그널링 API 프로덕션 curl 테스트 완료 (6/6 PASS)
+
+## v12.20 - 실시간 위치 공유
+
+### DB 스키마
+- [ ] user_locations 테이블 (userId, meetupId, lat, lng, accuracy, updatedAt, isSharing)
+
+### 서버 API (location 라우터)
+- [ ] location.updateMyLocation - 내 위치 업데이트
+- [ ] location.startSharing - 위치 공유 시작 (채팅방/밋업)
+- [ ] location.stopSharing - 위치 공유 중지
+- [ ] location.getRoomLocations - 채팅방 참여자 위치 조회
+- [ ] location.getMeetupLocations - 밋업 전체 참가자 위치 조회 (관리자)
+- [ ] location.getMyLocation - 내 현재 공유 상태 조회
+
+### 클라이언트 - 채팅방 위치 공유
+- [x] 채팅방 첨부 메뉴에 실시간 위치 지도 버튼 통합
+- [x] ChatRoomLocationMap 컴포넌트 (채팅방 내 지도 오버레이)
+- [x] 참여자 마커 표시 (이름, 프로필 사진)
+- [x] 위치 공유 상태 표시 (공유 중/중지)
+- [x] Geolocation API 연동 (주기적 위치 업데이트)
+
+### 관리자 - 참가자 위치 추적 대시보드
+- [x] LocationTracker 페이지 (admin/location-tracker)
+- [x] 밋업별 참가자 위치 지도 표시
+- [x] 참가자 클릭 시 상세 정보 표시
+- [x] 위치 공유 중인 참가자 수 카운트
+- [x] 사이드바 메뉴 추가
+
+### 채팅 UI 통합
+- [x] 채팅방 첨부 메뉴에 실시간 위치 지도 버튼 추가
+- [x] ChatRoomLocationMap 컴포넌트 (채팅방 내 위치 공유 오버레이)
+
+### 테스트
+- [x] 위치 공유 API vitest 테스트 (10건 통과)

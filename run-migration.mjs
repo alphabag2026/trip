@@ -3,7 +3,7 @@ import mysql from 'mysql2/promise';
 
 async function run() {
   const conn = await mysql.createConnection(process.env.DATABASE_URL);
-  const files = ['drizzle/0036_exotic_omega_red.sql', 'drizzle/0037_wild_master_mold.sql'];
+  const files = ['drizzle/0036_exotic_omega_red.sql', 'drizzle/0037_wild_master_mold.sql', 'drizzle/0038_groovy_terrax.sql'];
   for (const file of files) {
     if (!fs.existsSync(file)) { console.log(`Skipping ${file} (not found)`); continue; }
     const sql = fs.readFileSync(file, 'utf8');
