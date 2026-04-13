@@ -3443,3 +3443,68 @@ export async function getLocationHistoryForExport(meetupId: number, opts?: { use
     .where(and(...conditions))
     .orderBy(asc(locationHistory.createdAt));
 }
+
+// ── 특정 사용자 목록의 푸시 구독 조회 ──
+export async function getPushSubscriptionsByUserIds(userIds: number[]) {
+  const db = await getDb();
+  if (!db || userIds.length === 0) return [];
+  return db.select({
+    id: pushSubscriptions.id,
+    userId: pushSubscriptions.userId,
+    endpoint: pushSubscriptions.endpoint,
+    p256dh: pushSubscriptions.p256dh,
+    auth: pushSubscriptions.auth,
+  }).from(pushSubscriptions).where(inArray(pushSubscriptions.userId, userIds));
+}
+
+// ── 밋업 참가자의 푸시 구독 조회 ──
+export async function getPushSubscriptionsByMeetupId(meetupId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const regs = await db.select({ userId: registrations.userId }).from(registrations)
+    .where(and(eq(registrations.meetupId, meetupId), eq(registrations.status, "approved")));
+  const userIds = regs.map(r => r.userId).filter(Boolean) as number[];
+  if (userIds.length === 0) return [];
+  return db.select({
+    id: pushSubscriptions.id,
+    userId: pushSubscriptions.userId,
+    endpoint: pushSubscriptions.endpoint,
+    p256dh: pushSubscriptions.p256dh,
+    auth: pushSubscriptions.auth,
+  }).from(pushSubscriptions).where(inArray(pushSubscriptions.userId, userIds));
+}
+
+// ── 채팅방 멤버의 푸시 구독 조회 (발신자 제외) ──
+export async function getPushSubscriptionsByChatRoom(roomId: number, excludeUserId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const members = await db.select({ userId: chatRoomMembers.userId }).from(chatRoomMembers)
+    .where(eq(chatRoomMembers.roomId, roomId));
+  let userIds = members.map(m => m.userId).filter(Boolean) as number[];
+  if (excludeUserId) userIds = userIds.filter(id => id !== excludeUserId);
+  if (userIds.length === 0) return [];
+  return db.select({
+    id: pushSubscriptions.id,
+    userId: pushSubscriptions.userId,
+    endpoint: pushSubscriptions.endpoint,
+    p256dh: pushSubscriptions.p256dh,
+    auth: pushSubscriptions.auth,
+  }).from(pushSubscriptions).where(inArray(pushSubscriptions.userId, userIds));
+}
+
+// ── 히트맵용 위치 데이터 조회 (경량 - 위도/경도만) ──
+export async function getLocationHistoryForHeatmap(meetupId: number, opts?: { startTime?: Date; endTime?: Date }) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions: any[] = [eq(locationHistory.meetupId, meetupId)];
+  if (opts?.startTime) conditions.push(gte(locationHistory.createdAt, opts.startTime));
+  if (opts?.endTime) conditions.push(lte(locationHistory.createdAt, opts.endTime));
+  return db.select({
+    lat: locationHistory.latitude,
+    lng: locationHistory.longitude,
+    createdAt: locationHistory.createdAt,
+  }).from(locationHistory)
+    .where(and(...conditions))
+    .orderBy(desc(locationHistory.createdAt))
+    .limit(10000);
+}

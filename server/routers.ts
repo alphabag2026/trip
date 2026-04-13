@@ -16,6 +16,7 @@ import { sdk } from "./_core/sdk";
 import { sendEmail, buildVerificationEmail, buildPasswordResetEmail } from "./email";
 import { generateDemoHotels, generateDemoFlights } from "./demoTravelData";
 import { generateDemoRideOptions, generateDemoRestaurants, calculateDeliveryPricing, SUPPORTED_CITIES, FOOD_CATEGORIES } from "./demoRideDeliveryData";
+import { sendPushToAdmins, sendPushToUsers, sendPushToMeetupParticipants, sendPushToChatRoomMembers } from "./webPushHelper";
 import { mystiflyClient, cabinClassToMystifly, type MystiflyFlight, type MystiflyBookingParams } from "./mystiflyClient";
 import {
   generateFlightSearchLinks,
@@ -988,13 +989,30 @@ export const appRouter = router({
         if (data.actualDeparture) updateData.actualDeparture = new Date(data.actualDeparture);
         if (data.actualArrival) updateData.actualArrival = new Date(data.actualArrival);
         await db.updateFlightSchedule(id, updateData);
-        // Notify delay via telegram
+        // Notify delay via telegram + web push
         if (data.delayMinutes && data.delayMinutes > 0) {
           const flight = await db.getFlightScheduleById(id);
           if (flight && !flight.notifiedDelay) {
             await sendTelegram(`✈️ 항공편 지연 알림\n편명: ${flight.flightNo}\n지연: ${data.delayMinutes}분\n상태: ${data.flightStatus || flight.flightStatus}`);
             await db.updateFlightSchedule(id, { notifiedDelay: true });
+            // 웹 푸시 알림 - 관리자 + 밋업 참가자
+            try {
+              await sendPushToAdmins({ title: "✈️ 항공편 지연", body: `${flight.flightNo} - ${data.delayMinutes}분 지연`, tag: `flight-delay-${id}` });
+              if (flight.meetupId) {
+                await sendPushToMeetupParticipants(flight.meetupId, { title: "✈️ 항공편 지연 알림", body: `${flight.flightNo}편이 ${data.delayMinutes}분 지연되었습니다.`, tag: `flight-delay-${id}` });
+              }
+            } catch (_) {}
           }
+        }
+        // 항공편 취소 시 웹 푸시
+        if (data.flightStatus === "cancelled") {
+          const flight = await db.getFlightScheduleById(id);
+          try {
+            await sendPushToAdmins({ title: "🚫 항공편 취소", body: `${flight?.flightNo || ''}편이 취소되었습니다.`, tag: `flight-cancel-${id}` });
+            if (flight?.meetupId) {
+              await sendPushToMeetupParticipants(flight.meetupId, { title: "🚫 항공편 취소", body: `${flight.flightNo}편이 취소되었습니다. 관리자에게 문의하세요.`, tag: `flight-cancel-${id}` });
+            }
+          } catch (_) {}
         }
         return { success: true };
       }),
@@ -1207,11 +1225,27 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
+        // 기존 일정 조회 (변경 감지용)
+        const oldEvent = await db.getScheduleEventById(id);
         await db.updateScheduleEvent(id, {
           ...data,
           eventTime: data.eventTime ? new Date(data.eventTime) : undefined,
           endTime: data.endTime ? new Date(data.endTime) : undefined,
         });
+        // 일정 변경 시 웹 푸시 알림 (시간/장소 변경)
+        if (oldEvent && (data.eventTime || data.location)) {
+          try {
+            const title = data.title || oldEvent.title;
+            const changes: string[] = [];
+            if (data.eventTime) changes.push(`시간: ${new Date(data.eventTime).toLocaleString("ko-KR")}`);
+            if (data.location) changes.push(`장소: ${data.location}`);
+            const body = `"${title}" 일정이 변경되었습니다. ${changes.join(", ")}`;
+            await sendPushToAdmins({ title: "📅 일정 변경", body, tag: `schedule-change-${id}` });
+            if (oldEvent.meetupId) {
+              await sendPushToMeetupParticipants(oldEvent.meetupId, { title: "📅 일정 변경 알림", body, tag: `schedule-change-${id}` });
+            }
+          } catch (_) {}
+        }
         return { success: true };
       }),
     delete: adminProcedure.input(z.object({ id: z.number() }))
@@ -1235,6 +1269,14 @@ export const appRouter = router({
               await sendTelegram(`📢 ${reg.name}님, ${event.notifyBefore || 10}분 후 다음 일정이 시작됩니다!\n📍 ${event.title}\n📌 ${event.location || "미정"}\n🕐 ${event.eventTime.toLocaleString("ko-KR")}\n\n준비하시고 이동해 주세요!`);
             }
           }
+          // 웹 푸시 알림 - 밋업 참가자에게
+          try {
+            await sendPushToMeetupParticipants(event.meetupId, {
+              title: `⏰ ${event.notifyBefore || 10}분 후 일정 시작`,
+              body: `📍 ${event.title}\n📌 ${event.location || "미정"}`,
+              tag: `schedule-reminder-${event.id}`,
+            });
+          } catch (_) {}
         }
       }
       return { triggered: sent, total: upcoming.length };
@@ -4405,6 +4447,19 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
             await sendTelegram(`${prefix} [${room?.name || "채팅방"}]\n👤 ${senderName}: ${input.content.substring(0, 200)}`);
           } catch { /* 텔레그램 알림 실패 무시 */ }
         }
+        // 웹 푸시 알림 - 채팅방 멤버에게 (발신자 제외)
+        try {
+          const room = await db.getChatRoomById(input.roomId);
+          const senderName = ctx.user.name || "익명";
+          const msgPreview = input.content.length > 50 ? input.content.substring(0, 50) + "..." : input.content;
+          const pushTitle = input.messageType === "announcement" ? `📢 ${room?.name || "채팅방"}` : `💬 ${room?.name || "채팅방"}`;
+          await sendPushToChatRoomMembers(input.roomId, ctx.user.id, {
+            title: pushTitle,
+            body: `${senderName}: ${msgPreview}`,
+            tag: `chat-${input.roomId}`,
+            data: { roomId: input.roomId, type: "chat_message" },
+          });
+        } catch (_) {}
         return { id, shouldNotify: true };
       }),
 
@@ -8259,6 +8314,29 @@ Return ONLY valid JSON.`,
         });
         const csv = "\uFEFF" + header + "\n" + rows.join("\n");
         return { csv, count: history.length };
+      }),
+  }),
+
+  // ── Location Heatmap ──────────────────────────────────────────────────
+  locationHeatmap: router({
+    getData: protectedProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        startTime: z.number().optional(),
+        endTime: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const data = await db.getLocationHistoryForHeatmap(input.meetupId, {
+          startTime: input.startTime ? new Date(input.startTime) : undefined,
+          endTime: input.endTime ? new Date(input.endTime) : undefined,
+        });
+        return {
+          points: data.map((d: any) => ({
+            lat: Number(d.lat),
+            lng: Number(d.lng),
+          })),
+          count: data.length,
+        };
       }),
   }),
 });

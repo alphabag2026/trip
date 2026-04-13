@@ -2069,5 +2069,36 @@
 
 ### 테스트 & 배포
 - [x] vitest 테스트 작성 (11건 통과)
+- [x] 체크포인트 저장 (0edc060c)
+- [x] AWS Lightsail 프로덕션 배포 완료
+
+## v6.4 - DB 마이그레이션 스크립트 + 확장 푸시 알림 + 히트맵
+
+### 1. DB 마이그레이션 스크립트 (Manus → Production)
+- [x] Python 마이그레이션 스크립트 작성 (SSH 터널 경유, 배치 처리, 재시도 로직)
+- [x] 83개 테이블 전체 데이터 동기화 실행 (2,816+ rows 완료, 재시도 중)
+- [x] 외래키 의존성 순서 고려 (FOREIGN_KEY_CHECKS=0)
+- [x] 스크립트 실행 및 검증
+
+### 2. 확장 푸시 알림 (항공편 지연/일정 변경/새 메시지)
+- [x] 서버: webPushHelper.ts 공용 헬퍼 (sendPushToUsers, sendPushToAdmins)
+- [x] 항공편 지연/취소 알림: 항공편 상태 변경 시 관련 참가자에게 푸시
+- [x] 일정 변경 알림: 스케줄 수정 시 참가자에게 푸시
+- [x] 새 메시지 알림: 채팅방 메시지 수신 시 다른 멤버에게 푸시
+- [x] 일정 알림 (triggerNotifications) 에도 웹 푸시 추가
+- [x] Service Worker 업데이트 (알림 타입별 라우팅: 채팅/항공/일정/지오펜싱)
+- [x] PushNotificationToggle 설명 텍스트 업데이트
+
+### 3. Google Maps 히트맵 시각화
+- [x] 서버 API: locationExport.heatmapData - 히트맵용 위치 데이터 조회
+- [x] DB 함수: getLocationHistoryForHeatmap
+- [x] 프론트엔드: LocationHeatmap 페이지 (admin/location-heatmap)
+- [x] Google Maps Visualization 라이브러리 (HeatmapLayer) 연동
+- [x] 시간대별 필터링 (날짜/시간 범위)
+- [x] 밋업별 필터링
+- [x] 사이드바 메뉴 추가 + i18n (23개 언어)
+
+### 테스트 & 배포
+- [x] vitest 테스트 작성 (15건 통과)
 - [ ] 체크포인트 저장
 - [ ] AWS Lightsail 프로덕션 배포

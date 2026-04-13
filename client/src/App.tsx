@@ -69,6 +69,7 @@ import AdminMeetupSchedules from "./pages/admin/MeetupSchedules";
 import AdminLocationTracker from "./pages/admin/LocationTracker";
 import AdminGeofenceManager from "./pages/admin/GeofenceManager";
 import AdminLocationHistory from "./pages/admin/LocationHistory";
+import AdminLocationHeatmap from "./pages/admin/LocationHeatmap";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -168,6 +169,7 @@ function AdminRouter() {
         <Route path="/location-tracker" component={AdminLocationTracker} />
         <Route path="/geofence" component={AdminGeofenceManager} />
         <Route path="/location-history" component={AdminLocationHistory} />
+        <Route path="/location-heatmap" component={AdminLocationHeatmap} />
         <Route path="/2fa-settings" component={TwoFactorSettings} />
         <Route component={NotFound} />
       </Switch>

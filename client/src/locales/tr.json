@@ -929,7 +929,8 @@
       "locationTracker": "Konum Takibi",
       "meetupSchedules": "Schedule Management",
       "geofence": "Geofencing",
-      "locationHistory": "Location History"
+      "locationHistory": "Location History",
+      "locationHeatmap": "Konum Isı Haritası"
     },
     "survey": {
       "addQuestion": "Add Question",

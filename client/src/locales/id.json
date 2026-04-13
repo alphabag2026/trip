@@ -929,7 +929,8 @@
       "locationTracker": "Pelacak Lokasi Real-time",
       "meetupSchedules": "Schedule Management",
       "geofence": "Geofencing",
-      "locationHistory": "Location History"
+      "locationHistory": "Location History",
+      "locationHeatmap": "Peta Panas Lokasi"
     },
     "survey": {
       "addQuestion": "Add Question",

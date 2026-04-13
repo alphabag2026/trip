@@ -141,7 +141,7 @@ export function PushNotificationToggle() {
             </p>
             <p className="text-xs text-muted-foreground">
               {isSubscribed
-                ? "지오펜싱 진입/이탈 알림을 실시간으로 받습니다"
+                ? "지오펜싱, 항공편 지연, 일정 변경, 새 메시지 알림을 실시간으로 받습니다"
                 : "활성화하면 모바일에서도 즉시 알림을 받을 수 있습니다"}
             </p>
           </div>

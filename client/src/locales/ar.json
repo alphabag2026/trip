@@ -929,7 +929,8 @@
       "locationTracker": "تتبع الموقع في الوقت الفعلي",
       "meetupSchedules": "Schedule Management",
       "geofence": "Geofencing",
-      "locationHistory": "Location History"
+      "locationHistory": "Location History",
+      "locationHeatmap": "خريطة حرارية للموقع"
     },
     "survey": {
       "addQuestion": "Add Question",

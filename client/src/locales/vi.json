@@ -929,7 +929,8 @@
       "locationTracker": "Theo dõi vị trí thời gian thực",
       "meetupSchedules": "Schedule Management",
       "geofence": "Hàng rào địa lý",
-      "locationHistory": "Lịch sử vị trí"
+      "locationHistory": "Lịch sử vị trí",
+      "locationHeatmap": "Bản đồ nhiệt vị trí"
     },
     "survey": {
       "addQuestion": "Add Question",

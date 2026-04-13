@@ -929,7 +929,8 @@
       "locationTracker": "Відстеження місцезнаходження",
       "meetupSchedules": "Schedule Management",
       "geofence": "Geofencing",
-      "locationHistory": "Location History"
+      "locationHistory": "Location History",
+      "locationHeatmap": "Теплова карта місцезнаходжень"
     },
     "survey": {
       "addQuestion": "Add Question",

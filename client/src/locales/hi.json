@@ -929,7 +929,8 @@
       "locationTracker": "रीयल-टाइम स्थान ट्रैकर",
       "meetupSchedules": "Schedule Management",
       "geofence": "Geofencing",
-      "locationHistory": "Location History"
+      "locationHistory": "Location History",
+      "locationHeatmap": "स्थान हीटमैप"
     },
     "survey": {
       "addQuestion": "Add Question",

@@ -1472,7 +1472,8 @@
       "locationTracker": "实时位置追踪",
       "meetupSchedules": "Schedule Management",
       "geofence": "地理围栏",
-      "locationHistory": "位置历史"
+      "locationHistory": "位置历史",
+      "locationHeatmap": "位置热力图"
     },
     "survey": {
       "addQuestion": "Add Question",

@@ -1472,7 +1472,8 @@
       "locationTracker": "실시간 위치 추적",
       "meetupSchedules": "일정 관리",
       "geofence": "지오펜싱",
-      "locationHistory": "위치 이력"
+      "locationHistory": "위치 이력",
+      "locationHeatmap": "위치 히트맵"
     },
     "survey": {
       "addQuestion": "질문 추가",
