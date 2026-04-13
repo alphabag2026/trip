@@ -2227,5 +2227,24 @@
 ### 빌드 & 테스트
 - [x] TypeScript 에러 없음 확인
 - [x] vitest 테스트 6건 통과 (aiRefine.test.ts)
+- [x] 체크포인트 저장 (fb42f541)
+- [ ] AWS Lightsail 프로덕션 배포
+
+## v6.10 - AI 자동 답장 + 채팅 요약 기능
+
+### AI 자동 답장 기능
+- [x] chatMessage.aiSuggestReply tRPC 프로시저 구현 (5가지 톤 옵션, 컨텍스트 기반 3개 답장 생성)
+- [x] 최근 메시지 20개 컨텍스트 기반 답장 제안 (간단/적당/상세)
+- [x] 채팅 입력창에 Bot 아이콘 AI 답장 제안 버튼 추가 (에메랄드 테마)
+- [x] AI 답장 제안 프리뷰 영역 (3개 옵션, 클릭으로 적용)
+
+### 채팅 메시지 요약 기능
+- [x] chatMessage.aiSummarize tRPC 프로시저 구현 (구조화된 요약: 핵심내용/결정사항/액션아이템/참여자)
+- [x] 채팅방 헤더 더보기 메뉴에 AI 대화 요약 버튼 추가
+- [x] 요약 결과 다이얼로그 (메타정보 + 복사 기능)
+
+### 빌드 & 테스트
+- [x] TypeScript 에러 없음 확인
+- [x] vitest 16건 테스트 통과 (aiRefine 6건 + aiSuggestSummarize 10건)
 - [ ] 체크포인트 저장
 - [ ] AWS Lightsail 프로덕션 배포

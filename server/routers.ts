@@ -4712,6 +4712,173 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 문구 수정에 실패했습니다" });
         }
       }),
+
+    // AI 자동 답장 제안 (컨텍스트 기반)
+    aiSuggestReply: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        replyToMessageId: z.number().optional(),
+        tone: z.enum(["auto", "polite", "casual", "business", "friendly"]).default("auto"),
+        lang: z.string().max(10).default("auto"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // 최근 메시지 20개 가져오기
+        const recentMessages = await db.getChatMessages(input.roomId, 20);
+        if (!recentMessages || recentMessages.length === 0) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "채팅방에 메시지가 없습니다" });
+        }
+
+        // 답장 대상 메시지 찾기
+        let targetMessage = recentMessages[recentMessages.length - 1];
+        if (input.replyToMessageId) {
+          const found = recentMessages.find(m => m.id === input.replyToMessageId);
+          if (found) targetMessage = found;
+        }
+
+        // 대화 컨텍스트 구성
+        const contextLines = recentMessages.map(m => {
+          const name = m.senderName || "익명";
+          const isMe = m.userId === ctx.user.id;
+          return `[${isMe ? "나" : name}]: ${(m.content || "").substring(0, 300)}`;
+        }).join("\n");
+
+        const toneGuide: Record<string, string> = {
+          auto: "Match the tone and formality level of the conversation naturally.",
+          polite: "Use a polite and respectful tone.",
+          casual: "Use a casual, relaxed tone.",
+          business: "Use a professional business tone.",
+          friendly: "Use a warm, friendly tone.",
+        };
+
+        const langGuide = input.lang !== "auto"
+          ? `Write the reply in ${input.lang} language.`
+          : "Write the reply in the same language as the most recent messages.";
+
+        const systemPrompt = `You are an AI assistant helping compose a chat reply. Based on the conversation context below, suggest a natural and appropriate reply.
+
+${toneGuide[input.tone] || toneGuide.auto}
+${langGuide}
+
+Rules:
+- Generate exactly 3 different reply suggestions (short, medium, detailed)
+- Each suggestion should be on a separate line, prefixed with [1], [2], [3]
+- Keep suggestions natural and contextually appropriate
+- Do NOT include any explanation, just the reply suggestions
+- Match the conversation style and topic`;
+
+        const userPrompt = `Conversation context:\n${contextLines}\n\nThe message to reply to: "${(targetMessage.content || "").substring(0, 500)}"\n\nSuggest 3 reply options:`;
+
+        try {
+          const response = await invokeLLM({
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt },
+            ],
+          });
+          const raw = response.choices[0]?.message?.content;
+          const text = typeof raw === "string" ? raw.trim() : "";
+
+          // [1], [2], [3] 파싱
+          const suggestions: string[] = [];
+          const lines = text.split("\n").filter(l => l.trim());
+          for (const line of lines) {
+            const cleaned = line.replace(/^\[\d+\]\s*/, "").trim();
+            if (cleaned) suggestions.push(cleaned);
+          }
+
+          return {
+            suggestions: suggestions.length > 0 ? suggestions.slice(0, 3) : [text],
+            targetMessageId: targetMessage.id,
+            targetContent: (targetMessage.content || "").substring(0, 200),
+            tone: input.tone,
+          };
+        } catch (err) {
+          console.error("AI suggest reply error:", err);
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 답장 제안에 실패했습니다" });
+        }
+      }),
+
+    // AI 채팅 요약 (대화 내용 요약)
+    aiSummarize: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        messageCount: z.number().min(5).max(200).default(50),
+        lang: z.string().max(10).default("auto"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const messages = await db.getChatMessages(input.roomId, input.messageCount);
+        if (!messages || messages.length < 3) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "요약할 메시지가 충분하지 않습니다 (최소 3개)" });
+        }
+
+        const room = await db.getChatRoomById(input.roomId);
+        const roomName = room?.name || "채팅방";
+
+        // 대화 텍스트 구성
+        const chatText = messages.map(m => {
+          const name = m.senderName || "익명";
+          const time = m.createdAt ? new Date(m.createdAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : "";
+          return `[${time}] ${name}: ${(m.content || "").substring(0, 500)}`;
+        }).join("\n");
+
+        const langGuide = input.lang !== "auto"
+          ? `Write the summary in ${input.lang} language.`
+          : "Write the summary in Korean (한국어).";
+
+        const systemPrompt = `You are an AI assistant that summarizes chat conversations. Analyze the conversation below and provide a structured summary.
+
+${langGuide}
+
+Provide the summary in this exact format:
+## 📋 대화 요약
+[2-3 sentence overview of the conversation]
+
+## 🔑 핵심 내용
+- [Key point 1]
+- [Key point 2]
+- [Key point 3]
+(list all important points)
+
+## ✅ 결정사항 / 합의
+- [Decision or agreement 1]
+- [Decision or agreement 2]
+(if none, write "특별한 결정사항 없음")
+
+## 📌 액션 아이템
+- [Action item 1 - who needs to do what]
+- [Action item 2]
+(if none, write "특별한 액션 아이템 없음")
+
+## 👥 주요 참여자
+- [Name 1]: [brief role/contribution]
+- [Name 2]: [brief role/contribution]
+
+Keep the summary concise but comprehensive. Focus on substance, not small talk.`;
+
+        try {
+          const response = await invokeLLM({
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: `채팅방: ${roomName}\n메시지 수: ${messages.length}개\n\n--- 대화 내용 ---\n${chatText}` },
+            ],
+          });
+          const raw = response.choices[0]?.message?.content;
+          const summary = typeof raw === "string" ? raw.trim() : "요약을 생성할 수 없습니다.";
+
+          return {
+            summary,
+            roomName,
+            messageCount: messages.length,
+            timeRange: {
+              from: messages[0]?.createdAt ? new Date(messages[0].createdAt).toISOString() : null,
+              to: messages[messages.length - 1]?.createdAt ? new Date(messages[messages.length - 1].createdAt).toISOString() : null,
+            },
+          };
+        } catch (err) {
+          console.error("AI summarize error:", err);
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 대화 요약에 실패했습니다" });
+        }
+      }),
   }),
 
   //  // ── WebRTC Signaling (시그널링 서버) ──────────────────────────

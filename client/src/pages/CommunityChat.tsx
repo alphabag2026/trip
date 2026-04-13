@@ -17,7 +17,7 @@ import {
   Paperclip, X, Play, Mic, MicOff, VideoOff, PhoneOff, Languages, Camera,
   UserPlus, Settings, Volume2, FileText, Pin, PinOff, GalleryHorizontalEnd, Download,
   Grid3X3, Film, File, Navigation, Sparkles, Wand2, Briefcase, Heart, Minimize2, Maximize2,
-  CheckCircle, RotateCcw, ChevronDown,
+  CheckCircle, RotateCcw, ChevronDown, Bot, FileSearch, Zap, MessageSquareText,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -1072,6 +1072,14 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const [aiRefinedText, setAiRefinedText] = useState("");
   const [aiRefineMode, setAiRefineMode] = useState<string>("");
   const [aiTranslateLang, setAiTranslateLang] = useState("en");
+  // AI 자동 답장
+  const [showAiSuggest, setShowAiSuggest] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [aiSuggestTone, setAiSuggestTone] = useState<"auto" | "polite" | "casual" | "business" | "friendly">("auto");
+  // AI 대화 요약
+  const [showAiSummary, setShowAiSummary] = useState(false);
+  const [aiSummaryText, setAiSummaryText] = useState("");
+  const [aiSummaryMeta, setAiSummaryMeta] = useState<{ roomName: string; messageCount: number; timeRange: { from: string | null; to: string | null } } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1140,6 +1148,53 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const revertAiRefined = () => {
     setAiRefinedText("");
     setAiRefineMode("");
+  };
+
+  // AI 자동 답장 제안
+  const aiSuggestMutation = trpc.chatMessage.aiSuggestReply.useMutation({
+    onSuccess: (r) => {
+      setAiSuggestions(r.suggestions);
+      setShowAiSuggest(true);
+    },
+    onError: (e) => toast.error(e.message || t("communityChat.aiSuggestError", "AI 답장 제안에 실패했습니다")),
+  });
+
+  const handleAiSuggest = (replyToId?: number) => {
+    setAiSuggestions([]);
+    aiSuggestMutation.mutate({
+      roomId,
+      replyToMessageId: replyToId || replyTo?.id,
+      tone: aiSuggestTone,
+      lang: myLang || "auto",
+    });
+  };
+
+  const applyAiSuggestion = (text: string) => {
+    setMessage(text);
+    setShowAiSuggest(false);
+    setAiSuggestions([]);
+    inputRef.current?.focus();
+    toast.success(t("communityChat.aiSuggestApplied", "AI 답장이 입력되었습니다"));
+  };
+
+  // AI 대화 요약
+  const aiSummarizeMutation = trpc.chatMessage.aiSummarize.useMutation({
+    onSuccess: (r) => {
+      setAiSummaryText(r.summary);
+      setAiSummaryMeta({ roomName: r.roomName, messageCount: r.messageCount, timeRange: r.timeRange });
+      setShowAiSummary(true);
+    },
+    onError: (e) => toast.error(e.message || t("communityChat.aiSummaryError", "AI 요약에 실패했습니다")),
+  });
+
+  const handleAiSummarize = () => {
+    setAiSummaryText("");
+    setAiSummaryMeta(null);
+    aiSummarizeMutation.mutate({
+      roomId,
+      messageCount: 50,
+      lang: myLang || "auto",
+    });
   };
 
   // 미디어 갤러리
@@ -1405,6 +1460,9 @@ function ChatRoomView({ roomId }: { roomId: number }) {
             <DropdownMenuItem onClick={() => setShowTranslator(!showTranslator)}>
               <Languages className="h-4 w-4 mr-2" /> {t("communityChat.t46", "통번역기")}
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleAiSummarize} disabled={aiSummarizeMutation.isPending}>
+              <FileSearch className="h-4 w-4 mr-2" /> {aiSummarizeMutation.isPending ? t("communityChat.aiSummarizing", "AI 요약 중...") : t("communityChat.aiSummaryBtn", "AI 대화 요약")}
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => leaveMutation.mutate({ roomId })} className="text-red-400">
               <LogOut className="h-4 w-4 mr-2" /> {t("communityChat.t47", "나가기")}
@@ -1598,6 +1656,46 @@ function ChatRoomView({ roomId }: { roomId: number }) {
         </div>
       )}
 
+      {/* AI Suggest Reply Preview */}
+      {(showAiSuggest || aiSuggestMutation.isPending) && (
+        <div className="px-4 py-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-t border-emerald-500/20">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <Bot className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="text-xs font-medium text-emerald-400">
+                {t("communityChat.aiSuggestTitle", "AI 답장 제안")}
+              </span>
+            </div>
+            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { setShowAiSuggest(false); setAiSuggestions([]); }}>
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+          {aiSuggestMutation.isPending ? (
+            <div className="flex items-center gap-2 py-2">
+              <div className="animate-spin h-3 w-3 border-2 border-emerald-400 border-t-transparent rounded-full" />
+              <span className="text-xs text-muted-foreground">{t("communityChat.aiSuggesting", "AI가 답장을 생성하고 있습니다...")}</span>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {aiSuggestions.map((s, i) => (
+                <button
+                  key={i}
+                  className="w-full text-left text-sm bg-background/50 hover:bg-background/80 rounded px-3 py-2 transition-colors border border-transparent hover:border-emerald-500/30"
+                  onClick={() => applyAiSuggestion(s)}
+                >
+                  <div className="flex items-start gap-2">
+                    <Badge variant="outline" className="shrink-0 text-[10px] h-5 border-emerald-500/30 text-emerald-400">
+                      {i === 0 ? t("communityChat.aiShort", "간단") : i === 1 ? t("communityChat.aiMedium", "적당") : t("communityChat.aiDetailed", "상세")}
+                    </Badge>
+                    <span className="text-foreground">{s}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* AI Refine Preview */}
       {(aiRefinedText || aiRefineMutation.isPending) && (
         <div className="px-4 py-2 bg-gradient-to-r from-violet-500/10 to-blue-500/10 border-t border-violet-500/20">
@@ -1741,6 +1839,21 @@ function ChatRoomView({ roomId }: { roomId: number }) {
               </div>
             </PopoverContent>
           </Popover>
+          {/* AI 답장 제안 버튼 */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`shrink-0 transition-colors ${aiSuggestMutation.isPending ? "text-emerald-400 bg-emerald-500/10" : "text-muted-foreground hover:text-emerald-400"}`}
+            title={t("communityChat.aiSuggestBtn", "AI 답장 제안")}
+            onClick={() => handleAiSuggest()}
+            disabled={aiSuggestMutation.isPending}
+          >
+            {aiSuggestMutation.isPending ? (
+              <div className="animate-spin h-4 w-4 border-2 border-emerald-400 border-t-transparent rounded-full" />
+            ) : (
+              <Bot className="h-4.5 w-4.5" />
+            )}
+          </Button>
           <Button onClick={handleSend} disabled={!message.trim() || sendMutation.isPending} size="icon" className="shrink-0">
             <Send className="h-4 w-4" />
           </Button>
@@ -1752,11 +1865,53 @@ function ChatRoomView({ roomId }: { roomId: number }) {
           </div>
         )}
       </div>
+
+      {/* AI 대화 요약 다이얼로그 */}
+      <Dialog open={showAiSummary} onOpenChange={setShowAiSummary}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSearch className="h-5 w-5 text-blue-400" />
+              {t("communityChat.aiSummaryTitle", "AI 대화 요약")}
+            </DialogTitle>
+          </DialogHeader>
+          {aiSummarizeMutation.isPending ? (
+            <div className="flex flex-col items-center justify-center py-8 gap-3">
+              <div className="animate-spin h-8 w-8 border-3 border-blue-400 border-t-transparent rounded-full" />
+              <p className="text-sm text-muted-foreground">{t("communityChat.aiSummarizing", "AI 요약 중...")}</p>
+            </div>
+          ) : aiSummaryText ? (
+            <div className="space-y-3">
+              {aiSummaryMeta && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded px-3 py-2">
+                  <MessageSquareText className="h-3.5 w-3.5" />
+                  <span>{aiSummaryMeta.roomName}</span>
+                  <span>·</span>
+                  <span>{aiSummaryMeta.messageCount}{t("communityChat.aiMsgCount", "개 메시지 분석")}</span>
+                </div>
+              )}
+              <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap">
+                {aiSummaryText}
+              </div>
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAiSummary(false)}>
+              {t("communityChat.aiClose", "닫기")}
+            </Button>
+            {aiSummaryText && (
+              <Button variant="default" onClick={() => { navigator.clipboard.writeText(aiSummaryText); toast.success(t("communityChat.aiCopied", "요약이 복사되었습니다")); }}>
+                {t("communityChat.aiCopy", "복사")}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-// ── 메인 컴포넌트 ──────────────────────────────────────
+// ── 메인 컴포넌트 ──────────────────────────────────────────────
 export default function CommunityChat() {
   const params = useParams<{ roomId: string }>();
   const roomId = parseInt(params.roomId || "0");
