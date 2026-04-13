@@ -8338,9 +8338,54 @@ Return ONLY valid JSON.`,
           count: data.length,
         };
       }),
+   }),
+
+  // ── 주변 장소 즐겨찾기 ──
+  placeFavorite: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return db.getPlaceFavorites(ctx.user.id);
+    }),
+    add: protectedProcedure
+      .input(z.object({
+        placeId: z.string(),
+        name: z.string(),
+        address: z.string().optional(),
+        lat: z.number(),
+        lng: z.number(),
+        category: z.string().optional(),
+        rating: z.number().optional(),
+        photoUrl: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const already = await db.isPlaceFavorited(ctx.user.id, input.placeId);
+        if (already) throw new TRPCError({ code: "CONFLICT", message: "이미 즐겨찾기에 추가된 장소입니다" });
+        const id = await db.addPlaceFavorite({
+          userId: ctx.user.id,
+          placeId: input.placeId,
+          name: input.name,
+          address: input.address ?? null,
+          lat: String(input.lat),
+          lng: String(input.lng),
+          category: input.category ?? null,
+          rating: input.rating != null ? String(input.rating) : null,
+          photoUrl: input.photoUrl ?? null,
+        });
+        return { id };
+      }),
+    remove: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const ok = await db.removePlaceFavorite(input.id, ctx.user.id);
+        if (!ok) throw new TRPCError({ code: "NOT_FOUND", message: "즐겨찾기를 찾을 수 없습니다" });
+        return { success: true };
+      }),
+    check: protectedProcedure
+      .input(z.object({ placeId: z.string() }))
+      .query(async ({ ctx, input }) => {
+        return { favorited: await db.isPlaceFavorited(ctx.user.id, input.placeId) };
+      }),
   }),
 });
-
 // ── Haversine 거리 계산 (미터) ─────────────────────────────
 function getDistanceFromLatLon(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371000; // 지구 반경 (미터)

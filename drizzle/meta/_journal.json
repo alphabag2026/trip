@@ -288,6 +288,13 @@
       "when": 1776000450557,
       "tag": "0040_dazzling_rockslide",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "5",
+      "when": 1776077820142,
+      "tag": "0041_slow_talisman",
+      "breakpoints": true
     }
   ]
 }

@@ -8,6 +8,7 @@ import App from "./App";
 
 import "./index.css";
 import { initLocales } from "./lib/i18n";
+import { registerSW } from "virtual:pwa-register";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,12 @@ const trpcClient = trpc.createClient({
       },
     }),
   ],
+});
+
+// Register PWA Service Worker
+const updateSW = registerSW({
+  onNeedRefresh() { updateSW(true); },
+  onOfflineReady() { console.log("[PWA] App ready for offline use"); },
 });
 
 // Load initial locale(s) then render

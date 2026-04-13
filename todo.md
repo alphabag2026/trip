@@ -2179,5 +2179,34 @@
 ### 빌드 & 테스트
 - [x] 빌드 성공 확인 (136개 JS 청크, 7.6MB 총 크기, 15.19s 빌드)
 - [x] vitest 테스트 통과 확인 (848/855 passed, satori 7건 기존 실패)
+- [x] 체크포인트 저장 (5bcd1100)
+- [x] AWS Lightsail 프로덕션 배포 완료 (HTTPS 200)
+
+## v6.8.1 - AttendeeDashboard 분리 + PWA 오프라인 + NearbyExplorer 즐겨찾기
+
+### AttendeeDashboard 청크 분리
+- [x] AttendeeDashboard 구조 분석 (3개 탭: Overview/Comparison/Applicants, 645줄)
+- [x] 3개 서브 컴포넌트 React.lazy로 동적 import (recharts 차트 포함)
+- [x] AttendeeDashboard 498KB → 개별 청크로 분리
+
+### PWA 오프라인 지원
+- [x] vite-plugin-pwa 설치 및 설정
+- [x] Service Worker 설정 (autoUpdate, generateSW)
+- [x] PWA manifest 설정 (192/512 아이콘, 다크 테마, standalone)
+- [x] API 응답 캐싱 (NetworkFirst, 5분 TTL)
+- [x] CDN 이미지 캐싱 (CacheFirst, 30일 TTL)
+- [x] Google Fonts 캐싱 (StaleWhileRevalidate + CacheFirst)
+- [x] main.tsx에 SW 등록 코드 추가
+
+### NearbyExplorer 즐겨찾기
+- [x] place_favorites 테이블 생성 (drizzle 스키마 + 마이그레이션 적용)
+- [x] tRPC 프로시저 (list/add/remove)
+- [x] NearbyExplorer UI에 즐겨찾기 하트 버튼 추가 (상세 다이얼로그)
+- [x] 즐겨찾기 목록 뷰 구현 (북마크 탭 + 삭제 버튼)
+- [x] 로그인 사용자만 즐겨찾기 기능 표시
+
+### 빌드 & 테스트
+- [x] 빌드 성공 확인 (PWA SW 생성 포함)
+- [x] vitest 테스트 통과 확인 (848/855 passed, satori 7건 기존 실패)
 - [ ] 체크포인트 저장
 - [ ] AWS Lightsail 프로덕션 배포

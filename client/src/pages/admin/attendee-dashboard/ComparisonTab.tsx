@@ -1,0 +1,29 @@
+import { useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
+import { Globe, BarChart3 } from "lucide-react";
+import { Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+
+const STATUS_COLORS: Record<string, string> = { pending: "#f59e0b", approved: "#22c55e", rejected: "#ef4444", completed: "#6366f1" };
+
+interface ComparisonTabProps { comparisonData: any[] | undefined; }
+
+export default function ComparisonTab({ comparisonData }: ComparisonTabProps) {
+  const { t } = useTranslation();
+  const comparisonChartData = useMemo(() => comparisonData?.map((m: any) => ({ name: m.meetupTitle.length > 12 ? m.meetupTitle.slice(0, 12) + "..." : m.meetupTitle, fullName: m.meetupTitle, total: m.total, pending: m.pending, approved: m.approved, rejected: m.rejected, completed: m.completed })) || [], [comparisonData]);
+  const comparisonLocationData = useMemo(() => comparisonData?.map((m: any) => ({ name: m.meetupTitle.length > 12 ? m.meetupTitle.slice(0, 12) + "..." : m.meetupTitle, fullName: m.meetupTitle, domestic: m.domestic, overseas: m.overseas })) || [], [comparisonData]);
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    const item = payload[0]?.payload;
+    return (<div className="bg-popover border border-border rounded-lg p-3 shadow-lg text-sm"><p className="font-semibold mb-1">{item?.fullName || label}</p>{payload.map((p: any, i: number) => (<div key={i} className="flex items-center gap-2"><div className="w-3 h-3 rounded" style={{ backgroundColor: p.color }} /><span>{p.name}: {p.value}</span></div>))}</div>);
+  };
+  if (comparisonChartData.length === 0) return <Card className="bg-card border-border"><CardContent className="p-12 text-center text-muted-foreground">{t("admin.attendeeDashboard.noData")}</CardContent></Card>;
+  return (
+    <div className="space-y-4">
+      <Card className="bg-card border-border"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><BarChart3 className="h-4 w-4" />{t("admin.attendeeDashboard.meetupStatusComparison")}</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={350}><BarChart data={comparisonChartData} barGap={2}><CartesianGrid strokeDasharray="3 3" opacity={0.3} /><XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-20} textAnchor="end" height={60} /><YAxis allowDecimals={false} /><Tooltip content={<CustomTooltip />} /><Legend /><Bar dataKey="pending" name={t("admin.attendeeDashboard.pending")} stackId="a" fill={STATUS_COLORS.pending} /><Bar dataKey="approved" name={t("admin.attendeeDashboard.approved")} stackId="a" fill={STATUS_COLORS.approved} /><Bar dataKey="rejected" name={t("admin.attendeeDashboard.rejected")} stackId="a" fill={STATUS_COLORS.rejected} /><Bar dataKey="completed" name={t("admin.attendeeDashboard.completed")} stackId="a" fill={STATUS_COLORS.completed} radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></CardContent></Card>
+      <Card className="bg-card border-border"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Globe className="h-4 w-4" />{t("admin.attendeeDashboard.meetupLocationComparison")}</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={300}><BarChart data={comparisonLocationData} barGap={2}><CartesianGrid strokeDasharray="3 3" opacity={0.3} /><XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-20} textAnchor="end" height={60} /><YAxis allowDecimals={false} /><Tooltip content={<CustomTooltip />} /><Legend /><Bar dataKey="domestic" name={t("admin.attendeeDashboard.domestic")} fill="#3b82f6" radius={[4, 4, 0, 0]} /><Bar dataKey="overseas" name={t("admin.attendeeDashboard.overseas")} fill="#f97316" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></CardContent></Card>
+      <Card className="bg-card border-border"><CardHeader className="pb-2"><CardTitle className="text-sm">{t("admin.attendeeDashboard.meetupSummaryTable")}</CardTitle></CardHeader><CardContent><div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-border"><th className="p-2 text-left">{t("admin.attendeeDashboard.meetupName")}</th><th className="p-2 text-right">{t("admin.attendeeDashboard.totalApplications")}</th><th className="p-2 text-right">{t("admin.attendeeDashboard.pending")}</th><th className="p-2 text-right">{t("admin.attendeeDashboard.approved")}</th><th className="p-2 text-right">{t("admin.attendeeDashboard.rejected")}</th><th className="p-2 text-right">{t("admin.attendeeDashboard.completed")}</th><th className="p-2 text-right">{t("admin.attendeeDashboard.approvalRate")}</th></tr></thead><tbody>{comparisonData?.map((m: any) => (<tr key={m.meetupId} className="border-b border-border/50 hover:bg-muted/50 transition-colors"><td className="p-2 font-medium">{m.meetupTitle}</td><td className="p-2 text-right font-semibold">{m.total}</td><td className="p-2 text-right"><span className="text-yellow-400">{m.pending}</span></td><td className="p-2 text-right"><span className="text-green-400">{m.approved}</span></td><td className="p-2 text-right"><span className="text-red-400">{m.rejected}</span></td><td className="p-2 text-right"><span className="text-indigo-400">{m.completed}</span></td><td className="p-2 text-right"><Badge variant={m.total > 0 && (m.approved / m.total) >= 0.7 ? "default" : "secondary"}>{m.total > 0 ? Math.round((m.approved / m.total) * 100) : 0}%</Badge></td></tr>))}{(!comparisonData || comparisonData.length === 0) && <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">{t("admin.attendeeDashboard.noData")}</td></tr>}</tbody></table></div></CardContent></Card>
+    </div>
+  );
+}

@@ -1985,3 +1985,20 @@ export const pushSubscriptions = mysqlTable("push_subscriptions", {
 });
 export type PushSubscriptionRow = typeof pushSubscriptions.$inferSelect;
 export type InsertPushSubscriptionRow = typeof pushSubscriptions.$inferInsert;
+
+// ── 주변 장소 즐겨찾기 ─────────────────────────────────────
+export const placeFavorites = mysqlTable("place_favorites", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  placeId: varchar("placeId", { length: 255 }).notNull(), // Google Places ID
+  name: varchar("name", { length: 500 }).notNull(),
+  address: text("address"),
+  lat: decimal("lat", { precision: 10, scale: 7 }).notNull(),
+  lng: decimal("lng", { precision: 10, scale: 7 }).notNull(),
+  category: varchar("category", { length: 100 }),
+  rating: decimal("rating", { precision: 2, scale: 1 }),
+  photoUrl: text("photoUrl"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type PlaceFavorite = typeof placeFavorites.$inferSelect;
+export type InsertPlaceFavorite = typeof placeFavorites.$inferInsert;

@@ -16,6 +16,10 @@ import {
   MapPinOff, Compass, RefreshCw, Info
 } from "lucide-react";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Bookmark, BookmarkCheck, Trash2 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════
 // Category definitions
@@ -229,6 +233,49 @@ export default function NearbyExplorer() {
   const [locationLoading, setLocationLoading] = useState(true);
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [resultsCount, setResultsCount] = useState(0);
+  const [showFavorites, setShowFavorites] = useState(false);
+
+  // ── Auth & Favorites ──
+  const { user } = useAuth();
+  const favoritesQuery = trpc.placeFavorite.list.useQuery(undefined, { enabled: !!user });
+  const addFavMutation = trpc.placeFavorite.add.useMutation({
+    onSuccess: () => {
+      favoritesQuery.refetch();
+      toast.success(t("nearby.fav_added", "즐겨찾기에 추가되었습니다"));
+    },
+    onError: (err) => toast.error(err.message),
+  });
+  const removeFavMutation = trpc.placeFavorite.remove.useMutation({
+    onSuccess: () => {
+      favoritesQuery.refetch();
+      toast.success(t("nearby.fav_removed", "즐겨찾기에서 삭제되었습니다"));
+    },
+    onError: (err) => toast.error(err.message),
+  });
+  const favoriteIds = useMemo(() => {
+    const set = new Set<string>();
+    favoritesQuery.data?.forEach((f: any) => set.add(f.placeId));
+    return set;
+  }, [favoritesQuery.data]);
+
+  const toggleFavorite = useCallback((place: { placeId: string; name: string; address?: string; lat: number; lng: number; rating?: number; photoUrl?: string }, catId?: string) => {
+    if (!user) { toast.error(t("nearby.login_required", "로그인이 필요합니다")); return; }
+    const existing = favoritesQuery.data?.find((f: any) => f.placeId === place.placeId);
+    if (existing) {
+      removeFavMutation.mutate({ id: existing.id });
+    } else {
+      addFavMutation.mutate({
+        placeId: place.placeId,
+        name: place.name,
+        address: place.address || "",
+        lat: place.lat,
+        lng: place.lng,
+        category: catId || selectedCategory,
+        rating: place.rating,
+        photoUrl: place.photoUrl,
+      });
+    }
+  }, [user, favoritesQuery.data, addFavMutation, removeFavMutation, selectedCategory, t]);
 
   // Default center (Bangkok - common travel destination)
   const defaultCenter = useMemo(() => ({ lat: 13.7563, lng: 100.5018 }), []);
@@ -637,19 +684,30 @@ export default function NearbyExplorer() {
             </p>
           </div>
           <div className="flex items-center gap-1">
+            {user && (
+              <Button
+                variant={showFavorites ? "default" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setShowFavorites(!showFavorites)}
+                title={t("nearby.favorites", "즐겨찾기")}
+              >
+                <Bookmark className={`h-4 w-4 ${showFavorites ? "fill-current" : ""}`} />
+              </Button>
+            )}
             <Button
-              variant={viewMode === "map" ? "default" : "ghost"}
+              variant={viewMode === "map" && !showFavorites ? "default" : "ghost"}
               size="icon"
               className="h-8 w-8"
-              onClick={() => setViewMode("map")}
+              onClick={() => { setViewMode("map"); setShowFavorites(false); }}
             >
               <MapIcon className="h-4 w-4" />
             </Button>
             <Button
-              variant={viewMode === "list" ? "default" : "ghost"}
+              variant={viewMode === "list" && !showFavorites ? "default" : "ghost"}
               size="icon"
               className="h-8 w-8"
-              onClick={() => setViewMode("list")}
+              onClick={() => { setViewMode("list"); setShowFavorites(false); }}
             >
               <List className="h-4 w-4" />
             </Button>
@@ -708,8 +766,95 @@ export default function NearbyExplorer() {
 
       {/* ── Content ── */}
       <div className="flex-1 relative">
+        {/* Favorites view */}
+        {showFavorites && (
+          <div className="p-4 space-y-3 pb-24">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-base font-semibold flex items-center gap-2">
+                <BookmarkCheck className="h-5 w-5 text-primary" />
+                {t("nearby.my_favorites", "내 즐겨찾기")}
+                {favoritesQuery.data && (
+                  <Badge variant="secondary" className="text-[10px] h-5 px-1.5">{favoritesQuery.data.length}</Badge>
+                )}
+              </h2>
+            </div>
+            {favoritesQuery.isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <CardContent className="p-3 flex gap-3">
+                    <Skeleton className="w-20 h-20 rounded-lg shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : !favoritesQuery.data?.length ? (
+              <div className="text-center py-16 px-6">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-muted mb-4">
+                  <Bookmark className="h-10 w-10 text-muted-foreground opacity-60" />
+                </div>
+                <h3 className="text-base font-semibold mb-1">{t("nearby.no_favorites", "즐겨찾기가 없습니다")}</h3>
+                <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                  {t("nearby.no_favorites_desc", "마음에 드는 장소를 하트 버튼으로 저장하세요")}
+                </p>
+                <Button variant="default" size="sm" className="mt-4" onClick={() => setShowFavorites(false)}>
+                  {t("nearby.explore_places", "장소 탐색하기")}
+                </Button>
+              </div>
+            ) : (
+              favoritesQuery.data.map((fav: any) => {
+                const favCat = CATEGORIES.find(c => c.id === fav.category);
+                return (
+                  <Card key={fav.id} className="overflow-hidden">
+                    <CardContent className="p-3 flex gap-3">
+                      {fav.photoUrl ? (
+                        <img loading="lazy" decoding="async"
+                          src={fav.photoUrl}
+                          alt={fav.name}
+                          className="w-20 h-20 object-cover rounded-lg shrink-0 cursor-pointer"
+                          onClick={() => fetchPlaceDetail(fav.placeId)}
+                        />
+                      ) : (
+                        <div
+                          className={`w-20 h-20 rounded-lg ${favCat?.bgColor || "bg-muted"} flex items-center justify-center shrink-0 cursor-pointer`}
+                          onClick={() => fetchPlaceDetail(fav.placeId)}
+                        >
+                          {favCat && <favCat.icon className={`h-8 w-8 ${favCat.color} opacity-50`} />}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => fetchPlaceDetail(fav.placeId)}>
+                        <p className="font-medium text-sm truncate">{fav.name}</p>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{fav.address}</p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          {fav.rating && <StarRating rating={Number(fav.rating)} />}
+                          {favCat && (
+                            <Badge variant="outline" className="text-[10px] h-5">
+                              {t(favCat.labelKey, favCat.fallbackLabel)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 self-center text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => removeFavMutation.mutate({ id: fav.id })}
+                        disabled={removeFavMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        )}
+
         {/* Map view */}
-        {viewMode === "map" && (
+        {viewMode === "map" && !showFavorites && (
           <div className="relative h-[calc(100vh-220px)] md:h-[calc(100vh-200px)]">
             {locationLoading ? (
               <div className="flex items-center justify-center h-full">
@@ -804,7 +949,7 @@ export default function NearbyExplorer() {
         )}
 
         {/* List view */}
-        {viewMode === "list" && (
+        {viewMode === "list" && !showFavorites && (
           <div className="p-4 space-y-3 pb-24">
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
@@ -935,14 +1080,27 @@ export default function NearbyExplorer() {
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <h2 className="text-lg font-bold leading-tight">{selectedPlace.name}</h2>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 shrink-0 -mr-1"
-                      onClick={() => handleSharePlace(selectedPlace)}
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-0.5 shrink-0 -mr-1">
+                      {user && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => toggleFavorite(selectedPlace, selectedCategory)}
+                          disabled={addFavMutation.isPending || removeFavMutation.isPending}
+                        >
+                          <Heart className={`h-4 w-4 ${favoriteIds.has(selectedPlace.placeId) ? "fill-red-500 text-red-500" : ""}`} />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleSharePlace(selectedPlace)}
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 mt-1">
                     <StarRating rating={selectedPlace.rating} count={selectedPlace.userRatingsTotal} />

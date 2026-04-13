@@ -3508,3 +3508,38 @@ export async function getLocationHistoryForHeatmap(meetupId: number, opts?: { st
     .orderBy(desc(locationHistory.createdAt))
     .limit(10000);
 }
+
+// ── 주변 장소 즐겨찾기 ─────────────────────────────────────
+import { placeFavorites, InsertPlaceFavorite } from "../drizzle/schema";
+
+export async function getPlaceFavorites(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(placeFavorites)
+    .where(eq(placeFavorites.userId, userId))
+    .orderBy(desc(placeFavorites.createdAt));
+}
+
+export async function addPlaceFavorite(data: InsertPlaceFavorite) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.insert(placeFavorites).values(data);
+  return result.insertId;
+}
+
+export async function removePlaceFavorite(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  const [result] = await db.delete(placeFavorites)
+    .where(and(eq(placeFavorites.id, id), eq(placeFavorites.userId, userId)));
+  return (result as any).affectedRows > 0;
+}
+
+export async function isPlaceFavorited(userId: number, placeId: string) {
+  const db = await getDb();
+  if (!db) return false;
+  const rows = await db.select({ id: placeFavorites.id }).from(placeFavorites)
+    .where(and(eq(placeFavorites.userId, userId), eq(placeFavorites.placeId, placeId)))
+    .limit(1);
+  return rows.length > 0;
+}
