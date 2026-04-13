@@ -7,7 +7,7 @@ import superjson from "superjson";
 import App from "./App";
 
 import "./index.css";
-import "./lib/i18n";
+import { initLocales } from "./lib/i18n";
 
 const queryClient = new QueryClient();
 
@@ -73,10 +73,13 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-createRoot(document.getElementById("root")!).render(
-  <trpc.Provider client={trpcClient} queryClient={queryClient}>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </trpc.Provider>
-);
+// Load initial locale(s) then render
+initLocales().then(() => {
+  createRoot(document.getElementById("root")!).render(
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </trpc.Provider>
+  );
+});

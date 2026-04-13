@@ -2127,5 +2127,27 @@
 ### 빌드 & 테스트
 - [x] 빌드 성공 확인 및 번들 크기 비교 (7.1MB→7.4MB, 57개 청크 분리)
 - [x] vitest 테스트 통과 확인 (850/855 passed)
-- [ ] 체크포인트 저장
+- [x] 체크포인트 저장 (08ac84f5)
 - [ ] AWS Lightsail 프로덕션 배포
+
+## v6.5.1 - 프로덕션 배포 + 번들 최적화
+
+### 프로덕션 배포
+- [x] v6.5 코드 AWS Lightsail 프로덕션 배포 완료 (HTTPS 200 확인)
+
+### locales 동적 로딩 최적화
+- [x] i18n 설정을 동적 import 방식으로 변경 (사용자 언어만 로드)
+- [x] 23개 언어 JSON 파일을 개별 청크로 분리 (60~127KB/언어)
+- [x] 언어 변경 시 해당 언어만 lazy load
+- [x] locales 번들 크기 1.84MB → 각 언어 60~127KB로 최적화
+
+### MyPage 청크 분리
+- [x] MyPage 하위 6개 탭 서브 컴포넌트로 분리 (Profile/Passport/Trips/Vouchers/Tickets/Checklist/Transport)
+- [x] 무거운 하위 컴포넌트를 React.lazy로 동적 import
+- [x] pdfDownload(597KB) 동적 import으로 필요 시만 로드
+
+### 빌드 & 테스트
+- [x] 빌드 성공 확인 (85개 청크, 초기 로딩 최적화)
+- [x] vitest 테스트 통과 확인 (v65-features 15/15 passed, 기존 satori 실패 무관)
+- [ ] 체크포인트 저장
+- [ ] AWS Lightsail 최종 프로덕션 배포

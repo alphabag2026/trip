@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { languages } from "@/lib/i18n";
+import { languages, changeLanguage } from "@/lib/i18n";
 import { Globe } from "lucide-react";
 
 export default function LanguageSelector() {
@@ -35,7 +35,7 @@ export default function LanguageSelector() {
             {languages.map(lang => (
               <button
                 key={lang.code}
-                onClick={() => { i18n.changeLanguage(lang.code); setOpen(false); }}
+                onClick={() => { changeLanguage(lang.code); setOpen(false); }}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-secondary ${
                   i18n.language === lang.code ? "bg-primary/10 text-primary font-medium" : ""
                 }`}

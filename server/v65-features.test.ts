@@ -72,26 +72,31 @@ describe("v6.5 - Resend Email, Kakao OAuth, Email Verification UI", () => {
 
   // ── MyPage Email Verification Card ──
   describe("MyPage Email Verification", () => {
-    it("should have EmailVerificationCard component in MyPage", async () => {
+    it("should have EmailVerificationCard component in ProfileTab", async () => {
       const fs = await import("fs");
-      const myPageContent = fs.readFileSync(
-        path.join(__dirname, "../client/src/pages/MyPage.tsx"),
-        "utf-8"
-      );
-      expect(myPageContent).toContain("EmailVerificationCard");
-      expect(myPageContent).toContain("emailVerification.verified");
-      expect(myPageContent).toContain("emailVerification.unverified");
-      expect(myPageContent).toContain("sendVerificationEmail");
+      // After MyPage split, EmailVerificationCard lives in ProfileTab sub-component
+      const profileTabPath = path.join(__dirname, "../client/src/pages/mypage/ProfileTab.tsx");
+      const myPagePath = path.join(__dirname, "../client/src/pages/MyPage.tsx");
+      const profileExists = fs.existsSync(profileTabPath);
+      const content = profileExists
+        ? fs.readFileSync(profileTabPath, "utf-8")
+        : fs.readFileSync(myPagePath, "utf-8");
+      expect(content).toContain("EmailVerificationCard");
+      expect(content).toContain("emailVerification.verified");
+      expect(content).toContain("emailVerification.unverified");
+      expect(content).toContain("sendVerificationEmail");
     });
 
     it("should have cooldown timer for resend", async () => {
       const fs = await import("fs");
-      const myPageContent = fs.readFileSync(
-        path.join(__dirname, "../client/src/pages/MyPage.tsx"),
-        "utf-8"
-      );
-      expect(myPageContent).toContain("cooldown");
-      expect(myPageContent).toContain("setCooldown");
+      const profileTabPath = path.join(__dirname, "../client/src/pages/mypage/ProfileTab.tsx");
+      const myPagePath = path.join(__dirname, "../client/src/pages/MyPage.tsx");
+      const profileExists = fs.existsSync(profileTabPath);
+      const content = profileExists
+        ? fs.readFileSync(profileTabPath, "utf-8")
+        : fs.readFileSync(myPagePath, "utf-8");
+      expect(content).toContain("cooldown");
+      expect(content).toContain("setCooldown");
     });
   });
 

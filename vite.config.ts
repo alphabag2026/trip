@@ -186,10 +186,7 @@ export default defineConfig({
           if (id.includes('node_modules/@trpc/') || id.includes('node_modules/@tanstack/')) {
             return 'vendor-data';
           }
-          // Locale files
-          if (id.includes('/locales/') && id.endsWith('.json')) {
-            return 'locales';
-          }
+          // Locale files are now dynamically imported - no manual chunk needed
           // Admin pages → separate chunk
           if (id.includes('/pages/admin/')) {
             return 'admin';
