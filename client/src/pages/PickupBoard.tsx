@@ -156,7 +156,7 @@ export default function PickupBoard() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {photos.map(photo => (
                 <Card key={photo.id} className="overflow-hidden">
-                  <img src={photo.photoUrl} alt={photo.caption || ""} className="w-full h-40 object-cover" />
+                  <img loading="lazy" decoding="async" src={photo.photoUrl} alt={photo.caption || ""} className="w-full h-40 object-cover" />
                   <CardContent className="py-2">
                     <p className="text-xs text-muted-foreground">{photo.uploadedBy || t("pickup.anonymous")}</p>
                     {photo.caption && <p className="text-xs text-foreground mt-0.5">{photo.caption}</p>}

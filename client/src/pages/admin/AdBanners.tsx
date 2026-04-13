@@ -148,7 +148,7 @@ export default function AdBanners() {
                   {/* Thumbnail */}
                   <div className="w-40 h-24 rounded-lg overflow-hidden bg-muted shrink-0">
                     {banner.imageUrl ? (
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={banner.imageUrl}
                         alt={banner.title || "배너"}
                         className="w-full h-full object-cover"
@@ -262,7 +262,7 @@ export default function AdBanners() {
               <Input value={form.imageUrl} onChange={e => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://..." />
               {form.imageUrl && (
                 <div className="mt-2 rounded-lg overflow-hidden border">
-                  <img src={form.imageUrl} alt="미리보기" className="w-full h-32 object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <img loading="lazy" decoding="async" src={form.imageUrl} alt="미리보기" className="w-full h-32 object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 </div>
               )}
             </div>

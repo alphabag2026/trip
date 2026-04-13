@@ -304,7 +304,7 @@ export default function Onboarding() {
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container flex items-center justify-between h-14">
-          <a href="/" className="flex items-center gap-2 text-lg font-bold text-primary hover:opacity-80 transition-opacity cursor-pointer"><img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-7 w-7 rounded-md" />Alpha Trip</a>
+          <a href="/" className="flex items-center gap-2 text-lg font-bold text-primary hover:opacity-80 transition-opacity cursor-pointer"><img loading="lazy" decoding="async" src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-7 w-7 rounded-md" />Alpha Trip</a>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">{t("onboarding.welcome", { name: user?.name })}</span>
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive gap-1" onClick={async () => { await logout(); window.location.href = "/"; }}>
@@ -473,7 +473,7 @@ export default function Onboarding() {
               <Card>
                 <CardContent className="pt-4 pb-4">
                   <div className="flex justify-center mb-3">
-                    <img src={scanImagePreview} alt="여권 스캔" className="max-h-48 rounded-lg object-contain" />
+                    <img loading="lazy" decoding="async" src={scanImagePreview} alt="여권 스캔" className="max-h-48 rounded-lg object-contain" />
                   </div>
                   <div className="flex justify-center">
                     <Button
@@ -863,7 +863,7 @@ export default function Onboarding() {
                 <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center">
                   {passportForm.passportImageUrl ? (
                     <div className="space-y-3">
-                      <img src={passportForm.passportImageUrl} alt={t("onboarding.passportTitle")} className="max-h-48 mx-auto rounded-lg object-contain" />
+                      <img loading="lazy" decoding="async" src={passportForm.passportImageUrl} alt={t("onboarding.passportTitle")} className="max-h-48 mx-auto rounded-lg object-contain" />
                       <Badge variant="secondary">{t("onboarding.passportImageDone")}</Badge>
                       <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
                         {t("onboarding.reupload")}

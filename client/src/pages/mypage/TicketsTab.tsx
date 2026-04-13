@@ -102,7 +102,7 @@ export default function TicketsTab() {
                 {t_ticket.ticketFileType === "pdf" ? (
                   <a href={t_ticket.ticketFileUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">{t("myPage.viewTicketPdf")}</a>
                 ) : (
-                  <img src={t_ticket.ticketFileUrl} alt="Flight Ticket" className="max-w-full rounded border" />
+                  <img loading="lazy" decoding="async" src={t_ticket.ticketFileUrl} alt="Flight Ticket" className="max-w-full rounded border" />
                 )}
               </div>
             )}

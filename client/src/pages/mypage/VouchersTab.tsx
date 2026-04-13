@@ -104,7 +104,7 @@ export default function VouchersTab() {
                 {v.voucherFileType === "pdf" ? (
                   <a href={v.voucherFileUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">{t("myPage.viewPdf")}</a>
                 ) : (
-                  <img src={v.voucherFileUrl} alt="Hotel Voucher" className="max-w-full rounded border" />
+                  <img loading="lazy" decoding="async" src={v.voucherFileUrl} alt="Hotel Voucher" className="max-w-full rounded border" />
                 )}
               </div>
             )}

@@ -574,7 +574,7 @@ export default function AdminRegistrations() {
             <DialogHeader><DialogTitle>{selectedReg.name} - 여권 정보</DialogTitle></DialogHeader>
             <div className="space-y-4">
               {selectedReg.passportImageUrl && (
-                <img src={selectedReg.passportImageUrl} alt="여권" className="w-full rounded-lg" />
+                <img loading="lazy" decoding="async" src={selectedReg.passportImageUrl} alt="여권" className="w-full rounded-lg" />
               )}
               {selectedReg.preferredDepartureTime && (
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-sm">

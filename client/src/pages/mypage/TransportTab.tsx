@@ -32,7 +32,7 @@ export default function TransportTab() {
                   <CardContent className="pt-4 space-y-3">
                     <div className="flex items-start gap-4">
                       {p.vehiclePhotoUrl && (
-                        <img src={p.vehiclePhotoUrl} alt="vehicle" className="w-24 h-24 rounded-lg object-cover border" />
+                        <img loading="lazy" decoding="async" src={p.vehiclePhotoUrl} alt="vehicle" className="w-24 h-24 rounded-lg object-cover border" />
                       )}
                       <div className="flex-1 space-y-1">
                         <h4 className="font-semibold text-lg">{p.vehicleName}</h4>
@@ -96,7 +96,7 @@ export default function TransportTab() {
                   <CardContent className="pt-4 space-y-3">
                     <div className="flex items-start gap-4">
                       {a.accommodationPhotoUrl && (
-                        <img src={a.accommodationPhotoUrl} alt="hotel" className="w-24 h-24 rounded-lg object-cover border" />
+                        <img loading="lazy" decoding="async" src={a.accommodationPhotoUrl} alt="hotel" className="w-24 h-24 rounded-lg object-cover border" />
                       )}
                       <div className="flex-1 space-y-1">
                         <h4 className="font-semibold text-lg">{a.hotelName}</h4>

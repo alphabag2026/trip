@@ -321,7 +321,7 @@ export default function FlightTracker() {
                     {/* Tag photo */}
                     {b.tagPhotoUrl ? (
                       <div className="relative">
-                        <img src={b.tagPhotoUrl} alt="" className="w-full h-32 object-cover rounded-lg" />
+                        <img loading="lazy" decoding="async" src={b.tagPhotoUrl} alt="" className="w-full h-32 object-cover rounded-lg" />
                         {b.ocrResult && (
                           <div className="absolute bottom-2 left-2 right-2 bg-black/70 backdrop-blur-sm rounded-lg p-2 text-xs">
                             <div className="flex justify-between text-white">
@@ -436,7 +436,7 @@ export default function FlightTracker() {
                     {c.boardingPassUrl && (
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">{t("tracker.boardingPass", "탑승권")}</p>
-                        <img src={c.boardingPassUrl} alt="" className="w-full rounded-lg border border-border" />
+                        <img loading="lazy" decoding="async" src={c.boardingPassUrl} alt="" className="w-full rounded-lg border border-border" />
                       </div>
                     )}
 

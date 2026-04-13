@@ -321,14 +321,14 @@ function DashboardLayoutContent({
               </button>
               {!isCollapsed ? (
                 <a href="/" className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity">
-                  <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-7 w-7 rounded-md flex-shrink-0" />
+                  <img loading="lazy" decoding="async" src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-7 w-7 rounded-md flex-shrink-0" />
                   <span className="font-semibold tracking-tight truncate text-primary" style={{ fontFamily: 'Inter, sans-serif' }}>
                     Alpha Trip
                   </span>
                 </a>
               ) : (
                 <a href="/" className="hover:opacity-80 transition-opacity">
-                  <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-7 w-7 rounded-md" />
+                  <img loading="lazy" decoding="async" src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-7 w-7 rounded-md" />
                 </a>
               )}
             </div>

@@ -926,7 +926,7 @@ function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onU
   const renderContent = () => {
     switch (msg.messageType) {
       case "image":
-        return msg.fileUrl ? <img src={msg.fileUrl} alt={msg.fileName || "이미지"} className="rounded-lg max-w-full max-h-60 cursor-pointer" onClick={() => window.open(msg.fileUrl, "_blank")} /> : <p>{msg.content}</p>;
+        return msg.fileUrl ? <img loading="lazy" decoding="async" src={msg.fileUrl} alt={msg.fileName || "이미지"} className="rounded-lg max-w-full max-h-60 cursor-pointer" onClick={() => window.open(msg.fileUrl, "_blank")} /> : <p>{msg.content}</p>;
       case "video":
         return msg.fileUrl ? (
           <video src={msg.fileUrl} controls className="rounded-lg max-w-full max-h-60" />
@@ -1468,7 +1468,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
                   if (item.messageType === "image") {
                     return (
                       <div key={item.id} className="aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.open(item.fileUrl, "_blank")}>
-                        <img src={item.fileUrl} alt={item.fileName || "이미지"} className="w-full h-full object-cover" />
+                        <img loading="lazy" decoding="async" src={item.fileUrl} alt={item.fileName || "이미지"} className="w-full h-full object-cover" />
                       </div>
                     );
                   }
@@ -1529,7 +1529,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
                     </span>
                   </div>
                   {pm.messageType === "image" && pm.fileUrl ? (
-                    <img src={pm.fileUrl} alt="" className="rounded-lg max-h-40 mb-1" />
+                    <img loading="lazy" decoding="async" src={pm.fileUrl} alt="" className="rounded-lg max-h-40 mb-1" />
                   ) : pm.messageType === "video" && pm.fileUrl ? (
                     <video src={pm.fileUrl} controls className="rounded-lg max-h-40 mb-1" />
                   ) : (

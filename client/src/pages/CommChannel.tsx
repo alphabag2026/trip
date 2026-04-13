@@ -176,7 +176,7 @@ export default function CommChannel() {
                     </Badge>
                   </div>
                   {msg.messageType === "photo" && msg.photoUrl && (
-                    <img src={msg.photoUrl} alt="photo" className="rounded-md max-w-full max-h-60 mb-2" />
+                    <img loading="lazy" decoding="async" src={msg.photoUrl} alt="photo" className="rounded-md max-w-full max-h-60 mb-2" />
                   )}
                   <p className="text-sm">{msg.content}</p>
                   <p className="text-[10px] text-muted-foreground mt-1">

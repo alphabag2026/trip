@@ -187,9 +187,11 @@ export default defineConfig({
             return 'vendor-data';
           }
           // Locale files are now dynamically imported - no manual chunk needed
-          // Admin pages → separate chunk
-          if (id.includes('/pages/admin/')) {
-            return 'admin';
+          // Admin pages: each page is already React.lazy, so NO manual chunk grouping.
+          // This lets Vite split each admin page into its own chunk automatically.
+          // DashboardLayout shared by all admin pages → separate chunk
+          if (id.includes('/components/DashboardLayout')) {
+            return 'admin-layout';
           }
         },
       },

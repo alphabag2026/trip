@@ -217,7 +217,7 @@ export default function AdminBaggageCheckin() {
                                 </DialogTrigger>
                                 <DialogContent>
                                   <DialogHeader><DialogTitle>{t("admin.baggageCheckin.t16", "수화물 태그 사진")}</DialogTitle></DialogHeader>
-                                  <img src={b.tagPhotoUrl} alt="태그" className="w-full rounded-lg" />
+                                  <img loading="lazy" decoding="async" src={b.tagPhotoUrl} alt="태그" className="w-full rounded-lg" />
                                   {b.ocrResult && (
                                     <div className="bg-secondary rounded-lg p-3 text-sm space-y-1">
                                       <p><strong>{t("admin.baggageCheckin.t17", "태그번호:")}</strong> {b.ocrResult.tagNumber}</p>

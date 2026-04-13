@@ -12,7 +12,8 @@ import {
   ArrowLeft, MapPin, Search, Navigation, Star, Clock, Phone,
   ExternalLink, UtensilsCrossed, Coffee, Hotel, ShoppingBag,
   Landmark, Banknote, Pill, Building2, Loader2, X, ChevronRight,
-  Locate, Filter, List, Map as MapIcon, Heart, Share2, Copy, Check
+  Locate, Filter, List, Map as MapIcon, Heart, Share2, Copy, Check,
+  MapPinOff, Compass, RefreshCw, Info
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,17 +28,18 @@ type PlaceCategory = {
   types: string[];
   color: string;
   gradient: string;
+  bgColor: string;
 };
 
 const CATEGORIES: PlaceCategory[] = [
-  { id: "restaurant", icon: UtensilsCrossed, labelKey: "nearby.cat_restaurant", fallbackLabel: "식당", types: ["restaurant", "food"], color: "text-orange-500", gradient: "from-orange-500 to-red-500" },
-  { id: "cafe", icon: Coffee, labelKey: "nearby.cat_cafe", fallbackLabel: "카페", types: ["cafe"], color: "text-amber-600", gradient: "from-amber-500 to-yellow-600" },
-  { id: "attraction", icon: Landmark, labelKey: "nearby.cat_attraction", fallbackLabel: "관광지", types: ["tourist_attraction", "museum", "art_gallery"], color: "text-blue-500", gradient: "from-blue-500 to-indigo-500" },
-  { id: "hotel", icon: Hotel, labelKey: "nearby.cat_hotel", fallbackLabel: "호텔", types: ["lodging"], color: "text-rose-500", gradient: "from-rose-500 to-pink-500" },
-  { id: "convenience", icon: ShoppingBag, labelKey: "nearby.cat_convenience", fallbackLabel: "편의점", types: ["convenience_store", "supermarket"], color: "text-green-500", gradient: "from-green-500 to-emerald-500" },
-  { id: "atm", icon: Banknote, labelKey: "nearby.cat_atm", fallbackLabel: "ATM", types: ["atm", "bank"], color: "text-emerald-500", gradient: "from-emerald-500 to-teal-500" },
-  { id: "pharmacy", icon: Pill, labelKey: "nearby.cat_pharmacy", fallbackLabel: "약국", types: ["pharmacy", "drugstore"], color: "text-red-500", gradient: "from-red-500 to-rose-500" },
-  { id: "hospital", icon: Building2, labelKey: "nearby.cat_hospital", fallbackLabel: "병원", types: ["hospital", "doctor"], color: "text-sky-500", gradient: "from-sky-500 to-blue-500" },
+  { id: "restaurant", icon: UtensilsCrossed, labelKey: "nearby.cat_restaurant", fallbackLabel: "식당", types: ["restaurant", "food"], color: "text-orange-500", gradient: "from-orange-500 to-red-500", bgColor: "bg-orange-50 dark:bg-orange-950/30" },
+  { id: "cafe", icon: Coffee, labelKey: "nearby.cat_cafe", fallbackLabel: "카페", types: ["cafe"], color: "text-amber-600", gradient: "from-amber-500 to-yellow-600", bgColor: "bg-amber-50 dark:bg-amber-950/30" },
+  { id: "attraction", icon: Landmark, labelKey: "nearby.cat_attraction", fallbackLabel: "관광지", types: ["tourist_attraction", "museum", "art_gallery"], color: "text-blue-500", gradient: "from-blue-500 to-indigo-500", bgColor: "bg-blue-50 dark:bg-blue-950/30" },
+  { id: "hotel", icon: Hotel, labelKey: "nearby.cat_hotel", fallbackLabel: "호텔", types: ["lodging"], color: "text-rose-500", gradient: "from-rose-500 to-pink-500", bgColor: "bg-rose-50 dark:bg-rose-950/30" },
+  { id: "convenience", icon: ShoppingBag, labelKey: "nearby.cat_convenience", fallbackLabel: "편의점", types: ["convenience_store", "supermarket"], color: "text-green-500", gradient: "from-green-500 to-emerald-500", bgColor: "bg-green-50 dark:bg-green-950/30" },
+  { id: "atm", icon: Banknote, labelKey: "nearby.cat_atm", fallbackLabel: "ATM", types: ["atm", "bank"], color: "text-emerald-500", gradient: "from-emerald-500 to-teal-500", bgColor: "bg-emerald-50 dark:bg-emerald-950/30" },
+  { id: "pharmacy", icon: Pill, labelKey: "nearby.cat_pharmacy", fallbackLabel: "약국", types: ["pharmacy", "drugstore"], color: "text-red-500", gradient: "from-red-500 to-rose-500", bgColor: "bg-red-50 dark:bg-red-950/30" },
+  { id: "hospital", icon: Building2, labelKey: "nearby.cat_hospital", fallbackLabel: "병원", types: ["hospital", "doctor"], color: "text-sky-500", gradient: "from-sky-500 to-blue-500", bgColor: "bg-sky-50 dark:bg-sky-950/30" },
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -121,6 +123,91 @@ function StarRating({ rating, count }: { rating?: number; count?: number }) {
 }
 
 // ═══════════════════════════════════════════════════════
+// Location Permission Banner
+// ═══════════════════════════════════════════════════════
+function LocationBanner({
+  locationDenied,
+  onRetry,
+  t,
+}: {
+  locationDenied: boolean;
+  onRetry: () => void;
+  t: (key: string, fallback: string) => string;
+}) {
+  if (!locationDenied) return null;
+  return (
+    <div className="mx-4 mb-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 flex items-start gap-3">
+      <MapPinOff className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+          {t("nearby.location_denied_title", "위치 권한이 거부되었습니다")}
+        </p>
+        <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+          {t("nearby.location_denied_desc", "기본 위치(방콕)를 기준으로 주변 장소를 표시합니다. 정확한 결과를 위해 위치 권한을 허용해주세요.")}
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-2 h-7 text-xs border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/50"
+          onClick={onRetry}
+        >
+          <RefreshCw className="h-3 w-3 mr-1" />
+          {t("nearby.retry_location", "위치 다시 요청")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// Empty State Component
+// ═══════════════════════════════════════════════════════
+function EmptyState({
+  searchQuery,
+  category,
+  onClearSearch,
+  onRetry,
+  t,
+}: {
+  searchQuery: string;
+  category?: PlaceCategory;
+  onClearSearch: () => void;
+  onRetry: () => void;
+  t: (key: string, fallback: string) => string;
+}) {
+  const Icon = category?.icon || MapPin;
+  return (
+    <div className="text-center py-16 px-6">
+      <div className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl ${category?.bgColor || "bg-muted"} mb-4`}>
+        <Icon className={`h-10 w-10 ${category?.color || "text-muted-foreground"} opacity-60`} />
+      </div>
+      <h3 className="text-base font-semibold mb-1">
+        {searchQuery
+          ? t("nearby.no_search_results", "검색 결과가 없습니다")
+          : t("nearby.no_results", "주변에 장소가 없습니다")}
+      </h3>
+      <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+        {searchQuery
+          ? t("nearby.try_different_search", "다른 검색어를 시도하거나 카테고리를 선택해보세요")
+          : t("nearby.try_other", "다른 카테고리를 선택하거나 지도를 이동하여 검색해보세요")}
+      </p>
+      <div className="flex items-center justify-center gap-2 mt-4">
+        {searchQuery && (
+          <Button variant="outline" size="sm" onClick={onClearSearch}>
+            <X className="h-3.5 w-3.5 mr-1" />
+            {t("nearby.clear_search", "검색 초기화")}
+          </Button>
+        )}
+        <Button variant="default" size="sm" onClick={onRetry}>
+          <RefreshCw className="h-3.5 w-3.5 mr-1" />
+          {t("nearby.retry", "다시 검색")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════
 export default function NearbyExplorer() {
@@ -131,6 +218,7 @@ export default function NearbyExplorer() {
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
 
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationDenied, setLocationDenied] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("restaurant");
   const [places, setPlaces] = useState<NearbyPlace[]>([]);
   const [loading, setLoading] = useState(false);
@@ -140,33 +228,77 @@ export default function NearbyExplorer() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(true);
   const [copiedAddress, setCopiedAddress] = useState(false);
+  const [resultsCount, setResultsCount] = useState(0);
 
   // Default center (Bangkok - common travel destination)
   const defaultCenter = useMemo(() => ({ lat: 13.7563, lng: 100.5018 }), []);
 
   // ── Get user location ──
-  useEffect(() => {
+  const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setLocationLoading(false);
+      setLocationDenied(true);
       return;
     }
+    setLocationLoading(true);
+    setLocationDenied(false);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setLocationLoading(false);
+        setLocationDenied(false);
       },
-      () => {
+      (err) => {
         setLocationLoading(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationDenied(true);
+        }
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, []);
+
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
 
   // ── Clear markers ──
   const clearMarkers = useCallback(() => {
     markersRef.current.forEach((m) => (m.map = null));
     markersRef.current = [];
     if (infoWindowRef.current) infoWindowRef.current.close();
+  }, []);
+
+  // ── Create custom marker element ──
+  const createMarkerContent = useCallback((category: PlaceCategory, isHighlighted = false) => {
+    const el = document.createElement("div");
+    const size = isHighlighted ? 36 : 28;
+    el.innerHTML = `<div style="
+      width:${size}px;height:${size}px;
+      background:linear-gradient(135deg, var(--from), var(--to));
+      border:2px solid white;
+      border-radius:50%;
+      box-shadow:0 2px 8px rgba(0,0,0,0.25);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;
+      transition:transform 0.2s;
+      ${isHighlighted ? "transform:scale(1.2);" : ""}
+    " class="marker-pin"></div>`;
+    // Set CSS custom properties for gradient
+    const gradientMap: Record<string, [string, string]> = {
+      restaurant: ["#f97316", "#ef4444"],
+      cafe: ["#f59e0b", "#ca8a04"],
+      attraction: ["#3b82f6", "#6366f1"],
+      hotel: ["#f43f5e", "#ec4899"],
+      convenience: ["#22c55e", "#10b981"],
+      atm: ["#10b981", "#14b8a6"],
+      pharmacy: ["#ef4444", "#f43f5e"],
+      hospital: ["#0ea5e9", "#3b82f6"],
+    };
+    const [from, to] = gradientMap[category.id] || ["#6b7280", "#9ca3af"];
+    el.style.setProperty("--from", from);
+    el.style.setProperty("--to", to);
+    return el;
   }, []);
 
   // ── Search nearby places ──
@@ -188,6 +320,7 @@ export default function NearbyExplorer() {
         setLoading(false);
         if (status !== google.maps.places.PlacesServiceStatus.OK || !results) {
           setPlaces([]);
+          setResultsCount(0);
           return;
         }
 
@@ -213,13 +346,16 @@ export default function NearbyExplorer() {
           .sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
         setPlaces(mapped);
+        setResultsCount(mapped.length);
 
-        // Add markers
+        // Add markers with custom styling
         mapped.forEach((place) => {
+          const markerContent = createMarkerContent(category);
           const marker = new google.maps.marker.AdvancedMarkerElement({
             map: mapRef.current!,
             position: { lat: place.lat, lng: place.lng },
             title: place.name,
+            content: markerContent,
           });
           marker.addListener("click", () => {
             fetchPlaceDetail(place.placeId);
@@ -237,7 +373,7 @@ export default function NearbyExplorer() {
         }
       });
     },
-    [userLocation, defaultCenter, clearMarkers]
+    [userLocation, defaultCenter, clearMarkers, createMarkerContent]
   );
 
   // ── Text search ──
@@ -259,6 +395,7 @@ export default function NearbyExplorer() {
         setLoading(false);
         if (status !== google.maps.places.PlacesServiceStatus.OK || !results) {
           setPlaces([]);
+          setResultsCount(0);
           return;
         }
 
@@ -284,6 +421,7 @@ export default function NearbyExplorer() {
           .sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
         setPlaces(mapped);
+        setResultsCount(mapped.length);
 
         mapped.forEach((place) => {
           const marker = new google.maps.marker.AdvancedMarkerElement({
@@ -363,7 +501,7 @@ export default function NearbyExplorer() {
       // Blue dot for user location
       if (userLocation) {
         const el = document.createElement("div");
-        el.innerHTML = `<div style="width:16px;height:16px;background:#4285F4;border:3px solid white;border-radius:50%;box-shadow:0 0 8px rgba(66,133,244,0.5)"></div>`;
+        el.innerHTML = `<div style="width:18px;height:18px;background:#4285F4;border:3px solid white;border-radius:50%;box-shadow:0 0 10px rgba(66,133,244,0.5);animation:pulse 2s infinite"></div>`;
         new google.maps.marker.AdvancedMarkerElement({
           map,
           position: userLocation,
@@ -396,18 +534,27 @@ export default function NearbyExplorer() {
     if (userLocation) {
       mapRef.current.panTo(userLocation);
       mapRef.current.setZoom(15);
+      // Re-search from current location
+      const cat = CATEGORIES.find((c) => c.id === selectedCategory);
+      if (cat) searchNearby(cat, userLocation);
     } else {
       navigator.geolocation?.getCurrentPosition(
         (pos) => {
           const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setUserLocation(loc);
+          setLocationDenied(false);
           mapRef.current?.panTo(loc);
           mapRef.current?.setZoom(15);
+          const cat = CATEGORIES.find((c) => c.id === selectedCategory);
+          if (cat) searchNearby(cat, loc);
         },
-        () => toast.error(t("nearby.location_error", "위치를 가져올 수 없습니다"))
+        () => {
+          toast.error(t("nearby.location_error", "위치를 가져올 수 없습니다"));
+          setLocationDenied(true);
+        }
       );
     }
-  }, [userLocation, t]);
+  }, [userLocation, t, selectedCategory, searchNearby]);
 
   // ── Copy address ──
   const handleCopyAddress = useCallback((address: string) => {
@@ -415,6 +562,17 @@ export default function NearbyExplorer() {
     setCopiedAddress(true);
     toast.success(t("nearby.address_copied", "주소가 복사되었습니다"));
     setTimeout(() => setCopiedAddress(false), 2000);
+  }, [t]);
+
+  // ── Share place ──
+  const handleSharePlace = useCallback((place: PlaceDetail) => {
+    const url = `https://www.google.com/maps/place/?q=place_id:${place.placeId}`;
+    if (navigator.share) {
+      navigator.share({ title: place.name, text: `${place.name} - ${place.address}`, url });
+    } else {
+      navigator.clipboard.writeText(url);
+      toast.success(t("nearby.link_copied", "링크가 복사되었습니다"));
+    }
   }, [t]);
 
   // ── Search submit ──
@@ -426,6 +584,23 @@ export default function NearbyExplorer() {
     [searchQuery, searchByText]
   );
 
+  // ── Clear search and re-search category ──
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+    const cat = CATEGORIES.find(c => c.id === selectedCategory);
+    if (cat) searchNearby(cat);
+  }, [selectedCategory, searchNearby]);
+
+  // ── Retry search ──
+  const handleRetrySearch = useCallback(() => {
+    if (searchQuery.trim()) {
+      searchByText(searchQuery.trim());
+    } else {
+      const cat = CATEGORIES.find(c => c.id === selectedCategory);
+      if (cat) searchNearby(cat);
+    }
+  }, [searchQuery, selectedCategory, searchByText, searchNearby]);
+
   const currentCategory = CATEGORIES.find((c) => c.id === selectedCategory);
 
   return (
@@ -434,16 +609,31 @@ export default function NearbyExplorer() {
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
         <div className="flex items-center gap-3 px-4 py-3">
           <Link href="/">
-            <Button variant="ghost" size="icon" className="shrink-0">
+            <Button variant="ghost" size="icon" className="shrink-0 -ml-1">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold truncate">{t("nearby.title", "주변 탐색")}</h1>
-            <p className="text-xs text-muted-foreground truncate">
-              {userLocation
-                ? t("nearby.location_found", "현재 위치 기반")
-                : t("nearby.location_default", "기본 위치 (방콕)")}
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold truncate">{t("nearby.title", "주변 탐색")}</h1>
+              {!loading && resultsCount > 0 && (
+                <Badge variant="secondary" className="text-[10px] h-5 px-1.5 shrink-0">
+                  {resultsCount}
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+              {userLocation ? (
+                <>
+                  <Compass className="h-3 w-3 text-green-500" />
+                  {t("nearby.location_found", "현재 위치 기반")}
+                </>
+              ) : (
+                <>
+                  <Info className="h-3 w-3 text-amber-500" />
+                  {t("nearby.location_default", "기본 위치 (방콕)")}
+                </>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-1">
@@ -466,6 +656,9 @@ export default function NearbyExplorer() {
           </div>
         </div>
 
+        {/* ── Location denied banner ── */}
+        <LocationBanner locationDenied={locationDenied} onRetry={requestLocation} t={t} />
+
         {/* ── Search bar ── */}
         <div className="px-4 pb-3">
           <form onSubmit={handleSearchSubmit} className="relative">
@@ -474,13 +667,13 @@ export default function NearbyExplorer() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("nearby.search_placeholder", "장소, 식당, 카페 검색...")}
-              className="pl-9 pr-10 h-10"
+              className="pl-9 pr-10 h-10 rounded-xl"
             />
             {searchQuery && (
               <button
                 type="button"
-                onClick={() => { setSearchQuery(""); const cat = CATEGORIES.find(c => c.id === selectedCategory); if (cat) searchNearby(cat); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
+                onClick={handleClearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors"
               >
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -498,7 +691,7 @@ export default function NearbyExplorer() {
                 <button
                   key={cat.id}
                   onClick={() => handleCategoryChange(cat.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap active:scale-95 ${
                     isActive
                       ? `bg-gradient-to-r ${cat.gradient} text-white shadow-sm`
                       : "bg-muted/60 text-muted-foreground hover:bg-muted"
@@ -521,8 +714,13 @@ export default function NearbyExplorer() {
             {locationLoading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center space-y-3">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  </div>
                   <p className="text-sm text-muted-foreground">{t("nearby.getting_location", "위치를 확인하는 중...")}</p>
+                  <p className="text-xs text-muted-foreground/60">{t("nearby.location_hint", "위치 권한을 허용해주세요")}</p>
                 </div>
               </div>
             ) : (
@@ -538,53 +736,57 @@ export default function NearbyExplorer() {
             <Button
               variant="secondary"
               size="icon"
-              className="absolute bottom-24 right-4 z-10 h-10 w-10 rounded-full shadow-lg"
+              className="absolute bottom-24 right-4 z-10 h-11 w-11 rounded-full shadow-lg border"
               onClick={handleRecenter}
+              title={t("nearby.recenter", "현재 위치로 이동")}
             >
               <Locate className="h-5 w-5" />
             </Button>
 
             {/* Bottom place cards (horizontal scroll) */}
             {places.length > 0 && !loading && (
-              <div className="absolute bottom-4 left-0 right-0 z-10 px-4 overflow-x-auto scrollbar-hide">
-                <div className="flex gap-3 min-w-max pb-2">
-                  {places.slice(0, 10).map((place) => (
-                    <button
-                      key={place.placeId}
-                      onClick={() => {
-                        fetchPlaceDetail(place.placeId);
-                        mapRef.current?.panTo({ lat: place.lat, lng: place.lng });
-                        mapRef.current?.setZoom(17);
-                      }}
-                      className="bg-card rounded-xl shadow-lg border p-3 min-w-[200px] max-w-[240px] text-left hover:shadow-xl transition-shadow"
-                    >
-                      {place.photoUrl && (
-                        <img
-                          src={place.photoUrl}
-                          alt={place.name}
-                          className="w-full h-24 object-cover rounded-lg mb-2"
-                          loading="lazy"
-                        />
-                      )}
-                      <p className="font-medium text-sm truncate">{place.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <StarRating rating={place.rating} count={place.userRatingsTotal} />
-                        {place.distance !== undefined && (
-                          <span className="text-xs text-muted-foreground ml-auto">
-                            {formatDistance(place.distance)}
-                          </span>
+              <div className="absolute bottom-4 left-0 right-0 z-10">
+                {/* Scroll hint gradient */}
+                <div className="relative px-4 overflow-x-auto scrollbar-hide scroll-smooth">
+                  <div className="flex gap-3 min-w-max pb-2 snap-x snap-mandatory">
+                    {places.slice(0, 10).map((place) => (
+                      <button
+                        key={place.placeId}
+                        onClick={() => {
+                          fetchPlaceDetail(place.placeId);
+                          mapRef.current?.panTo({ lat: place.lat, lng: place.lng });
+                          mapRef.current?.setZoom(17);
+                        }}
+                        className="bg-card rounded-xl shadow-lg border p-3 min-w-[220px] max-w-[260px] text-left hover:shadow-xl transition-all active:scale-[0.98] snap-start"
+                      >
+                        {place.photoUrl && (
+                          <img loading="lazy" decoding="async"
+                            src={place.photoUrl}
+                            alt={place.name}
+                            className="w-full h-28 object-cover rounded-lg mb-2"
+                          />
                         )}
-                      </div>
-                      {place.openNow !== undefined && (
-                        <Badge
-                          variant={place.openNow ? "default" : "secondary"}
-                          className={`mt-1.5 text-[10px] ${place.openNow ? "bg-green-500/10 text-green-600 border-green-200" : ""}`}
-                        >
-                          {place.openNow ? t("nearby.open", "영업 중") : t("nearby.closed", "영업 종료")}
-                        </Badge>
-                      )}
-                    </button>
-                  ))}
+                        <p className="font-medium text-sm truncate">{place.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <StarRating rating={place.rating} count={place.userRatingsTotal} />
+                          {place.distance !== undefined && (
+                            <span className="text-xs text-muted-foreground ml-auto flex items-center gap-0.5">
+                              <Navigation className="h-3 w-3" />
+                              {formatDistance(place.distance)}
+                            </span>
+                          )}
+                        </div>
+                        {place.openNow !== undefined && (
+                          <Badge
+                            variant={place.openNow ? "default" : "secondary"}
+                            className={`mt-1.5 text-[10px] ${place.openNow ? "bg-green-500/10 text-green-600 border-green-200" : ""}`}
+                          >
+                            {place.openNow ? t("nearby.open", "영업 중") : t("nearby.closed", "영업 종료")}
+                          </Badge>
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -606,7 +808,7 @@ export default function NearbyExplorer() {
           <div className="p-4 space-y-3 pb-24">
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <Card key={i}>
+                <Card key={i} className="overflow-hidden">
                   <CardContent className="p-3 flex gap-3">
                     <Skeleton className="w-20 h-20 rounded-lg shrink-0" />
                     <div className="flex-1 space-y-2">
@@ -618,58 +820,77 @@ export default function NearbyExplorer() {
                 </Card>
               ))
             ) : places.length === 0 ? (
-              <div className="text-center py-16">
-                <MapPin className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
-                <p className="text-sm text-muted-foreground">{t("nearby.no_results", "검색 결과가 없습니다")}</p>
-                <p className="text-xs text-muted-foreground mt-1">{t("nearby.try_other", "다른 카테고리나 검색어를 시도해보세요")}</p>
-              </div>
+              <EmptyState
+                searchQuery={searchQuery}
+                category={currentCategory}
+                onClearSearch={handleClearSearch}
+                onRetry={handleRetrySearch}
+                t={t}
+              />
             ) : (
-              places.map((place) => (
-                <Card
-                  key={place.placeId}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => fetchPlaceDetail(place.placeId)}
-                >
-                  <CardContent className="p-3 flex gap-3">
-                    {place.photoUrl ? (
-                      <img
-                        src={place.photoUrl}
-                        alt={place.name}
-                        className="w-20 h-20 object-cover rounded-lg shrink-0"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                        {currentCategory && <currentCategory.icon className={`h-8 w-8 ${currentCategory.color} opacity-40`} />}
+              <>
+                {/* Results summary */}
+                <div className="flex items-center justify-between text-xs text-muted-foreground px-1 pb-1">
+                  <span>
+                    {searchQuery
+                      ? t("nearby.search_results_for", `"${searchQuery}" 검색 결과`)
+                      : `${t(currentCategory?.labelKey || "", currentCategory?.fallbackLabel || "")} ${t("nearby.results", "결과")}`}
+                    {" "}({resultsCount}{t("nearby.count_suffix", "개")})
+                  </span>
+                  {userLocation && (
+                    <span className="flex items-center gap-0.5">
+                      <Navigation className="h-3 w-3" />
+                      {t("nearby.sorted_by_distance", "거리순")}
+                    </span>
+                  )}
+                </div>
+
+                {places.map((place) => (
+                  <Card
+                    key={place.placeId}
+                    className="cursor-pointer hover:shadow-md transition-all active:scale-[0.99] overflow-hidden"
+                    onClick={() => fetchPlaceDetail(place.placeId)}
+                  >
+                    <CardContent className="p-3 flex gap-3">
+                      {place.photoUrl ? (
+                        <img loading="lazy" decoding="async"
+                          src={place.photoUrl}
+                          alt={place.name}
+                          className="w-20 h-20 object-cover rounded-lg shrink-0"
+                        />
+                      ) : (
+                        <div className={`w-20 h-20 rounded-lg ${currentCategory?.bgColor || "bg-muted"} flex items-center justify-center shrink-0`}>
+                          {currentCategory && <currentCategory.icon className={`h-8 w-8 ${currentCategory.color} opacity-50`} />}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{place.name}</p>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{place.address}</p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <StarRating rating={place.rating} count={place.userRatingsTotal} />
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          {place.openNow !== undefined && (
+                            <Badge
+                              variant={place.openNow ? "default" : "secondary"}
+                              className={`text-[10px] ${place.openNow ? "bg-green-500/10 text-green-600 border-green-200" : ""}`}
+                            >
+                              {place.openNow ? t("nearby.open", "영업 중") : t("nearby.closed", "영업 종료")}
+                            </Badge>
+                          )}
+                          {place.distance !== undefined && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                              <Navigation className="h-3 w-3" />
+                              {formatDistance(place.distance)}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{place.name}</p>
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">{place.address}</p>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <StarRating rating={place.rating} count={place.userRatingsTotal} />
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        {place.openNow !== undefined && (
-                          <Badge
-                            variant={place.openNow ? "default" : "secondary"}
-                            className={`text-[10px] ${place.openNow ? "bg-green-500/10 text-green-600 border-green-200" : ""}`}
-                          >
-                            {place.openNow ? t("nearby.open", "영업 중") : t("nearby.closed", "영업 종료")}
-                          </Badge>
-                        )}
-                        {place.distance !== undefined && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                            <Navigation className="h-3 w-3" />
-                            {formatDistance(place.distance)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 self-center" />
-                  </CardContent>
-                </Card>
-              ))
+                      <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 self-center" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </>
             )}
           </div>
         )}
@@ -687,26 +908,42 @@ export default function NearbyExplorer() {
               {/* Photos carousel */}
               {selectedPlace.photoUrls.length > 0 && (
                 <div className="relative">
-                  <div className="overflow-x-auto scrollbar-hide">
+                  <div className="overflow-x-auto scrollbar-hide snap-x snap-mandatory">
                     <div className="flex min-w-max">
                       {selectedPlace.photoUrls.map((url, i) => (
-                        <img
+                        <img loading="lazy" decoding="async"
                           key={i}
                           src={url}
                           alt={`${selectedPlace.name} ${i + 1}`}
-                          className="w-full h-48 object-cover shrink-0"
-                          loading="lazy"
+                          className="w-full h-52 object-cover shrink-0 snap-start"
                         />
                       ))}
                     </div>
                   </div>
+                  {selectedPlace.photoUrls.length > 1 && (
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                      {selectedPlace.photoUrls.map((_, i) => (
+                        <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/60" />
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
               <div className="p-4 space-y-4">
                 {/* Name & rating */}
                 <div>
-                  <h2 className="text-lg font-bold">{selectedPlace.name}</h2>
+                  <div className="flex items-start justify-between gap-2">
+                    <h2 className="text-lg font-bold leading-tight">{selectedPlace.name}</h2>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 -mr-1"
+                      onClick={() => handleSharePlace(selectedPlace)}
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <div className="flex items-center gap-3 mt-1">
                     <StarRating rating={selectedPlace.rating} count={selectedPlace.userRatingsTotal} />
                     <PriceLevel level={selectedPlace.priceLevel} />

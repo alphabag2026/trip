@@ -98,7 +98,7 @@ export default function AdminPickups() {
                 {/* 차량 사진 미리보기 */}
                 {form.vehiclePhotoUrl && (
                   <div className="relative">
-                    <img src={form.vehiclePhotoUrl} alt="vehicle" className="w-full h-32 object-cover rounded-md border border-border" />
+                    <img loading="lazy" decoding="async" src={form.vehiclePhotoUrl} alt="vehicle" className="w-full h-32 object-cover rounded-md border border-border" />
                     {form.vehiclePlateNumber && (
                       <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-mono">
                         {form.vehiclePlateNumber}
@@ -141,7 +141,7 @@ export default function AdminPickups() {
               {/* 차량 사진 */}
               {p.vehiclePhotoUrl && (
                 <div className="relative mb-2 cursor-pointer" onClick={() => setPhotoDialogId(p.id)}>
-                  <img src={p.vehiclePhotoUrl} alt={p.vehicleName} className="w-full h-28 object-cover rounded-md" />
+                  <img loading="lazy" decoding="async" src={p.vehiclePhotoUrl} alt={p.vehicleName} className="w-full h-28 object-cover rounded-md" />
                   {p.vehiclePlateNumber && (
                     <div className="absolute bottom-1 left-1 bg-black/70 text-white px-2 py-0.5 rounded text-xs font-mono">
                       {p.vehiclePlateNumber}
@@ -186,7 +186,7 @@ export default function AdminPickups() {
               <DialogHeader><DialogTitle>{(pickup as any).vehicleName}</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 {(pickup as any).vehiclePhotoUrl && (
-                  <img src={(pickup as any).vehiclePhotoUrl} alt={(pickup as any).vehicleName} className="w-full rounded-md" />
+                  <img loading="lazy" decoding="async" src={(pickup as any).vehiclePhotoUrl} alt={(pickup as any).vehicleName} className="w-full rounded-md" />
                 )}
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {(pickup as any).vehiclePlateNumber && <div><span className="text-muted-foreground">{t("admin.pickups.plateNumber", "차량번호")}:</span> <span className="font-mono font-bold">{(pickup as any).vehiclePlateNumber}</span></div>}

@@ -470,7 +470,7 @@ export default function HotelVouchers() {
                   {viewVoucher.voucherFileType === "pdf" ? (
                     <a href={viewVoucher.voucherFileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm ml-2">{t("admin.hotelVouchers.t55", "PDF 보기")}</a>
                   ) : (
-                    <img src={viewVoucher.voucherFileUrl} alt="Voucher" className="mt-2 max-w-full rounded border" />
+                    <img loading="lazy" decoding="async" src={viewVoucher.voucherFileUrl} alt="Voucher" className="mt-2 max-w-full rounded border" />
                   )}
                 </div>
               )}

@@ -176,7 +176,7 @@ export default function ChatDashboard() {
                             </Badge>
                           </div>
                           {msg.messageType === "image" && msg.imageUrl ? (
-                            <img src={msg.imageUrl} alt="사진" className="rounded max-h-48 mb-1" />
+                            <img loading="lazy" decoding="async" src={msg.imageUrl} alt="사진" className="rounded max-h-48 mb-1" />
                           ) : null}
                           <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                           <p className={`text-xs mt-1 ${isAdmin ? "text-primary-foreground/60" : "text-muted-foreground"}`}>

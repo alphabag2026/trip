@@ -86,7 +86,7 @@ export default function AdminAccommodations() {
                 {/* 숙소 사진 미리보기 */}
                 {form.accommodationPhotoUrl && (
                   <div className="relative">
-                    <img src={form.accommodationPhotoUrl} alt="accommodation" className="w-full h-32 object-cover rounded-md border border-border" />
+                    <img loading="lazy" decoding="async" src={form.accommodationPhotoUrl} alt="accommodation" className="w-full h-32 object-cover rounded-md border border-border" />
                   </div>
                 )}
 
@@ -123,7 +123,7 @@ export default function AdminAccommodations() {
               {/* 숙소 사진 */}
               {a.accommodationPhotoUrl && (
                 <div className="relative mb-2 cursor-pointer" onClick={() => setPhotoDialogId(a.id)}>
-                  <img src={a.accommodationPhotoUrl} alt={a.hotelName} className="w-full h-28 object-cover rounded-md" />
+                  <img loading="lazy" decoding="async" src={a.accommodationPhotoUrl} alt={a.hotelName} className="w-full h-28 object-cover rounded-md" />
                 </div>
               )}
               <CardTitle className="text-base flex items-center justify-between">
@@ -157,7 +157,7 @@ export default function AdminAccommodations() {
             <DialogContent className="max-w-2xl">
               <DialogHeader><DialogTitle>{(acc as any).hotelName} - Room {(acc as any).roomNumber}</DialogTitle></DialogHeader>
               {(acc as any).accommodationPhotoUrl && (
-                <img src={(acc as any).accommodationPhotoUrl} alt={(acc as any).hotelName} className="w-full rounded-md" />
+                <img loading="lazy" decoding="async" src={(acc as any).accommodationPhotoUrl} alt={(acc as any).hotelName} className="w-full rounded-md" />
               )}
             </DialogContent>
           </Dialog>

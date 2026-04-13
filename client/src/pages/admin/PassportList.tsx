@@ -265,7 +265,7 @@ export default function AdminPassportList() {
               {selectedPerson.passportImageUrl && (
                 <div>
                   <div className="text-muted-foreground mb-2 text-sm">{t("admin.passportList.t38", "여권 이미지")}</div>
-                  <img src={selectedPerson.passportImageUrl} alt="Passport" className="w-full rounded-lg border" />
+                  <img loading="lazy" decoding="async" src={selectedPerson.passportImageUrl} alt="Passport" className="w-full rounded-lg border" />
                 </div>
               )}
 

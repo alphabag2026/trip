@@ -175,7 +175,7 @@ export default function PassportTab() {
               <div className="space-y-4">
                 {passport.passportImageUrl && (
                   <div className="flex justify-center">
-                    <img src={passport.passportImageUrl} alt={t("myPage.passportInfo")} className="max-h-40 rounded-lg object-contain border" />
+                    <img loading="lazy" decoding="async" src={passport.passportImageUrl} alt={t("myPage.passportInfo")} className="max-h-40 rounded-lg object-contain border" />
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -222,7 +222,7 @@ export default function PassportTab() {
                 <Label>{t("myPage.passportImage")}</Label>
                 {passportForm?.passportImageUrl && (
                   <div className="flex justify-center">
-                    <img src={passportForm.passportImageUrl} alt="Passport" className="max-h-32 rounded-lg object-contain border" />
+                    <img loading="lazy" decoding="async" src={passportForm.passportImageUrl} alt="Passport" className="max-h-32 rounded-lg object-contain border" />
                   </div>
                 )}
                 <div className="flex gap-2">

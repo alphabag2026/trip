@@ -770,7 +770,7 @@ export default function BookingCenter() {
                     <Card key={hotel.id} className="overflow-hidden hover:shadow-lg transition-all group">
                       <div className="flex flex-col md:flex-row">
                         <div className="md:w-72 h-48 md:h-auto relative overflow-hidden">
-                          <img src={hotel.imageUrl} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <img loading="lazy" decoding="async" src={hotel.imageUrl} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           {hotel.freeCancellation && (
                             <Badge className="absolute top-2 left-2 bg-green-500 text-white text-[10px]">Free Cancellation</Badge>
                           )}

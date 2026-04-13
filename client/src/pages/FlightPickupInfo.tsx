@@ -216,7 +216,7 @@ export default function FlightPickupInfo() {
                           {pickup.pickupPhotoUrl && (
                             <div className="mt-3">
                               <p className="text-xs text-muted-foreground mb-1">{t("flightPickup.pickupPhoto", "픽업 장소 사진")}</p>
-                              <img src={pickup.pickupPhotoUrl} alt="" className="rounded-lg max-h-48 object-cover w-full" />
+                              <img loading="lazy" decoding="async" src={pickup.pickupPhotoUrl} alt="" className="rounded-lg max-h-48 object-cover w-full" />
                             </div>
                           )}
                           {pickup.notes && (

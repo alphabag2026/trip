@@ -464,7 +464,7 @@ export default function Home() {
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/95">
         <div className="container flex items-center justify-between h-14 gap-3">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-8 w-8 rounded-lg" />
+            <img loading="lazy" decoding="async" src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-8 w-8 rounded-lg" />
             <span className="font-bold text-lg hidden sm:inline" style={{ fontFamily: 'Inter, sans-serif' }}>Alpha Trip</span>
           </Link>
 
@@ -675,7 +675,7 @@ export default function Home() {
             <section className="py-3">
               <div className="container max-w-lg mx-auto px-4">
                 <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="block relative rounded-xl overflow-hidden group cursor-pointer" onClick={() => ad1 && trackClick.mutate({ id: ad1.id })}>
-                  <img src={imgSrc} alt={title} className="w-full h-36 md:h-44 object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <img loading="lazy" decoding="async" src={imgSrc} alt={title} className="w-full h-36 md:h-44 object-cover transition-transform duration-500 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center">
                     <div className="px-6">
                       <Badge className="bg-amber-500 text-white mb-2 text-xs">AD</Badge>
@@ -876,7 +876,7 @@ export default function Home() {
       <footer className="border-t border-border/30 py-8 mb-16 md:mb-0 bg-muted/20">
         <div className="container max-w-lg mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-6 w-6 rounded" />
+            <img loading="lazy" decoding="async" src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-6 w-6 rounded" />
             <span className="font-bold text-sm">Alpha Trip</span>
           </div>
           <p className="text-xs text-muted-foreground mb-4">{t("home.footer_desc", "글로벌 밋업 & 출장 관리 플랫폼")}</p>

@@ -122,7 +122,7 @@ export default function AIUploader({ context, onExtracted, className = "", compa
           <div className="relative">
             {previewUrl && (
               <div className="relative mb-2">
-                <img src={previewUrl} alt="preview" className="w-full h-24 object-cover rounded-md border border-border" />
+                <img loading="lazy" decoding="async" src={previewUrl} alt="preview" className="w-full h-24 object-cover rounded-md border border-border" />
                 <button onClick={clearPreview} className="absolute top-1 right-1 bg-black/60 rounded-full p-0.5">
                   <X className="h-3 w-3 text-white" />
                 </button>
@@ -202,7 +202,7 @@ export default function AIUploader({ context, onExtracted, className = "", compa
         <>
           {previewUrl && (
             <div className="relative">
-              <img src={previewUrl} alt="preview" className="w-full h-32 object-cover rounded-md border border-border" />
+              <img loading="lazy" decoding="async" src={previewUrl} alt="preview" className="w-full h-32 object-cover rounded-md border border-border" />
               <button onClick={clearPreview} className="absolute top-2 right-2 bg-black/60 rounded-full p-1">
                 <X className="h-4 w-4 text-white" />
               </button>

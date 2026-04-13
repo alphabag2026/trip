@@ -138,7 +138,7 @@ export default function TwoFactorSettings() {
             {/* QR Code */}
             <div className="flex justify-center">
               <div className="p-4 bg-white rounded-xl">
-                <img src={setupData.qrDataUrl} alt="2FA QR Code" className="w-48 h-48" />
+                <img loading="lazy" decoding="async" src={setupData.qrDataUrl} alt="2FA QR Code" className="w-48 h-48" />
               </div>
             </div>
 

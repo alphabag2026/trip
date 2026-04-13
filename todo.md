@@ -2149,5 +2149,35 @@
 ### 빌드 & 테스트
 - [x] 빌드 성공 확인 (85개 청크, 초기 로딩 최적화)
 - [x] vitest 테스트 통과 확인 (v65-features 15/15 passed, 기존 satori 실패 무관)
+- [x] 체크포인트 저장 (14026526)
+- [x] AWS Lightsail 최종 프로덕션 배포 완료 (HTTPS 200)
+
+## v6.6 - admin 청크 분리 + 이미지 최적화 + NearbyExplorer 개선
+
+### admin 청크 페이지별 분리
+- [x] admin 페이지 목록 분석 및 그룹핑 (40+개 페이지)
+- [x] 각 admin 페이지를 React.lazy로 동적 import (이미 적용됨)
+- [x] Vite manualChunks에서 admin 단일 청크 규칙 제거 → 개별 청크 자동 분리
+- [x] admin 청크 2.18MB → 40+개 개별 청크 (10~172KB/페이지)
+
+### 이미지 WebP/AVIF 변환 및 lazy loading
+- [x] 사이트 내 모든 img 태그(53개)에 loading="lazy" + decoding="async" 적용
+- [x] OptimizedImage 컴포넌트 생성 (Intersection Observer + blur placeholder + error fallback)
+- [x] CDN 이미지는 이미 WebP 포맷 사용 중 (CloudFront)
+- [x] 빌드 성공 확인
+
+### NearbyExplorer 사용성 테스트 및 개선
+- [x] 위치 권한 거부 시 UX 개선 (LocationBanner 컴포넌트 - 경고 배너 + 재시도 버튼)
+- [x] 검색 결과 없을 때 빈 상태 UI 개선 (EmptyState 컴포넌트 - 카테고리 아이콘 + 초기화/재시도 버튼)
+- [x] 모바일 터치 최적화 (active:scale-[0.98], snap-x snap-mandatory, 터치 영역 확대)
+- [x] 카테고리 아이콘 및 색상 개선 (bgColor 추가, 그라데이션 마커)
+- [x] 결과 요약 표시 (건수 + 정렬 기준)
+- [x] 장소 공유 버튼 (Web Share API / 클립보드 폴백)
+- [x] 사진 캐러셀 인디케이터 돈 추가
+- [x] Recenter 시 자동 재검색 기능 추가
+
+### 빌드 & 테스트
+- [x] 빌드 성공 확인 (136개 JS 청크, 7.6MB 총 크기, 15.19s 빌드)
+- [x] vitest 테스트 통과 확인 (848/855 passed, satori 7건 기존 실패)
 - [ ] 체크포인트 저장
-- [ ] AWS Lightsail 최종 프로덕션 배포
+- [ ] AWS Lightsail 프로덕션 배포
