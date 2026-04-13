@@ -2102,3 +2102,30 @@
 - [x] vitest 테스트 작성 (15건 통과)
 - [x] 체크포인트 저장 (be4a504a)
 - [x] AWS Lightsail 프로덕션 배포 완료 (v6.4 코드 + 41개 테이블 5,223행 DB 동기화)
+
+## v6.5 - Google Maps 주변 탐색 + 코드 스플리팅 + Lazy Loading
+
+### Google Maps 주변 탐색 페이지
+- [x] NearbyExplorer 페이지 구현 (현재 위치 기반 주변 장소 탐색)
+- [x] 카테고리별 검색 (식당/카페/관광지/호텔/편의점/ATM/약국/병원)
+- [x] Google Places API 연동 (장소 검색, 상세 정보, 사진)
+- [x] 지도 마커 + 장소 목록 UI (지도/리스트 뷰 전환)
+- [x] 장소 상세 정보 (영업시간, 평점, 리뷰, 전화번호, 길찾기, Grab 연동)
+- [x] 다국어 지원 (i18n 키 nearby.* 추가)
+
+### 버그 수정
+- [x] [BUG] 홈 화면 '지도' 버튼 → /nearby 페이지로 링크 수정 (모든 역할 6개 버튼)
+- [x] 라우트 등록 (App.tsx)
+
+### 코드 스플리팅 + Lazy Loading
+- [x] React.lazy + Suspense로 전체 페이지 컴포넌트 lazy loading 적용 (70+개 컴포넌트)
+- [x] 관리자 페이지 그룹 별도 청크로 분리 (admin-2.18MB)
+- [x] 사용자 페이지 그룹 별도 청크로 분리 (57개 개별 청크)
+- [x] Vite rollupOptions.manualChunks 설정으로 벤더 라이브러리 분리 (react/ui/i18n/data/locales)
+- [x] 로딩 스피너 Suspense fallback 구현 (PageLoader 컴포넌트)
+
+### 빌드 & 테스트
+- [x] 빌드 성공 확인 및 번들 크기 비교 (7.1MB→7.4MB, 57개 청크 분리)
+- [x] vitest 테스트 통과 확인 (850/855 passed)
+- [ ] 체크포인트 저장
+- [ ] AWS Lightsail 프로덕션 배포

@@ -167,6 +167,36 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Vendor: React core
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'vendor-react';
+          }
+          // Vendor: UI libraries (radix, lucide, sonner)
+          if (id.includes('node_modules/@radix-ui/') || id.includes('node_modules/lucide-react/') || id.includes('node_modules/sonner/')) {
+            return 'vendor-ui';
+          }
+          // Vendor: i18n
+          if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next')) {
+            return 'vendor-i18n';
+          }
+          // Vendor: tRPC + tanstack-query
+          if (id.includes('node_modules/@trpc/') || id.includes('node_modules/@tanstack/')) {
+            return 'vendor-data';
+          }
+          // Locale files
+          if (id.includes('/locales/') && id.endsWith('.json')) {
+            return 'locales';
+          }
+          // Admin pages → separate chunk
+          if (id.includes('/pages/admin/')) {
+            return 'admin';
+          }
+        },
+      },
+    },
   },
   server: {
     host: true,

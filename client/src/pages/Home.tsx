@@ -64,7 +64,7 @@ const USER_ROW2: ServiceIcon[] = [
   { icon: Hotel, label: "home.u_hotel_info", href: "/booking", gradient: "from-rose-500 to-pink-600", ring: "ring-rose-200 dark:ring-rose-900" },
   { icon: Car, label: "home.u_ride", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900", badge: "NEW" },
   { icon: Globe, label: "home.u_country", href: "/countries", gradient: "from-emerald-500 to-cyan-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
-  { icon: Map, label: "home.u_map", href: "/booking", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
+  { icon: Map, label: "home.u_map", href: "/nearby", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
 ];
 
 const USER_EXTRA: ServiceIcon[] = [
@@ -101,7 +101,7 @@ const ORG_EXTRA: ServiceIcon[] = [
   { icon: UtensilsCrossed, label: "home.o_catering", href: "/delivery", gradient: "from-orange-500 to-red-600", ring: "ring-orange-200 dark:ring-orange-900" },
   { icon: BarChart3, label: "home.o_report", href: "/admin", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
   { icon: Wallet, label: "home.o_settlement", href: "/admin", gradient: "from-green-500 to-emerald-600", ring: "ring-green-200 dark:ring-green-900" },
-  { icon: Map, label: "home.o_map", href: "/booking", gradient: "from-teal-500 to-cyan-600", ring: "ring-teal-200 dark:ring-teal-900" },
+  { icon: Map, label: "home.o_map", href: "/nearby", gradient: "from-teal-500 to-cyan-600", ring: "ring-teal-200 dark:ring-teal-900" },
   { icon: Bot, label: "home.o_ai", href: "/chatbot", gradient: "from-indigo-500 to-violet-600", ring: "ring-indigo-200 dark:ring-indigo-900" },
   { icon: Shield, label: "home.o_immigration", href: "/immigration-checklist", gradient: "from-lime-500 to-green-600", ring: "ring-lime-200 dark:ring-lime-900" },
 ];
@@ -154,7 +154,7 @@ const GUEST_ROW2: ServiceIcon[] = [
   { icon: Car, label: "home.g_ride", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900" },
   { icon: Globe, label: "home.g_country", href: "/countries", gradient: "from-emerald-500 to-cyan-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
   { icon: Bot, label: "home.g_ai", href: "/chatbot", gradient: "from-cyan-500 to-blue-600", ring: "ring-cyan-200 dark:ring-cyan-900" },
-  { icon: Map, label: "home.g_map", href: "/booking", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
+  { icon: Map, label: "home.g_map", href: "/nearby", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -269,7 +269,7 @@ function getServiceMenus(role: string | undefined, isAuthenticated: boolean, t: 
         title: t("home.svc_driver_support_title", "지원 도구"),
         desc: t("home.svc_driver_support_desc", "지도, 메모, 통역"),
         items: [
-          { icon: Map, color: "text-teal-500", label: t("home.d_map", "지도"), href: "/booking" },
+          { icon: Map, color: "text-teal-500", label: t("home.d_map", "지도"), href: "/nearby" },
           { icon: StickyNote, color: "text-yellow-500", label: t("home.d_memo", "메모"), href: "/notes" },
           { icon: Languages, color: "text-cyan-500", label: t("home.d_translator", "통역"), href: "/translator" },
           { icon: Phone, color: "text-sky-500", label: t("home.d_contact", "연락처"), href: "/community" },
@@ -297,7 +297,7 @@ function getServiceMenus(role: string | undefined, isAuthenticated: boolean, t: 
         desc: t("home.svc_interp_support_desc", "메모, 지도, 연락"),
         items: [
           { icon: StickyNote, color: "text-yellow-500", label: t("home.i_memo", "메모"), href: "/notes" },
-          { icon: Map, color: "text-teal-500", label: t("home.i_map", "지도"), href: "/booking" },
+          { icon: Map, color: "text-teal-500", label: t("home.i_map", "지도"), href: "/nearby" },
           { icon: MessageCircle, color: "text-sky-500", label: t("home.i_chat", "채팅"), href: "/community" },
           { icon: Phone, color: "text-orange-500", label: t("home.i_contact", "연락처"), href: "/community" },
         ],
@@ -356,7 +356,7 @@ function getServiceMenus(role: string | undefined, isAuthenticated: boolean, t: 
         { icon: Car, color: "text-purple-500", label: t("home.u_ride"), href: "/ride", badge: "NEW" },
         { icon: UtensilsCrossed, color: "text-orange-500", label: t("home.u_delivery"), href: "/delivery", badge: "NEW" },
         { icon: Hotel, color: "text-rose-500", label: t("home.u_hotel_info"), href: "/booking" },
-        { icon: Map, color: "text-teal-500", label: t("home.u_map"), href: "/booking" },
+        { icon: Map, color: "text-teal-500", label: t("home.u_map"), href: "/nearby" },
       ],
     },
     {
