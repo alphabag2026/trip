@@ -4656,6 +4656,62 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
       .query(async ({ input }) => {
         return db.getPinnedMessages(input.roomId);
       }),
+
+    // AI 문구 다듬기 (입력 중인 메시지를 AI로 수정)
+    aiRefine: protectedProcedure
+      .input(z.object({
+        text: z.string().min(1).max(5000),
+        mode: z.enum([
+          "polite",       // 공손하게
+          "casual",       // 캐주얼하게
+          "business",     // 비즈니스 톤
+          "grammar",      // 문법 교정
+          "concise",      // 간결하게
+          "elaborate",    // 자세하게
+          "friendly",     // 친근하게
+          "translate",    // 번역
+        ]),
+        targetLang: z.string().optional(), // translate 모드에서 사용
+        sourceLang: z.string().optional(), // 원본 언어 힌트
+      }))
+      .mutation(async ({ input }) => {
+        const langNames: Record<string, string> = {
+          ko: "Korean", en: "English", ja: "Japanese", zh: "Chinese", th: "Thai",
+          vi: "Vietnamese", id: "Indonesian", ms: "Malay", tl: "Filipino",
+          hi: "Hindi", ar: "Arabic", ru: "Russian", es: "Spanish", fr: "French",
+          de: "German", pt: "Portuguese", it: "Italian", tr: "Turkish", pl: "Polish",
+          nl: "Dutch", sv: "Swedish", uk: "Ukrainian", cs: "Czech", ro: "Romanian",
+          mn: "Mongolian",
+        };
+
+        const modePrompts: Record<string, string> = {
+          polite: "Rewrite the following message in a more polite and respectful tone. Keep the same meaning and language. Return ONLY the rewritten text.",
+          casual: "Rewrite the following message in a casual, relaxed tone. Keep the same meaning and language. Return ONLY the rewritten text.",
+          business: "Rewrite the following message in a professional business tone. Keep the same meaning and language. Return ONLY the rewritten text.",
+          grammar: "Fix any grammar, spelling, or punctuation errors in the following message. Keep the same tone and language. Return ONLY the corrected text.",
+          concise: "Rewrite the following message to be more concise and to the point. Keep the same meaning and language. Return ONLY the rewritten text.",
+          elaborate: "Expand the following message with more detail and context while keeping the same meaning and language. Return ONLY the rewritten text.",
+          friendly: "Rewrite the following message in a warm, friendly tone. Keep the same meaning and language. Return ONLY the rewritten text.",
+          translate: `Translate the following message to ${langNames[input.targetLang || "en"] || input.targetLang || "English"}. Return ONLY the translated text.`,
+        };
+
+        const systemPrompt = modePrompts[input.mode] || modePrompts.grammar;
+
+        try {
+          const response = await invokeLLM({
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: input.text },
+            ],
+          });
+          const content = response.choices[0]?.message?.content;
+          const refined = (typeof content === "string" ? content.trim() : "") || input.text;
+          return { refined, mode: input.mode, original: input.text };
+        } catch (err) {
+          console.error("AI refine error:", err);
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 문구 수정에 실패했습니다" });
+        }
+      }),
   }),
 
   //  // ── WebRTC Signaling (시그널링 서버) ──────────────────────────

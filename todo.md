@@ -2128,7 +2128,7 @@
 - [x] 빌드 성공 확인 및 번들 크기 비교 (7.1MB→7.4MB, 57개 청크 분리)
 - [x] vitest 테스트 통과 확인 (850/855 passed)
 - [x] 체크포인트 저장 (08ac84f5)
-- [ ] AWS Lightsail 프로덕션 배포
+- [x] AWS Lightsail 프로덕션 배포 완료 (HTTPS 200, API 정상, place_favorites 마이그레이션 적용, MySQL 인증 플러그인 수정)
 
 ## v6.5.1 - 프로덕션 배포 + 번들 최적화
 
@@ -2208,5 +2208,24 @@
 ### 빌드 & 테스트
 - [x] 빌드 성공 확인 (PWA SW 생성 포함)
 - [x] vitest 테스트 통과 확인 (848/855 passed, satori 7건 기존 실패)
+- [x] 체크포인트 저장 (5bc124b4)
+- [x] AWS Lightsail 프로덕션 배포 완료 (HTTPS 200, API 정상, place_favorites 마이그레이션 적용, MySQL 인증 플러그인 수정)
+
+## v6.9 - 실시간 채팅 AI 문구 수정 기능
+
+### 백엔드
+- [x] AI 문구 수정 tRPC 프로시저 구현 (chatMessage.aiRefine, LLM invokeLLM 연동)
+- [x] 8가지 문구 다듬기 모드 지원 (공손/캐주얼/비즈니스/문법교정/간결/자세/친근/번역)
+- [x] 25개 언어 번역 지원 (translate 모드)
+
+### 프론트엔드
+- [x] 채팅 입력창에 AI 문구 수정 Wand2 버튼 추가 (보라색 테마)
+- [x] AI 수정 옵션 Popover UI (8가지 모드 + 번역 언어 선택)
+- [x] AI 수정 결과 미리보기 영역 (그라데이션 배경, 적용/취소 버튼)
+- [x] 로딩 상태 표시 (스피너 + "AI가 문구를 다듬고 있습니다...")
+
+### 빌드 & 테스트
+- [x] TypeScript 에러 없음 확인
+- [x] vitest 테스트 6건 통과 (aiRefine.test.ts)
 - [ ] 체크포인트 저장
 - [ ] AWS Lightsail 프로덕션 배포

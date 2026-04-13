@@ -16,8 +16,10 @@ import {
   Image, MoreVertical, LogOut, Trash2, Reply, MapPin, Phone, Video, Globe,
   Paperclip, X, Play, Mic, MicOff, VideoOff, PhoneOff, Languages, Camera,
   UserPlus, Settings, Volume2, FileText, Pin, PinOff, GalleryHorizontalEnd, Download,
-  Grid3X3, Film, File, Navigation,
+  Grid3X3, Film, File, Navigation, Sparkles, Wand2, Briefcase, Heart, Minimize2, Maximize2,
+  CheckCircle, RotateCcw, ChevronDown,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useParams, useLocation } from "wouter";
@@ -1066,6 +1068,10 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const [activeCall, setActiveCall] = useState<{ callId: string; callType: "voice" | "video"; callerName: string; isOutgoing: boolean } | null>(null);
   const [groupCall, setGroupCall] = useState<{ callId: string; callType: "voice" | "video" } | null>(null);
   const [showLiveLocationMap, setShowLiveLocationMap] = useState(false);
+  const [showAiRefine, setShowAiRefine] = useState(false);
+  const [aiRefinedText, setAiRefinedText] = useState("");
+  const [aiRefineMode, setAiRefineMode] = useState<string>("");
+  const [aiTranslateLang, setAiTranslateLang] = useState("en");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1101,6 +1107,40 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const initiateCallMutation = trpc.webrtc.initiateCall.useMutation();
   const createGroupCallMutation = trpc.webrtc.createGroupCall.useMutation();
   const joinGroupCallMutation = trpc.webrtc.joinGroupCall.useMutation();
+
+  // AI 문구 다듬기
+  const aiRefineMutation = trpc.chatMessage.aiRefine.useMutation({
+    onSuccess: (r) => {
+      setAiRefinedText(r.refined);
+      setAiRefineMode(r.mode);
+    },
+    onError: (e) => toast.error(e.message || t("communityChat.aiRefineError", "AI 문구 수정에 실패했습니다")),
+  });
+
+  const handleAiRefine = (mode: string) => {
+    if (!message.trim()) { toast.error(t("communityChat.aiRefineEmpty", "메시지를 먼저 입력해주세요")); return; }
+    setAiRefinedText("");
+    aiRefineMutation.mutate({
+      text: message.trim(),
+      mode: mode as any,
+      targetLang: mode === "translate" ? aiTranslateLang : undefined,
+      sourceLang: myLang,
+    });
+  };
+
+  const applyAiRefined = () => {
+    if (aiRefinedText) {
+      setMessage(aiRefinedText);
+      setAiRefinedText("");
+      setShowAiRefine(false);
+      toast.success(t("communityChat.aiRefineApplied", "AI 수정이 적용되었습니다"));
+    }
+  };
+
+  const revertAiRefined = () => {
+    setAiRefinedText("");
+    setAiRefineMode("");
+  };
 
   // 미디어 갤러리
   const { data: mediaItems, refetch: refetchMedia } = trpc.chatMessage.mediaList.useQuery(
@@ -1558,6 +1598,48 @@ function ChatRoomView({ roomId }: { roomId: number }) {
         </div>
       )}
 
+      {/* AI Refine Preview */}
+      {(aiRefinedText || aiRefineMutation.isPending) && (
+        <div className="px-4 py-2 bg-gradient-to-r from-violet-500/10 to-blue-500/10 border-t border-violet-500/20">
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+            <span className="text-xs font-medium text-violet-400">
+              {t("communityChat.aiRefineTitle", "AI 문구 수정")}
+              {aiRefineMode && (
+                <span className="ml-1 text-violet-300/70">
+                  ({aiRefineMode === "polite" ? t("communityChat.aiPolite", "공손하게") :
+                    aiRefineMode === "casual" ? t("communityChat.aiCasual", "캐주얼하게") :
+                    aiRefineMode === "business" ? t("communityChat.aiBusiness", "비즈니스") :
+                    aiRefineMode === "grammar" ? t("communityChat.aiGrammar", "문법 교정") :
+                    aiRefineMode === "concise" ? t("communityChat.aiConcise", "간결하게") :
+                    aiRefineMode === "elaborate" ? t("communityChat.aiElaborate", "자세하게") :
+                    aiRefineMode === "friendly" ? t("communityChat.aiFriendly", "친근하게") :
+                    aiRefineMode === "translate" ? t("communityChat.aiTranslate", "번역") : aiRefineMode})
+                </span>
+              )}
+            </span>
+          </div>
+          {aiRefineMutation.isPending ? (
+            <div className="flex items-center gap-2 py-1">
+              <div className="animate-spin h-3 w-3 border-2 border-violet-400 border-t-transparent rounded-full" />
+              <span className="text-xs text-muted-foreground">{t("communityChat.aiRefining", "AI가 문구를 다듬고 있습니다...")}</span>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-foreground bg-background/50 rounded px-2 py-1.5 mb-2">{aiRefinedText}</p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="default" className="h-7 text-xs bg-violet-600 hover:bg-violet-700" onClick={applyAiRefined}>
+                  <CheckCircle className="h-3 w-3 mr-1" /> {t("communityChat.aiApply", "적용")}
+                </Button>
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={revertAiRefined}>
+                  <RotateCcw className="h-3 w-3 mr-1" /> {t("communityChat.aiRevert", "취소")}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Input */}
       <div className="border-t px-4 py-3 shrink-0">
         <div className="flex gap-2 items-center">
@@ -1597,6 +1679,68 @@ function ChatRoomView({ roomId }: { roomId: number }) {
             className="flex-1"
             disabled={sendMutation.isPending || uploadMutation.isPending}
           />
+          {/* AI 문구 수정 버튼 */}
+          <Popover open={showAiRefine} onOpenChange={setShowAiRefine}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`shrink-0 transition-colors ${showAiRefine ? "text-violet-400 bg-violet-500/10" : "text-muted-foreground hover:text-violet-400"}`}
+                title={t("communityChat.aiRefineBtn", "AI 문구 수정")}
+              >
+                <Wand2 className="h-4.5 w-4.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-64 p-2" side="top">
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground px-2 py-1">
+                  {t("communityChat.aiRefineTitle", "AI 문구 수정")}
+                </p>
+                <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors text-left" onClick={() => { handleAiRefine("polite"); setShowAiRefine(false); }}>
+                  <span className="text-base">🌸</span> {t("communityChat.aiPolite", "공손하게")}
+                </button>
+                <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors text-left" onClick={() => { handleAiRefine("casual"); setShowAiRefine(false); }}>
+                  <span className="text-base">✌️</span> {t("communityChat.aiCasual", "캐주얼하게")}
+                </button>
+                <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors text-left" onClick={() => { handleAiRefine("business"); setShowAiRefine(false); }}>
+                  <Briefcase className="h-4 w-4 text-blue-400" /> {t("communityChat.aiBusiness", "비즈니스")}
+                </button>
+                <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors text-left" onClick={() => { handleAiRefine("friendly"); setShowAiRefine(false); }}>
+                  <Heart className="h-4 w-4 text-pink-400" /> {t("communityChat.aiFriendly", "친근하게")}
+                </button>
+                <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors text-left" onClick={() => { handleAiRefine("grammar"); setShowAiRefine(false); }}>
+                  <CheckCircle className="h-4 w-4 text-green-400" /> {t("communityChat.aiGrammar", "문법 교정")}
+                </button>
+                <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors text-left" onClick={() => { handleAiRefine("concise"); setShowAiRefine(false); }}>
+                  <Minimize2 className="h-4 w-4 text-orange-400" /> {t("communityChat.aiConcise", "간결하게")}
+                </button>
+                <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors text-left" onClick={() => { handleAiRefine("elaborate"); setShowAiRefine(false); }}>
+                  <Maximize2 className="h-4 w-4 text-cyan-400" /> {t("communityChat.aiElaborate", "자세하게")}
+                </button>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">{t("communityChat.aiTranslate", "번역")}</p>
+                  <div className="flex gap-1">
+                    <Select value={aiTranslateLang} onValueChange={setAiTranslateLang}>
+                      <SelectTrigger className="h-7 text-xs flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGES.map(l => (
+                          <SelectItem key={l.code} value={l.code}>
+                            {l.flag} {l.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button size="sm" variant="outline" className="h-7 text-xs shrink-0" onClick={() => { handleAiRefine("translate"); setShowAiRefine(false); }}>
+                      <Languages className="h-3 w-3 mr-1" /> {t("communityChat.aiTranslateBtn", "번역")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button onClick={handleSend} disabled={!message.trim() || sendMutation.isPending} size="icon" className="shrink-0">
             <Send className="h-4 w-4" />
           </Button>
