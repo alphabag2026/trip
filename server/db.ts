@@ -313,11 +313,85 @@ export async function createFlightSchedule(data: InsertFlightSchedule) {
 
 export async function getFlightSchedules(filters?: { meetupId?: number; registrationId?: number; direction?: string }) {
   const db = await getDb(); if (!db) return [];
+  // 1) flight_schedules 테이블 조회
   const conditions = [];
   if (filters?.meetupId) conditions.push(eq(flightSchedules.meetupId, filters.meetupId));
   if (filters?.registrationId) conditions.push(eq(flightSchedules.registrationId, filters.registrationId));
   if (filters?.direction) conditions.push(eq(flightSchedules.direction, filters.direction as any));
-  return db.select().from(flightSchedules).where(conditions.length ? and(...conditions) : undefined).orderBy(flightSchedules.scheduledDeparture);
+  const schedules = await db.select().from(flightSchedules).where(conditions.length ? and(...conditions) : undefined).orderBy(flightSchedules.scheduledDeparture);
+
+  // 2) flight_tickets 테이블도 조회하여 통합 (시뮬레이션 데이터 포함)
+  const ticketConditions = [];
+  if (filters?.meetupId) ticketConditions.push(eq(flightTickets.meetupId, filters.meetupId));
+  if (filters?.registrationId) ticketConditions.push(eq(flightTickets.registrationId, filters.registrationId));
+  const tickets = await db.select().from(flightTickets).where(ticketConditions.length ? and(...ticketConditions) : undefined).orderBy(flightTickets.createdAt);
+
+  // 3) flight_tickets → flight_schedules 형식으로 변환
+  const ticketAsSchedules = tickets.flatMap((t) => {
+    const results: any[] = [];
+    if (t.outboundFlightNo) {
+      const depDate = t.outboundDepartureDate && t.outboundDepartureTime
+        ? new Date(`${t.outboundDepartureDate}T${t.outboundDepartureTime}:00`)
+        : null;
+      const arrDate = t.outboundArrivalDate && t.outboundArrivalTime
+        ? new Date(`${t.outboundArrivalDate}T${t.outboundArrivalTime}:00`)
+        : null;
+      results.push({
+        id: t.id * -1,
+        meetupId: t.meetupId,
+        registrationId: t.registrationId,
+        flightNo: t.outboundFlightNo,
+        airline: t.outboundAirline || null,
+        departureAirport: t.outboundDepartureAirport || null,
+        arrivalAirport: t.outboundArrivalAirport || null,
+        scheduledDeparture: depDate,
+        scheduledArrival: arrDate,
+        actualDeparture: null, actualArrival: null,
+        delayMinutes: 0,
+        flightStatus: "scheduled" as const,
+        direction: "outbound" as const,
+        notifiedDelay: false,
+        createdAt: t.createdAt, updatedAt: t.updatedAt,
+        _source: "ticket" as const,
+      });
+    }
+    if (t.returnFlightNo) {
+      const depDate = t.returnDepartureDate && t.returnDepartureTime
+        ? new Date(`${t.returnDepartureDate}T${t.returnDepartureTime}:00`)
+        : null;
+      const arrDate = t.returnArrivalDate && t.returnArrivalTime
+        ? new Date(`${t.returnArrivalDate}T${t.returnArrivalTime}:00`)
+        : null;
+      results.push({
+        id: t.id * -1 - 100000,
+        meetupId: t.meetupId,
+        registrationId: t.registrationId,
+        flightNo: t.returnFlightNo,
+        airline: t.returnAirline || null,
+        departureAirport: t.returnDepartureAirport || null,
+        arrivalAirport: t.returnArrivalAirport || null,
+        scheduledDeparture: depDate,
+        scheduledArrival: arrDate,
+        actualDeparture: null, actualArrival: null,
+        delayMinutes: 0,
+        flightStatus: "scheduled" as const,
+        direction: "return" as const,
+        notifiedDelay: false,
+        createdAt: t.createdAt, updatedAt: t.updatedAt,
+        _source: "ticket" as const,
+      });
+    }
+    return results;
+  });
+
+  // 4) 중복 제거: flight_schedules에 이미 같은 flightNo가 있으면 ticket 데이터 제외
+  const existingFlightNos = new Set(schedules.map(s => s.flightNo));
+  const uniqueTickets = ticketAsSchedules.filter(t => !existingFlightNos.has(t.flightNo));
+  const filteredTickets = filters?.direction
+    ? uniqueTickets.filter(t => t.direction === filters.direction)
+    : uniqueTickets;
+
+  return [...schedules, ...filteredTickets];
 }
 
 export async function getFlightScheduleById(id: number) {

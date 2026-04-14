@@ -223,7 +223,7 @@ export default function FlightPickupInfo() {
                             <p className="mt-2 text-sm text-muted-foreground bg-muted/50 p-2 rounded">{pickup.notes}</p>
                           )}
                           <div className="mt-3 flex gap-2">
-                            <Link href={`/pickup-board/${pickup.meetupId || 0}`}>
+                            <Link href={`/pickup/${pickup.meetupId || 0}`}>
                               <Button variant="outline" size="sm">{t("lookup.pickupBoard")}</Button>
                             </Link>
                             {pickup.driverPhone && (
@@ -248,7 +248,7 @@ export default function FlightPickupInfo() {
                   <Link href="/lookup">
                     <Button variant="outline" size="sm">{t("nav.lookup")}</Button>
                   </Link>
-                  <Link href={`/my-assignments?regId=${regId}`}>
+                  <Link href={`/my-assignments/${regId}`}>
                     <Button variant="outline" size="sm">{t("flightPickup.assignments", "배치 확인")}</Button>
                   </Link>
                   <Link href="/schedule">

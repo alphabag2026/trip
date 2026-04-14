@@ -2248,3 +2248,17 @@
 - [x] vitest 16건 테스트 통과 (aiRefine 6건 + aiSuggestSummarize 10건)
 - [ ] 체크포인트 저장
 - [ ] AWS Lightsail 프로덕션 배포
+
+## v6.11 - Pickup Board 빈 화면 버그 수정 + Flight/Pickup 통합
+
+### 버그 수정
+- [x] [BUG] Pickup Board 빈 화면 - FlightPickupInfo에서 `/pickup-board/` 잘못된 라우트 → `/pickup/`으로 수정
+- [x] [BUG] My Assignments 링크 - 쿼리 파라미터 `?regId=` → 경로 파라미터 `/:regId`로 수정
+
+### Flight/Ticket 데이터 통합
+- [x] getFlightSchedules 함수가 flight_tickets 테이블도 함께 조회하도록 수정
+- [x] flight_tickets → flight_schedules 형식 변환 (outbound/return 분리)
+- [x] 중복 제거 로직 (동일 flightNo 기준)
+
+### 테스트
+- [x] flight-pickup-fix.test.ts 5건 통과
