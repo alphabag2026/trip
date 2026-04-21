@@ -2368,3 +2368,11 @@
 - [x] 네이티브 플러그인 구성 (카메라, 마이크, 푸시 알림 권한)
 - [x] Android SDK 설치 및 Gradle 빌드
 - [x] APK 파일 생성 및 전달
+
+## 앱 아이콘/스플래시/릴리즈/웹 푸시
+- [x] Alpha Trip 브랜드 로고로 앱 아이콘 생성 (mdpi~xxxhdpi 5종)
+- [x] 스플래시 스크린 이미지 생성 (1200x2400 다크 그라디언트)
+- [x] Android 프로젝트에 아이콘/스플래시 적용
+- [x] 릴리즈 서명 키(keystore) 생성 (alphatrip-release.keystore)
+- [x] VAPID 기반 웹 푸시 알림 강화 (신청 승인/거절 시 참가자 알림, 마이페이지 알림 탭)
+- [x] 릴리즈 APK 빌드 및 전달 (AlphaTrip-v1.0-release.apk)

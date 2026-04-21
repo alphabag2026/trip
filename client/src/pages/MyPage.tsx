@@ -7,13 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   User, BookOpen, History, ArrowLeft, Loader2, ArrowRight,
-  CreditCard, Ticket, ClipboardCheck, LogOut, Car, Shield,
+  CreditCard, Ticket, ClipboardCheck, LogOut, Car, Shield, Bell,
 } from "lucide-react";
 import { Link } from "wouter";
 import LanguageSelector from "@/components/LanguageSelector";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useTranslation } from "react-i18next";
 import { AppDownloadCard } from "@/components/AppDownloadPrompt";
+import { PushNotificationToggle } from "@/components/PushNotificationToggle";
 
 // Lazy-loaded tab content components
 const ProfileTab = lazy(() => import("./mypage/ProfileTab"));
@@ -161,6 +162,9 @@ export default function MyPage() {
             <TabsTrigger value="safety" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
               <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabSafety", "안전/SOS")}</span><span className="sm:hidden">SOS</span>
             </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
+              <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabNotifications", "알림")}</span><span className="sm:hidden">{t("myPage.tabNotificationsShort", "알림")}</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
@@ -209,6 +213,16 @@ export default function MyPage() {
             <Suspense fallback={<TabLoader />}>
               <SafetyTab />
             </Suspense>
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <h3 className="text-lg font-semibold">{t("myPage.notificationSettings", "푸시 알림 설정")}</h3>
+                <p className="text-sm text-muted-foreground">{t("myPage.notificationDesc", "항공편 지연, 일정 변경, 신청 승인/거절, 픽업 시간 등 주요 이벤트를 실시간으로 알려드립니다.")}</p>
+                <PushNotificationToggle />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 

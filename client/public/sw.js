@@ -39,6 +39,10 @@ self.addEventListener('notificationclick', function(event) {
     targetUrl = '/admin/schedule';
   } else if (notifData.type === 'geofence') {
     targetUrl = '/admin/geofence';
+  } else if (notifData.type === 'registration_status') {
+    targetUrl = '/my-page';
+  } else if (notifData.type === 'pickup_time') {
+    targetUrl = '/my-page';
   } else if (notifData.url) {
     targetUrl = notifData.url;
   }

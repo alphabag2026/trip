@@ -850,6 +850,24 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
+        // 상태 변경 시 참가자에게 푸시 알림 발송
+        if (input.status === "approved" || input.status === "rejected") {
+          try {
+            const reg = await db.getRegistrationById(id);
+            if (reg?.userId) {
+              const statusText = input.status === "approved" ? "승인" : "거절";
+              const statusEmoji = input.status === "approved" ? "✅" : "❌";
+              await sendPushToUsers([reg.userId], {
+                title: `${statusEmoji} 참가 신청 ${statusText}`,
+                body: input.status === "approved"
+                  ? `${reg.name}님의 밋업 참가 신청이 승인되었습니다. 마이페이지에서 일정을 확인하세요!`
+                  : `${reg.name}님의 밋업 참가 신청이 거절되었습니다.${input.notes ? " 사유: " + input.notes : ""}`,
+                tag: `registration-${input.status}-${id}`,
+                data: { type: "registration_status", registrationId: id },
+              });
+            }
+          } catch (e) { console.error("[Push] Registration status push failed:", e); }
+        }
         await db.updateRegistration(id, data);
         return { success: true };
       }),
