@@ -1477,7 +1477,9 @@
       "travelPolicy": "여행 정책",
       "attendeeTiers": "참석자 등급",
       "budgetDashboard": "예산 대시보드",
-      "safetyCenter": "안전 센터"
+      "safetyCenter": "안전 센터",
+      "bookingPipeline": "예약 파이프라인",
+      "executiveReport": "경영진 리포트"
     },
     "survey": {
       "addQuestion": "질문 추가",

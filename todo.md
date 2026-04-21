@@ -2306,3 +2306,24 @@
 
 ### 7. 테스트
 - [x] vitest 테스트 작성 (7건 통과)
+
+## v6.13 - 파이프라인 대시보드 + SOS 긴급 버튼 + 경영진 리포트 PDF
+
+### 1. 예약 상태 파이프라인 대시보드 (Booking Pipeline)
+- [x] 서버: bookingPipeline.stats API (단계별 건수/전환율/병목 분석)
+- [x] 프론트엔드: Funnel 차트 시각화 (단계별 색상 + 애니메이션)
+- [x] 프론트엔드: 단계별 병목 하이라이트 + 전환율 통계 카드
+- [x] 프론트엔드: 백오피스 페이지 + 사이드바 메뉴 추가
+
+### 2. 참가자 마이페이지 SOS 긴급 버튼 + 비상 연락처 등록
+- [x] 프론트엔드: 마이페이지 Safety 탭 + 비상 연락처 등록/수정 폼
+- [x] 프론트엔드: SOS 긴급 버튼 (빨간색 큰 버튼 + 확인 다이얼로그 + 위치정보)
+- [x] 서버: sos.send API (safety_alerts 기록 + sendPushToAdmins 알림)
+
+### 3. 경영진 리포트 PDF 생성
+- [x] 서버: executiveReport.getData API (참석/예산/비용/국가/ROI 통합)
+- [x] 프론트엔드: 리포트 미리보기 + html2canvas/jsPDF PDF 다운로드
+- [x] 프론트엔드: 리포트 섹션 선택 커스터마이징 (5개 섹션)
+
+### 4. 테스트
+- [x] vitest 테스트 5건 통과 (pipeline/SOS/emergency/report)

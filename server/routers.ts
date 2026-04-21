@@ -8861,6 +8861,63 @@ Return ONLY valid JSON.`,
         };
       }),
   }),
+
+  // ── Booking Pipeline Dashboard ─────────────────────────────
+  bookingPipeline: router({
+    stats: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getBookingPipelineStats(input.meetupId);
+      }),
+  }),
+
+  // ── SOS Emergency ─────────────────────────────────────────
+  sos: router({
+    send: protectedProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        message: z.string().optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // 1. safety_alerts에 SOS 기록
+        const alert = await db.createSafetyAlert({
+          meetupId: input.meetupId || 0,
+          alertType: "sos",
+          severity: "critical",
+          title: `SOS from ${ctx.user.name}`,
+          description: input.message || `Emergency SOS from ${ctx.user.name}. Location: ${input.latitude || 'N/A'}, ${input.longitude || 'N/A'}`,
+          affectedArea: input.latitude && input.longitude ? `${input.latitude}, ${input.longitude}` : undefined,
+        });
+        // 2. 관리자에게 알림
+        try {
+          const { notifyOwner } = await import("./_core/notification");
+          await notifyOwner({
+            title: `🚨 SOS 긴급 알림 - ${ctx.user.name}`,
+            content: `참가자 ${ctx.user.name}이(가) SOS 긴급 버튼을 눌렀습니다.\n메시지: ${input.message || '없음'}\n위치: ${input.latitude || 'N/A'}, ${input.longitude || 'N/A'}`,
+          });
+        } catch (e) { console.error("SOS notify error:", e); }
+        // 3. 웹 푸시 알림
+        try {
+          await sendPushToAdmins({
+            title: `🚨 SOS - ${ctx.user.name}`,
+            body: input.message || "긴급 도움 요청",
+            data: { url: "/admin/safety-center" },
+          });
+        } catch (e) { console.error("SOS push error:", e); }
+        return { success: true, alertId: alert };
+      }),
+  }),
+
+  // ── Executive Report ──────────────────────────────────────
+  executiveReport: router({
+    getData: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getExecutiveReportData(input.meetupId);
+      }),
+  }),
 });
 // ── Haversine 거리 계산 (미터) ─────────────────────────────
 function getDistanceFromLatLon(lat1: number, lon1: number, lat2: number, lon2: number): number {

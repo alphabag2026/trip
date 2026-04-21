@@ -113,6 +113,8 @@ const AdminTravelPolicy = lazy(() => import("./pages/admin/TravelPolicy"));
 const AdminAttendeeTiers = lazy(() => import("./pages/admin/AttendeeTiers"));
 const AdminSafetyCenter = lazy(() => import("./pages/admin/SafetyCenter"));
 const AdminBudgetDashboard = lazy(() => import("./pages/admin/BudgetDashboard"));
+const AdminBookingPipeline = lazy(() => import("./pages/admin/BookingPipeline"));
+const AdminExecutiveReport = lazy(() => import("./pages/admin/ExecutiveReport"));
 
 // ═══════════════════════════════════════════════════════
 // Routers
@@ -210,6 +212,8 @@ function AdminRouter() {
           <Route path="/attendee-tiers" component={AdminAttendeeTiers} />
           <Route path="/safety-center" component={AdminSafetyCenter} />
           <Route path="/budget-dashboard" component={AdminBudgetDashboard} />
+          <Route path="/booking-pipeline" component={AdminBookingPipeline} />
+          <Route path="/executive-report" component={AdminExecutiveReport} />
           <Route path="/2fa-settings" component={TwoFactorSettings} />
           <Route component={NotFound} />
         </Switch>

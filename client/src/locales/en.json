@@ -1477,7 +1477,9 @@
       "travelPolicy": "Travel Policy",
       "attendeeTiers": "Attendee Tiers",
       "budgetDashboard": "Budget Dashboard",
-      "safetyCenter": "Safety Center"
+      "safetyCenter": "Safety Center",
+      "bookingPipeline": "Booking Pipeline",
+      "executiveReport": "Executive Report"
     },
     "survey": {
       "addQuestion": "Add Question",

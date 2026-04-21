@@ -3754,3 +3754,121 @@ export async function getRegistrationWithTier(registrationId: number) {
   const defaultTier = tiers.find(t => t.isDefault) ?? tiers[tiers.length - 1] ?? null;
   return { ...reg[0], tier: defaultTier };
 }
+
+
+// ── Booking Pipeline 통계 ──────────────────────────────────
+export async function getBookingPipelineStats(meetupId: number) {
+  const db = await getDb(); if (!db) return null;
+  const where = eq(registrations.meetupId, meetupId);
+
+  // 1. 초대 (전체 등록)
+  const [total] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where);
+  // 2. RSVP (pending이 아닌 것 = 응답한 것)
+  const [rsvped] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(and(where, sql`${registrations.status} != 'pending'`));
+  // 3. 승인됨 (approved + completed)
+  const [approved] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(and(where, sql`${registrations.status} IN ('approved', 'completed')`));
+  // 4. 체크인 (pickupAssignments에 assignedRegistrationIds JSON 배열에서 카운트)
+  const [checkedIn] = await db.select({ count: sql<number>`count(*)` })
+    .from(pickupAssignments)
+    .where(and(
+      eq(pickupAssignments.meetupId, meetupId),
+      sql`${pickupAssignments.status} IN ('picked_up', 'completed')`
+    ));
+  // 5. 완료 (completed)
+  const [completed] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(and(where, eq(registrations.status, "completed")));
+
+  const invited = total?.count ?? 0;
+  const rsvpCount = rsvped?.count ?? 0;
+  const approvedCount = approved?.count ?? 0;
+  const checkedInCount = checkedIn?.count ?? 0;
+  const completedCount = completed?.count ?? 0;
+
+  return {
+    stages: [
+      { name: "invited", label: "초대", count: invited },
+      { name: "rsvp", label: "RSVP", count: rsvpCount },
+      { name: "approved", label: "승인", count: approvedCount },
+      { name: "checkedIn", label: "체크인", count: checkedInCount },
+      { name: "completed", label: "완료", count: completedCount },
+    ],
+    conversionRates: {
+      inviteToRsvp: invited > 0 ? Math.round((rsvpCount / invited) * 100) : 0,
+      rsvpToApproved: rsvpCount > 0 ? Math.round((approvedCount / rsvpCount) * 100) : 0,
+      approvedToCheckin: approvedCount > 0 ? Math.round((checkedInCount / approvedCount) * 100) : 0,
+      checkinToCompleted: checkedInCount > 0 ? Math.round((completedCount / checkedInCount) * 100) : 0,
+    },
+    bottleneck: (() => {
+      const rates = [
+        { stage: "invite→RSVP", rate: invited > 0 ? (rsvpCount / invited) * 100 : 100 },
+        { stage: "RSVP→승인", rate: rsvpCount > 0 ? (approvedCount / rsvpCount) * 100 : 100 },
+        { stage: "승인→체크인", rate: approvedCount > 0 ? (checkedInCount / approvedCount) * 100 : 100 },
+        { stage: "체크인→완료", rate: checkedInCount > 0 ? (completedCount / checkedInCount) * 100 : 100 },
+      ];
+      const min = rates.reduce((a, b) => a.rate < b.rate ? a : b);
+      return min.rate < 100 ? { stage: min.stage, rate: Math.round(min.rate) } : null;
+    })(),
+  };
+}
+
+// ── 경영진 리포트 데이터 ──────────────────────────────────
+export async function getExecutiveReportData(meetupId: number) {
+  const db = await getDb(); if (!db) return null;
+  const where = eq(registrations.meetupId, meetupId);
+
+  // 참석 통계
+  const [total] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(where);
+  const [approved] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(and(where, sql`${registrations.status} IN ('approved', 'completed')`));
+  const [completed] = await db.select({ count: sql<number>`count(*)` }).from(registrations).where(and(where, eq(registrations.status, "completed")));
+
+  // 국가별 분포 (userProfiles에서 nationality 조인)
+  const countryDist = await db.select({
+    country: userProfiles.nationality,
+    count: sql<number>`count(*)`,
+  }).from(registrations)
+    .leftJoin(userProfiles, eq(registrations.userId, userProfiles.userId))
+    .where(and(where, sql`${userProfiles.nationality} IS NOT NULL AND ${userProfiles.nationality} != ''`))
+    .groupBy(userProfiles.nationality)
+    .orderBy(sql`count(*) DESC`)
+    .limit(20);
+
+  // 비용 데이터 (meetup_expenses)
+  const expenses = await db.select().from(meetupExpenses).where(eq(meetupExpenses.meetupId, meetupId));
+  const totalExpense = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const expenseByCategory = expenses.reduce((acc, e) => {
+    const cat = e.category || "기타";
+    acc[cat] = (acc[cat] || 0) + Number(e.amount || 0);
+    return acc;
+  }, {} as Record<string, number>);
+
+  // 밋업 정보
+  const meetup = await db.select().from(meetups).where(eq(meetups.id, meetupId)).limit(1);
+
+  // 여행 정책
+  const policy = await getTravelPolicy(meetupId);
+
+  return {
+    meetup: meetup[0] || null,
+    attendance: {
+      total: total?.count ?? 0,
+      approved: approved?.count ?? 0,
+      completed: completed?.count ?? 0,
+      attendanceRate: (total?.count ?? 0) > 0 ? Math.round(((approved?.count ?? 0) / (total?.count ?? 0)) * 100) : 0,
+    },
+    countryDistribution: countryDist.map(c => ({ country: c.country || "Unknown", count: c.count })),
+    expenses: {
+      total: totalExpense,
+      byCategory: expenseByCategory,
+      items: expenses,
+    },
+    budget: policy ? {
+      total: Number(policy.totalBudget || 0),
+      spent: Number(policy.spentAmount || 0),
+      remaining: Number(policy.totalBudget || 0) - Number(policy.spentAmount || 0),
+      utilization: Number(policy.totalBudget) > 0 ? Math.round((Number(policy.spentAmount || 0) / Number(policy.totalBudget)) * 100) : 0,
+    } : null,
+    roi: totalExpense > 0 && (approved?.count ?? 0) > 0 ? {
+      costPerAttendee: Math.round(totalExpense / (approved?.count ?? 1)),
+      totalInvestment: totalExpense,
+    } : null,
+  };
+}

@@ -136,6 +136,8 @@ const menuGroups: MenuGroup[] = [
       { icon: Crown, labelKey: "admin.sidebar.attendeeTiers", path: "/attendee-tiers", roles: ["all"] },
       { icon: PieChart, labelKey: "admin.sidebar.budgetDashboard", path: "/budget-dashboard", roles: ["all"] },
       { icon: ShieldAlert, labelKey: "admin.sidebar.safetyCenter", path: "/safety-center", roles: ["all"] },
+      { icon: TrendingUp, labelKey: "admin.sidebar.bookingPipeline", path: "/booking-pipeline", roles: ["all"] },
+      { icon: FileText, labelKey: "admin.sidebar.executiveReport", path: "/executive-report", roles: ["all"] },
     ],
   },
   // ─── 9. 플랫폼 관리 (슈퍼관리자 전용) ───

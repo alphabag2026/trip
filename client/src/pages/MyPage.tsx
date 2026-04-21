@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   User, BookOpen, History, ArrowLeft, Loader2, ArrowRight,
-  CreditCard, Ticket, ClipboardCheck, LogOut, Car,
+  CreditCard, Ticket, ClipboardCheck, LogOut, Car, Shield,
 } from "lucide-react";
 import { Link } from "wouter";
 import LanguageSelector from "@/components/LanguageSelector";
@@ -22,6 +22,7 @@ const VouchersTab = lazy(() => import("./mypage/VouchersTab"));
 const TicketsTab = lazy(() => import("./mypage/TicketsTab"));
 const ChecklistTab = lazy(() => import("./mypage/ChecklistTab"));
 const TransportTab = lazy(() => import("./mypage/TransportTab"));
+const SafetyTab = lazy(() => import("./mypage/SafetyTab"));
 
 function TabLoader() {
   return (
@@ -156,6 +157,9 @@ export default function MyPage() {
             <TabsTrigger value="transport" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
               <Car className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabTransport", "차량/숙소")}</span><span className="sm:hidden">{t("myPage.tabTransportShort", "차량")}</span>
             </TabsTrigger>
+            <TabsTrigger value="safety" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
+              <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabSafety", "안전/SOS")}</span><span className="sm:hidden">SOS</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
@@ -197,6 +201,12 @@ export default function MyPage() {
           <TabsContent value="transport">
             <Suspense fallback={<TabLoader />}>
               <TransportTab />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="safety">
+            <Suspense fallback={<TabLoader />}>
+              <SafetyTab />
             </Suspense>
           </TabsContent>
         </Tabs>
