@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt, Shield, Image, ChevronDown, MapPin, Navigation, Route, Target, Flame, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt, Shield, Image, ChevronDown, MapPin, Navigation, Route, Target, Flame, Crown, PieChart, ShieldAlert, type LucideIcon } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -127,7 +127,18 @@ const menuGroups: MenuGroup[] = [
       { icon: Ticket, labelKey: "admin.sidebar.flightTickets", path: "/flight-tickets", roles: ["all"] },
     ],
   },
-  // ─── 8. 플랫폼 관리 (슈퍼관리자 전용) ───
+  // ─── 8. 정책 & 예산 ───
+  {
+    labelKey: "admin.sidebarGroup.policyBudget",
+    roles: ["all"],
+    items: [
+      { icon: Shield, labelKey: "admin.sidebar.travelPolicy", path: "/travel-policy", roles: ["all"] },
+      { icon: Crown, labelKey: "admin.sidebar.attendeeTiers", path: "/attendee-tiers", roles: ["all"] },
+      { icon: PieChart, labelKey: "admin.sidebar.budgetDashboard", path: "/budget-dashboard", roles: ["all"] },
+      { icon: ShieldAlert, labelKey: "admin.sidebar.safetyCenter", path: "/safety-center", roles: ["all"] },
+    ],
+  },
+  // ─── 9. 플랫폼 관리 (슈퍼관리자 전용) ───
   {
     labelKey: "admin.sidebarGroup.platformAdmin",
     roles: ["admin", "superadmin"],

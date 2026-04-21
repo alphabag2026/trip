@@ -8608,6 +8608,259 @@ Return ONLY valid JSON.`,
         return { favorited: await db.isPlaceFavorited(ctx.user.id, input.placeId) };
       }),
   }),
+
+  // ══════════════════════════════════════════════════════════
+  // v6.12 - Travel Policies, Attendee Tiers, Emergency Contacts, Safety Alerts
+  // ══════════════════════════════════════════════════════════
+
+  travelPolicy: router({
+    get: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getTravelPolicy(input.meetupId);
+      }),
+    upsert: protectedProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        allowedFlightClass: z.enum(["economy", "premium_economy", "business", "first", "any"]).optional(),
+        maxFlightBudget: z.number().optional(),
+        flightBudgetCurrency: z.string().optional(),
+        allowedHotelStars: z.number().optional(),
+        maxHotelBudgetPerNight: z.number().optional(),
+        hotelBudgetCurrency: z.string().optional(),
+        maxTravelDays: z.number().optional(),
+        minAdvanceBookingDays: z.number().optional(),
+        totalBudget: z.number().optional(),
+        totalBudgetCurrency: z.string().optional(),
+        requireApproval: z.boolean().optional(),
+        autoRejectOverBudget: z.boolean().optional(),
+        policyNotes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { meetupId, maxFlightBudget, maxHotelBudgetPerNight, totalBudget, ...rest } = input;
+        const data: any = { ...rest };
+        if (maxFlightBudget !== undefined) data.maxFlightBudget = String(maxFlightBudget);
+        if (maxHotelBudgetPerNight !== undefined) data.maxHotelBudgetPerNight = String(maxHotelBudgetPerNight);
+        if (totalBudget !== undefined) data.totalBudget = String(totalBudget);
+        data.createdBy = ctx.user.id;
+        const id = await db.upsertTravelPolicy(meetupId, data);
+        return { id };
+      }),
+  }),
+
+  attendeeTier: router({
+    list: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getAttendeeTiers(input.meetupId);
+      }),
+    create: protectedProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        tierName: z.string(),
+        tierLevel: z.number().default(0),
+        color: z.string().default("#6366f1"),
+        flightClass: z.enum(["economy", "premium_economy", "business", "first", "any"]).optional(),
+        maxFlightBudget: z.number().optional(),
+        hotelStars: z.number().optional(),
+        maxHotelBudgetPerNight: z.number().optional(),
+        mealAllowance: z.number().optional(),
+        transportAllowance: z.number().optional(),
+        airportPickup: z.boolean().default(false),
+        loungeAccess: z.boolean().default(false),
+        prioritySeating: z.boolean().default(false),
+        giftBag: z.boolean().default(false),
+        vipDinner: z.boolean().default(false),
+        dedicatedInterpreter: z.boolean().default(false),
+        customBenefits: z.array(z.string()).optional(),
+        description: z.string().optional(),
+        isDefault: z.boolean().default(false),
+      }))
+      .mutation(async ({ input }) => {
+        const { maxFlightBudget, maxHotelBudgetPerNight, mealAllowance, transportAllowance, ...rest } = input;
+        const data: any = { ...rest };
+        if (maxFlightBudget !== undefined) data.maxFlightBudget = String(maxFlightBudget);
+        if (maxHotelBudgetPerNight !== undefined) data.maxHotelBudgetPerNight = String(maxHotelBudgetPerNight);
+        if (mealAllowance !== undefined) data.mealAllowance = String(mealAllowance);
+        if (transportAllowance !== undefined) data.transportAllowance = String(transportAllowance);
+        const id = await db.createAttendeeTier(data);
+        return { id };
+      }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        tierName: z.string().optional(),
+        tierLevel: z.number().optional(),
+        color: z.string().optional(),
+        flightClass: z.enum(["economy", "premium_economy", "business", "first", "any"]).optional(),
+        maxFlightBudget: z.number().nullable().optional(),
+        hotelStars: z.number().optional(),
+        maxHotelBudgetPerNight: z.number().nullable().optional(),
+        mealAllowance: z.number().nullable().optional(),
+        transportAllowance: z.number().nullable().optional(),
+        airportPickup: z.boolean().optional(),
+        loungeAccess: z.boolean().optional(),
+        prioritySeating: z.boolean().optional(),
+        giftBag: z.boolean().optional(),
+        vipDinner: z.boolean().optional(),
+        dedicatedInterpreter: z.boolean().optional(),
+        customBenefits: z.array(z.string()).optional(),
+        description: z.string().optional(),
+        isDefault: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, maxFlightBudget, maxHotelBudgetPerNight, mealAllowance, transportAllowance, ...rest } = input;
+        const data: any = { ...rest };
+        if (maxFlightBudget !== undefined) data.maxFlightBudget = maxFlightBudget !== null ? String(maxFlightBudget) : null;
+        if (maxHotelBudgetPerNight !== undefined) data.maxHotelBudgetPerNight = maxHotelBudgetPerNight !== null ? String(maxHotelBudgetPerNight) : null;
+        if (mealAllowance !== undefined) data.mealAllowance = mealAllowance !== null ? String(mealAllowance) : null;
+        if (transportAllowance !== undefined) data.transportAllowance = transportAllowance !== null ? String(transportAllowance) : null;
+        await db.updateAttendeeTier(id, data);
+        return { success: true };
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteAttendeeTier(input.id);
+        return { success: true };
+      }),
+  }),
+
+  emergencyContact: router({
+    list: protectedProcedure
+      .input(z.object({ registrationId: z.number().optional(), meetupId: z.number().optional() }))
+      .query(async ({ input }) => {
+        if (input.registrationId) return db.getEmergencyContacts(input.registrationId);
+        if (input.meetupId) return db.getEmergencyContactsByMeetup(input.meetupId);
+        return [];
+      }),
+    upsert: protectedProcedure
+      .input(z.object({
+        registrationId: z.number().optional(),
+        meetupId: z.number().optional(),
+        contactName: z.string(),
+        relationship: z.string(),
+        phone: z.string(),
+        email: z.string().optional(),
+        countryCode: z.string().optional(),
+        notes: z.string().optional(),
+        isPrimary: z.boolean().default(true),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.upsertEmergencyContact({
+          userId: ctx.user.id,
+          registrationId: input.registrationId ?? null,
+          meetupId: input.meetupId ?? null,
+          contactName: input.contactName,
+          relationship: input.relationship,
+          phone: input.phone,
+          email: input.email ?? null,
+          countryCode: input.countryCode ?? null,
+          notes: input.notes ?? null,
+          isPrimary: input.isPrimary,
+        });
+        return { id };
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteEmergencyContact(input.id);
+        return { success: true };
+      }),
+  }),
+
+  safetyAlert: router({
+    list: protectedProcedure
+      .input(z.object({ meetupId: z.number(), activeOnly: z.boolean().default(true) }))
+      .query(async ({ input }) => {
+        return db.getSafetyAlerts(input.meetupId, input.activeOnly);
+      }),
+    create: protectedProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        alertType: z.enum(["sos", "weather", "security", "health", "travel_advisory", "general"]).default("general"),
+        severity: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+        title: z.string(),
+        description: z.string().optional(),
+        affectedArea: z.string().optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        radius: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const data: any = {
+          ...input,
+          reportedByUserId: ctx.user.id,
+          reportedByName: ctx.user.name,
+        };
+        if (input.latitude !== undefined) data.latitude = String(input.latitude);
+        if (input.longitude !== undefined) data.longitude = String(input.longitude);
+        const id = await db.createSafetyAlert(data);
+        return { id };
+      }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        severity: z.enum(["low", "medium", "high", "critical"]).optional(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        status: z.enum(["active", "monitoring", "resolved", "dismissed"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateSafetyAlert(id, data as any);
+        return { success: true };
+      }),
+    resolve: protectedProcedure
+      .input(z.object({ id: z.number(), note: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.resolveSafetyAlert(input.id, ctx.user.id, input.note);
+        return { success: true };
+      }),
+    // SOS 긴급 신고 (참석자용)
+    sos: protectedProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        description: z.string(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const data: any = {
+          meetupId: input.meetupId,
+          alertType: "sos",
+          severity: "critical",
+          title: `SOS: ${ctx.user.name || "참석자"} 긴급 신고`,
+          description: input.description,
+          reportedByUserId: ctx.user.id,
+          reportedByName: ctx.user.name,
+        };
+        if (input.latitude !== undefined) data.latitude = String(input.latitude);
+        if (input.longitude !== undefined) data.longitude = String(input.longitude);
+        const id = await db.createSafetyAlert(data);
+        return { id, message: "SOS 신고가 접수되었습니다. 관리자에게 알림이 전송됩니다." };
+      }),
+  }),
+
+  // ── Budget Dashboard ──────────────────────────────
+  budgetDashboard: router({
+    summary: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        const policy = await db.getTravelPolicy(input.meetupId);
+        const tiers = await db.getAttendeeTiers(input.meetupId);
+        return {
+          policy,
+          tiers,
+          totalBudget: policy ? Number(policy.totalBudget || 0) : 0,
+          spentAmount: policy ? Number(policy.spentAmount || 0) : 0,
+          remainingBudget: policy ? Number(policy.totalBudget || 0) - Number(policy.spentAmount || 0) : 0,
+          budgetUtilization: policy && Number(policy.totalBudget) > 0
+            ? Math.round((Number(policy.spentAmount || 0) / Number(policy.totalBudget)) * 100)
+            : 0,
+        };
+      }),
+  }),
 });
 // ── Haversine 거리 계산 (미터) ─────────────────────────────
 function getDistanceFromLatLon(lat1: number, lon1: number, lat2: number, lon2: number): number {

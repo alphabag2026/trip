@@ -1473,7 +1473,11 @@
       "meetupSchedules": "Schedule Management",
       "geofence": "Geofencing",
       "locationHistory": "Location History",
-      "locationHeatmap": "Location Heatmap"
+      "locationHeatmap": "Location Heatmap",
+      "travelPolicy": "Travel Policy",
+      "attendeeTiers": "Attendee Tiers",
+      "budgetDashboard": "Budget Dashboard",
+      "safetyCenter": "Safety Center"
     },
     "survey": {
       "addQuestion": "Add Question",
@@ -2089,7 +2093,8 @@
       "meetupParticipants": "MEETUP & PARTICIPANTS",
       "transportAccom": "TRANSPORT & ACCOMMODATION",
       "scheduleItinerary": "SCHEDULE & ITINERARY",
-      "commNotify": "COMMUNICATION & NOTIFY"
+      "commNotify": "COMMUNICATION & NOTIFY",
+      "policyBudget": "POLICY & BUDGET"
     },
     "accessDenied": "Access Denied",
     "superadminOnly": "This page is only accessible to super administrators.",

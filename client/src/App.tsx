@@ -109,6 +109,10 @@ const AdminLocationTracker = lazy(() => import("./pages/admin/LocationTracker"))
 const AdminGeofenceManager = lazy(() => import("./pages/admin/GeofenceManager"));
 const AdminLocationHistory = lazy(() => import("./pages/admin/LocationHistory"));
 const AdminLocationHeatmap = lazy(() => import("./pages/admin/LocationHeatmap"));
+const AdminTravelPolicy = lazy(() => import("./pages/admin/TravelPolicy"));
+const AdminAttendeeTiers = lazy(() => import("./pages/admin/AttendeeTiers"));
+const AdminSafetyCenter = lazy(() => import("./pages/admin/SafetyCenter"));
+const AdminBudgetDashboard = lazy(() => import("./pages/admin/BudgetDashboard"));
 
 // ═══════════════════════════════════════════════════════
 // Routers
@@ -202,6 +206,10 @@ function AdminRouter() {
           <Route path="/geofence" component={AdminGeofenceManager} />
           <Route path="/location-history" component={AdminLocationHistory} />
           <Route path="/location-heatmap" component={AdminLocationHeatmap} />
+          <Route path="/travel-policy" component={AdminTravelPolicy} />
+          <Route path="/attendee-tiers" component={AdminAttendeeTiers} />
+          <Route path="/safety-center" component={AdminSafetyCenter} />
+          <Route path="/budget-dashboard" component={AdminBudgetDashboard} />
           <Route path="/2fa-settings" component={TwoFactorSettings} />
           <Route component={NotFound} />
         </Switch>

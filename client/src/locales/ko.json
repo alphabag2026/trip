@@ -1473,7 +1473,11 @@
       "meetupSchedules": "일정 관리",
       "geofence": "지오펜싱",
       "locationHistory": "위치 이력",
-      "locationHeatmap": "위치 히트맵"
+      "locationHeatmap": "위치 히트맵",
+      "travelPolicy": "여행 정책",
+      "attendeeTiers": "참석자 등급",
+      "budgetDashboard": "예산 대시보드",
+      "safetyCenter": "안전 센터"
     },
     "survey": {
       "addQuestion": "질문 추가",
@@ -2089,7 +2093,8 @@
       "meetupParticipants": "밋업 & 참가자",
       "transportAccom": "교통 & 숙소",
       "scheduleItinerary": "일정 & 여정",
-      "commNotify": "소통 & 알림"
+      "commNotify": "소통 & 알림",
+      "policyBudget": "정책 & 예산"
     },
     "accessDenied": "접근 권한이 없습니다",
     "superadminOnly": "이 페이지는 슈퍼관리자만 접근할 수 있습니다.",

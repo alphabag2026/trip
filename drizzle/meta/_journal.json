@@ -295,6 +295,13 @@
       "when": 1776077820142,
       "tag": "0041_slow_talisman",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "5",
+      "when": 1776753568983,
+      "tag": "0042_soft_mandroid",
+      "breakpoints": true
     }
   ]
 }

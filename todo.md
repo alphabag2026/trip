@@ -2262,3 +2262,47 @@
 
 ### 테스트
 - [x] flight-pickup-fix.test.ts 5건 통과
+
+## v6.12 - 경쟁사 Gap 분석 기반 기능 보강 (KAYAK/RouteSpring/Cvent/Navan)
+
+### 1. 이벤트별 여행 정책 설정 (Travel Policy)
+- [x] DB: travel_policies 테이블 (밋업별 정책 - 항공클래스/예산상한/기간제한/사전예약기간)
+- [x] DB: attendee_tiers 테이블 (참가자 등급 - VIP/연사/일반/스태프)
+- [x] DB: tier_policies → attendee_tiers에 통합 (등급별 차등 정책 포함)
+- [x] 서버: travelPolicy CRUD API
+- [x] 서버: attendeeTier CRUD API
+- [x] 프론트엔드: 백오피스 여행 정책 설정 페이지
+- [x] 프론트엔드: 참가자 등급 관리 UI (프리셋 포함)
+- [x] 프론트엔드: 등급별 혜택 비교표 (카드 뷰)
+
+### 2. 예약 상태 파이프라인 대시보드 (Booking Pipeline)
+- [ ] 프론트엔드: 초대→RSVP→예약→체크인→완료 파이프라인 시각화
+- [ ] 프론트엔드: Funnel 차트 (단계별 전환율)
+- [ ] 프론트엔드: 단계별 병목 하이라이트
+- [ ] 서버: 파이프라인 통계 API (단계별 건수/전환율)
+
+### 3. 예산 대시보드 강화 (Budget Dashboard)
+- [x] 프론트엔드: 실시간 예산 소진율 게이지 차트
+- [x] 프론트엔드: 카테고리별 예산 vs 실제 비교 바 차트
+- [x] 프론트엔드: 초과 예산 경고 배너
+- [ ] 서버: 예산 초과 알림 API (웹 푸시 연동)
+
+### 4. 경영진 리포트 생성기 (Executive Report)
+- [ ] 서버: PDF 리포트 생성 API (비용 요약/참석률/ROI/국가별 분포)
+- [ ] 프론트엔드: 리포트 미리보기 + PDF 다운로드
+- [ ] 프론트엔드: 리포트 필드 선택 커스터마이징
+
+### 5. 듀티 오브 케어 (Duty of Care / 안전 관리)
+- [x] DB: emergency_contacts 테이블 (참가자별 긴급 연락처)
+- [x] DB: safety_alerts 테이블 (여행 경보/위험 알림)
+- [x] 서버: emergencyContact CRUD API
+- [x] 서버: safetyAlert CRUD API + 해결 처리
+- [ ] 프론트엔드: 참가자 긴급 연락처 등록 (마이페이지)
+- [ ] 프론트엔드: SOS 긴급 버튼 (관리자에게 즉시 알림)
+- [x] 프론트엔드: 관리자 안전 대시보드 (참가자 안전 상태 모니터링)
+
+### 6. 다국어 번역 키
+- [x] ko/en 번역 키 추가 (sidebar, sidebarGroup)
+
+### 7. 테스트
+- [x] vitest 테스트 작성 (7건 통과)

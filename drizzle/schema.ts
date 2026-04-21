@@ -2002,3 +2002,116 @@ export const placeFavorites = mysqlTable("place_favorites", {
 });
 export type PlaceFavorite = typeof placeFavorites.$inferSelect;
 export type InsertPlaceFavorite = typeof placeFavorites.$inferInsert;
+
+// ══════════════════════════════════════════════════════════
+// v6.12 - 경쟁사 Gap 분석 기반 기능 보강
+// ══════════════════════════════════════════════════════════
+
+// ── Travel Policies (이벤트별 여행 정책) ──────────────────
+export const travelPolicies = mysqlTable("travel_policies", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  // 항공 정책
+  allowedFlightClass: mysqlEnum("allowedFlightClass", ["economy", "premium_economy", "business", "first", "any"]).default("economy").notNull(),
+  maxFlightBudget: decimal("maxFlightBudget", { precision: 12, scale: 2 }), // 1인당 항공 예산 상한
+  flightBudgetCurrency: varchar("flightBudgetCurrency", { length: 10 }).default("USD"),
+  // 숙소 정책
+  allowedHotelStars: int("allowedHotelStars").default(3), // 최소 호텔 등급
+  maxHotelBudgetPerNight: decimal("maxHotelBudgetPerNight", { precision: 12, scale: 2 }),
+  hotelBudgetCurrency: varchar("hotelBudgetCurrency", { length: 10 }).default("USD"),
+  // 기간 정책
+  maxTravelDays: int("maxTravelDays"), // 최대 여행 일수
+  minAdvanceBookingDays: int("minAdvanceBookingDays").default(7), // 최소 사전 예약 기간
+  // 전체 예산
+  totalBudget: decimal("totalBudget", { precision: 15, scale: 2 }), // 밋업 전체 예산
+  totalBudgetCurrency: varchar("totalBudgetCurrency", { length: 10 }).default("USD"),
+  spentAmount: decimal("spentAmount", { precision: 15, scale: 2 }).default("0"), // 현재 지출
+  // 기타 정책
+  requireApproval: boolean("requireApproval").default(false).notNull(), // 예산 초과 시 승인 필요
+  autoRejectOverBudget: boolean("autoRejectOverBudget").default(false).notNull(),
+  policyNotes: text("policyNotes"), // 추가 정책 안내
+  isActive: boolean("isActive").default(true).notNull(),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type TravelPolicy = typeof travelPolicies.$inferSelect;
+export type InsertTravelPolicy = typeof travelPolicies.$inferInsert;
+
+// ── Attendee Tiers (참가자 등급 및 차등 정책) ──────────────
+export const attendeeTiers = mysqlTable("attendee_tiers", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  tierName: varchar("tierName", { length: 100 }).notNull(), // VIP, Speaker, General, Staff
+  tierLevel: int("tierLevel").default(0).notNull(), // 등급 우선순위 (높을수록 상위)
+  color: varchar("color", { length: 20 }).default("#6366f1"), // 배지 색상
+  // 차등 혜택
+  flightClass: mysqlEnum("flightClass", ["economy", "premium_economy", "business", "first", "any"]).default("economy"),
+  maxFlightBudget: decimal("maxFlightBudget", { precision: 12, scale: 2 }),
+  hotelStars: int("hotelStars").default(3),
+  maxHotelBudgetPerNight: decimal("maxHotelBudgetPerNight", { precision: 12, scale: 2 }),
+  mealAllowance: decimal("mealAllowance", { precision: 12, scale: 2 }), // 식비 한도
+  transportAllowance: decimal("transportAllowance", { precision: 12, scale: 2 }), // 교통비 한도
+  // 추가 혜택
+  airportPickup: boolean("airportPickup").default(false).notNull(), // 공항 픽업 제공
+  loungeAccess: boolean("loungeAccess").default(false).notNull(), // 라운지 이용
+  prioritySeating: boolean("prioritySeating").default(false).notNull(), // 우선 좌석
+  giftBag: boolean("giftBag").default(false).notNull(), // 선물 가방
+  vipDinner: boolean("vipDinner").default(false).notNull(), // VIP 디너
+  dedicatedInterpreter: boolean("dedicatedInterpreter").default(false).notNull(), // 전담 통역
+  customBenefits: json("customBenefits").$type<string[]>(), // 추가 커스텀 혜택
+  description: text("description"),
+  isDefault: boolean("isDefault").default(false).notNull(), // 기본 등급 여부
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AttendeeTier = typeof attendeeTiers.$inferSelect;
+export type InsertAttendeeTier = typeof attendeeTiers.$inferInsert;
+
+// ── Emergency Contacts (참가자 긴급 연락처) ──────────────
+export const emergencyContacts = mysqlTable("emergency_contacts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  registrationId: int("registrationId"),
+  meetupId: int("meetupId"),
+  contactName: varchar("contactName", { length: 255 }).notNull(),
+  relationship: varchar("relationship", { length: 100 }).notNull(), // 가족, 친구, 동료 등
+  phone: varchar("phone", { length: 50 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  countryCode: varchar("countryCode", { length: 5 }),
+  notes: text("notes"),
+  isPrimary: boolean("isPrimary").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EmergencyContact = typeof emergencyContacts.$inferSelect;
+export type InsertEmergencyContact = typeof emergencyContacts.$inferInsert;
+
+// ── Safety Alerts (안전 알림/여행 경보) ──────────────────
+export const safetyAlerts = mysqlTable("safety_alerts", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId"),
+  alertType: mysqlEnum("alertType", ["sos", "weather", "security", "health", "travel_advisory", "general"]).default("general").notNull(),
+  severity: mysqlEnum("severity", ["low", "medium", "high", "critical"]).default("medium").notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description"),
+  affectedArea: varchar("affectedArea", { length: 500 }), // 영향 지역
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  radius: int("radius"), // 영향 반경 (미터)
+  // SOS 관련
+  reportedByUserId: int("reportedByUserId"),
+  reportedByName: varchar("reportedByName", { length: 255 }),
+  // 상태
+  status: mysqlEnum("status", ["active", "monitoring", "resolved", "dismissed"]).default("active").notNull(),
+  resolvedAt: timestamp("resolvedAt"),
+  resolvedByUserId: int("resolvedByUserId"),
+  resolvedNote: text("resolvedNote"),
+  // 알림
+  notifiedAdmins: boolean("notifiedAdmins").default(false).notNull(),
+  notifiedParticipants: boolean("notifiedParticipants").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SafetyAlert = typeof safetyAlerts.$inferSelect;
+export type InsertSafetyAlert = typeof safetyAlerts.$inferInsert;

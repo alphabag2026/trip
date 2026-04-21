@@ -65,6 +65,11 @@ import {
   geofenceEvents, InsertGeofenceEvent,
   locationHistory, InsertLocationHistory,
   pushSubscriptions, InsertPushSubscriptionRow,
+  placeFavorites, InsertPlaceFavorite,
+  travelPolicies, InsertTravelPolicy,
+  attendeeTiers, InsertAttendeeTier,
+  emergencyContacts, InsertEmergencyContact,
+  safetyAlerts, InsertSafetyAlert,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -3584,7 +3589,6 @@ export async function getLocationHistoryForHeatmap(meetupId: number, opts?: { st
 }
 
 // ── 주변 장소 즐겨찾기 ─────────────────────────────────────
-import { placeFavorites, InsertPlaceFavorite } from "../drizzle/schema";
 
 export async function getPlaceFavorites(userId: number) {
   const db = await getDb();
@@ -3616,4 +3620,137 @@ export async function isPlaceFavorited(userId: number, placeId: string) {
     .where(and(eq(placeFavorites.userId, userId), eq(placeFavorites.placeId, placeId)))
     .limit(1);
   return rows.length > 0;
+}
+
+// ══════════════════════════════════════════════════════════
+// v6.12 - Travel Policies, Attendee Tiers, Emergency Contacts, Safety Alerts
+// ══════════════════════════════════════════════════════════
+
+// ── Travel Policies ──────────────────────────────────
+export async function getTravelPolicy(meetupId: number) {
+  const db = await getDb(); if (!db) return null;
+  const rows = await db.select().from(travelPolicies).where(eq(travelPolicies.meetupId, meetupId)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function upsertTravelPolicy(meetupId: number, data: Partial<InsertTravelPolicy>) {
+  const db = await getDb(); if (!db) return null;
+  const existing = await getTravelPolicy(meetupId);
+  if (existing) {
+    await db.update(travelPolicies).set(data).where(eq(travelPolicies.id, existing.id));
+    return existing.id;
+  } else {
+    const [result] = await db.insert(travelPolicies).values({ meetupId, ...data } as InsertTravelPolicy);
+    return (result as any).insertId;
+  }
+}
+
+// ── Attendee Tiers ──────────────────────────────────
+export async function getAttendeeTiers(meetupId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(attendeeTiers).where(eq(attendeeTiers.meetupId, meetupId)).orderBy(desc(attendeeTiers.tierLevel));
+}
+
+export async function createAttendeeTier(data: InsertAttendeeTier) {
+  const db = await getDb(); if (!db) return null;
+  const [result] = await db.insert(attendeeTiers).values(data);
+  return (result as any).insertId;
+}
+
+export async function updateAttendeeTier(id: number, data: Partial<InsertAttendeeTier>) {
+  const db = await getDb(); if (!db) return false;
+  await db.update(attendeeTiers).set(data).where(eq(attendeeTiers.id, id));
+  return true;
+}
+
+export async function deleteAttendeeTier(id: number) {
+  const db = await getDb(); if (!db) return false;
+  await db.delete(attendeeTiers).where(eq(attendeeTiers.id, id));
+  return true;
+}
+
+// ── Emergency Contacts ──────────────────────────────
+export async function getEmergencyContacts(registrationId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(emergencyContacts).where(eq(emergencyContacts.registrationId, registrationId));
+}
+
+export async function getEmergencyContactsByMeetup(meetupId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(emergencyContacts).where(eq(emergencyContacts.meetupId, meetupId));
+}
+
+export async function upsertEmergencyContact(data: InsertEmergencyContact) {
+  const db = await getDb(); if (!db) return null;
+  if (data.registrationId) {
+    const existing = await db.select().from(emergencyContacts)
+      .where(and(eq(emergencyContacts.registrationId, data.registrationId), eq(emergencyContacts.isPrimary, true)))
+      .limit(1);
+    if (existing.length > 0) {
+      await db.update(emergencyContacts).set(data).where(eq(emergencyContacts.id, existing[0].id));
+      return existing[0].id;
+    }
+  }
+  const [result] = await db.insert(emergencyContacts).values(data);
+  return (result as any).insertId;
+}
+
+export async function deleteEmergencyContact(id: number) {
+  const db = await getDb(); if (!db) return false;
+  await db.delete(emergencyContacts).where(eq(emergencyContacts.id, id));
+  return true;
+}
+
+// ── Safety Alerts ──────────────────────────────────
+export async function getSafetyAlerts(meetupId: number, activeOnly = true) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [eq(safetyAlerts.meetupId, meetupId)];
+  if (activeOnly) conditions.push(inArray(safetyAlerts.status, ["active", "monitoring"]));
+  return db.select().from(safetyAlerts).where(and(...conditions)).orderBy(desc(safetyAlerts.createdAt));
+}
+
+export async function createSafetyAlert(data: InsertSafetyAlert) {
+  const db = await getDb(); if (!db) return null;
+  const [result] = await db.insert(safetyAlerts).values(data);
+  return (result as any).insertId;
+}
+
+export async function updateSafetyAlert(id: number, data: Partial<InsertSafetyAlert>) {
+  const db = await getDb(); if (!db) return false;
+  await db.update(safetyAlerts).set(data).where(eq(safetyAlerts.id, id));
+  return true;
+}
+
+export async function resolveSafetyAlert(id: number, userId: number, note?: string) {
+  const db = await getDb(); if (!db) return false;
+  await db.update(safetyAlerts).set({
+    status: "resolved",
+    resolvedAt: new Date(),
+    resolvedByUserId: userId,
+    resolvedNote: note ?? null,
+  }).where(eq(safetyAlerts.id, id));
+  return true;
+}
+
+// ── Budget Tracking (travel_policies spentAmount 업데이트) ──
+export async function updateBudgetSpent(meetupId: number, additionalAmount: number) {
+  const db = await getDb(); if (!db) return false;
+  const policy = await getTravelPolicy(meetupId);
+  if (!policy) return false;
+  const newSpent = Number(policy.spentAmount || 0) + additionalAmount;
+  await db.update(travelPolicies).set({ spentAmount: String(newSpent) as any }).where(eq(travelPolicies.id, policy.id));
+  return true;
+}
+
+// ── Registration Tier 연결 (registrations 테이블에 tierId 필드 확인) ──
+export async function getRegistrationWithTier(registrationId: number) {
+  const db = await getDb(); if (!db) return null;
+  const reg = await db.select().from(registrations).where(eq(registrations.id, registrationId)).limit(1);
+  if (!reg[0]) return null;
+  // tierId가 registrations에 없으면 기본 tier 반환
+  const meetupId = reg[0].meetupId;
+  if (!meetupId) return { ...reg[0], tier: null };
+  const tiers = await getAttendeeTiers(meetupId);
+  const defaultTier = tiers.find(t => t.isDefault) ?? tiers[tiers.length - 1] ?? null;
+  return { ...reg[0], tier: defaultTier };
 }
