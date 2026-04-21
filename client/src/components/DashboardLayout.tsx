@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt, Shield, Image, ChevronDown, MapPin, Navigation, Route, Target, Flame, Crown, PieChart, ShieldAlert, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt, Shield, Image, ChevronDown, MapPin, Navigation, Route, Target, Flame, Crown, PieChart, ShieldAlert, Bell, type LucideIcon } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -138,6 +138,8 @@ const menuGroups: MenuGroup[] = [
       { icon: ShieldAlert, labelKey: "admin.sidebar.safetyCenter", path: "/safety-center", roles: ["all"] },
       { icon: TrendingUp, labelKey: "admin.sidebar.bookingPipeline", path: "/booking-pipeline", roles: ["all"] },
       { icon: FileText, labelKey: "admin.sidebar.executiveReport", path: "/executive-report", roles: ["all"] },
+      { icon: Bell, labelKey: "admin.sidebar.rsvpReminder", path: "/rsvp-reminder", roles: ["all"] },
+      { icon: Luggage, labelKey: "admin.sidebar.selfBookingAdmin", path: "/self-booking-admin", roles: ["all"] },
     ],
   },
   // ─── 9. 플랫폼 관리 (슈퍼관리자 전용) ───

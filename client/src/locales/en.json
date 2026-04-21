@@ -1479,7 +1479,9 @@
       "budgetDashboard": "Budget Dashboard",
       "safetyCenter": "Safety Center",
       "bookingPipeline": "Booking Pipeline",
-      "executiveReport": "Executive Report"
+      "executiveReport": "Executive Report",
+      "rsvpReminder": "RSVP Reminders",
+      "selfBookingAdmin": "Self Booking Requests"
     },
     "survey": {
       "addQuestion": "Add Question",

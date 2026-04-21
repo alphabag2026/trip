@@ -1479,7 +1479,9 @@
       "budgetDashboard": "예산 대시보드",
       "safetyCenter": "안전 센터",
       "bookingPipeline": "예약 파이프라인",
-      "executiveReport": "경영진 리포트"
+      "executiveReport": "경영진 리포트",
+      "rsvpReminder": "RSVP 리마인더",
+      "selfBookingAdmin": "셀프 예약 관리"
     },
     "survey": {
       "addQuestion": "질문 추가",

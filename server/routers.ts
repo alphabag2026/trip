@@ -8918,6 +8918,193 @@ Return ONLY valid JSON.`,
         return await db.getExecutiveReportData(input.meetupId);
       }),
   }),
+  // ── RSVP Reminder ──────────────────────────────────────
+  rsvpReminder: router({
+    getSettings: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getRsvpReminderSettings(input.meetupId);
+      }),
+    updateSettings: protectedProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        enabled: z.boolean().optional(),
+        reminderDays: z.array(z.number()).optional(),
+        channels: z.array(z.string()).optional(),
+        emailSubjectTemplate: z.string().optional(),
+        emailBodyTemplate: z.string().optional(),
+        smsTemplate: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { meetupId, ...data } = input;
+        return await db.upsertRsvpReminderSettings(meetupId, { ...data, createdBy: ctx.user.id } as any);
+      }),
+    getStats: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getRsvpStats(input.meetupId);
+      }),
+    getPending: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getPendingRsvpInvitations(input.meetupId);
+      }),
+    getLogs: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getRsvpReminderLogs(input.meetupId);
+      }),
+    sendReminders: protectedProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        reminderType: z.enum(["d7", "d3", "d1", "custom"]),
+        channel: z.enum(["email", "sms", "telegram", "push"]).default("email"),
+        customSubject: z.string().optional(),
+        customBody: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const pending = await db.getPendingRsvpInvitations(input.meetupId);
+        if (pending.length === 0) return { sent: 0, failed: 0, skipped: 0 };
+        const meetup = await db.getMeetupById(input.meetupId);
+        let sent = 0, failed = 0, skipped = 0;
+        for (const inv of pending) {
+          try {
+            if (!inv.recipientEmail && input.channel === "email") { skipped++; continue; }
+            const subject = input.customSubject || `[Reminder] ${meetup?.title || 'Event'} - RSVP Required`;
+            const body = input.customBody || `Dear ${inv.recipientName || 'Guest'},\n\nThis is a reminder to RSVP for ${meetup?.title || 'the event'}. Please respond at your earliest convenience.\n\nBest regards,\nAlpha Trip Team`;
+            // Log the reminder
+            await db.createRsvpReminderLog({
+              meetupId: input.meetupId,
+              invitationId: inv.id,
+              reminderType: input.reminderType,
+              channel: input.channel,
+              recipientEmail: inv.recipientEmail,
+              recipientPhone: inv.recipientPhone,
+              recipientName: inv.recipientName,
+              subject,
+              body,
+              status: "sent",
+            });
+            sent++;
+          } catch (e: any) {
+            await db.createRsvpReminderLog({
+              meetupId: input.meetupId,
+              invitationId: inv.id,
+              reminderType: input.reminderType,
+              channel: input.channel,
+              recipientName: inv.recipientName,
+              status: "failed",
+              errorMessage: e.message,
+            });
+            failed++;
+          }
+        }
+        // Update last run
+        await db.upsertRsvpReminderSettings(input.meetupId, { lastRunAt: new Date() } as any);
+        return { sent, failed, skipped, total: pending.length };
+      }),
+  }),
+  // ── Self Booking Portal ──────────────────────────────────
+  selfBooking: router({
+    create: protectedProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        registrationId: z.number(),
+        bookingType: z.enum(["flight", "hotel", "both"]),
+        flightDepartureCity: z.string().optional(),
+        flightArrivalCity: z.string().optional(),
+        flightDepartureDate: z.string().optional(),
+        flightReturnDate: z.string().optional(),
+        flightClass: z.enum(["economy", "premium_economy", "business", "first"]).optional(),
+        flightPreferences: z.string().optional(),
+        hotelCity: z.string().optional(),
+        hotelCheckIn: z.string().optional(),
+        hotelCheckOut: z.string().optional(),
+        hotelStarRating: z.number().optional(),
+        hotelRoomType: z.string().optional(),
+        hotelPreferences: z.string().optional(),
+        estimatedBudget: z.string().optional(),
+        currency: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // 정책 준수 확인
+        const policy = await db.getTravelPolicy(input.meetupId);
+        let policyCompliant = true;
+        const violations: string[] = [];
+        if (policy) {
+          if (input.flightClass && policy.allowedFlightClass && policy.allowedFlightClass !== "any") {
+            const classOrder = ["economy", "premium_economy", "business", "first"];
+            if (classOrder.indexOf(input.flightClass) > classOrder.indexOf(policy.allowedFlightClass)) {
+              policyCompliant = false;
+              violations.push(`Flight class ${input.flightClass} exceeds policy limit (${policy.allowedFlightClass})`);
+            }
+          }
+          if (input.estimatedBudget && policy.totalBudget) {
+            const budget = Number(input.estimatedBudget);
+            const maxPerPerson = Number(policy.totalBudget) / 10; // rough per-person estimate
+            if (budget > maxPerPerson) {
+              violations.push(`Estimated budget $${budget} may exceed per-person allocation`);
+            }
+          }
+        }
+        const id = await db.createSelfBookingRequest({
+          ...input,
+          userId: ctx.user.id,
+          policyCompliant,
+          policyViolations: violations.length > 0 ? violations : null,
+          status: "submitted",
+        } as any);
+        // Notify admins
+        try {
+          await sendPushToAdmins({
+            title: "New Self-Booking Request",
+            body: `${ctx.user.name} submitted a ${input.bookingType} booking request`,
+            data: { url: "/admin/self-bookings" },
+          });
+        } catch (e) { /* ignore */ }
+        return { id, policyCompliant, violations };
+      }),
+    myRequests: protectedProcedure
+      .query(async ({ ctx }) => {
+        return await db.getSelfBookingRequestsByUser(ctx.user.id);
+      }),
+    listByMeetup: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getSelfBookingRequests(input.meetupId);
+      }),
+    stats: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getSelfBookingStats(input.meetupId);
+      }),
+    approve: protectedProcedure
+      .input(z.object({ id: z.number(), adminNotes: z.string().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateSelfBookingRequest(input.id, {
+          status: "approved",
+          approvedBy: ctx.user.id,
+          approvedAt: new Date(),
+          adminNotes: input.adminNotes,
+        });
+        return { success: true };
+      }),
+    reject: protectedProcedure
+      .input(z.object({ id: z.number(), rejectionReason: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateSelfBookingRequest(input.id, {
+          status: "rejected",
+          rejectionReason: input.rejectionReason,
+        });
+        return { success: true };
+      }),
+    updateStatus: protectedProcedure
+      .input(z.object({ id: z.number(), status: z.enum(["draft", "submitted", "approved", "rejected", "booked", "cancelled"]) }))
+      .mutation(async ({ input }) => {
+        await db.updateSelfBookingRequest(input.id, { status: input.status });
+        return { success: true };
+      }),
+  }),
 });
 // ── Haversine 거리 계산 (미터) ─────────────────────────────
 function getDistanceFromLatLon(lat1: number, lon1: number, lat2: number, lon2: number): number {

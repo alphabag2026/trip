@@ -115,6 +115,9 @@ const AdminSafetyCenter = lazy(() => import("./pages/admin/SafetyCenter"));
 const AdminBudgetDashboard = lazy(() => import("./pages/admin/BudgetDashboard"));
 const AdminBookingPipeline = lazy(() => import("./pages/admin/BookingPipeline"));
 const AdminExecutiveReport = lazy(() => import("./pages/admin/ExecutiveReport"));
+const AdminRsvpReminder = lazy(() => import("./pages/admin/RsvpReminder"));
+const AdminSelfBookingAdmin = lazy(() => import("./pages/admin/SelfBookingAdmin"));
+const SelfBookingPortal = lazy(() => import("./pages/SelfBookingPortal"));
 
 // ═══════════════════════════════════════════════════════
 // Routers
@@ -143,6 +146,7 @@ function PublicRouter() {
         <Route path="/immigration-checklist" component={ImmigrationChecklist} />
         <Route path="/booking" component={BookingCenter} />
         <Route path="/my-bookings" component={MyBookings} />
+        <Route path="/self-booking" component={SelfBookingPortal} />
         <Route path="/schedule" component={ScheduleHub} />
         <Route path="/ride" component={RideHailing} />
         <Route path="/delivery" component={FoodDelivery} />
@@ -214,6 +218,8 @@ function AdminRouter() {
           <Route path="/budget-dashboard" component={AdminBudgetDashboard} />
           <Route path="/booking-pipeline" component={AdminBookingPipeline} />
           <Route path="/executive-report" component={AdminExecutiveReport} />
+          <Route path="/rsvp-reminder" component={AdminRsvpReminder} />
+          <Route path="/self-booking-admin" component={AdminSelfBookingAdmin} />
           <Route path="/2fa-settings" component={TwoFactorSettings} />
           <Route component={NotFound} />
         </Switch>

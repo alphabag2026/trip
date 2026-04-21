@@ -70,6 +70,10 @@ import {
   attendeeTiers, InsertAttendeeTier,
   emergencyContacts, InsertEmergencyContact,
   safetyAlerts, InsertSafetyAlert,
+  rsvpReminderLogs, InsertRsvpReminderLog,
+  rsvpReminderSettings, InsertRsvpReminderSetting,
+  selfBookingRequests, InsertSelfBookingRequest,
+  meetupInvitations,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -3870,5 +3874,112 @@ export async function getExecutiveReportData(meetupId: number) {
       costPerAttendee: Math.round(totalExpense / (approved?.count ?? 1)),
       totalInvestment: totalExpense,
     } : null,
+  };
+}
+
+
+// ══════════════════════════════════════════════════════════
+// v6.14 - RSVP 리마인더 + 셀프 예약 포털
+// ══════════════════════════════════════════════════════════
+
+// ── RSVP Reminder Settings ──────────────────────────────
+export async function getRsvpReminderSettings(meetupId: number) {
+  const db = await getDb();
+  const rows = await db!.select().from(rsvpReminderSettings).where(eq(rsvpReminderSettings.meetupId, meetupId)).limit(1);
+  return rows[0] || null;
+}
+
+export async function upsertRsvpReminderSettings(meetupId: number, data: Partial<InsertRsvpReminderSetting>) {
+  const db = await getDb();
+  const existing = await getRsvpReminderSettings(meetupId);
+  if (existing) {
+    await db!.update(rsvpReminderSettings).set(data).where(eq(rsvpReminderSettings.id, existing.id));
+    return { ...existing, ...data };
+  } else {
+    const [result] = await db!.insert(rsvpReminderSettings).values({ meetupId, ...data } as InsertRsvpReminderSetting);
+    return { id: result.insertId, meetupId, ...data };
+  }
+}
+
+// ── RSVP Reminder Logs ──────────────────────────────────
+export async function createRsvpReminderLog(data: InsertRsvpReminderLog) {
+  const db = await getDb();
+  const [result] = await db!.insert(rsvpReminderLogs).values(data);
+  return result.insertId;
+}
+
+export async function getRsvpReminderLogs(meetupId: number, limit = 50) {
+  const db = await getDb();
+  return db!.select().from(rsvpReminderLogs).where(eq(rsvpReminderLogs.meetupId, meetupId)).orderBy(desc(rsvpReminderLogs.sentAt)).limit(limit);
+}
+
+export async function getRsvpReminderLogsByInvitation(invitationId: number) {
+  const db = await getDb();
+  return db!.select().from(rsvpReminderLogs).where(eq(rsvpReminderLogs.invitationId, invitationId)).orderBy(desc(rsvpReminderLogs.sentAt));
+}
+
+// ── Pending RSVP 조회 (미응답 초대자) ──────────────────────
+export async function getPendingRsvpInvitations(meetupId: number) {
+  const db = await getDb();
+  return db!.select().from(meetupInvitations)
+    .where(and(
+      eq(meetupInvitations.meetupId, meetupId),
+      eq(meetupInvitations.status, "sent")
+    ))
+    .orderBy(desc(meetupInvitations.createdAt));
+}
+
+export async function getRsvpStats(meetupId: number) {
+  const db = await getDb();
+  const all = await db!.select().from(meetupInvitations).where(eq(meetupInvitations.meetupId, meetupId));
+  const total = all.length;
+  const sent = all.filter(i => i.status === "sent").length;
+  const opened = all.filter(i => i.status === "opened").length;
+  const accepted = all.filter(i => i.status === "accepted").length;
+  const rejected = all.filter(i => i.status === "rejected").length;
+  const expired = all.filter(i => i.status === "expired").length;
+  return { total, sent, opened, accepted, rejected, expired, responseRate: total > 0 ? Math.round(((accepted + rejected) / total) * 100) : 0 };
+}
+
+// ── Self Booking Requests ──────────────────────────────
+export async function createSelfBookingRequest(data: InsertSelfBookingRequest) {
+  const db = await getDb();
+  const [result] = await db!.insert(selfBookingRequests).values(data);
+  return result.insertId;
+}
+
+export async function getSelfBookingRequests(meetupId: number) {
+  const db = await getDb();
+  return db!.select().from(selfBookingRequests).where(eq(selfBookingRequests.meetupId, meetupId)).orderBy(desc(selfBookingRequests.createdAt));
+}
+
+export async function getSelfBookingRequestsByUser(userId: number) {
+  const db = await getDb();
+  return db!.select().from(selfBookingRequests).where(eq(selfBookingRequests.userId, userId)).orderBy(desc(selfBookingRequests.createdAt));
+}
+
+export async function getSelfBookingRequestById(id: number) {
+  const db = await getDb();
+  const rows = await db!.select().from(selfBookingRequests).where(eq(selfBookingRequests.id, id)).limit(1);
+  return rows[0] || null;
+}
+
+export async function updateSelfBookingRequest(id: number, data: Partial<InsertSelfBookingRequest>) {
+  const db = await getDb();
+  await db!.update(selfBookingRequests).set(data).where(eq(selfBookingRequests.id, id));
+}
+
+export async function getSelfBookingStats(meetupId: number) {
+  const db = await getDb();
+  const all = await db!.select().from(selfBookingRequests).where(eq(selfBookingRequests.meetupId, meetupId));
+  return {
+    total: all.length,
+    draft: all.filter(r => r.status === "draft").length,
+    submitted: all.filter(r => r.status === "submitted").length,
+    approved: all.filter(r => r.status === "approved").length,
+    rejected: all.filter(r => r.status === "rejected").length,
+    booked: all.filter(r => r.status === "booked").length,
+    totalBudget: all.reduce((sum, r) => sum + Number(r.estimatedBudget || 0), 0),
+    policyViolations: all.filter(r => !r.policyCompliant).length,
   };
 }

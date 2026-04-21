@@ -2327,3 +2327,28 @@
 
 ### 4. 테스트
 - [x] vitest 테스트 5건 통과 (pipeline/SOS/emergency/report)
+
+## v6.14 - RSVP 자동 리마인더 + 셀프 예약 포털
+
+### 1. RSVP 자동 리마인더
+- [x] DB: rsvp_reminder_settings 테이블 (D-7/D-3/D-1 설정, 채널 선택)
+- [x] DB: rsvp_reminder_logs 테이블 (발송 이력 추적)
+- [x] 서버: rsvpReminder.getSettings / updateSettings API
+- [x] 서버: rsvpReminder.getStats API (응답률/미응답 통계)
+- [x] 서버: rsvpReminder.getPending API (미응답 초대자 목록)
+- [x] 서버: rsvpReminder.sendReminders API (일괄 리마인더 발송 + 로그)
+- [x] 프론트엔드: RSVP Reminder 백오피스 페이지 (설정/통계/발송/이력)
+
+### 2. 참석자 셀프 예약 포털
+- [x] DB: self_booking_requests 테이블 (항공/호텔 예약 요청 + 정책 준수 체크)
+- [x] 서버: selfBooking.create API (정책 자동 검증 + 관리자 알림)
+- [x] 서버: selfBooking.myRequests / listByMeetup / stats API
+- [x] 서버: selfBooking.approve / reject API (관리자 승인/거절)
+- [x] 프론트엔드: Self Booking Portal 참석자 페이지 (항공/호텔 선택 + 정책 범위 표시)
+- [x] 프론트엔드: Self Booking Admin 관리자 승인 페이지
+
+### 3. 테스트
+- [x] vitest 테스트 4건 통과 (rsvpReminder/selfBooking)
+
+### 4. 프로덕션 배포
+- [ ] AWS Lightsail 배포 (SSH 키 필요)

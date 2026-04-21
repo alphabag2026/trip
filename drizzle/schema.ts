@@ -2115,3 +2115,88 @@ export const safetyAlerts = mysqlTable("safety_alerts", {
 });
 export type SafetyAlert = typeof safetyAlerts.$inferSelect;
 export type InsertSafetyAlert = typeof safetyAlerts.$inferInsert;
+
+
+// ══════════════════════════════════════════════════════════
+// v6.14 - RSVP 자동 리마인더 + 셀프 예약 포털
+// ══════════════════════════════════════════════════════════
+
+// ── RSVP Reminder Logs (RSVP 리마인더 발송 기록) ──────────────
+export const rsvpReminderLogs = mysqlTable("rsvp_reminder_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  invitationId: int("invitationId").notNull(), // meetup_invitations.id
+  reminderType: mysqlEnum("reminderType", ["d7", "d3", "d1", "custom"]).notNull(),
+  channel: mysqlEnum("channel", ["email", "sms", "telegram", "push"]).default("email").notNull(),
+  recipientEmail: varchar("recipientEmail", { length: 320 }),
+  recipientPhone: varchar("recipientPhone", { length: 50 }),
+  recipientName: varchar("recipientName", { length: 255 }),
+  subject: varchar("subject", { length: 500 }),
+  body: text("body"),
+  status: mysqlEnum("status", ["sent", "failed", "skipped"]).default("sent").notNull(),
+  errorMessage: text("errorMessage"),
+  sentAt: timestamp("sentAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type RsvpReminderLog = typeof rsvpReminderLogs.$inferSelect;
+export type InsertRsvpReminderLog = typeof rsvpReminderLogs.$inferInsert;
+
+// ── RSVP Reminder Settings (밋업별 리마인더 설정) ──────────────
+export const rsvpReminderSettings = mysqlTable("rsvp_reminder_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  enabled: boolean("enabled").default(true).notNull(),
+  reminderDays: json("reminderDays"), // [7, 3, 1] - D-7, D-3, D-1
+  channels: json("channels"), // ["email", "telegram"]
+  emailSubjectTemplate: varchar("emailSubjectTemplate", { length: 500 }),
+  emailBodyTemplate: text("emailBodyTemplate"),
+  smsTemplate: text("smsTemplate"),
+  lastRunAt: timestamp("lastRunAt"),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type RsvpReminderSetting = typeof rsvpReminderSettings.$inferSelect;
+export type InsertRsvpReminderSetting = typeof rsvpReminderSettings.$inferInsert;
+
+// ── Self Booking Requests (참석자 셀프 예약 요청) ──────────────
+export const selfBookingRequests = mysqlTable("self_booking_requests", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId").notNull(),
+  registrationId: int("registrationId").notNull(),
+  userId: int("userId").notNull(),
+  // 예약 유형
+  bookingType: mysqlEnum("bookingType", ["flight", "hotel", "both"]).notNull(),
+  // 항공편 요청
+  flightDepartureCity: varchar("flightDepartureCity", { length: 100 }),
+  flightArrivalCity: varchar("flightArrivalCity", { length: 100 }),
+  flightDepartureDate: varchar("flightDepartureDate", { length: 20 }),
+  flightReturnDate: varchar("flightReturnDate", { length: 20 }),
+  flightClass: mysqlEnum("flightClass", ["economy", "premium_economy", "business", "first"]).default("economy"),
+  flightPreferences: text("flightPreferences"), // 선호 항공사, 시간대 등
+  // 호텔 요청
+  hotelCity: varchar("hotelCity", { length: 100 }),
+  hotelCheckIn: varchar("hotelCheckIn", { length: 20 }),
+  hotelCheckOut: varchar("hotelCheckOut", { length: 20 }),
+  hotelStarRating: int("hotelStarRating"), // 최소 별점
+  hotelRoomType: varchar("hotelRoomType", { length: 100 }),
+  hotelPreferences: text("hotelPreferences"), // 특별 요청
+  // 예산
+  estimatedBudget: decimal("estimatedBudget", { precision: 12, scale: 2 }),
+  currency: varchar("currency", { length: 10 }).default("USD"),
+  // 정책 준수
+  policyCompliant: boolean("policyCompliant").default(true),
+  policyViolations: json("policyViolations"), // 위반 항목 배열
+  // 승인 프로세스
+  status: mysqlEnum("status", ["draft", "submitted", "approved", "rejected", "booked", "cancelled"]).default("draft").notNull(),
+  approvedBy: int("approvedBy"),
+  approvedAt: timestamp("approvedAt"),
+  rejectionReason: text("rejectionReason"),
+  // 최종 예약 연결
+  linkedBookingId: int("linkedBookingId"), // travel_bookings.id
+  adminNotes: text("adminNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SelfBookingRequest = typeof selfBookingRequests.$inferSelect;
+export type InsertSelfBookingRequest = typeof selfBookingRequests.$inferInsert;
