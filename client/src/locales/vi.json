@@ -2189,5 +2189,22 @@
   "home.feat5_title": "Lịch trình & Giao tiếp nhóm",
   "home.feat5_desc": "Chia sẻ địa điểm và thời gian cuộc họp qua lịch với các thành viên trong nhóm và giao tiếp thuận lợi thông qua các thông báo của nhóm và trò chuyện thời gian thực. Lịch trình của nhóm được tạo tự động khi đăng ký các cuộc gặp.",
   "home.feat6_title": "Bảng điều khiển dựa trên vai trò",
-  "home.feat6_desc": "Các màn hình chuyên dụng được tối ưu hóa cho từng vai trò — người tham dự, người tổ chức, tài xế, thông dịch viên, đại lý và đối tác. Xem nhanh chỉ những thông tin bạn cần."
+  "home.feat6_desc": "Các màn hình chuyên dụng được tối ưu hóa cho từng vai trò — người tham dự, người tổ chức, tài xế, thông dịch viên, đại lý và đối tác. Xem nhanh chỉ những thông tin bạn cần.",
+  "appDownload": {
+    "modalTitle": "Vui lòng sử dụng ứng dụng",
+    "modalDesc": "Tính năng {{callLabel}} chỉ hoạt động ổn định trên ứng dụng. Hãy cài đặt Alpha Trip để nhận thông báo đến nơi và liên lạc thuận tiện.",
+    "voiceCall": "Cuộc gọi thoại",
+    "videoCall": "Cuộc gọi video",
+    "groupCall": "Cuộc gọi nhóm",
+    "benefit1": "Cuộc gọi thoại/video ổn định (hỗ trợ nền)",
+    "benefit2": "Cuộc gọi video nhóm và chia sẻ màn hình",
+    "benefit3": "Thông báo đẩy thời gian thực (thông báo đến nơi, thay đổi lịch trình)",
+    "appStore": "Tải từ App Store",
+    "playStore": "Tải từ Google Play",
+    "continueWeb": "Tiếp tục trò chuyện trên web",
+    "bannerText": "Cuộc gọi thoại và video có sẵn trên ứng dụng.",
+    "bannerLink": "Tải ứng dụng",
+    "cardTitle": "Cài đặt ứng dụng Alpha Trip",
+    "cardDesc": "Cài đặt ứng dụng để nhận thông báo đến nơi và liên lạc thời gian thực. Truy cập cuộc gọi thoại/video, thông báo đẩy, chia sẻ vị trí và nhiều hơn nữa."
+  }
 }

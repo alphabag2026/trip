@@ -3981,5 +3981,22 @@
     "channelPlaceholder": "e.g. Dubai meetup airport pickup channel, driver John 010-1234-5678",
     "promptSuccess": "AI generated the info. Please review and edit.",
     "promptFail": "AI generation failed. Please enter manually."
+  },
+  "appDownload": {
+    "modalTitle": "Please use the app",
+    "modalDesc": "{{callLabel}} is only available on the app for a stable experience. Please install the Alpha Trip app for arrival notifications and seamless communication.",
+    "voiceCall": "Voice Call",
+    "videoCall": "Video Call",
+    "groupCall": "Group Call",
+    "benefit1": "Stable voice/video calls (background support)",
+    "benefit2": "Group video calls and screen sharing",
+    "benefit3": "Real-time push notifications (arrival alerts, schedule changes)",
+    "appStore": "Download on App Store",
+    "playStore": "Download on Google Play",
+    "continueWeb": "Continue chatting on web",
+    "bannerText": "Voice and video calls are available on the app.",
+    "bannerLink": "Download App",
+    "cardTitle": "Install Alpha Trip App",
+    "cardDesc": "Install the app for arrival notifications and real-time communication. Access voice/video calls, push notifications, location sharing and more."
   }
 }

@@ -2189,5 +2189,22 @@
   "home.feat5_title": "टीम शेड्यूल और संचार",
   "home.feat5_desc": "टीम के सदस्यों के साथ कैलेंडर के माध्यम से बैठक के स्थान और समय साझा करें, और टीम घोषणाओं और वास्तविक समय चैट के माध्यम से सुचारू रूप से संवाद करें। मीटअप के लिए पंजीकरण करते समय टीम शेड्यूल स्वतः बन जाते हैं।",
   "home.feat6_title": "भूमिका-आधारित डैशबोर्ड",
-  "home.feat6_desc": "प्रत्येक भूमिका के लिए अनुकूलित समर्पित स्क्रीन — उपस्थित लोग, आयोजक, ड्राइवर, दुभाषिए, एजेंसियां ​​और भागीदार। एक नज़र में केवल वही जानकारी देखें जिसकी आपको आवश्यकता है।"
+  "home.feat6_desc": "प्रत्येक भूमिका के लिए अनुकूलित समर्पित स्क्रीन — उपस्थित लोग, आयोजक, ड्राइवर, दुभाषिए, एजेंसियां ​​और भागीदार। एक नज़र में केवल वही जानकारी देखें जिसकी आपको आवश्यकता है।",
+  "appDownload": {
+    "modalTitle": "Please use the app",
+    "modalDesc": "{{callLabel}} is only available on the app for a stable experience. Please install the Alpha Trip app for arrival notifications and seamless communication.",
+    "voiceCall": "Voice Call",
+    "videoCall": "Video Call",
+    "groupCall": "Group Call",
+    "benefit1": "Stable voice/video calls (background support)",
+    "benefit2": "Group video calls and screen sharing",
+    "benefit3": "Real-time push notifications (arrival alerts, schedule changes)",
+    "appStore": "Download on App Store",
+    "playStore": "Download on Google Play",
+    "continueWeb": "Continue chatting on web",
+    "bannerText": "Voice and video calls are available on the app.",
+    "bannerLink": "Download App",
+    "cardTitle": "Install Alpha Trip App",
+    "cardDesc": "Install the app for arrival notifications and real-time communication. Access voice/video calls, push notifications, location sharing and more."
+  }
 }

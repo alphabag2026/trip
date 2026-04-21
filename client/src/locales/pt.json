@@ -2189,5 +2189,22 @@
   "home.feat5_title": "Horário e Comunicação da Equipa",
   "home.feat5_desc": "Partilhe locais e horários de reuniões através do calendário com os membros da equipa e comunique de forma fluida através de anúncios da equipa e chat em tempo real. Os horários da equipa são criados automaticamente ao registar-se em encontros.",
   "home.feat6_title": "Painéis de Controlo Baseados em Funções",
-  "home.feat6_desc": "Ecrãs dedicados otimizados para cada função — participantes, organizadores, motoristas, intérpretes, agências e parceiros. Veja apenas a informação de que precisa num relance."
+  "home.feat6_desc": "Ecrãs dedicados otimizados para cada função — participantes, organizadores, motoristas, intérpretes, agências e parceiros. Veja apenas a informação de que precisa num relance.",
+  "appDownload": {
+    "modalTitle": "Please use the app",
+    "modalDesc": "{{callLabel}} is only available on the app for a stable experience. Please install the Alpha Trip app for arrival notifications and seamless communication.",
+    "voiceCall": "Voice Call",
+    "videoCall": "Video Call",
+    "groupCall": "Group Call",
+    "benefit1": "Stable voice/video calls (background support)",
+    "benefit2": "Group video calls and screen sharing",
+    "benefit3": "Real-time push notifications (arrival alerts, schedule changes)",
+    "appStore": "Download on App Store",
+    "playStore": "Download on Google Play",
+    "continueWeb": "Continue chatting on web",
+    "bannerText": "Voice and video calls are available on the app.",
+    "bannerLink": "Download App",
+    "cardTitle": "Install Alpha Trip App",
+    "cardDesc": "Install the app for arrival notifications and real-time communication. Access voice/video calls, push notifications, location sharing and more."
+  }
 }

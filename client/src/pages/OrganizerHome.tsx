@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/_core/hooks/useAuth";
 import LanguageSelector from "@/components/LanguageSelector";
 import ThemeToggle from "@/components/ThemeToggle";
+import { AppDownloadCard } from "@/components/AppDownloadPrompt";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -588,6 +589,11 @@ export default function OrganizerHome() {
                 <ArrowRight className="h-5 w-5 text-white/60 flex-shrink-0" />
               </div>
             </Link>
+          </section>
+
+          {/* ── 앱 다운로드 안내 ── */}
+          <section className="py-4">
+            <AppDownloadCard />
           </section>
 
         </div>

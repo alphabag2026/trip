@@ -4175,5 +4175,22 @@
     "channelPlaceholder": "例: 迪拜聚会机场接机频道，司机张三 010-1234-5678",
     "promptSuccess": "AI已生成信息，请确认并修改。",
     "promptFail": "AI生成失败，请手动输入。"
+  },
+  "appDownload": {
+    "modalTitle": "请使用App",
+    "modalDesc": "{{callLabel}}功能仅在App中可稳定使用。为了到达通知和顺畅通信，请安装Alpha Trip App。",
+    "voiceCall": "语音通话",
+    "videoCall": "视频通话",
+    "groupCall": "群组通话",
+    "benefit1": "稳定的语音/视频通话（后台支持）",
+    "benefit2": "群组视频通话和屏幕共享",
+    "benefit3": "实时推送通知（到达提醒、日程变更）",
+    "appStore": "从App Store下载",
+    "playStore": "从Google Play下载",
+    "continueWeb": "在网页上继续聊天",
+    "bannerText": "语音和视频通话可在App中使用。",
+    "bannerLink": "下载App",
+    "cardTitle": "安装Alpha Trip App",
+    "cardDesc": "请安装App以获取到达通知和实时通信。可使用语音/视频通话、推送通知、位置共享等所有功能。"
   }
 }

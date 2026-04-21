@@ -2189,5 +2189,22 @@
   "home.feat5_title": "Programma e comunicazione del team",
   "home.feat5_desc": "Condividi luoghi e orari delle riunioni tramite calendario con i membri del team e comunica senza problemi tramite annunci di squadra e chat in tempo reale. I programmi del team vengono creati automaticamente al momento della registrazione ai meetup.",
   "home.feat6_title": "Dashboard basati sui ruoli",
-  "home.feat6_desc": "Schermate dedicate e ottimizzate per ogni ruolo: partecipanti, organizzatori, autisti, interpreti, agenzie e partner. Visualizza a colpo d'occhio solo le informazioni di cui hai bisogno."
+  "home.feat6_desc": "Schermate dedicate e ottimizzate per ogni ruolo: partecipanti, organizzatori, autisti, interpreti, agenzie e partner. Visualizza a colpo d'occhio solo le informazioni di cui hai bisogno.",
+  "appDownload": {
+    "modalTitle": "Please use the app",
+    "modalDesc": "{{callLabel}} is only available on the app for a stable experience. Please install the Alpha Trip app for arrival notifications and seamless communication.",
+    "voiceCall": "Voice Call",
+    "videoCall": "Video Call",
+    "groupCall": "Group Call",
+    "benefit1": "Stable voice/video calls (background support)",
+    "benefit2": "Group video calls and screen sharing",
+    "benefit3": "Real-time push notifications (arrival alerts, schedule changes)",
+    "appStore": "Download on App Store",
+    "playStore": "Download on Google Play",
+    "continueWeb": "Continue chatting on web",
+    "bannerText": "Voice and video calls are available on the app.",
+    "bannerLink": "Download App",
+    "cardTitle": "Install Alpha Trip App",
+    "cardDesc": "Install the app for arrival notifications and real-time communication. Access voice/video calls, push notifications, location sharing and more."
+  }
 }

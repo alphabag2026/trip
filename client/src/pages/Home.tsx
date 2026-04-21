@@ -29,6 +29,7 @@ import { useState, useMemo, useRef } from "react";
 import { getLoginUrl } from "@/const";
 import PromoCarousel from "@/components/PromoCarousel";
 import OrganizerHome from "@/pages/OrganizerHome";
+import { AppDownloadCard } from "@/components/AppDownloadPrompt";
 
 // CDN Image URLs
 const IMAGES = {
@@ -702,6 +703,13 @@ export default function Home() {
                 <span>{t("home.infoBar2", "예약할 때마다 쌓이는 혜택")}</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ── App Download Section ── */}
+        <section className="py-3">
+          <div className="container max-w-lg mx-auto px-4">
+            <AppDownloadCard />
           </div>
         </section>
 

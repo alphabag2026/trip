@@ -2189,5 +2189,22 @@
   "home.feat5_title": "Iskedyul at Komunikasyon ng Team",
   "home.feat5_desc": "Ibahagi ang mga lokasyon at oras ng pulong sa pamamagitan ng kalendaryo sa mga miyembro ng team, at makipag-usap nang maayos sa pamamagitan ng mga anunsyo ng team at real-time na chat. Awtomatikong nililikha ang mga iskedyul ng team kapag nagrerehistro para sa mga meetup.",
   "home.feat6_title": "Mga Dashboard na Batay sa Papel",
-  "home.feat6_desc": "Mga naka-optimize na dedikadong screen para sa bawat papel — mga dadalo, organizer, driver, interpreter, ahensya, at partner. Tingnan lamang ang impormasyong kailangan mo sa isang sulyap."
+  "home.feat6_desc": "Mga naka-optimize na dedikadong screen para sa bawat papel — mga dadalo, organizer, driver, interpreter, ahensya, at partner. Tingnan lamang ang impormasyong kailangan mo sa isang sulyap.",
+  "appDownload": {
+    "modalTitle": "Please use the app",
+    "modalDesc": "{{callLabel}} is only available on the app for a stable experience. Please install the Alpha Trip app for arrival notifications and seamless communication.",
+    "voiceCall": "Voice Call",
+    "videoCall": "Video Call",
+    "groupCall": "Group Call",
+    "benefit1": "Stable voice/video calls (background support)",
+    "benefit2": "Group video calls and screen sharing",
+    "benefit3": "Real-time push notifications (arrival alerts, schedule changes)",
+    "appStore": "Download on App Store",
+    "playStore": "Download on Google Play",
+    "continueWeb": "Continue chatting on web",
+    "bannerText": "Voice and video calls are available on the app.",
+    "bannerLink": "Download App",
+    "cardTitle": "Install Alpha Trip App",
+    "cardDesc": "Install the app for arrival notifications and real-time communication. Access voice/video calls, push notifications, location sharing and more."
+  }
 }

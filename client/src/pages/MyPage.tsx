@@ -13,6 +13,7 @@ import { Link } from "wouter";
 import LanguageSelector from "@/components/LanguageSelector";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useTranslation } from "react-i18next";
+import { AppDownloadCard } from "@/components/AppDownloadPrompt";
 
 // Lazy-loaded tab content components
 const ProfileTab = lazy(() => import("./mypage/ProfileTab"));
@@ -210,6 +211,11 @@ export default function MyPage() {
             </Suspense>
           </TabsContent>
         </Tabs>
+
+        {/* 앱 다운로드 안내 */}
+        <div className="mt-6">
+          <AppDownloadCard />
+        </div>
       </div>
     </div>
   );

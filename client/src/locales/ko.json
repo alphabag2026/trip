@@ -3981,5 +3981,22 @@
     "channelPlaceholder": "예: 두바이 밋업 공항 픽업 채널, 기사 홍길동 010-1234-5678",
     "promptSuccess": "AI가 정보를 생성했습니다. 확인 후 수정해주세요.",
     "promptFail": "AI 생성에 실패했습니다. 수동으로 입력해주세요."
+  },
+  "appDownload": {
+    "modalTitle": "앱에서 이용해 주세요",
+    "modalDesc": "{{callLabel}} 기능은 앱에서만 안정적으로 이용할 수 있습니다. 고객 도착 안내 및 원활한 통신을 위해 Alpha Trip 앱을 설치해 주세요.",
+    "voiceCall": "음성 통화",
+    "videoCall": "영상 통화",
+    "groupCall": "그룹 통화",
+    "benefit1": "안정적인 음성/영상 통화 (백그라운드 지원)",
+    "benefit2": "그룹 영상 통화 및 화면 공유",
+    "benefit3": "실시간 푸시 알림 (도착 안내, 일정 변경)",
+    "appStore": "App Store에서 다운로드",
+    "playStore": "Google Play에서 다운로드",
+    "continueWeb": "웹에서 채팅으로 계속하기",
+    "bannerText": "통화 및 영상통화는 앱에서 이용 가능합니다.",
+    "bannerLink": "앱 다운로드",
+    "cardTitle": "Alpha Trip 앱 설치",
+    "cardDesc": "고객 도착 안내 및 실시간 통신을 위해 앱을 설치해 주세요. 음성/영상 통화, 푸시 알림, 위치 공유 등 모든 기능을 이용할 수 있습니다."
   }
 }

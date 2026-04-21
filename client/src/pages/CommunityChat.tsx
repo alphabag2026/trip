@@ -26,6 +26,7 @@ import { Link, useParams, useLocation } from "wouter";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "react-i18next";
 import { ChatRoomLocationMap } from "@/components/LiveLocationMap";
+import { AppDownloadModal, AppCallBanner } from "@/components/AppDownloadPrompt";
 
 // ── 상수 ──────────────────────────────────────────────
 const ROOM_TYPE_MAP: Record<string, { label: string; icon: any; color: string }> = {
@@ -1067,6 +1068,8 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const [myLang, setMyLang] = useState("ko");
   const [activeCall, setActiveCall] = useState<{ callId: string; callType: "voice" | "video"; callerName: string; isOutgoing: boolean } | null>(null);
   const [groupCall, setGroupCall] = useState<{ callId: string; callType: "voice" | "video" } | null>(null);
+  const [showAppDownload, setShowAppDownload] = useState(false);
+  const [appDownloadCallType, setAppDownloadCallType] = useState<"voice" | "video" | "group">("voice");
   const [showLiveLocationMap, setShowLiveLocationMap] = useState(false);
   const [showAiRefine, setShowAiRefine] = useState(false);
   const [aiRefinedText, setAiRefinedText] = useState("");
@@ -1406,29 +1409,17 @@ function ChatRoomView({ roomId }: { roomId: number }) {
           <h2 className="font-semibold truncate">{room?.name || "채팅방"}</h2>
           <p className="text-xs text-muted-foreground">{members?.length || 0}명 참여중</p>
         </div>
-        {/* 1:1 통화 */}
-        <Button variant="ghost" size="icon" onClick={() => startCall("voice")} title={t("communityChat.t95", "1:1 음성 통화")}>
+        {/* 1:1 통화 → 앱 다운로드 유도 */}
+        <Button variant="ghost" size="icon" onClick={() => { setAppDownloadCallType("voice"); setShowAppDownload(true); }} title={t("communityChat.t95", "1:1 음성 통화")}>
           <Phone className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => startCall("video")} title={t("communityChat.t96", "1:1 영상 통화")}>
+        <Button variant="ghost" size="icon" onClick={() => { setAppDownloadCallType("video"); setShowAppDownload(true); }} title={t("communityChat.t96", "1:1 영상 통화")}>
           <Video className="h-5 w-5" />
         </Button>
-        {/* 그룹 통화 */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" title={t("communityChat.t97", "그룹 통화")}>
-              <Users className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => startGroupCall("voice")}>
-              <Phone className="h-4 w-4 mr-2" /> {t("communityChat.t42", "그룹 음성 통화 시작")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => startGroupCall("video")}>
-              <Video className="h-4 w-4 mr-2" /> {t("communityChat.t43", "그룹 영상 통화 시작")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* 그룹 통화 → 앱 다운로드 유도 */}
+        <Button variant="ghost" size="icon" onClick={() => { setAppDownloadCallType("group"); setShowAppDownload(true); }} title={t("communityChat.t97", "그룹 통화")}>
+          <Users className="h-5 w-5" />
+        </Button>
         {/* 번역 언어 선택 */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -1470,6 +1461,12 @@ function ChatRoomView({ roomId }: { roomId: number }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* 앱 다운로드 안내 배너 */}
+      <AppCallBanner onDownload={() => setShowAppDownload(true)} />
+
+      {/* 앱 다운로드 모달 */}
+      <AppDownloadModal open={showAppDownload} onOpenChange={setShowAppDownload} callType={appDownloadCallType} />
 
       {/* 활성 그룹 통화 배너 */}
       {activeGroupCall && !groupCall && (

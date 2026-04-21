@@ -2189,5 +2189,22 @@
   "home.feat5_title": "Багийн хуваарь ба харилцаа холбоо",
   "home.feat5_desc": "Уулзалтын байршил, цагийг хуанлигаар багийн гишүүдтэй хуваалцаж, багийн зарлал, бодит цагийн чатаар дамжуулан жигд харилцаарай. Уулзалтад бүртгүүлэх үед багийн хуваарь автоматаар үүсгэгдэнэ.",
   "home.feat6_title": "Үүрэгт суурилсан хяналтын самбарууд",
-  "home.feat6_desc": "Оролцогчид, зохион байгуулагчид, жолооч нар, орчуулагчид, агентлагууд, түншүүд гэх мэт үүрэг тус бүрт зориулсан оновчтой дэлгэцүүд. Та зөвхөн өөрт хэрэгтэй мэдээллийг нэг дороос хараарай."
+  "home.feat6_desc": "Оролцогчид, зохион байгуулагчид, жолооч нар, орчуулагчид, агентлагууд, түншүүд гэх мэт үүрэг тус бүрт зориулсан оновчтой дэлгэцүүд. Та зөвхөн өөрт хэрэгтэй мэдээллийг нэг дороос хараарай.",
+  "appDownload": {
+    "modalTitle": "Please use the app",
+    "modalDesc": "{{callLabel}} is only available on the app for a stable experience. Please install the Alpha Trip app for arrival notifications and seamless communication.",
+    "voiceCall": "Voice Call",
+    "videoCall": "Video Call",
+    "groupCall": "Group Call",
+    "benefit1": "Stable voice/video calls (background support)",
+    "benefit2": "Group video calls and screen sharing",
+    "benefit3": "Real-time push notifications (arrival alerts, schedule changes)",
+    "appStore": "Download on App Store",
+    "playStore": "Download on Google Play",
+    "continueWeb": "Continue chatting on web",
+    "bannerText": "Voice and video calls are available on the app.",
+    "bannerLink": "Download App",
+    "cardTitle": "Install Alpha Trip App",
+    "cardDesc": "Install the app for arrival notifications and real-time communication. Access voice/video calls, push notifications, location sharing and more."
+  }
 }

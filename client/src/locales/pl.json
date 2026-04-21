@@ -2189,5 +2189,22 @@
   "home.feat5_title": "Harmonogram zespołu i komunikacja",
   "home.feat5_desc": "Udostępniaj lokalizacje i godziny spotkań za pośrednictwem kalendarza członkom zespołu i płynnie komunikuj się za pomocą ogłoszeń zespołu i czatu w czasie rzeczywistym. Harmonogramy zespołów są tworzone automatycznie podczas rejestracji na spotkania.",
   "home.feat6_title": "Pulpity nawigacyjne oparte na rolach",
-  "home.feat6_desc": "Zoptymalizowane, dedykowane ekrany dla każdej roli — uczestników, organizatorów, kierowców, tłumaczy, agencji i partnerów. Zobacz tylko potrzebne informacje na pierwszy rzut oka."
+  "home.feat6_desc": "Zoptymalizowane, dedykowane ekrany dla każdej roli — uczestników, organizatorów, kierowców, tłumaczy, agencji i partnerów. Zobacz tylko potrzebne informacje na pierwszy rzut oka.",
+  "appDownload": {
+    "modalTitle": "Please use the app",
+    "modalDesc": "{{callLabel}} is only available on the app for a stable experience. Please install the Alpha Trip app for arrival notifications and seamless communication.",
+    "voiceCall": "Voice Call",
+    "videoCall": "Video Call",
+    "groupCall": "Group Call",
+    "benefit1": "Stable voice/video calls (background support)",
+    "benefit2": "Group video calls and screen sharing",
+    "benefit3": "Real-time push notifications (arrival alerts, schedule changes)",
+    "appStore": "Download on App Store",
+    "playStore": "Download on Google Play",
+    "continueWeb": "Continue chatting on web",
+    "bannerText": "Voice and video calls are available on the app.",
+    "bannerLink": "Download App",
+    "cardTitle": "Install Alpha Trip App",
+    "cardDesc": "Install the app for arrival notifications and real-time communication. Access voice/video calls, push notifications, location sharing and more."
+  }
 }
