@@ -2360,3 +2360,11 @@
 - [x] 홈페이지에 앱 다운로드 섹션 추가
 - [x] 마이페이지에 앱 다운로드 안내 카드 추가
 - [x] 다국어 지원 (앱 다운로드 관련 텍스트 23개 언어)
+
+## Capacitor Android APK 빌드
+- [x] Capacitor 패키지 설치 및 초기화
+- [x] capacitor.config.ts 설정 (앱 이름, 서버 URL 등)
+- [x] Android 프로젝트 생성
+- [x] 네이티브 플러그인 구성 (카메라, 마이크, 푸시 알림 권한)
+- [x] Android SDK 설치 및 Gradle 빌드
+- [x] APK 파일 생성 및 전달
