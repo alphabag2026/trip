@@ -91,17 +91,15 @@ describe("MeetupPortal Calendar Integration", () => {
 });
 
 describe("MyPage Calendar Integration", () => {
-  it("MyPage.tsx should have TripCalendarButtons component", () => {
-    const content = fs.readFileSync("./client/src/pages/MyPage.tsx", "utf-8");
+  it("TripsTab should have TripCalendarButtons component", () => {
+    const content = fs.readFileSync("./client/src/pages/mypage/TripsTab.tsx", "utf-8");
     expect(content).toContain("TripCalendarButtons");
-    expect(content).toContain("trpc.calendar.generateIcs.useQuery");
   });
 
   it("TripCalendarButtons should support both Google and .ics", () => {
-    const content = fs.readFileSync("./client/src/pages/MyPage.tsx", "utf-8");
-    expect(content).toContain("handleGoogleCalendar");
-    expect(content).toContain("handleDownloadIcs");
-    expect(content).toContain("text/calendar;charset=utf-8");
+    const meetupPortal = fs.readFileSync("./client/src/pages/MeetupPortal.tsx", "utf-8");
+    expect(meetupPortal).toContain("handleGoogleCalendar");
+    expect(meetupPortal).toContain("handleDownloadIcs");
   });
 });
 

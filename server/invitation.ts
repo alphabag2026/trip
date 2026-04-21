@@ -16,6 +16,7 @@ const FONT_REGULAR_CDN = "https://d2xsxph8kpxj0f.cloudfront.net/3105196633732008
 // Load fonts - try local first, then CDN
 let fontBold: Buffer;
 let fontRegular: Buffer;
+let fontLoadPromise: Promise<void> | null = null;
 const localBold = join(__dirname_esm, "fonts", "NotoSansKR-Bold.otf");
 const localRegular = join(__dirname_esm, "fonts", "NotoSansKR-Regular.otf");
 
@@ -26,7 +27,7 @@ if (existsSync(localBold) && existsSync(localRegular)) {
   // Will be loaded lazily from CDN
   fontBold = Buffer.alloc(0);
   fontRegular = Buffer.alloc(0);
-  (async () => {
+  fontLoadPromise = (async () => {
     try {
       const [boldRes, regularRes] = await Promise.all([
         fetch(FONT_BOLD_CDN).then(r => r.arrayBuffer()),
@@ -39,6 +40,11 @@ if (existsSync(localBold) && existsSync(localRegular)) {
       console.error("[Fonts] Failed to load from CDN:", e);
     }
   })();
+}
+
+/** Ensure fonts are loaded before generating images */
+export async function ensureFontsLoaded(): Promise<void> {
+  if (fontLoadPromise) await fontLoadPromise;
 }
 
 interface InvitationData {
@@ -79,6 +85,9 @@ function infoRow(emoji: string, label: string, value: string, bgColor: string) {
 }
 
 export async function generateInvitationImage(data: InvitationData): Promise<Buffer> {
+  // Ensure fonts are loaded before generating
+  await ensureFontsLoaded();
+
   const lang = data.lang || "ko";
   const labels = LABELS[lang] || LABELS.ko;
 

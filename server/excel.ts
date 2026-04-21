@@ -153,7 +153,7 @@ export async function exportPickupsToExcel(data: any[]): Promise<Buffer> {
     ws.addRow({
       ...d,
       pickupTime: d.pickupTime ? new Date(d.pickupTime).toLocaleString("ko-KR") : "",
-      assignedCount: d.assignedRegistrationIds ? JSON.parse(d.assignedRegistrationIds).length : 0,
+      assignedCount: d.assignedRegistrationIds ? (() => { try { return JSON.parse(d.assignedRegistrationIds).length; } catch { return 0; } })() : 0,
     });
   });
   styleDataRows(ws, 2, data.length + 1);
@@ -181,7 +181,7 @@ export async function exportAccommodationsToExcel(data: any[]): Promise<Buffer> 
       ...d,
       checkIn: d.checkIn ? new Date(d.checkIn).toLocaleString("ko-KR") : "",
       checkOut: d.checkOut ? new Date(d.checkOut).toLocaleString("ko-KR") : "",
-      assignedCount: d.assignedRegistrationIds ? JSON.parse(d.assignedRegistrationIds).length : 0,
+      assignedCount: d.assignedRegistrationIds ? (() => { try { return JSON.parse(d.assignedRegistrationIds).length; } catch { return 0; } })() : 0,
     });
   });
   styleDataRows(ws, 2, data.length + 1);
