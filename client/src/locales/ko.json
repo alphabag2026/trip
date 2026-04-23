@@ -3998,5 +3998,25 @@
     "bannerLink": "앱 다운로드",
     "cardTitle": "Alpha Trip 앱 설치",
     "cardDesc": "고객 도착 안내 및 실시간 통신을 위해 앱을 설치해 주세요. 음성/영상 통화, 푸시 알림, 위치 공유 등 모든 기능을 이용할 수 있습니다."
-  }
+  },
+  "tour.welcomeTitle": "Alpha Trip에 오신 것을 환영합니다!",
+  "tour.welcomeDesc": "밋업과 출장을 한 곳에서 관리하세요. 주요 기능을 빠르게 안내해 드리겠습니다.",
+  "tour.profileTitle": "프로필 설정",
+  "tour.profileDesc": "전화번호, 소속, 비상연락처 등 기본 정보를 입력하세요. 밋업 신청 시 자동으로 입력됩니다.",
+  "tour.passportTitle": "여권 등록",
+  "tour.passportDesc": "여권 사진을 촬영하면 AI가 자동으로 정보를 인식합니다. 출입국과 호텔 체크인에 활용됩니다.",
+  "tour.meetupTitle": "밋업 참가",
+  "tour.meetupDesc": "초대받은 밋업에 참가 신청하고, 일정/항공/숙박 정보를 한 눈에 확인하세요.",
+  "tour.chatTitle": "실시간 채팅",
+  "tour.chatDesc": "참가자들과 실시간으로 소통하세요. AI가 문구를 다듬어주고, 자동 답장도 제안합니다.",
+  "tour.nearbyTitle": "주변 탐색",
+  "tour.nearbyDesc": "현지 맛집, 카페, 관광지를 지도에서 바로 찾아보세요. 즐겨찾기도 가능합니다.",
+  "tour.safetyTitle": "안전 & SOS",
+  "tour.safetyDesc": "긴급 상황 시 SOS 버튼으로 관리자에게 즉시 알림을 보낼 수 있습니다.",
+  "tour.completeTitle": "준비 완료!",
+  "tour.completeDesc": "이제 Alpha Trip의 모든 기능을 자유롭게 이용하세요. 프로필 설정부터 시작해 보세요!",
+  "tour.skip": "건너뛰기",
+  "tour.prev": "이전",
+  "tour.next": "다음",
+  "tour.getStarted": "시작하기"
 }

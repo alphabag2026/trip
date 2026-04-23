@@ -2206,5 +2206,25 @@
     "bannerLink": "ดาวน์โหลดแอป",
     "cardTitle": "ติดตั้งแอป Alpha Trip",
     "cardDesc": "ติดตั้งแอปเพื่อรับการแจ้งเตือนการมาถึงและการสื่อสารแบบเรียลไทม์ เข้าถึงการโทรเสียง/วิดีโอ การแจ้งเตือนแบบพุช การแชร์ตำแหน่ง และอื่นๆ"
-  }
+  },
+  "tour.welcomeTitle": "Welcome to Alpha Trip!",
+  "tour.welcomeDesc": "Manage meetups and business trips in one place. Let us show you the key features.",
+  "tour.profileTitle": "Profile Setup",
+  "tour.profileDesc": "Enter your phone, organization, and emergency contacts. This info auto-fills when you register for meetups.",
+  "tour.passportTitle": "Passport Registration",
+  "tour.passportDesc": "Take a photo of your passport and AI will auto-recognize the information. Used for immigration and hotel check-in.",
+  "tour.meetupTitle": "Join Meetups",
+  "tour.meetupDesc": "Register for invited meetups and check schedules, flights, and accommodation at a glance.",
+  "tour.chatTitle": "Real-time Chat",
+  "tour.chatDesc": "Communicate with participants in real-time. AI helps polish messages and suggests auto-replies.",
+  "tour.nearbyTitle": "Explore Nearby",
+  "tour.nearbyDesc": "Find local restaurants, cafes, and attractions on the map. Save your favorites too.",
+  "tour.safetyTitle": "Safety & SOS",
+  "tour.safetyDesc": "In emergencies, use the SOS button to instantly alert the organizer.",
+  "tour.completeTitle": "All Set!",
+  "tour.completeDesc": "You are ready to use all Alpha Trip features. Start by completing your profile!",
+  "tour.skip": "Skip",
+  "tour.prev": "Previous",
+  "tour.next": "Next",
+  "tour.getStarted": "Get Started"
 }

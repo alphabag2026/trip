@@ -30,6 +30,7 @@ import { getLoginUrl } from "@/const";
 import PromoCarousel from "@/components/PromoCarousel";
 import OrganizerHome from "@/pages/OrganizerHome";
 import { AppDownloadCard } from "@/components/AppDownloadPrompt";
+import { OnboardingTour } from "@/components/OnboardingTour";
 
 // CDN Image URLs
 const IMAGES = {
@@ -49,23 +50,24 @@ type ServiceIcon = {
   gradient: string;
   ring: string;
   badge?: string;
+  tourId?: string;
 };
 
 // ═══════════════════════════════════════════════════════
 // 일반 유저(참석자) - 출장 플로우 중심
 // ═══════════════════════════════════════════════════════
 const USER_ROW1: ServiceIcon[] = [
-  { icon: ClipboardList, label: "home.u_apply", href: "/register", gradient: "from-blue-500 to-indigo-600", ring: "ring-blue-200 dark:ring-blue-900" },
+  { icon: ClipboardList, label: "home.u_apply", href: "/register", gradient: "from-blue-500 to-indigo-600", ring: "ring-blue-200 dark:ring-blue-900", tourId: "meetup" },
   { icon: Ticket, label: "home.u_transport", href: "/my-page", gradient: "from-violet-500 to-purple-600", ring: "ring-violet-200 dark:ring-violet-900" },
   { icon: CalendarDays, label: "home.u_schedule", href: "/schedule", gradient: "from-emerald-500 to-teal-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
-  { icon: MessageCircle, label: "home.u_team_chat", href: "/community", gradient: "from-sky-500 to-cyan-600", ring: "ring-sky-200 dark:ring-sky-900" },
+  { icon: MessageCircle, label: "home.u_team_chat", href: "/community", gradient: "from-sky-500 to-cyan-600", ring: "ring-sky-200 dark:ring-sky-900", tourId: "chat" },
 ];
 
 const USER_ROW2: ServiceIcon[] = [
   { icon: Hotel, label: "home.u_hotel_info", href: "/booking", gradient: "from-rose-500 to-pink-600", ring: "ring-rose-200 dark:ring-rose-900" },
   { icon: Car, label: "home.u_ride", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900", badge: "NEW" },
   { icon: Globe, label: "home.u_country", href: "/countries", gradient: "from-emerald-500 to-cyan-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
-  { icon: Map, label: "home.u_map", href: "/nearby", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
+  { icon: Map, label: "home.u_map", href: "/nearby", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900", tourId: "nearby" },
 ];
 
 const USER_EXTRA: ServiceIcon[] = [
@@ -74,7 +76,7 @@ const USER_EXTRA: ServiceIcon[] = [
   { icon: Bot, label: "home.u_ai", href: "/chatbot", gradient: "from-indigo-500 to-violet-600", ring: "ring-indigo-200 dark:ring-indigo-900" },
   { icon: Share2, label: "home.u_share", href: "/dashboard", gradient: "from-amber-500 to-orange-600", ring: "ring-amber-200 dark:ring-amber-900" },
   { icon: Video, label: "home.u_video", href: "/community", gradient: "from-pink-500 to-rose-600", ring: "ring-pink-200 dark:ring-pink-900" },
-  { icon: Shield, label: "home.u_passport", href: "/my-page", gradient: "from-slate-500 to-gray-600", ring: "ring-slate-200 dark:ring-slate-900" },
+  { icon: Shield, label: "home.u_passport", href: "/my-page", gradient: "from-slate-500 to-gray-600", ring: "ring-slate-200 dark:ring-slate-900", tourId: "safety" },
   { icon: Compass, label: "home.u_guide", href: "/immigration-checklist", gradient: "from-lime-500 to-green-600", ring: "ring-lime-200 dark:ring-lime-900" },
   { icon: Luggage, label: "home.u_baggage", href: "/flight-tracker", gradient: "from-stone-500 to-neutral-600", ring: "ring-stone-200 dark:ring-stone-900" },
 ];
@@ -440,7 +442,7 @@ export default function Home() {
     <div className="grid grid-cols-4 gap-y-4 gap-x-2">
       {icons.map((svc, i) => (
         <Link key={i} href={svc.href}>
-          <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
+          <div className="flex flex-col items-center gap-1.5 cursor-pointer group" {...(svc.tourId ? { 'data-tour': svc.tourId } : {})}>
             <div className={`relative w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-2xl bg-gradient-to-br ${svc.gradient} flex items-center justify-center shadow-lg ring-2 ${svc.ring} group-hover:scale-110 group-hover:shadow-xl transition-all duration-200`}>
               <svc.icon className="h-5 w-5 md:h-6 md:w-6 text-white drop-shadow" />
               {svc.badge && (
@@ -461,6 +463,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* ===== ONBOARDING TOUR ===== */}
+      {isAuthenticated && <OnboardingTour />}
       {/* ===== HEADER ===== */}
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/95">
         <div className="container flex items-center justify-between h-14 gap-3">
@@ -647,7 +651,7 @@ export default function Home() {
         {isAuthenticated && (
           <section className="py-2">
             <div className="container max-w-lg mx-auto px-4">
-              <div className="bg-card border border-border/50 rounded-xl p-4">
+              <div className="bg-card border border-border/50 rounded-xl p-4" data-tour="profile">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{t("home.profileCompletion", "프로필 완성도")}</span>
