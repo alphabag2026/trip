@@ -118,6 +118,10 @@ const AdminExecutiveReport = lazy(() => import("./pages/admin/ExecutiveReport"))
 const AdminRsvpReminder = lazy(() => import("./pages/admin/RsvpReminder"));
 const AdminSelfBookingAdmin = lazy(() => import("./pages/admin/SelfBookingAdmin"));
 const SelfBookingPortal = lazy(() => import("./pages/SelfBookingPortal"));
+const AdminSnsManager = lazy(() => import("./pages/admin/SnsManager"));
+const OrganizerQuickSetup = lazy(() => import("./pages/OrganizerQuickSetup"));
+const AdminAiBulkRegister = lazy(() => import("./pages/admin/AiBulkRegister"));
+const AdminAiScheduleGenerator = lazy(() => import("./pages/admin/AiScheduleGenerator"));
 
 // ═══════════════════════════════════════════════════════
 // Routers
@@ -147,6 +151,7 @@ function PublicRouter() {
         <Route path="/booking" component={BookingCenter} />
         <Route path="/my-bookings" component={MyBookings} />
         <Route path="/self-booking" component={SelfBookingPortal} />
+        <Route path="/organizer-setup" component={OrganizerQuickSetup} />
         <Route path="/schedule" component={ScheduleHub} />
         <Route path="/ride" component={RideHailing} />
         <Route path="/delivery" component={FoodDelivery} />
@@ -220,6 +225,9 @@ function AdminRouter() {
           <Route path="/executive-report" component={AdminExecutiveReport} />
           <Route path="/rsvp-reminder" component={AdminRsvpReminder} />
           <Route path="/self-booking-admin" component={AdminSelfBookingAdmin} />
+          <Route path="/sns-manager" component={AdminSnsManager} />
+          <Route path="/ai-bulk-register" component={AdminAiBulkRegister} />
+          <Route path="/ai-schedule-generator" component={AdminAiScheduleGenerator} />
           <Route path="/2fa-settings" component={TwoFactorSettings} />
           <Route component={NotFound} />
         </Switch>

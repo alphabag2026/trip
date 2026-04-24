@@ -9123,6 +9123,375 @@ Return ONLY valid JSON.`,
         return { success: true };
       }),
   }),
+
+  // ── SNS 게시물 관리 ────────────────────────────────────────
+  snsPost: router({
+    list: adminProcedure
+      .input(z.object({ status: z.string().optional(), platform: z.string().optional(), meetupId: z.number().optional() }).optional())
+      .query(({ input }) => db.getSnsPosts(input)),
+    get: adminProcedure.input(z.object({ id: z.number() })).query(({ input }) => db.getSnsPostById(input.id)),
+    stats: adminProcedure.query(() => db.getSnsPostStats()),
+    create: adminProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        platform: z.enum(["twitter", "instagram", "tiktok", "facebook", "linkedin", "telegram", "all"]).default("all"),
+        contentType: z.enum(["text", "image", "video", "carousel"]).default("text"),
+        title: z.string().optional(),
+        content: z.string().min(1),
+        imageUrls: z.array(z.string()).optional(),
+        hashtags: z.array(z.string()).optional(),
+        scheduledAt: z.string().optional(),
+        status: z.enum(["draft", "scheduled"]).default("draft"),
+        aiGenerated: z.boolean().default(false),
+        aiPrompt: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.createSnsPost({
+          ...input,
+          createdBy: ctx.user.id,
+          scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : undefined,
+          imageUrls: input.imageUrls || [],
+          hashtags: input.hashtags || [],
+        });
+        return { id };
+      }),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        content: z.string().optional(),
+        title: z.string().optional(),
+        platform: z.enum(["twitter", "instagram", "tiktok", "facebook", "linkedin", "telegram", "all"]).optional(),
+        imageUrls: z.array(z.string()).optional(),
+        hashtags: z.array(z.string()).optional(),
+        scheduledAt: z.string().optional(),
+        status: z.enum(["draft", "scheduled", "published", "cancelled"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateSnsPost(id, {
+          ...data,
+          scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
+        });
+        return { success: true };
+      }),
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+      await db.deleteSnsPost(input.id);
+      return { success: true };
+    }),
+    // AI 콘텐츠 생성
+    generateContent: adminProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        platform: z.enum(["twitter", "instagram", "tiktok", "facebook", "linkedin", "telegram", "all"]).default("all"),
+        tone: z.enum(["professional", "casual", "exciting", "informative"]).default("professional"),
+        language: z.string().default("ko"),
+        additionalContext: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        let meetupInfo = "";
+        if (input.meetupId) {
+          const meetup = await db.getMeetupById(input.meetupId);
+          if (meetup) {
+            meetupInfo = `\n밋업 정보:\n- 제목: ${meetup.title}\n- 장소: ${meetup.location || "미정"}\n- 기간: ${meetup.scheduleStart ? new Date(meetup.scheduleStart).toLocaleDateString() : ""} ~ ${meetup.scheduleEnd ? new Date(meetup.scheduleEnd).toLocaleDateString() : ""}\n- 설명: ${meetup.description || ""}\n- 유형: ${meetup.type}`;
+          }
+        }
+        const platformGuide: Record<string, string> = {
+          twitter: "최대 280자, 해시태그 3-5개, 간결하고 임팩트 있는 문체",
+          instagram: "시각적 설명, 해시태그 10-15개, 이모지 사용, CTA 포함",
+          tiktok: "짧고 재미있는 톤, 트렌드 해시태그, 점은 층 타겟",
+          facebook: "상세한 설명, 링크 포함 가능, 커뮤니티 참여 유도",
+          linkedin: "전문적인 톤, 업계 키워드, 네트워킹 강조",
+          telegram: "간결한 안내, 링크 포함, 직접적 CTA",
+          all: "다양한 플랫폼에 적합한 범용 콘텐츠",
+        };
+        const toneGuide: Record<string, string> = {
+          professional: "전문적이고 신뢰감 있는 톤",
+          casual: "친근하고 편안한 톤",
+          exciting: "흥미진진하고 에너지 넘치는 톤",
+          informative: "정보 전달에 초점을 맞춘 톤",
+        };
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a social media content creator for meetup/event promotion.
+Generate engaging SNS post content based on the given information.
+
+Platform: ${input.platform} - ${platformGuide[input.platform] || platformGuide.all}
+Tone: ${input.tone} - ${toneGuide[input.tone]}
+Language: ${input.language === "ko" ? "한국어" : input.language}
+
+Return ONLY valid JSON:
+{
+  "title": "string - 게시물 제목",
+  "content": "string - 본문 (플랫폼 가이드에 맞게)",
+  "hashtags": ["string - 해시태그 배열"],
+  "imagePrompt": "string - AI 이미지 생성을 위한 영어 프롬프트 (professional event poster style)",
+  "suggestedSchedule": "string - 최적 게시 시간 제안 (ISO format)"
+}`,
+            },
+            {
+              role: "user",
+              content: `${meetupInfo}\n${input.additionalContext ? `추가 컨텍스트: ${input.additionalContext}` : "일반적인 밋업 홍보 콘텐츠를 생성해주세요."}`,
+            },
+          ],
+          response_format: { type: "json_object" },
+        });
+        const content = response.choices[0]?.message?.content;
+        if (typeof content === "string") {
+          try {
+            const parsed = JSON.parse(content);
+            return { success: true, data: parsed };
+          } catch {
+            return { success: false, data: null, error: "AI 응답 파싱 실패" };
+          }
+        }
+        return { success: false, data: null, error: "AI 응답 없음" };
+      }),
+    // AI 이미지 생성
+    generateImage: adminProcedure
+      .input(z.object({ prompt: z.string().min(3) }))
+      .mutation(async ({ input }) => {
+        try {
+          const { generateImage } = await import("./_core/imageGeneration");
+          const result = await generateImage({ prompt: input.prompt });
+          return { success: true, url: result.url };
+        } catch (e: any) {
+          return { success: false, url: null, error: e.message || "이미지 생성 실패" };
+        }
+      }),
+  }),
+
+  // ── SNS 템플릿 ────────────────────────────────────────────
+  snsTemplate: router({
+    list: adminProcedure.query(() => db.getSnsTemplates()),
+    create: adminProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        platform: z.enum(["twitter", "instagram", "tiktok", "facebook", "linkedin", "telegram", "all"]).default("all"),
+        contentType: z.enum(["text", "image", "video", "carousel"]).default("text"),
+        templateContent: z.string().min(1),
+        imagePrompt: z.string().optional(),
+        hashtags: z.array(z.string()).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.createSnsTemplate({ ...input, createdBy: ctx.user.id, hashtags: input.hashtags || [] });
+        return { id };
+      }),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        templateContent: z.string().optional(),
+        imagePrompt: z.string().optional(),
+        hashtags: z.array(z.string()).optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateSnsTemplate(id, data);
+        return { success: true };
+      }),
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+      await db.deleteSnsTemplate(input.id);
+      return { success: true };
+    }),
+  }),
+
+  // ── SNS 계정 관리 ─────────────────────────────────────────
+  snsAccount: router({
+    list: adminProcedure.query(({ ctx }) => db.getSnsAccounts()),
+    create: adminProcedure
+      .input(z.object({
+        platform: z.enum(["twitter", "instagram", "tiktok", "facebook", "linkedin", "telegram"]),
+        accountName: z.string().min(1),
+        accountId: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.createSnsAccount({ ...input, userId: ctx.user.id });
+        return { id };
+      }),
+    update: adminProcedure
+      .input(z.object({ id: z.number(), accountName: z.string().optional(), isActive: z.boolean().optional() }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateSnsAccount(id, data);
+        return { success: true };
+      }),
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+      await db.deleteSnsAccount(input.id);
+      return { success: true };
+    }),
+  }),
+
+  // ── AI 일괄 등록 ───────────────────────────────────────────
+  aiBulk: router({
+    parseRegistrations: adminProcedure
+      .input(z.object({ text: z.string().min(5), meetupId: z.number().optional() }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a data extraction assistant. Parse the following text containing multiple participant registrations.
+Extract each person's information and return a JSON array.
+
+Return ONLY valid JSON:
+{
+  "participants": [
+    {
+      "name": "string",
+      "phone": "string",
+      "messengerId": "string - telegram/kakao ID",
+      "locationType": "domestic" | "overseas",
+      "category": "meetup" | "pre_visit" | "event" | "meeting" | "other",
+      "teamName": "string",
+      "referrerName": "string",
+      "notes": "string"
+    }
+  ],
+  "totalCount": number
+}
+
+Rules:
+- Parse Korean, English, Chinese names
+- Extract phone numbers in any format
+- Parse messenger IDs (telegram: @xxx, kakao: xxx)
+- If no category specified, default to "meetup"
+- If no locationType specified, default to "domestic"
+- Always respond in valid JSON only.`,
+            },
+            { role: "user", content: input.text },
+          ],
+          response_format: { type: "json_object" },
+        });
+        const content = response.choices[0]?.message?.content;
+        if (typeof content === "string") {
+          try {
+            const parsed = JSON.parse(content);
+            return { success: true, data: parsed };
+          } catch {
+            return { success: false, data: null, error: "AI 응답 파싱 실패" };
+          }
+        }
+        return { success: false, data: null, error: "AI 응답 없음" };
+      }),
+    bulkCreate: adminProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        participants: z.array(z.object({
+          name: z.string(),
+          phone: z.string().optional(),
+          messengerId: z.string().optional(),
+          locationType: z.enum(["domestic", "overseas"]).default("domestic"),
+          category: z.enum(["meetup", "pre_visit", "event", "meeting", "other"]).default("meetup"),
+          teamName: z.string().optional(),
+          referrerName: z.string().optional(),
+          notes: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const dataList = input.participants.map(p => ({
+          meetupId: input.meetupId,
+          name: p.name,
+          phone: p.phone || "",
+          messengerId: p.messengerId || "",
+          locationType: p.locationType as "domestic" | "overseas",
+          category: p.category as any,
+          teamName: p.teamName || "",
+          referrerName: p.referrerName || "",
+          notes: p.notes || "",
+          status: "approved" as const,
+        }));
+        const ids = await db.bulkCreateRegistrations(dataList);
+        return { success: true, count: ids.length, ids };
+      }),
+  }),
+
+  // ── AI 스케줄 자동 생성 ─────────────────────────────────────
+  aiSchedule: router({
+    generate: adminProcedure
+      .input(z.object({ meetupId: z.number(), preferences: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        const meetup = await db.getMeetupById(input.meetupId);
+        if (!meetup) throw new TRPCError({ code: "NOT_FOUND", message: "밋업을 찾을 수 없습니다" });
+        const existingEvents = await db.getScheduleEvents(input.meetupId);
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a meetup schedule planner. Generate a detailed schedule for the given meetup.
+
+Return ONLY valid JSON:
+{
+  "schedules": [
+    {
+      "title": "string - 일정 제목 (한국어)",
+      "location": "string - 장소",
+      "eventTime": "string - ISO datetime",
+      "endTime": "string - ISO datetime",
+      "description": "string - 상세 설명 (한국어)",
+      "eventOrder": number
+    }
+  ]
+}
+
+Rules:
+- Generate schedules in Korean
+- Include typical meetup activities: 환영식, 네트워킹, 세션, 식사, 관광, 자유시간, 환송식
+- Consider the meetup type and location
+- Space events reasonably throughout the day
+- Include meal times
+- If preferences are given, incorporate them`,
+            },
+            {
+              role: "user",
+              content: `밋업: ${meetup.title}\n장소: ${meetup.location || "미정"}\n기간: ${meetup.scheduleStart ? new Date(meetup.scheduleStart).toISOString() : ""} ~ ${meetup.scheduleEnd ? new Date(meetup.scheduleEnd).toISOString() : ""}\n유형: ${meetup.type}\n기존 일정 수: ${existingEvents.length}\n${input.preferences ? `선호사항: ${input.preferences}` : ""}`,
+            },
+          ],
+          response_format: { type: "json_object" },
+        });
+        const content = response.choices[0]?.message?.content;
+        if (typeof content === "string") {
+          try {
+            const parsed = JSON.parse(content);
+            return { success: true, data: parsed };
+          } catch {
+            return { success: false, data: null, error: "AI 응답 파싱 실패" };
+          }
+        }
+        return { success: false, data: null, error: "AI 응답 없음" };
+      }),
+    // 생성된 스케줄 일괄 저장
+    bulkSave: adminProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        schedules: z.array(z.object({
+          title: z.string(),
+          location: z.string().optional(),
+          eventTime: z.string(),
+          endTime: z.string().optional(),
+          description: z.string().optional(),
+          eventOrder: z.number().default(0),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const ids = [];
+        for (const s of input.schedules) {
+          const id = await db.createScheduleEvent({
+            meetupId: input.meetupId,
+            title: s.title,
+            location: s.location,
+            eventTime: new Date(s.eventTime),
+            endTime: s.endTime ? new Date(s.endTime) : undefined,
+            description: s.description,
+            eventOrder: s.eventOrder,
+          });
+          ids.push(id);
+        }
+        return { success: true, count: ids.length, ids };
+      }),
+  }),
 });
 // ── Haversine 거리 계산 (미터) ─────────────────────────────
 function getDistanceFromLatLon(lat1: number, lon1: number, lat2: number, lon2: number): number {

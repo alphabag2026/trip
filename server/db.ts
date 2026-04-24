@@ -74,6 +74,9 @@ import {
   rsvpReminderSettings, InsertRsvpReminderSetting,
   selfBookingRequests, InsertSelfBookingRequest,
   meetupInvitations,
+  snsAccounts, InsertSnsAccount,
+  snsPosts, InsertSnsPost,
+  snsTemplates, InsertSnsTemplate,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -3982,4 +3985,98 @@ export async function getSelfBookingStats(meetupId: number) {
     totalBudget: all.reduce((sum, r) => sum + Number(r.estimatedBudget || 0), 0),
     policyViolations: all.filter(r => !r.policyCompliant).length,
   };
+}
+
+// ── SNS Accounts ──────────────────────────────────────────
+export async function getSnsAccounts(userId?: number) {
+  const db = await getDb();
+  if (userId) return db!.select().from(snsAccounts).where(eq(snsAccounts.userId, userId));
+  return db!.select().from(snsAccounts);
+}
+export async function createSnsAccount(data: InsertSnsAccount) {
+  const db = await getDb();
+  const [result] = await db!.insert(snsAccounts).values(data);
+  return result.insertId;
+}
+export async function updateSnsAccount(id: number, data: Partial<InsertSnsAccount>) {
+  const db = await getDb();
+  await db!.update(snsAccounts).set(data).where(eq(snsAccounts.id, id));
+}
+export async function deleteSnsAccount(id: number) {
+  const db = await getDb();
+  await db!.delete(snsAccounts).where(eq(snsAccounts.id, id));
+}
+
+// ── SNS Posts ──────────────────────────────────────────────
+export async function getSnsPosts(filters?: { status?: string; platform?: string; meetupId?: number }) {
+  const db = await getDb();
+  const conditions: any[] = [];
+  if (filters?.status) conditions.push(eq(snsPosts.status, filters.status as any));
+  if (filters?.platform) conditions.push(eq(snsPosts.platform, filters.platform as any));
+  if (filters?.meetupId) conditions.push(eq(snsPosts.meetupId, filters.meetupId));
+  if (conditions.length > 0) {
+    return db!.select().from(snsPosts).where(and(...conditions)).orderBy(desc(snsPosts.createdAt));
+  }
+  return db!.select().from(snsPosts).orderBy(desc(snsPosts.createdAt));
+}
+export async function getSnsPostById(id: number) {
+  const db = await getDb();
+  const [post] = await db!.select().from(snsPosts).where(eq(snsPosts.id, id));
+  return post;
+}
+export async function createSnsPost(data: InsertSnsPost) {
+  const db = await getDb();
+  const [result] = await db!.insert(snsPosts).values(data);
+  return result.insertId;
+}
+export async function updateSnsPost(id: number, data: Partial<InsertSnsPost>) {
+  const db = await getDb();
+  await db!.update(snsPosts).set(data).where(eq(snsPosts.id, id));
+}
+export async function deleteSnsPost(id: number) {
+  const db = await getDb();
+  await db!.delete(snsPosts).where(eq(snsPosts.id, id));
+}
+export async function getSnsPostStats() {
+  const db = await getDb();
+  const all = await db!.select().from(snsPosts);
+  return {
+    total: all.length,
+    draft: all.filter(p => p.status === "draft").length,
+    scheduled: all.filter(p => p.status === "scheduled").length,
+    published: all.filter(p => p.status === "published").length,
+    failed: all.filter(p => p.status === "failed").length,
+    aiGenerated: all.filter(p => p.aiGenerated).length,
+  };
+}
+
+// ── SNS Templates ──────────────────────────────────────────
+export async function getSnsTemplates() {
+  const db = await getDb();
+  return db!.select().from(snsTemplates).orderBy(desc(snsTemplates.createdAt));
+}
+export async function createSnsTemplate(data: InsertSnsTemplate) {
+  const db = await getDb();
+  const [result] = await db!.insert(snsTemplates).values(data);
+  return result.insertId;
+}
+export async function updateSnsTemplate(id: number, data: Partial<InsertSnsTemplate>) {
+  const db = await getDb();
+  await db!.update(snsTemplates).set(data).where(eq(snsTemplates.id, id));
+}
+export async function deleteSnsTemplate(id: number) {
+  const db = await getDb();
+  await db!.delete(snsTemplates).where(eq(snsTemplates.id, id));
+}
+
+// ── AI Bulk Registration ──────────────────────────────────
+export async function bulkCreateRegistrations(dataList: InsertRegistration[]) {
+  const db = await getDb();
+  if (dataList.length === 0) return [];
+  const results = [];
+  for (const data of dataList) {
+    const [result] = await db!.insert(registrations).values(data);
+    results.push(result.insertId);
+  }
+  return results;
 }

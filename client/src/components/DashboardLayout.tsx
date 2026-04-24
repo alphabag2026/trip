@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt, Shield, Image, ChevronDown, MapPin, Navigation, Route, Target, Flame, Crown, PieChart, ShieldAlert, Bell, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, ClipboardList, Plane, Globe, Send, Search, Home, Car, Hotel, CalendarDays, Edit, MessageCircle, FileText, Megaphone, Luggage, UtensilsCrossed, DoorOpen, Cloud, Handshake, CreditCard, Ticket, ShoppingCart, TrendingUp, Key, Upload, BookOpen, ShieldCheck, Receipt, Shield, Image, ChevronDown, MapPin, Navigation, Route, Target, Flame, Crown, PieChart, ShieldAlert, Bell, Sparkles, Wand2, CalendarPlus, UserPlus, type LucideIcon } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -142,7 +142,17 @@ const menuGroups: MenuGroup[] = [
       { icon: Luggage, labelKey: "admin.sidebar.selfBookingAdmin", path: "/self-booking-admin", roles: ["all"] },
     ],
   },
-  // ─── 9. 플랫폼 관리 (슈퍼관리자 전용) ───
+  // ─── 9. AI & SNS ───
+  {
+    labelKey: "admin.sidebarGroup.aiSns",
+    roles: ["all"],
+    items: [
+      { icon: Megaphone, labelKey: "admin.sidebar.snsManager", path: "/sns-manager", roles: ["all"] },
+      { icon: UserPlus, labelKey: "admin.sidebar.aiBulkRegister", path: "/ai-bulk-register", roles: ["all"] },
+      { icon: CalendarPlus, labelKey: "admin.sidebar.aiScheduleGenerator", path: "/ai-schedule-generator", roles: ["all"] },
+    ],
+  },
+  // ─── 10. 플랫폼 관리 (슈퍼관리자 전용) ───
   {
     labelKey: "admin.sidebarGroup.platformAdmin",
     roles: ["admin", "superadmin"],

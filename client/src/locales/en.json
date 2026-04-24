@@ -1481,7 +1481,10 @@
       "bookingPipeline": "Booking Pipeline",
       "executiveReport": "Executive Report",
       "rsvpReminder": "RSVP Reminders",
-      "selfBookingAdmin": "Self Booking Requests"
+      "selfBookingAdmin": "Self Booking Requests",
+      "snsManager": "SNS Auto Post",
+      "aiBulkRegister": "AI Bulk Register",
+      "aiScheduleGenerator": "AI Schedule Gen"
     },
     "survey": {
       "addQuestion": "Add Question",
@@ -2098,7 +2101,8 @@
       "transportAccom": "TRANSPORT & ACCOMMODATION",
       "scheduleItinerary": "SCHEDULE & ITINERARY",
       "commNotify": "COMMUNICATION & NOTIFY",
-      "policyBudget": "POLICY & BUDGET"
+      "policyBudget": "POLICY & BUDGET",
+      "aiSns": "AI & SNS"
     },
     "accessDenied": "Access Denied",
     "superadminOnly": "This page is only accessible to super administrators.",

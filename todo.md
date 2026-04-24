@@ -2412,3 +2412,30 @@
 ### 프로덕션 재배포 준비
 - [x] 최근 기능 통합 확인 (앱 다운로드 유도, 온보딩 투어, 푸시 알림)
 - [x] 전체 테스트 71개 파일 970건 통과 확인
+
+## v6.18 - 프롬프트 자동 입력 + 온보딩 강화 + SNS 자동 게시
+
+### 1. 프롬프트 기반 자동 입력 (LLM 연동)
+- [x] 서버: AI 일괄 등록 + AI 스케줄 자동 생성 tRPC 프로시저 추가
+- [x] 서버: aiBulkRegister.parse + aiBulkRegister.register + aiSchedule.generate + aiSchedule.bulkSave 프로시저
+- [x] 프론트엔드: AI 일괄 등록 페이지 (AiBulkRegister.tsx) - 텍스트 → 참가자 자동 파싱 → 일괄 등록
+- [x] 프론트엔드: AI 스케줄 자동 생성 페이지 (AiScheduleGenerator.tsx) - 밋업 정보 기반 일정 자동 제안
+- [x] ko/en 번역 키 추가 (snsManager, aiBulkRegister, aiScheduleGenerator, sidebarGroup.aiSns)
+
+### 2. 주최자/파트너 온보딩 강화
+- [x] DB: organizations 테이블 (이미 v6.x에서 구현됨)
+- [x] 서버: organization CRUD tRPC 프로시저 (이미 구현됨)
+- [x] 서버: 이메일 도메인 기반 회사 자동 매칭 (온보딩 위자드에서 처리)
+- [x] 프론트엔드: 주최자 퀵 셋업 위자드 (OrganizerQuickSetup.tsx) - 3단계: 조직 등록 → 밋업 생성(AI) → 팀 초대
+- [x] 프론트엔드: 파트너 가이드 가입 절차 (기존 Welcome.tsx 4유형 온보딩 활용)
+- [x] /organizer-setup 라우트 등록
+
+### 3. SNS 자동 게시 기능
+- [x] DB: sns_posts 테이블 (게시물 내용, 플랫폼, 예약 시간, 상태)
+- [x] DB: sns_accounts + sns_templates 테이블 생성
+- [x] 서버: sns CRUD + AI 콘텐츠 생성 + AI 이미지 생성 tRPC 프로시저
+- [x] 서버: generateImage 연동 (밋업 홍보 이미지 자동 생성)
+- [x] 프론트엔드: SNS 관리 대시보드 (SnsManager.tsx) - 게시물 CRUD, 예약 관리, AI 생성
+- [x] 프론트엔드: AI 콘텐츠 생성 UI (텍스트 + 이미지 미리보기 + 템플릿)
+- [x] 프론트엔드: SNS 계정 관리 탭 (계정 연결/해제)
+- [x] 전체 테스트 72개 파일 990건 통과 (v618-features.test.ts 20건 포함)

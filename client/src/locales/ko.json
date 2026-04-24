@@ -1481,7 +1481,10 @@
       "bookingPipeline": "예약 파이프라인",
       "executiveReport": "경영진 리포트",
       "rsvpReminder": "RSVP 리마인더",
-      "selfBookingAdmin": "셀프 예약 관리"
+      "selfBookingAdmin": "셀프 예약 관리",
+      "snsManager": "SNS 자동 게시",
+      "aiBulkRegister": "AI 일괄 등록",
+      "aiScheduleGenerator": "AI 스케줄 생성"
     },
     "survey": {
       "addQuestion": "질문 추가",
@@ -2098,7 +2101,8 @@
       "transportAccom": "교통 & 숙소",
       "scheduleItinerary": "일정 & 여정",
       "commNotify": "소통 & 알림",
-      "policyBudget": "정책 & 예산"
+      "policyBudget": "정책 & 예산",
+      "aiSns": "AI & SNS"
     },
     "accessDenied": "접근 권한이 없습니다",
     "superadminOnly": "이 페이지는 슈퍼관리자만 접근할 수 있습니다.",

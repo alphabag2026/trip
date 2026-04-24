@@ -2200,3 +2200,65 @@ export const selfBookingRequests = mysqlTable("self_booking_requests", {
 });
 export type SelfBookingRequest = typeof selfBookingRequests.$inferSelect;
 export type InsertSelfBookingRequest = typeof selfBookingRequests.$inferInsert;
+
+// ── SNS Accounts (연결된 SNS 계정) ──────────────────────────
+export const snsAccounts = mysqlTable("sns_accounts", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId"),
+  userId: int("userId").notNull(),
+  platform: mysqlEnum("platform", ["twitter", "instagram", "tiktok", "facebook", "linkedin", "telegram"]).notNull(),
+  accountName: varchar("accountName", { length: 255 }).notNull(),
+  accountId: varchar("accountId", { length: 255 }), // 플랫폼 고유 ID
+  accessToken: text("accessToken"), // 암호화된 토큰
+  refreshToken: text("refreshToken"),
+  tokenExpiresAt: timestamp("tokenExpiresAt"),
+  profileImageUrl: varchar("profileImageUrl", { length: 1000 }),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SnsAccount = typeof snsAccounts.$inferSelect;
+export type InsertSnsAccount = typeof snsAccounts.$inferInsert;
+
+// ── SNS Posts (SNS 게시물) ──────────────────────────────────
+export const snsPosts = mysqlTable("sns_posts", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId"),
+  meetupId: int("meetupId"),
+  createdBy: int("createdBy").notNull(),
+  platform: mysqlEnum("platform", ["twitter", "instagram", "tiktok", "facebook", "linkedin", "telegram", "all"]).default("all").notNull(),
+  contentType: mysqlEnum("contentType", ["text", "image", "video", "carousel"]).default("text").notNull(),
+  title: varchar("title", { length: 500 }),
+  content: text("content").notNull(),
+  imageUrls: json("imageUrls"), // JSON array of image URLs
+  videoUrl: varchar("videoUrl", { length: 1000 }),
+  hashtags: json("hashtags"), // JSON array of hashtags
+  scheduledAt: timestamp("scheduledAt"), // 예약 게시 시간
+  publishedAt: timestamp("publishedAt"), // 실제 게시 시간
+  status: mysqlEnum("status", ["draft", "scheduled", "published", "failed", "cancelled"]).default("draft").notNull(),
+  aiGenerated: boolean("aiGenerated").default(false),
+  aiPrompt: text("aiPrompt"), // AI 생성 시 사용된 프롬프트
+  engagement: json("engagement"), // { likes, shares, comments, views }
+  externalPostId: varchar("externalPostId", { length: 255 }), // 외부 플랫폼 게시물 ID
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SnsPost = typeof snsPosts.$inferSelect;
+export type InsertSnsPost = typeof snsPosts.$inferInsert;
+
+// ── SNS Templates (SNS 콘텐츠 템플릿) ────────────────────────
+export const snsTemplates = mysqlTable("sns_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  platform: mysqlEnum("platform", ["twitter", "instagram", "tiktok", "facebook", "linkedin", "telegram", "all"]).default("all").notNull(),
+  contentType: mysqlEnum("contentType", ["text", "image", "video", "carousel"]).default("text").notNull(),
+  templateContent: text("templateContent").notNull(), // 변수 포함 템플릿 ({{meetupTitle}}, {{date}} 등)
+  imagePrompt: text("imagePrompt"), // AI 이미지 생성 프롬프트 템플릿
+  hashtags: json("hashtags"),
+  isActive: boolean("isActive").default(true),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SnsTemplate = typeof snsTemplates.$inferSelect;
+export type InsertSnsTemplate = typeof snsTemplates.$inferInsert;
