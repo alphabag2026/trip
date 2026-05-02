@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Smartphone, Phone, Video, Download, X, Apple, MonitorSmartphone } from "lucide-react";
+import { Link } from "wouter";
 
 // ── 앱 스토어 URL (추후 실제 URL로 교체) ──
 const APP_STORE_URL = "https://apps.apple.com/app/alpha-trip/id0000000000";
@@ -14,6 +15,11 @@ function detectPlatform(): "ios" | "android" | "desktop" {
   if (/iPad|iPhone|iPod/.test(ua)) return "ios";
   if (/android/i.test(ua)) return "android";
   return "desktop";
+}
+
+function isInStandaloneMode(): boolean {
+  return window.matchMedia("(display-mode: standalone)").matches ||
+    (window.navigator as any).standalone === true;
 }
 
 // ── 앱 다운로드 유도 모달 (통화 시도 시 표시) ──
@@ -28,7 +34,6 @@ export function AppDownloadModal({
 }) {
   const { t } = useTranslation();
   const platform = detectPlatform();
-
   const callLabel =
     callType === "video"
       ? t("appDownload.videoCall", "영상 통화")
@@ -36,75 +41,63 @@ export function AppDownloadModal({
         ? t("appDownload.groupCall", "그룹 통화")
         : t("appDownload.voiceCall", "음성 통화");
 
-  const handleDownload = () => {
-    if (platform === "ios") {
-      window.open(APP_STORE_URL, "_blank");
-    } else if (platform === "android") {
-      window.open(PLAY_STORE_URL, "_blank");
-    } else {
-      // 데스크톱: 두 스토어 모두 표시
-      window.open(PLAY_STORE_URL, "_blank");
-    }
-    onOpenChange(false);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-sm mx-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-lg">
-            <Smartphone className="h-5 w-5 text-primary" />
+          <div className="flex justify-center mb-3">
+            <div className="rounded-full bg-primary/10 p-4">
+              <Smartphone className="h-8 w-8 text-primary" />
+            </div>
+          </div>
+          <DialogTitle className="text-center text-lg">
             {t("appDownload.modalTitle", "앱에서 이용해 주세요")}
           </DialogTitle>
-          <DialogDescription className="text-left">
+          <DialogDescription className="text-center text-sm leading-relaxed">
             {t(
               "appDownload.modalDesc",
-              "{{callLabel}} 기능은 앱에서만 안정적으로 이용할 수 있습니다. 고객 도착 안내 및 원활한 통신을 위해 Alpha Trip 앱을 설치해 주세요.",
-              { callLabel }
+              `${callLabel} 기능은 안정적인 이용을 위해 앱에서만 지원됩니다. Alpha Trip 앱을 설치하면 도착 안내 알림과 원활한 커뮤니케이션이 가능합니다.`
             )}
           </DialogDescription>
         </DialogHeader>
-
-        <div className="space-y-4 pt-2">
-          {/* 앱 장점 안내 */}
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2.5">
-            <div className="flex items-start gap-3">
-              <Phone className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+        <div className="space-y-3 mt-2">
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Phone className="h-4 w-4 text-primary" />
               <span className="text-sm">{t("appDownload.benefit1", "안정적인 음성/영상 통화 (백그라운드 지원)")}</span>
             </div>
-            <div className="flex items-start gap-3">
-              <Video className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <div className="flex items-center gap-2">
+              <Video className="h-4 w-4 text-primary" />
               <span className="text-sm">{t("appDownload.benefit2", "그룹 영상 통화 및 화면 공유")}</span>
             </div>
-            <div className="flex items-start gap-3">
-              <MonitorSmartphone className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <div className="flex items-center gap-2">
+              <MonitorSmartphone className="h-4 w-4 text-primary" />
               <span className="text-sm">{t("appDownload.benefit3", "실시간 푸시 알림 (도착 안내, 일정 변경)")}</span>
             </div>
           </div>
-
-          {/* 다운로드 버튼 */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 pt-1">
             {(platform === "ios" || platform === "desktop") && (
-              <Button onClick={() => window.open(APP_STORE_URL, "_blank")} className="w-full gap-2" size="lg">
-                <Apple className="h-5 w-5" />
+              <Button className="w-full gap-2" onClick={() => window.open(APP_STORE_URL, "_blank")}>
+                <Apple className="h-4 w-4" />
                 {t("appDownload.appStore", "App Store에서 다운로드")}
               </Button>
             )}
             {(platform === "android" || platform === "desktop") && (
               <Button
-                onClick={() => window.open(PLAY_STORE_URL, "_blank")}
-                className="w-full gap-2"
-                size="lg"
                 variant={platform === "desktop" ? "outline" : "default"}
+                className="w-full gap-2"
+                onClick={() => window.open(PLAY_STORE_URL, "_blank")}
               >
-                <Download className="h-5 w-5" />
+                <Download className="h-4 w-4" />
                 {t("appDownload.playStore", "Google Play에서 다운로드")}
               </Button>
             )}
           </div>
-
-          {/* 웹에서 계속 (채팅만) */}
-          <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="ghost"
+            className="w-full text-muted-foreground"
+            onClick={() => onOpenChange(false)}
+          >
             {t("appDownload.continueWeb", "웹에서 채팅으로 계속하기")}
           </Button>
         </div>
@@ -113,45 +106,59 @@ export function AppDownloadModal({
   );
 }
 
-// ── 채팅방 상단 앱 다운로드 안내 배너 ──
-export function AppCallBanner({ onDownload }: { onDownload?: () => void }) {
+// ── 채팅방 상단 앱 안내 배너 ──
+export function AppDownloadBanner({
+  onDismiss,
+}: {
+  onDismiss: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="bg-primary/5 border-b border-primary/10 px-4 py-2 flex items-center justify-between">
+      <div className="flex items-center gap-2 min-w-0">
+        <Smartphone className="h-4 w-4 text-primary flex-shrink-0" />
+        <span className="text-xs text-muted-foreground truncate">
+          {t("appDownload.bannerText", "통화 및 영상통화는 앱에서 이용 가능합니다.")}
+        </span>
+      </div>
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Link href="/app-install">
+          <Button variant="link" size="sm" className="text-xs text-primary h-auto p-0">
+            {t("appDownload.bannerLink", "앱 다운로드")}
+          </Button>
+        </Link>
+        <button onClick={onDismiss} className="ml-2 text-muted-foreground hover:text-foreground">
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── 채팅방 통화 안내 배너 (하위 호환) ──
+export function AppCallBanner({ onDownload }: { onDownload: () => void }) {
   const { t } = useTranslation();
   const [dismissed, setDismissed] = useState(false);
 
-  // 세션 내에서 한 번 닫으면 유지
-  useEffect(() => {
-    const v = sessionStorage.getItem("app-banner-dismissed");
-    if (v === "1") setDismissed(true);
-  }, []);
-
   if (dismissed) return null;
 
-  const handleDismiss = () => {
-    setDismissed(true);
-    sessionStorage.setItem("app-banner-dismissed", "1");
-  };
-
-  const platform = detectPlatform();
-  const storeUrl = platform === "ios" ? APP_STORE_URL : PLAY_STORE_URL;
-
   return (
-    <div className="px-4 py-2.5 bg-primary/5 border-b border-primary/10 flex items-center gap-3">
-      <Smartphone className="h-4 w-4 text-primary shrink-0" />
-      <p className="text-xs text-primary flex-1">
-        {t("appDownload.bannerText", "통화 및 영상통화는 앱에서 이용 가능합니다.")}
-        <button
-          className="ml-1 underline font-medium"
-          onClick={() => {
-            if (onDownload) onDownload();
-            else window.open(storeUrl, "_blank");
-          }}
-        >
+    <div className="bg-primary/5 border-b border-primary/10 px-4 py-2 flex items-center justify-between">
+      <div className="flex items-center gap-2 min-w-0">
+        <Smartphone className="h-4 w-4 text-primary flex-shrink-0" />
+        <span className="text-xs text-muted-foreground truncate">
+          {t("appDownload.bannerText", "통화 및 영상통화는 앱에서 이용 가능합니다.")}
+        </span>
+      </div>
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Button variant="link" size="sm" className="text-xs text-primary h-auto p-0" onClick={onDownload}>
           {t("appDownload.bannerLink", "앱 다운로드")}
+        </Button>
+        <button onClick={() => setDismissed(true)} className="ml-2 text-muted-foreground hover:text-foreground">
+          <X className="h-3.5 w-3.5" />
         </button>
-      </p>
-      <button onClick={handleDismiss} className="text-muted-foreground hover:text-foreground">
-        <X className="h-3.5 w-3.5" />
-      </button>
+      </div>
     </div>
   );
 }
@@ -159,7 +166,9 @@ export function AppCallBanner({ onDownload }: { onDownload?: () => void }) {
 // ── 홈/마이페이지용 앱 다운로드 카드 ──
 export function AppDownloadCard() {
   const { t } = useTranslation();
-  const platform = detectPlatform();
+
+  // 이미 PWA로 설치된 경우 표시하지 않음
+  if (isInStandaloneMode()) return null;
 
   return (
     <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 p-5">
@@ -174,25 +183,16 @@ export function AppDownloadCard() {
           <p className="text-sm text-muted-foreground leading-relaxed">
             {t(
               "appDownload.cardDesc",
-              "고객 도착 안내 및 실시간 통신을 위해 앱을 설치해 주세요. 음성/영상 통화, 푸시 알림, 위치 공유 등 모든 기능을 이용할 수 있습니다."
+              "홈 화면에 추가하여 앱처럼 빠르게 사용하세요. 푸시 알림, 오프라인 지원, 전체 화면 모드를 이용할 수 있습니다."
             )}
           </p>
           <div className="flex gap-2 pt-2">
-            {(platform === "ios" || platform === "desktop") && (
-              <Button size="sm" className="gap-1.5" onClick={() => window.open(APP_STORE_URL, "_blank")}>
-                <Apple className="h-4 w-4" /> App Store
+            <Link href="/app-install">
+              <Button size="sm" className="gap-1.5">
+                <Download className="h-4 w-4" />
+                {t("appDownload.installGuide", "설치 가이드")}
               </Button>
-            )}
-            {(platform === "android" || platform === "desktop") && (
-              <Button
-                size="sm"
-                variant={platform === "desktop" ? "outline" : "default"}
-                className="gap-1.5"
-                onClick={() => window.open(PLAY_STORE_URL, "_blank")}
-              >
-                <Download className="h-4 w-4" /> Google Play
-              </Button>
-            )}
+            </Link>
           </div>
         </div>
       </div>

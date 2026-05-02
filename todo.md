@@ -2501,3 +2501,23 @@
 - [x] 프론트엔드: CheckinReport 페이지 (AreaChart 시간대별 추이 + PieChart 진행률 + 진행률 바)
 - [x] 사이드바 메뉴 추가 (BarChart3 아이콘) + i18n ko/en
 - [x] 테스트 16건 통과, 전체 75개 파일 1041건 통과
+
+## v6.22 - PWA 앱 변환 (모바일 앱 설치 지원)
+
+### 1. PWA 기본 설정
+- [x] manifest.json 업데이트 (앱 이름 Alpha Trip, 아이콘, 테마 색상, 시작 URL)
+- [x] 앱 아이콘 설정 (192x192, 512x512, maskable)
+- [x] 서비스워커 등록 (vite-plugin-pwa + workbox 오프라인 캐싱)
+- [x] 스플래시 스크린 설정 (manifest screenshots)
+- [x] meta 태그 추가 (apple-touch-icon, theme-color, apple-mobile-web-app-capable 등)
+- [x] iOS PWA meta 태그 추가 (apple-mobile-web-app-status-bar-style, mobile-web-app-capable)
+
+### 2. 앱 설치 프롬프트
+- [x] beforeinstallprompt 이벤트 처리 (PWAInstallPrompt 컴포넌트)
+- [x] 커스텀 설치 배너 UI (3초 후 표시, localStorage 기반 재표시 제어)
+- [x] iOS Safari 설치 가이드 (홈 화면에 추가 - 단계별 안내)
+
+### 3. 앱 다운로드 유도
+- [x] 홈 화면에 앱 다운로드 유도 배너 (AppDownloadCard - PWA 설치 시 자동 숨김)
+- [x] 앱 설치 가이드 페이지 (/app-install) - Android/iOS/Desktop 탭별 설치 가이드
+- [x] 테스트 작성 및 전체 테스트 통과 (55개 테스트)

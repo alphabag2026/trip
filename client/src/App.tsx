@@ -127,6 +127,7 @@ const AdminCheckinReport = lazy(() => import("./pages/admin/CheckinReport"));
 const CheckinScanner = lazy(() => import("./pages/CheckinScanner"));
 const MyQrCode = lazy(() => import("./pages/MyQrCode"));
 const KioskCheckin = lazy(() => import("./pages/KioskCheckin"));
+const AppInstallGuide = lazy(() => import("./pages/AppInstallGuide"));
 
 // ═════════════════════════════════════════════════════════
 // Routers
@@ -174,6 +175,7 @@ function PublicRouter() {
         <Route path="/checkin-scanner" component={CheckinScanner} />
         <Route path="/my-qr" component={MyQrCode} />
         <Route path="/kiosk" component={KioskCheckin} />
+        <Route path="/app-install" component={AppInstallGuide} />
         <Route path="/404" component={NotFound} />
       </Switch>
     </Suspense>
