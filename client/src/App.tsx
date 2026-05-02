@@ -125,8 +125,9 @@ const AdminAiScheduleGenerator = lazy(() => import("./pages/admin/AiScheduleGene
 const AdminCheckinDashboard = lazy(() => import("./pages/admin/CheckinDashboard"));
 const CheckinScanner = lazy(() => import("./pages/CheckinScanner"));
 const MyQrCode = lazy(() => import("./pages/MyQrCode"));
+const KioskCheckin = lazy(() => import("./pages/KioskCheckin"));
 
-// ═══════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════
 // Routers
 // ═══════════════════════════════════════════════════════
 function PublicRouter() {
@@ -171,6 +172,7 @@ function PublicRouter() {
         <Route path="/welcome" component={Welcome} />
         <Route path="/checkin-scanner" component={CheckinScanner} />
         <Route path="/my-qr" component={MyQrCode} />
+        <Route path="/kiosk" component={KioskCheckin} />
         <Route path="/404" component={NotFound} />
       </Switch>
     </Suspense>

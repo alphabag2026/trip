@@ -9575,6 +9575,35 @@ Rules:
         });
         const reg = await db.getRegistrationById(checkin.registrationId);
         const meetup = await db.getMeetupById(checkin.meetupId);
+        const stats = await db.getEventCheckinStats(checkin.meetupId);
+        // 비동기 알림 (응답 지연 방지)
+        (async () => {
+          try {
+            // 1) 주최자에게 텔레그램 알림
+            await sendTelegram(
+              `✅ <b>체크인 완료</b>\n` +
+              `👤 ${reg?.name || "Unknown"}\n` +
+              `📋 ${meetup?.title || "Unknown"}\n` +
+              `📊 ${stats.checkedIn + 1}/${stats.total} 체크인 완료`
+            );
+            // 2) 참가자에게 이메일 환영 메시지
+            if (reg?.email) {
+              const { sendEmail } = await import("./email");
+              await sendEmail({
+                to: reg.email,
+                subject: `🎉 ${meetup?.title || "밋업"} 체크인 완료!`,
+                html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+                  <h2 style="color:#6366f1">환영합니다, ${reg.name}님! 🎉</h2>
+                  <p><strong>${meetup?.title || "밋업"}</strong>에 성공적으로 체크인되었습니다.</p>
+                  <p style="color:#666;font-size:14px">체크인 시간: ${new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</p>
+                  <p>즐거운 시간 보내세요!</p>
+                  <hr style="border:none;border-top:1px solid #eee;margin:16px 0">
+                  <p style="color:#999;font-size:12px">Alpha Trip</p>
+                </div>`,
+              });
+            }
+          } catch (e) { console.error("[Checkin Notification]", e); }
+        })();
         return {
           success: true,
           alreadyCheckedIn: false,
@@ -9681,6 +9710,124 @@ Rules:
           meetupTitle: meetup?.title,
           meetupId: checkin.meetupId,
         };
+      }),
+    // QR 코드 이메일 발송 (개별)
+    sendQrEmail: adminProcedure
+      .input(z.object({ checkinId: z.number(), origin: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        const { sendEmail } = await import("./email");
+        const QRCode = await import("qrcode");
+        const checkinRows = await (async () => {
+          const d = await db.getDb(); if (!d) return [];
+          const { eventCheckins: ec } = await import("../drizzle/schema");
+          const { eq: eqOp } = await import("drizzle-orm");
+          return d.select().from(ec).where(eqOp(ec.id, input.checkinId)).limit(1);
+        })();
+        const checkin = checkinRows[0];
+        if (!checkin) throw new TRPCError({ code: "NOT_FOUND", message: "체크인 레코드를 찾을 수 없습니다" });
+        const reg = await db.getRegistrationById(checkin.registrationId);
+        if (!reg?.email) throw new TRPCError({ code: "BAD_REQUEST", message: "참가자 이메일이 없습니다" });
+        const meetup = await db.getMeetupById(checkin.meetupId);
+        const baseUrl = input.origin || "";
+        const checkinUrl = `${baseUrl}/checkin-scanner?token=${checkin.qrToken}`;
+        const qrDataUrl = await QRCode.toDataURL(checkinUrl, { width: 300, margin: 2 });
+        await sendEmail({
+          to: reg.email,
+          subject: `🎫 ${meetup?.title || "밋업"} - QR 체크인 코드`,
+          html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+            <h2 style="color:#6366f1">🎫 QR 체크인 코드</h2>
+            <p><strong>${reg.name}</strong>님, <strong>${meetup?.title || "밋업"}</strong>의 QR 체크인 코드입니다.</p>
+            <div style="text-align:center;margin:24px 0">
+              <img src="${qrDataUrl}" alt="QR Code" style="width:250px;height:250px" />
+            </div>
+            <p style="text-align:center;color:#666;font-size:14px">행사 현장에서 이 QR 코드를 보여주세요.</p>
+            <hr style="border:none;border-top:1px solid #eee;margin:16px 0">
+            <p style="color:#999;font-size:12px">Alpha Trip</p>
+          </div>`,
+        });
+        return { success: true };
+      }),
+    // QR 코드 일괄 이메일 발송
+    bulkSendQrEmail: adminProcedure
+      .input(z.object({ meetupId: z.number(), origin: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        const checkins = await db.getEventCheckinsByMeetup(input.meetupId);
+        const { sendEmail } = await import("./email");
+        const QRCode = await import("qrcode");
+        let sent = 0, skipped = 0, failed = 0;
+        for (const checkin of checkins) {
+          const reg = await db.getRegistrationById(checkin.registrationId);
+          if (!reg?.email) { skipped++; continue; }
+          try {
+            const meetup = await db.getMeetupById(checkin.meetupId);
+            const baseUrl = input.origin || "";
+            const checkinUrl = `${baseUrl}/checkin-scanner?token=${checkin.qrToken}`;
+            const qrDataUrl = await QRCode.toDataURL(checkinUrl, { width: 300, margin: 2 });
+            await sendEmail({
+              to: reg.email,
+              subject: `🎫 ${meetup?.title || "밋업"} - QR 체크인 코드`,
+              html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+                <h2 style="color:#6366f1">🎫 QR 체크인 코드</h2>
+                <p><strong>${reg.name}</strong>님, <strong>${meetup?.title || "밋업"}</strong>의 QR 체크인 코드입니다.</p>
+                <div style="text-align:center;margin:24px 0">
+                  <img src="${qrDataUrl}" alt="QR Code" style="width:250px;height:250px" />
+                </div>
+                <p style="text-align:center;color:#666;font-size:14px">행사 현장에서 이 QR 코드를 보여주세요.</p>
+                <hr style="border:none;border-top:1px solid #eee;margin:16px 0">
+                <p style="color:#999;font-size:12px">Alpha Trip</p>
+              </div>`,
+            });
+            sent++;
+          } catch { failed++; }
+        }
+        return { sent, skipped, failed, total: checkins.length };
+      }),
+    // QR 코드 텔레그램 발송 (개별)
+    sendQrTelegram: adminProcedure
+      .input(z.object({ checkinId: z.number(), origin: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        const checkinRows = await (async () => {
+          const d = await db.getDb(); if (!d) return [];
+          const { eventCheckins: ec } = await import("../drizzle/schema");
+          const { eq: eqOp } = await import("drizzle-orm");
+          return d.select().from(ec).where(eqOp(ec.id, input.checkinId)).limit(1);
+        })();
+        const checkin = checkinRows[0];
+        if (!checkin) throw new TRPCError({ code: "NOT_FOUND" });
+        const reg = await db.getRegistrationById(checkin.registrationId);
+        const meetup = await db.getMeetupById(checkin.meetupId);
+        const baseUrl = input.origin || "";
+        const checkinUrl = `${baseUrl}/checkin-scanner?token=${checkin.qrToken}`;
+        const ok = await sendTelegram(
+          `🎫 <b>QR 체크인 코드</b>\n` +
+          `👤 ${reg?.name || "Unknown"}\n` +
+          `📋 ${meetup?.title || "Unknown"}\n` +
+          `🔗 <a href="${checkinUrl}">체크인 링크</a>`
+        );
+        return { success: ok };
+      }),
+    // QR 코드 일괄 텔레그램 발송
+    bulkSendQrTelegram: adminProcedure
+      .input(z.object({ meetupId: z.number(), origin: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        const checkins = await db.getEventCheckinsByMeetup(input.meetupId);
+        let sent = 0, failed = 0;
+        for (const checkin of checkins) {
+          const reg = await db.getRegistrationById(checkin.registrationId);
+          const meetup = await db.getMeetupById(checkin.meetupId);
+          const baseUrl = input.origin || "";
+          const checkinUrl = `${baseUrl}/checkin-scanner?token=${checkin.qrToken}`;
+          try {
+            await sendTelegram(
+              `🎫 <b>QR 체크인 코드</b>\n` +
+              `👤 ${reg?.name || "Unknown"}\n` +
+              `📋 ${meetup?.title || "Unknown"}\n` +
+              `🔗 <a href="${checkinUrl}">체크인 링크</a>`
+            );
+            sent++;
+          } catch { failed++; }
+        }
+        return { sent, failed, total: checkins.length };
       }),
   }),
 });

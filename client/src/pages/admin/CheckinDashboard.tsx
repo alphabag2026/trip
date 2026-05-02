@@ -11,8 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import {
   QrCode, Users, UserCheck, UserX, Search, RefreshCw, Download,
-  CheckCircle2, XCircle, Clock, Loader2, BarChart3, Ticket, Undo2
+  CheckCircle2, XCircle, Clock, Loader2, BarChart3, Ticket, Undo2,
+  Mail, Send, Monitor, ExternalLink
 } from "lucide-react";
+import { Link } from "wouter";
 
 export default function CheckinDashboard() {
   const { t } = useTranslation();
@@ -60,6 +62,26 @@ export default function CheckinDashboard() {
       refetchCheckins();
       refetchStats();
     },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const bulkSendEmail = trpc.eventCheckin.bulkSendQrEmail.useMutation({
+    onSuccess: (res) => toast.success(`이메일 발송: ${res.sent}건 성공, ${res.skipped}건 건너뜀, ${res.failed}건 실패`),
+    onError: (err) => toast.error(err.message),
+  });
+
+  const bulkSendTelegram = trpc.eventCheckin.bulkSendQrTelegram.useMutation({
+    onSuccess: (res) => toast.success(`텔레그램 발송: ${res.sent}건 성공, ${res.failed}건 실패`),
+    onError: (err) => toast.error(err.message),
+  });
+
+  const sendSingleEmail = trpc.eventCheckin.sendQrEmail.useMutation({
+    onSuccess: () => toast.success("QR 코드 이메일 발송 완료"),
+    onError: (err) => toast.error(err.message),
+  });
+
+  const sendSingleTelegram = trpc.eventCheckin.sendQrTelegram.useMutation({
+    onSuccess: () => toast.success("QR 코드 텔레그램 발송 완료"),
     onError: (err) => toast.error(err.message),
   });
 
@@ -125,6 +147,31 @@ export default function CheckinDashboard() {
                   {bulkGenerate.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ticket className="w-4 h-4" />}
                   QR 일괄 발급
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => bulkSendEmail.mutate({ meetupId: selectedMeetupId, origin: window.location.origin })}
+                  disabled={bulkSendEmail.isPending}
+                  className="gap-2"
+                >
+                  {bulkSendEmail.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                  이메일 일괄발송
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => bulkSendTelegram.mutate({ meetupId: selectedMeetupId, origin: window.location.origin })}
+                  disabled={bulkSendTelegram.isPending}
+                  className="gap-2"
+                >
+                  {bulkSendTelegram.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  TG 일괄발송
+                </Button>
+                <Link href="/kiosk" target="_blank">
+                  <Button variant="outline" className="gap-2">
+                    <Monitor className="w-4 h-4" />
+                    키오스크 모드
+                    <ExternalLink className="w-3 h-3" />
+                  </Button>
+                </Link>
                 <Button variant="outline" onClick={() => { refetchCheckins(); refetchStats(); }} className="gap-2">
                   <RefreshCw className="w-4 h-4" />
                   새로고침
@@ -246,7 +293,10 @@ export default function CheckinDashboard() {
                 onManualCheckin={(regId) => manualCheckin.mutate({ registrationId: regId, meetupId: selectedMeetupId })}
                 onUndoCheckin={(id) => undoCheckin.mutate({ id })}
                 onShowQr={(token) => { setSelectedQrToken(token); setShowQrDialog(true); }}
+                onSendEmail={(id) => sendSingleEmail.mutate({ checkinId: id, origin: window.location.origin })}
+                onSendTelegram={(id) => sendSingleTelegram.mutate({ checkinId: id, origin: window.location.origin })}
                 isPending={manualCheckin.isPending || undoCheckin.isPending}
+                isSending={sendSingleEmail.isPending || sendSingleTelegram.isPending}
               />
             </TabsContent>
             <TabsContent value="checked" className="mt-4">
@@ -256,7 +306,10 @@ export default function CheckinDashboard() {
                 onManualCheckin={(regId) => manualCheckin.mutate({ registrationId: regId, meetupId: selectedMeetupId })}
                 onUndoCheckin={(id) => undoCheckin.mutate({ id })}
                 onShowQr={(token) => { setSelectedQrToken(token); setShowQrDialog(true); }}
+                onSendEmail={(id) => sendSingleEmail.mutate({ checkinId: id, origin: window.location.origin })}
+                onSendTelegram={(id) => sendSingleTelegram.mutate({ checkinId: id, origin: window.location.origin })}
                 isPending={manualCheckin.isPending || undoCheckin.isPending}
+                isSending={sendSingleEmail.isPending || sendSingleTelegram.isPending}
               />
             </TabsContent>
             <TabsContent value="unchecked" className="mt-4">
@@ -266,7 +319,10 @@ export default function CheckinDashboard() {
                 onManualCheckin={(regId) => manualCheckin.mutate({ registrationId: regId, meetupId: selectedMeetupId })}
                 onUndoCheckin={(id) => undoCheckin.mutate({ id })}
                 onShowQr={(token) => { setSelectedQrToken(token); setShowQrDialog(true); }}
+                onSendEmail={(id) => sendSingleEmail.mutate({ checkinId: id, origin: window.location.origin })}
+                onSendTelegram={(id) => sendSingleTelegram.mutate({ checkinId: id, origin: window.location.origin })}
                 isPending={manualCheckin.isPending || undoCheckin.isPending}
+                isSending={sendSingleEmail.isPending || sendSingleTelegram.isPending}
               />
             </TabsContent>
           </Tabs>
@@ -329,14 +385,20 @@ function CheckinTable({
   onManualCheckin,
   onUndoCheckin,
   onShowQr,
+  onSendEmail,
+  onSendTelegram,
   isPending,
+  isSending,
 }: {
   items: CheckinItem[];
   isLoading: boolean;
   onManualCheckin: (regId: number) => void;
   onUndoCheckin: (id: number) => void;
   onShowQr: (token: string) => void;
+  onSendEmail: (id: number) => void;
+  onSendTelegram: (id: number) => void;
   isPending: boolean;
+  isSending: boolean;
 }) {
   if (isLoading) {
     return (
@@ -408,6 +470,24 @@ function CheckinTable({
                       title="QR 코드 보기"
                     >
                       <QrCode className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onSendEmail(item.id)}
+                      disabled={isSending}
+                      title="이메일 발송"
+                    >
+                      <Mail className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onSendTelegram(item.id)}
+                      disabled={isSending}
+                      title="텔레그램 발송"
+                    >
+                      <Send className="w-4 h-4" />
                     </Button>
                     {item.checkedIn ? (
                       <Button
