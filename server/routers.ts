@@ -9492,6 +9492,197 @@ Rules:
         return { success: true, count: ids.length, ids };
       }),
   }),
+  // ══ v6.19 - 현장 QR 체크인 ══
+  eventCheckin: router({
+    // QR 토큰 발급 (개별)
+    generateToken: adminProcedure
+      .input(z.object({ registrationId: z.number(), meetupId: z.number() }))
+      .mutation(async ({ input }) => {
+        // 이미 발급된 토큰이 있으면 반환
+        const existing = await db.getEventCheckinByRegistration(input.registrationId, input.meetupId);
+        if (existing) return { id: existing.id, qrToken: existing.qrToken, alreadyExists: true };
+        const qrToken = nanoid(32);
+        const id = await db.createEventCheckin({
+          registrationId: input.registrationId,
+          meetupId: input.meetupId,
+          qrToken,
+        });
+        return { id, qrToken, alreadyExists: false };
+      }),
+    // QR 토큰 일괄 발급
+    bulkGenerateTokens: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .mutation(async ({ input }) => {
+        const regs = await db.getRegistrations({ meetupId: input.meetupId, status: "approved" });
+        let created = 0;
+        let skipped = 0;
+        for (const reg of regs) {
+          const existing = await db.getEventCheckinByRegistration(reg.id, input.meetupId);
+          if (existing) { skipped++; continue; }
+          const qrToken = nanoid(32);
+          await db.createEventCheckin({
+            registrationId: reg.id,
+            meetupId: input.meetupId,
+            qrToken,
+          });
+          created++;
+        }
+        return { created, skipped, total: regs.length };
+      }),
+    // QR 코드 이미지 생성 (base64)
+    getQrImage: publicProcedure
+      .input(z.object({ qrToken: z.string() }))
+      .query(async ({ input }) => {
+        const QRCode = await import("qrcode");
+        const checkin = await db.getEventCheckinByToken(input.qrToken);
+        if (!checkin) throw new TRPCError({ code: "NOT_FOUND", message: "QR token not found" });
+        // QR 코드에 체크인 URL 인코딩
+        const checkinUrl = `${process.env.VITE_OAUTH_PORTAL_URL ? '' : ''}/checkin-scan?token=${input.qrToken}`;
+        const qrDataUrl = await QRCode.toDataURL(checkinUrl, {
+          width: 400,
+          margin: 2,
+          color: { dark: "#000000", light: "#FFFFFF" },
+        });
+        return { qrDataUrl, qrToken: input.qrToken, checkedIn: checkin.checkedIn };
+      }),
+    // QR 스캔으로 체크인 처리
+    scanCheckin: protectedProcedure
+      .input(z.object({
+        qrToken: z.string(),
+        locationNote: z.string().optional(),
+        deviceInfo: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const checkin = await db.getEventCheckinByToken(input.qrToken);
+        if (!checkin) throw new TRPCError({ code: "NOT_FOUND", message: "유효하지 않은 QR 코드입니다" });
+        if (checkin.checkedIn) {
+          const reg = await db.getRegistrationById(checkin.registrationId);
+          return {
+            success: false,
+            alreadyCheckedIn: true,
+            checkedInAt: checkin.checkedInAt,
+            participantName: reg?.name || "Unknown",
+            message: "이미 체크인된 참가자입니다",
+          };
+        }
+        await db.updateEventCheckin(checkin.id, {
+          checkedIn: true,
+          checkedInAt: new Date(),
+          checkedInBy: ctx.user.id,
+          checkInMethod: "qr_scan",
+          locationNote: input.locationNote,
+          deviceInfo: input.deviceInfo,
+        });
+        const reg = await db.getRegistrationById(checkin.registrationId);
+        const meetup = await db.getMeetupById(checkin.meetupId);
+        return {
+          success: true,
+          alreadyCheckedIn: false,
+          participantName: reg?.name || "Unknown",
+          meetupTitle: meetup?.title || "Unknown",
+          checkedInAt: new Date(),
+          message: "체크인 완료!",
+        };
+      }),
+    // 수동 체크인 (관리자)
+    manualCheckin: adminProcedure
+      .input(z.object({ registrationId: z.number(), meetupId: z.number(), locationNote: z.string().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        let checkin = await db.getEventCheckinByRegistration(input.registrationId, input.meetupId);
+        if (!checkin) {
+          const qrToken = nanoid(32);
+          const id = await db.createEventCheckin({
+            registrationId: input.registrationId,
+            meetupId: input.meetupId,
+            qrToken,
+            checkedIn: true,
+            checkedInAt: new Date(),
+            checkedInBy: ctx.user.id,
+            checkInMethod: "manual",
+            locationNote: input.locationNote,
+          });
+          return { success: true, id };
+        }
+        if (checkin.checkedIn) return { success: false, message: "이미 체크인됨" };
+        await db.updateEventCheckin(checkin.id, {
+          checkedIn: true,
+          checkedInAt: new Date(),
+          checkedInBy: ctx.user.id,
+          checkInMethod: "manual",
+          locationNote: input.locationNote,
+        });
+        return { success: true, id: checkin.id };
+      }),
+    // 체크인 취소
+    undoCheckin: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.updateEventCheckin(input.id, {
+          checkedIn: false,
+          checkedInAt: null as any,
+          checkedInBy: null as any,
+        });
+        return { success: true };
+      }),
+    // 밋업별 체크인 목록
+    listByMeetup: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        const checkins = await db.getEventCheckinsByMeetup(input.meetupId);
+        // 참가자 정보 조인
+        const enriched = await Promise.all(checkins.map(async (c) => {
+          const reg = await db.getRegistrationById(c.registrationId);
+          return { ...c, participantName: reg?.name, participantPhone: reg?.phone, participantTeam: reg?.teamName };
+        }));
+        return enriched;
+      }),
+    // 체크인 통계
+    stats: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(({ input }) => db.getEventCheckinStats(input.meetupId)),
+    // 내 QR 코드 조회 (참가자용)
+    myQr: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        // userId로 registration 찾기
+        const regs = await db.getRegistrations({ userId: ctx.user.id, meetupId: input.meetupId });
+        if (regs.length === 0) return null;
+        const reg = regs[0];
+        const checkin = await db.getEventCheckinByRegistration(reg.id, input.meetupId);
+        if (!checkin) return null;
+        const QRCode = await import("qrcode");
+        const checkinUrl = `/checkin-scan?token=${checkin.qrToken}`;
+        const qrDataUrl = await QRCode.toDataURL(checkinUrl, {
+          width: 400,
+          margin: 2,
+          color: { dark: "#000000", light: "#FFFFFF" },
+        });
+        return {
+          qrToken: checkin.qrToken,
+          qrDataUrl,
+          checkedIn: checkin.checkedIn,
+          checkedInAt: checkin.checkedInAt,
+          registrationName: reg.name,
+        };
+      }),
+    // 토큰으로 참가자 정보 조회 (공개)
+    getByToken: publicProcedure
+      .input(z.object({ qrToken: z.string() }))
+      .query(async ({ input }) => {
+        const checkin = await db.getEventCheckinByToken(input.qrToken);
+        if (!checkin) return null;
+        const reg = await db.getRegistrationById(checkin.registrationId);
+        const meetup = await db.getMeetupById(checkin.meetupId);
+        return {
+          id: checkin.id,
+          checkedIn: checkin.checkedIn,
+          checkedInAt: checkin.checkedInAt,
+          participantName: reg?.name,
+          meetupTitle: meetup?.title,
+          meetupId: checkin.meetupId,
+        };
+      }),
+  }),
 });
 // ── Haversine 거리 계산 (미터) ─────────────────────────────
 function getDistanceFromLatLon(lat1: number, lon1: number, lat2: number, lon2: number): number {

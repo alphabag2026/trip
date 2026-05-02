@@ -77,6 +77,7 @@ import {
   snsAccounts, InsertSnsAccount,
   snsPosts, InsertSnsPost,
   snsTemplates, InsertSnsTemplate,
+  eventCheckins, InsertEventCheckin,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -4079,4 +4080,65 @@ export async function bulkCreateRegistrations(dataList: InsertRegistration[]) {
     results.push(result.insertId);
   }
   return results;
+}
+
+// ── Event Checkins (현장 QR 체크인) ─────────────────────
+export async function createEventCheckin(data: InsertEventCheckin) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const [result] = await db.insert(eventCheckins).values(data);
+  return result.insertId;
+}
+
+export async function getEventCheckinByToken(qrToken: string) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(eventCheckins).where(eq(eventCheckins.qrToken, qrToken)).limit(1);
+  return result[0];
+}
+
+export async function getEventCheckinByRegistration(registrationId: number, meetupId: number) {
+  const db = await getDb(); if (!db) return undefined;
+  const result = await db.select().from(eventCheckins)
+    .where(and(eq(eventCheckins.registrationId, registrationId), eq(eventCheckins.meetupId, meetupId)))
+    .limit(1);
+  return result[0];
+}
+
+export async function getEventCheckinsByMeetup(meetupId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(eventCheckins)
+    .where(eq(eventCheckins.meetupId, meetupId))
+    .orderBy(desc(eventCheckins.updatedAt));
+}
+
+export async function updateEventCheckin(id: number, data: Partial<InsertEventCheckin>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(eventCheckins).set(data).where(eq(eventCheckins.id, id));
+}
+
+export async function getEventCheckinStats(meetupId: number) {
+  const db = await getDb();
+  if (!db) return { total: 0, checkedIn: 0, notCheckedIn: 0 };
+  const [total] = await db.select({ count: sql<number>`count(*)` }).from(eventCheckins).where(eq(eventCheckins.meetupId, meetupId));
+  const [checkedIn] = await db.select({ count: sql<number>`count(*)` }).from(eventCheckins).where(and(eq(eventCheckins.meetupId, meetupId), eq(eventCheckins.checkedIn, true)));
+  return {
+    total: total.count,
+    checkedIn: checkedIn.count,
+    notCheckedIn: total.count - checkedIn.count,
+  };
+}
+
+export async function bulkCreateEventCheckins(dataList: InsertEventCheckin[]) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  if (dataList.length === 0) return [];
+  const ids: number[] = [];
+  for (const data of dataList) {
+    const [result] = await db.insert(eventCheckins).values(data);
+    ids.push(result.insertId);
+  }
+  return ids;
+}
+
+export async function deleteEventCheckin(id: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(eventCheckins).where(eq(eventCheckins.id, id));
 }

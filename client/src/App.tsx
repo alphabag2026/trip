@@ -122,6 +122,9 @@ const AdminSnsManager = lazy(() => import("./pages/admin/SnsManager"));
 const OrganizerQuickSetup = lazy(() => import("./pages/OrganizerQuickSetup"));
 const AdminAiBulkRegister = lazy(() => import("./pages/admin/AiBulkRegister"));
 const AdminAiScheduleGenerator = lazy(() => import("./pages/admin/AiScheduleGenerator"));
+const AdminCheckinDashboard = lazy(() => import("./pages/admin/CheckinDashboard"));
+const CheckinScanner = lazy(() => import("./pages/CheckinScanner"));
+const MyQrCode = lazy(() => import("./pages/MyQrCode"));
 
 // ═══════════════════════════════════════════════════════
 // Routers
@@ -166,6 +169,8 @@ function PublicRouter() {
         <Route path="/nearby" component={NearbyExplorer} />
         <Route path="/m/:token" component={MeetupPortal} />
         <Route path="/welcome" component={Welcome} />
+        <Route path="/checkin-scanner" component={CheckinScanner} />
+        <Route path="/my-qr" component={MyQrCode} />
         <Route path="/404" component={NotFound} />
       </Switch>
     </Suspense>
@@ -228,6 +233,7 @@ function AdminRouter() {
           <Route path="/sns-manager" component={AdminSnsManager} />
           <Route path="/ai-bulk-register" component={AdminAiBulkRegister} />
           <Route path="/ai-schedule-generator" component={AdminAiScheduleGenerator} />
+          <Route path="/checkin-dashboard" component={AdminCheckinDashboard} />
           <Route path="/2fa-settings" component={TwoFactorSettings} />
           <Route component={NotFound} />
         </Switch>

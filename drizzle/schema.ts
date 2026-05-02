@@ -2262,3 +2262,21 @@ export const snsTemplates = mysqlTable("sns_templates", {
 });
 export type SnsTemplate = typeof snsTemplates.$inferSelect;
 export type InsertSnsTemplate = typeof snsTemplates.$inferInsert;
+
+// ── Event Checkins (현장 QR 체크인) ────────────────────────
+export const eventCheckins = mysqlTable("event_checkins", {
+  id: int("id").autoincrement().primaryKey(),
+  registrationId: int("registrationId").notNull(),
+  meetupId: int("meetupId").notNull(),
+  qrToken: varchar("qrToken", { length: 64 }).notNull().unique(),
+  checkedIn: boolean("checkedIn").default(false).notNull(),
+  checkedInAt: timestamp("checkedInAt"),
+  checkedInBy: int("checkedInBy"), // 스캔한 관리자 userId
+  checkInMethod: mysqlEnum("checkInMethod", ["qr_scan", "manual", "self_scan"]).default("qr_scan").notNull(),
+  locationNote: varchar("locationNote", { length: 255 }), // 체크인 장소 메모
+  deviceInfo: varchar("deviceInfo", { length: 255 }), // 스캔 기기 정보
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EventCheckin = typeof eventCheckins.$inferSelect;
+export type InsertEventCheckin = typeof eventCheckins.$inferInsert;

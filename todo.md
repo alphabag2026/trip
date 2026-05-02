@@ -2447,3 +2447,17 @@
 - [x] 전체 페이지(AIChatbot, FlightTracker, Lookup, MeetupPortal, MyPage, MyProfile, Register) 헤더에 overflow-hidden 추가
 - [x] LanguageSelector 버튼 모바일 패딩 축소 (px-2 sm:px-3)
 - [x] ProjectCodeSearch 모바일 max-width 축소 (max-w-xs sm:max-w-md) + min-w-0
+
+## v6.19 - 참가자 셀프 체크인 QR
+- [x] DB: event_checkins 테이블 (QR 토큰, 체크인 시간, 위치, 디바이스 정보)
+- [x] 서버: QR 토큰 발급 API (nanoid 기반 고유 토큰 생성)
+- [x] 서버: QR 이미지 생성 API (qrcode 패키지 활용)
+- [x] 서버: 스캔 체크인 API (토큰 검증 → 체크인 처리)
+- [x] 서버: 일괄 QR 발급 API (밋업 전체 참가자에게 한번에 발급)
+- [x] 서버: 체크인 통계 API (전체/체크인/미체크인 수)
+- [x] 서버: 수동 체크인 + 체크인 취소 API
+- [x] 프론트엔드: QR 스캐너 페이지 (/checkin-scanner) - 카메라 스캔 + 수동 입력 + jsQR
+- [x] 프론트엔드: 내 QR 코드 보기 페이지 (/my-qr) - QR 이미지 + 다운로드 + 공유
+- [x] 프론트엔드: 백오피스 체크인 대시보드 (/admin/checkin-dashboard)
+- [x] 사이드바 메뉴 추가 + i18n 번역 키 (ko/en)
+- [x] 테스트 20건 통과, 전체 73개 파일 1009/1010건 통과 (1건 기존 timeout 이슈)

@@ -1484,7 +1484,8 @@
       "selfBookingAdmin": "셀프 예약 관리",
       "snsManager": "SNS 자동 게시",
       "aiBulkRegister": "AI 일괄 등록",
-      "aiScheduleGenerator": "AI 스케줄 생성"
+      "aiScheduleGenerator": "AI 스케줄 생성",
+      "checkinDashboard": "QR 체크인"
     },
     "survey": {
       "addQuestion": "질문 추가",
