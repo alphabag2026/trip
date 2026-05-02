@@ -123,6 +123,7 @@ const OrganizerQuickSetup = lazy(() => import("./pages/OrganizerQuickSetup"));
 const AdminAiBulkRegister = lazy(() => import("./pages/admin/AiBulkRegister"));
 const AdminAiScheduleGenerator = lazy(() => import("./pages/admin/AiScheduleGenerator"));
 const AdminCheckinDashboard = lazy(() => import("./pages/admin/CheckinDashboard"));
+const AdminCheckinReport = lazy(() => import("./pages/admin/CheckinReport"));
 const CheckinScanner = lazy(() => import("./pages/CheckinScanner"));
 const MyQrCode = lazy(() => import("./pages/MyQrCode"));
 const KioskCheckin = lazy(() => import("./pages/KioskCheckin"));
@@ -236,6 +237,7 @@ function AdminRouter() {
           <Route path="/ai-bulk-register" component={AdminAiBulkRegister} />
           <Route path="/ai-schedule-generator" component={AdminAiScheduleGenerator} />
           <Route path="/checkin-dashboard" component={AdminCheckinDashboard} />
+          <Route path="/checkin-report" component={AdminCheckinReport} />
           <Route path="/2fa-settings" component={TwoFactorSettings} />
           <Route component={NotFound} />
         </Switch>

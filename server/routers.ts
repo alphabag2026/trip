@@ -9829,6 +9829,133 @@ Rules:
         }
         return { sent, failed, total: checkins.length };
       }),
+
+    // ── 네임택 PDF 생성 ──────────────────────────────────
+    generateNametag: adminProcedure
+      .input(z.object({ registrationId: z.number(), meetupId: z.number() }))
+      .mutation(async ({ input }) => {
+        const reg = await db.getRegistrationById(input.registrationId);
+        if (!reg) throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
+        const checkin = await db.getEventCheckinsByMeetup(input.meetupId);
+        const token = checkin.find(c => c.registrationId === input.registrationId);
+        const QRCode = await import("qrcode");
+        const checkinUrl = token ? `${process.env.VITE_OAUTH_PORTAL_URL || ""}/checkin/${token.qrToken}` : "";
+        const qrDataUrl = token ? await QRCode.toDataURL(checkinUrl, { width: 200, margin: 1 }) : "";
+        return {
+          name: reg.name,
+          organization: reg.teamName || "",
+          email: reg.email || "",
+          phone: reg.phone || "",
+          qrDataUrl,
+          qrToken: token?.qrToken || "",
+          registrationId: reg.id,
+          meetupId: input.meetupId,
+        };
+      }),
+
+    // ── 일괄 네임택 데이터 ──────────────────────────────────
+    bulkNametagData: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .mutation(async ({ input }) => {
+        const checkins = await db.getEventCheckinsByMeetup(input.meetupId);
+        const checkedInOnly = checkins.filter(c => c.checkedIn);
+        const QRCode = await import("qrcode");
+        const results = [];
+        for (const c of checkedInOnly) {
+          const reg = await db.getRegistrationById(c.registrationId);
+          if (!reg) continue;
+          const checkinUrl = `${process.env.VITE_OAUTH_PORTAL_URL || ""}/checkin/${c.qrToken}`;
+          const qrDataUrl = await QRCode.toDataURL(checkinUrl, { width: 200, margin: 1 });
+          results.push({
+            name: reg.name,
+            organization: reg.teamName || "",
+            email: reg.email || "",
+            qrDataUrl,
+            registrationId: reg.id,
+          });
+        }
+        return { nametags: results, total: results.length };
+      }),
+
+    // ── 시간대별 체크인 추이 ──────────────────────────────────
+    getHourlyStats: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        const checkins = await db.getEventCheckinsByMeetup(input.meetupId);
+        const checkedIn = checkins.filter(c => c.checkedIn && c.checkedInAt);
+        const hourlyMap: Record<string, number> = {};
+        for (const c of checkedIn) {
+          const hour = new Date(c.checkedInAt!).getHours();
+          const key = `${hour.toString().padStart(2, "0")}:00`;
+          hourlyMap[key] = (hourlyMap[key] || 0) + 1;
+        }
+        // 0~23시 전체 시간대 생성
+        const hourly = Array.from({ length: 24 }, (_, i) => {
+          const key = `${i.toString().padStart(2, "0")}:00`;
+          return { hour: key, count: hourlyMap[key] || 0 };
+        });
+        const total = checkins.length;
+        const checkedInCount = checkedIn.length;
+        const rate = total > 0 ? Math.round((checkedInCount / total) * 100) : 0;
+        return { hourly, total, checkedInCount, rate };
+      }),
+
+    // ── 리마인더 발송 (이메일) ──────────────────────────────────
+    sendReminder: adminProcedure
+      .input(z.object({ meetupId: z.number(), subject: z.string().optional(), message: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        const checkins = await db.getEventCheckinsByMeetup(input.meetupId);
+        const QRCode = await import("qrcode");
+        let sent = 0, failed = 0;
+        for (const c of checkins) {
+          const reg = await db.getRegistrationById(c.registrationId);
+          if (!reg || !reg.email) { failed++; continue; }
+          try {
+            const checkinUrl = `${process.env.VITE_OAUTH_PORTAL_URL || ""}/checkin/${c.qrToken}`;
+            const qrDataUrl = await QRCode.toDataURL(checkinUrl, { width: 300, margin: 2 });
+            const subject = input.subject || "[Alpha Trip] 밋업 리마인더 - 내일 행사가 시작됩니다!";
+            const customMsg = input.message || "내일 행사에서 만나요! 아래 QR 코드를 현장에서 제시해 주세요.";
+            const html = `
+              <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+                <h2 style="color:#6366f1;">🎉 밋업 리마인더</h2>
+                <p>안녕하세요, <strong>${reg.name}</strong>님!</p>
+                <p>${customMsg}</p>
+                <div style="text-align:center;margin:24px 0;">
+                  <img src="${qrDataUrl}" alt="QR Code" style="width:200px;height:200px;" />
+                </div>
+                <p style="text-align:center;font-size:12px;color:#666;">체크인 코드: ${c.qrToken}</p>
+                <a href="${checkinUrl}" style="display:block;text-align:center;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;margin:16px auto;max-width:200px;">셀프 체크인</a>
+                <hr style="margin:24px 0;border:none;border-top:1px solid #eee;" />
+                <p style="font-size:12px;color:#999;">Alpha Trip - Meetup & Travel Automation</p>
+              </div>
+            `;
+            await sendEmail({ to: reg.email, subject, html });
+            sent++;
+          } catch { failed++; }
+        }
+        return { sent, failed, total: checkins.length };
+      }),
+
+    // ── 리마인더 발송 (텔레그램) ──────────────────────────────────
+    sendReminderTelegram: adminProcedure
+      .input(z.object({ meetupId: z.number(), message: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        const checkins = await db.getEventCheckinsByMeetup(input.meetupId);
+        let sent = 0, failed = 0;
+        for (const c of checkins) {
+          const reg = await db.getRegistrationById(c.registrationId);
+          if (!reg || !reg.messengerId) { failed++; continue; }
+          try {
+            const checkinUrl = `${process.env.VITE_OAUTH_PORTAL_URL || ""}/checkin/${c.qrToken}`;
+            const customMsg = input.message || "내일 행사가 시작됩니다! 아래 링크로 셀프 체크인하세요.";
+            await sendTelegram(
+              `🎉 밋업 리마인더\n\n안녕하세요, ${reg.name}님! (${reg.messengerId})\n${customMsg}\n\n🔗 셀프 체크인: ${checkinUrl}\n📋 체크인 코드: ${c.qrToken}`
+            );
+            sent++;
+          } catch { failed++; }
+        }
+        return { sent, failed, total: checkins.length };
+      }),
   }),
 });
 // ── Haversine 거리 계산 (미터) ─────────────────────────────
