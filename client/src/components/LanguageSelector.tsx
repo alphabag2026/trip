@@ -22,7 +22,7 @@ export default function LanguageSelector() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/50 hover:bg-secondary text-sm transition-colors border border-border/50"
+        className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg bg-secondary/50 hover:bg-secondary text-sm transition-colors border border-border/50"
       >
         <Globe className="h-4 w-4" />
         <span className="text-base leading-none">{current.flag}</span>

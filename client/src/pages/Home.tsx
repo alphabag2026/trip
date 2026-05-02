@@ -467,7 +467,7 @@ export default function Home() {
       {isAuthenticated && <OnboardingTour />}
       {/* ===== HEADER ===== */}
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/95">
-        <div className="container flex items-center justify-between h-14 gap-3">
+        <div className="container flex items-center justify-between h-14 gap-2 overflow-hidden">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <img loading="lazy" decoding="async" src="https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-dUcFDfrYA6TfPgEdvQbuia.webp" alt="Alpha Trip" className="h-8 w-8 rounded-lg" />
             <span className="font-bold text-lg hidden sm:inline" style={{ fontFamily: 'Inter, sans-serif' }}>Alpha Trip</span>
@@ -476,7 +476,7 @@ export default function Home() {
           {/* Search Bar - 프로젝트 코드 검색 */}
           <ProjectCodeSearch navigate={navigate} t={t} />
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             <ThemeToggle />
             <LanguageSelector />
             {isAuthenticated ? (
@@ -946,13 +946,13 @@ function ProjectCodeSearch({ navigate, t }: { navigate: (path: string) => void; 
   if (!searchOpen) {
     return (
       <div
-        className="flex-1 max-w-md mx-2 cursor-pointer"
+        className="flex-1 min-w-0 max-w-xs sm:max-w-md mx-1 sm:mx-2 cursor-pointer"
         onClick={() => {
           setSearchOpen(true);
           setTimeout(() => inputRef.current?.focus(), 100);
         }}
       >
-        <div className="flex items-center gap-2 bg-muted/60 hover:bg-muted rounded-full px-4 py-2 transition-colors border border-border/50">
+        <div className="flex items-center gap-2 bg-muted/60 hover:bg-muted rounded-full px-3 sm:px-4 py-2 transition-colors border border-border/50">
           <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <span className="text-sm text-muted-foreground truncate">
             {t("home.searchPlaceholder2", "프로젝트 코드 또는 밋업 검색")}
@@ -963,7 +963,7 @@ function ProjectCodeSearch({ navigate, t }: { navigate: (path: string) => void; 
   }
 
   return (
-    <div className="flex-1 max-w-md mx-2 relative">
+    <div className="flex-1 min-w-0 max-w-xs sm:max-w-md mx-1 sm:mx-2 relative">
       <div className="flex items-center gap-1 bg-background rounded-full border-2 border-primary/50 shadow-lg px-3 py-1.5 transition-all">
         <Search className="h-4 w-4 text-primary flex-shrink-0" />
         <input

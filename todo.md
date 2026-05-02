@@ -2439,3 +2439,11 @@
 - [x] 프론트엔드: AI 콘텐츠 생성 UI (텍스트 + 이미지 미리보기 + 템플릿)
 - [x] 프론트엔드: SNS 계정 관리 탭 (계정 연결/해제)
 - [x] 전체 테스트 72개 파일 990건 통과 (v618-features.test.ts 20건 포함)
+
+## v6.18.1 - 모바일 UI 오버플로우 수정
+- [x] 모바일 헤더에서 언어 선택 아이콘(🌐)이 화면 밖으로 튀어나가는 문제 수정
+- [x] Home.tsx 헤더 컨테이너에 overflow-hidden + gap 축소
+- [x] OrganizerHome.tsx 헤더 동일 수정
+- [x] 전체 페이지(AIChatbot, FlightTracker, Lookup, MeetupPortal, MyPage, MyProfile, Register) 헤더에 overflow-hidden 추가
+- [x] LanguageSelector 버튼 모바일 패딩 축소 (px-2 sm:px-3)
+- [x] ProjectCodeSearch 모바일 max-width 축소 (max-w-xs sm:max-w-md) + min-w-0
