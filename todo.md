@@ -2521,3 +2521,43 @@
 - [x] 홈 화면에 앱 다운로드 유도 배너 (AppDownloadCard - PWA 설치 시 자동 숨김)
 - [x] 앱 설치 가이드 페이지 (/app-install) - Android/iOS/Desktop 탭별 설치 가이드
 - [x] 테스트 작성 및 전체 테스트 통과 (55개 테스트)
+
+## v6.23 - PWA 아이콘 커스터마이징 + Web Push 알림 연동
+
+### 1. PWA 전용 아이콘
+- [ ] PWA 전용 아이콘 디자인 (Alpha Trip 브랜드)
+- [ ] 192x192 아이콘 생성
+- [ ] 512x512 아이콘 생성
+- [ ] maskable 아이콘 생성 (안전 영역 고려)
+- [ ] 아이콘 업로드 및 manifest 업데이트
+- [ ] vite.config.ts PWA 아이콘 경로 업데이트
+
+### 2. Web Push 알림 백엔드
+- [ ] push_subscriptions 테이블 생성 (endpoint, keys, userId)
+- [ ] 푸시 구독 저장 API (subscribe/unsubscribe)
+- [ ] 푸시 알림 발송 API (web-push 라이브러리)
+- [ ] VAPID 키 설정 연동
+- [ ] 밋업 알림 트리거 (신규 밋업, 승인, 일정 변경)
+
+### 3. Web Push 프론트엔드
+- [ ] 알림 권한 요청 UI
+- [ ] 서비스워커 push 이벤트 핸들러 개선
+- [ ] 알림 설정 페이지 (토글 on/off)
+- [ ] 알림 클릭 시 해당 페이지로 이동
+
+### 4. 테스트
+- [ ] 테스트 작성 및 전체 통과 확인
+
+## v6.23.1 - 로그인/회원가입 오류 수정
+
+- [ ] 카카오 OAuth 로그인 시 빈 화면 문제 수정 (alphatrip.org/api/auth/kakao)
+- [ ] origin 파라미터에 www.alphatrip.org가 포함되어 리다이렉트 실패 가능성 확인
+- [ ] 커스텀 도메인(alphatrip.org) 환경에서 OAuth 콜백 정상 동작 확인
+
+## v6.24 - 관리자 계정 설정 + 비밀번호 변경 + 카카오 로그인 수정
+
+- [x] 카카오 로그인 에러 수정 (DNS 변경으로 해결 - 13.213.239.217로 변경)
+- [x] 관리자 계정 설정 (bro202411@gmail.com / admin123, role: superadmin)
+- [x] 비밀번호 변경 API 구현 (이미 존재 - changePassword 라우터)
+- [x] 비밀번호 변경 UI (마이페이지 > 안전/SOS 탭에 추가)
+- [x] AWS 서버 재배포 (Docker 재빌드 완료)

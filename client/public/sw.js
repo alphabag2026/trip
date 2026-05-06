@@ -1,6 +1,6 @@
 // Service Worker for Web Push Notifications
 self.addEventListener('push', function(event) {
-  let data = { title: '알림', body: '새로운 알림이 있습니다.', icon: '/favicon.ico' };
+  let data = { title: '알림', body: '새로운 알림이 있습니다.', icon: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/pwa-icon-192-nZvEU6ium9d2399JoxWmpV.png' };
   try {
     if (event.data) {
       data = Object.assign(data, event.data.json());
@@ -11,8 +11,8 @@ self.addEventListener('push', function(event) {
   
   const options = {
     body: data.body,
-    icon: data.icon || '/favicon.ico',
-    badge: data.badge || '/favicon.ico',
+    icon: data.icon || 'https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/pwa-icon-192-nZvEU6ium9d2399JoxWmpV.png',
+    badge: data.badge || 'https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/pwa-icon-192-nZvEU6ium9d2399JoxWmpV.png',
     vibrate: [200, 100, 200],
     data: data.data || { url: '/' },
     actions: data.actions || [],

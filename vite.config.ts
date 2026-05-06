@@ -174,8 +174,9 @@ const plugins = [
       dir: "ltr",
       icons: [
         { src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-favicon-3REJUhcKQJmrMLKTzWBvmh.png", sizes: "48x48", type: "image/png" },
-        { src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-25NAgjZMFgZ65SuCFd7Q9L.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
-        { src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/alpha-trip-icon-25NAgjZMFgZ65SuCFd7Q9L.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+        { src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/pwa-icon-192-nZvEU6ium9d2399JoxWmpV.png", sizes: "192x192", type: "image/png", purpose: "any" },
+        { src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/pwa-icon-512-5hPG6jZeogT7oSQPmY7qGw.png", sizes: "512x512", type: "image/png", purpose: "any" },
+        { src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/pwa-icon-maskable-CkrAKnSwy9uFjefuA5ZjEh.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
       ],
     },
     workbox: {

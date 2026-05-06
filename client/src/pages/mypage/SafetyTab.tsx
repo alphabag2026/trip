@@ -7,10 +7,42 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { AlertTriangle, Phone, Shield, Loader2, CheckCircle2, MapPin, Siren } from "lucide-react";
+import { AlertTriangle, Phone, Shield, Loader2, CheckCircle2, MapPin, Siren, Lock, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function SafetyTab() {
+  const { user } = useAuth();
+
+  // ── 비밀번호 변경 ──
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [pwChanging, setPwChanging] = useState(false);
+
+  const changePasswordMutation = trpc.auth.changePassword.useMutation({
+    onSuccess: () => {
+      toast.success("비밀번호가 변경되었습니다");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPwChanging(false);
+    },
+    onError: (err) => {
+      toast.error(err.message || "비밀번호 변경 실패");
+      setPwChanging(false);
+    },
+  });
+
+  const handleChangePassword = () => {
+    if (!currentPassword) { toast.error("현재 비밀번호를 입력해주세요"); return; }
+    if (newPassword.length < 8) { toast.error("새 비밀번호는 8자 이상이어야 합니다"); return; }
+    if (newPassword !== confirmPassword) { toast.error("새 비밀번호가 일치하지 않습니다"); return; }
+    setPwChanging(true);
+    changePasswordMutation.mutate({ currentPassword, newPassword });
+  };
 
   const [showSosDialog, setShowSosDialog] = useState(false);
   const [sosMessage, setSosMessage] = useState("");
@@ -200,6 +232,75 @@ export default function SafetyTab() {
           <Button onClick={handleSaveContact} disabled={contactSaving} className="w-full sm:w-auto">
             {contactSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Shield className="w-4 h-4 mr-2" />}
             비상 연락처 등록
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* 비밀번호 변경 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lock className="w-5 h-5" />
+            비밀번호 변경
+          </CardTitle>
+          <CardDescription>계정 보안을 위해 주기적으로 비밀번호를 변경해주세요</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">현재 비밀번호</Label>
+              <div className="relative">
+                <Input
+                  type={showCurrentPw ? "text" : "password"}
+                  placeholder="현재 비밀번호 입력"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPw(!showCurrentPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">새 비밀번호 (8자 이상)</Label>
+              <div className="relative">
+                <Input
+                  type={showNewPw ? "text" : "password"}
+                  placeholder="새 비밀번호 입력"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPw(!showNewPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">새 비밀번호 확인</Label>
+              <Input
+                type={showNewPw ? "text" : "password"}
+                placeholder="새 비밀번호 재입력"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                minLength={8}
+              />
+              {confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-xs text-red-500 mt-1">비밀번호가 일치하지 않습니다</p>
+              )}
+            </div>
+          </div>
+          <Button onClick={handleChangePassword} disabled={pwChanging} className="w-full sm:w-auto">
+            {pwChanging ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
+            비밀번호 변경
           </Button>
         </CardContent>
       </Card>
