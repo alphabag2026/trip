@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/_core/hooks/useAuth";
 import LanguageSelector from "@/components/LanguageSelector";
+import { TranslateButton } from "@/components/TranslateButton";
 
 export default function MeetupPortal() {
   const { t } = useTranslation();
@@ -190,6 +191,7 @@ export default function MeetupPortal() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">{meetup.description}</p>
+                  <TranslateButton text={meetup.description} variant="compact" className="mt-2" />
                 </CardContent>
               </Card>
             )}
@@ -536,8 +538,18 @@ function ScheduleListWithRsvp({ meetupId }: { meetupId: number }) {
                             {s.costPerPerson && <p>1인 비용: {s.costPerPerson}</p>}
                           </div>
                         )}
-                        {s.description && <p className="text-xs text-muted-foreground mt-1">{s.description}</p>}
-                        {s.notes && <p className="text-xs text-muted-foreground/70 mt-1 italic">{s.notes}</p>}
+                        {s.description && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <p className="text-xs text-muted-foreground">{s.description}</p>
+                            <TranslateButton text={s.description} variant="icon" />
+                          </div>
+                        )}
+                        {s.notes && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <p className="text-xs text-muted-foreground/70 italic">{s.notes}</p>
+                            <TranslateButton text={s.notes} variant="icon" />
+                          </div>
+                        )}
                         {s.locationUrl && (
                           <a href={s.locationUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline flex items-center gap-1 mt-1">
                             <MapPin className="w-3 h-3" /> 지도 보기

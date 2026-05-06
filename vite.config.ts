@@ -151,12 +151,13 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
+const isExternalBuild = process.env.EXTERNAL_BUILD === 'true';
+
 const plugins = [
   react(),
   tailwindcss(),
   jsxLocPlugin(),
-  vitePluginManusRuntime(),
-  vitePluginManusDebugCollector(),
+  ...(!isExternalBuild ? [vitePluginManusRuntime(), vitePluginManusDebugCollector()] : []),
   VitePWA({
     registerType: "autoUpdate",
     includeAssets: ["favicon.ico"],
@@ -234,31 +235,25 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // Vendor: React core
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
-            return 'vendor-react';
-          }
-          // Vendor: UI libraries (radix, lucide, sonner)
-          if (id.includes('node_modules/@radix-ui/') || id.includes('node_modules/lucide-react/') || id.includes('node_modules/sonner/')) {
-            return 'vendor-ui';
-          }
-          // Vendor: i18n
-          if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next')) {
-            return 'vendor-i18n';
-          }
-          // Vendor: tRPC + tanstack-query
-          if (id.includes('node_modules/@trpc/') || id.includes('node_modules/@tanstack/')) {
-            return 'vendor-data';
-          }
-          // Locale files are now dynamically imported - no manual chunk needed
-          // Admin pages: each page is already React.lazy, so NO manual chunk grouping.
-          // This lets Vite split each admin page into its own chunk automatically.
-          // DashboardLayout shared by all admin pages → separate chunk
-          if (id.includes('/components/DashboardLayout')) {
-            return 'admin-layout';
-          }
-        },
+        // For external deployment, let Vite/Rollup handle chunk splitting automatically
+        // to avoid circular dependency issues between manual chunks.
+        // The manualChunks config is only used in Manus dev environment.
+        ...(isExternalBuild ? {} : {
+          manualChunks(id: string) {
+            if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+              return 'vendor-react';
+            }
+            if (id.includes('node_modules/@radix-ui/') || id.includes('node_modules/lucide-react/') || id.includes('node_modules/sonner/') || id.includes('/components/DashboardLayout')) {
+              return 'vendor-ui';
+            }
+            if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next')) {
+              return 'vendor-i18n';
+            }
+            if (id.includes('node_modules/@trpc/') || id.includes('node_modules/@tanstack/')) {
+              return 'vendor-data';
+            }
+          },
+        }),
       },
     },
   },

@@ -4577,7 +4577,7 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
       }),
 
     // 텍스트 번역 (직접 입력)
-    translateText: protectedProcedure
+    translateText: publicProcedure
       .input(z.object({
         text: z.string().min(1).max(5000),
         targetLang: z.string(),
@@ -6919,7 +6919,7 @@ Keep the summary concise but comprehensive. Focus on substance, not small talk.`
 
   // ── Translator (통역) ───────────────────────────────────────
   translator: router({
-    translate: protectedProcedure
+    translate: publicProcedure
       .input(z.object({
         text: z.string().min(1).max(5000),
         sourceLang: z.string().min(2).max(5),

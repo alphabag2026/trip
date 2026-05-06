@@ -7,6 +7,7 @@ import { CalendarDays, MapPin, Clock, Bell, AlertTriangle, ArrowLeft } from "luc
 import { Link } from "wouter";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { TranslateButton } from "@/components/TranslateButton";
 
 export default function ScheduleView() {
   const { t } = useTranslation();
@@ -158,7 +159,12 @@ export default function ScheduleView() {
                             </span>
                           )}
                         </div>
-                        {event.description && <p className="text-sm text-muted-foreground mt-2">{event.description}</p>}
+                        {event.description && (
+                          <div>
+                            <p className="text-sm text-muted-foreground mt-2">{event.description}</p>
+                            <TranslateButton text={event.description} variant="icon" className="mt-1" />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
