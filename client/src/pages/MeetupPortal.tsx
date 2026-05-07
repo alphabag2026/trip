@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { MeetupShareModal } from "@/components/MeetupShareModal";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +36,7 @@ export default function MeetupPortal() {
 
   const [activeTab, setActiveTab] = useState("info");
   const [copied, setCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const shareUrl = useMemo(() => {
     if (typeof window === "undefined") return "";
@@ -224,9 +226,15 @@ export default function MeetupPortal() {
             {/* 공유 URL + QR 코드 */}
             <Card className="border-primary/20 bg-primary/5">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Share2 className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">{t("meetupPortal.shareUrl", "공유 URL")}</span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Share2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">{t("meetupPortal.shareUrl", "공유 URL")}</span>
+                  </div>
+                  <Button size="sm" variant="default" className="gap-1.5" onClick={() => setShowShareModal(true)}>
+                    <Send className="h-3.5 w-3.5" />
+                    {t("meetupPortal.shareRecommend", "추천글 공유")}
+                  </Button>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 items-center">
                   <div className="bg-white p-3 rounded-xl shadow-sm shrink-0">
@@ -297,12 +305,20 @@ export default function MeetupPortal() {
           <TabsContent value="chat" className="mt-6 space-y-4">
             <MeetupChat meetupId={meetup.id} meetupTitle={meetup.title} isAuthenticated={isAuthenticated} />
           </TabsContent>
-        </Tabs>
+         </Tabs>
       </div>
+      {/* 추천글 공유 모달 */}
+      {meetup && (
+        <MeetupShareModal
+          open={showShareModal}
+          onOpenChange={setShowShareModal}
+          meetup={meetup}
+          shareUrl={shareUrl}
+        />
+      )}
     </div>
   );
 }
-
 // 정보 행 컴포넌트
 function InfoRow({ icon: Icon, label, value, mono }: { icon: any; label: string; value: string; mono?: boolean }) {
   return (

@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { MeetupShareModal } from "@/components/MeetupShareModal";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle, Clock, UtensilsCrossed, Wine, Cigarette, Train, Car, Check, Sparkles, ScanLine, Camera, Loader2, Mail, Lock, UserCheck, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Plane, ArrowLeft, CheckCircle, Upload, Info, Luggage, AlertTriangle, Clock, UtensilsCrossed, Wine, Cigarette, Train, Car, Check, Sparkles, ScanLine, Camera, Loader2, Mail, Lock, UserCheck, ShieldAlert, ShieldCheck, Send } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
@@ -312,6 +313,12 @@ export default function Register() {
     }
   };
 
+  const [showShareModal, setShowShareModal] = useState(false);
+  const registerShareUrl = useMemo(() => {
+    if (typeof window === "undefined" || !selectedMeetup?.shareToken) return "";
+    return `${window.location.origin}/m/${selectedMeetup.shareToken}`;
+  }, [selectedMeetup]);
+
   if (submitted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -320,12 +327,32 @@ export default function Register() {
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">{t("register.successTitle")}</h2>
             <p className="text-muted-foreground mb-6">{t("register.successDesc")}</p>
+            {/* 추천글 공유 버튼 */}
+            {selectedMeetup && (
+              <Button
+                size="lg"
+                className="w-full gap-2 mb-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+                onClick={() => setShowShareModal(true)}
+              >
+                <Send className="h-5 w-5" />
+                {t("register.shareRecommend", "추천글 공유하기")}
+              </Button>
+            )}
             <div className="flex gap-3 justify-center">
               <Link href="/"><Button variant="outline">{t("register.goHome")}</Button></Link>
               <Link href="/lookup"><Button>{t("register.goLookup")}</Button></Link>
             </div>
           </CardContent>
         </Card>
+        {/* 추천글 공유 모달 */}
+        {selectedMeetup && (
+          <MeetupShareModal
+            open={showShareModal}
+            onOpenChange={setShowShareModal}
+            meetup={selectedMeetup}
+            shareUrl={registerShareUrl}
+          />
+        )}
       </div>
     );
   }
