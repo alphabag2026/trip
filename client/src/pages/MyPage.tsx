@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   User, BookOpen, History, ArrowLeft, Loader2, ArrowRight,
-  CreditCard, Ticket, ClipboardCheck, LogOut, Car, Shield, Bell,
+  CreditCard, Ticket, ClipboardCheck, LogOut, Car, Shield, Bell, Globe,
 } from "lucide-react";
 import { Link } from "wouter";
 import LanguageSelector from "@/components/LanguageSelector";
@@ -25,6 +25,7 @@ const TicketsTab = lazy(() => import("./mypage/TicketsTab"));
 const ChecklistTab = lazy(() => import("./mypage/ChecklistTab"));
 const TransportTab = lazy(() => import("./mypage/TransportTab"));
 const SafetyTab = lazy(() => import("./mypage/SafetyTab"));
+const TravelInfoTab = lazy(() => import("./mypage/TravelInfoTab"));
 
 function TabLoader() {
   return (
@@ -162,6 +163,9 @@ export default function MyPage() {
             <TabsTrigger value="safety" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
               <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabSafety", "안전/SOS")}</span><span className="sm:hidden">SOS</span>
             </TabsTrigger>
+            <TabsTrigger value="travelinfo" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
+              <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabTravelInfo", "여행지 정보")}</span><span className="sm:hidden">{t("myPage.tabTravelInfoShort", "여행지")}</span>
+            </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap shrink-0">
               <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden sm:inline">{t("myPage.tabNotifications", "알림")}</span><span className="sm:hidden">{t("myPage.tabNotificationsShort", "알림")}</span>
             </TabsTrigger>
@@ -212,6 +216,12 @@ export default function MyPage() {
           <TabsContent value="safety">
             <Suspense fallback={<TabLoader />}>
               <SafetyTab />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="travelinfo">
+            <Suspense fallback={<TabLoader />}>
+              <TravelInfoTab />
             </Suspense>
           </TabsContent>
 

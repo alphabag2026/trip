@@ -46,7 +46,7 @@ const ImmigrationChecklist = lazy(() => import("./pages/ImmigrationChecklist"));
 const BookingCenter = lazy(() => import("./pages/BookingCenter"));
 const MyBookings = lazy(() => import("./pages/MyBookings"));
 const ScheduleHub = lazy(() => import("./pages/ScheduleHub"));
-const RideHailing = lazy(() => import("./pages/RideHailing"));
+// const RideHailing = lazy(() => import("./pages/RideHailing")); // Grab removed
 const FoodDelivery = lazy(() => import("./pages/FoodDelivery"));
 const CommunityChat = lazy(() => import("./pages/CommunityChat"));
 const Notes = lazy(() => import("./pages/Notes"));
@@ -159,7 +159,7 @@ function PublicRouter() {
         <Route path="/self-booking" component={SelfBookingPortal} />
         <Route path="/organizer-setup" component={OrganizerQuickSetup} />
         <Route path="/schedule" component={ScheduleHub} />
-        <Route path="/ride" component={RideHailing} />
+        {/* <Route path="/ride" component={RideHailing} /> Grab removed */}
         <Route path="/delivery" component={FoodDelivery} />
         <Route path="/community" component={CommunityChat} />
         <Route path="/community/:roomId" component={CommunityChat} />

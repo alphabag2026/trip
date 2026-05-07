@@ -118,9 +118,7 @@ export default function VouchersTab() {
                   <Button variant="outline" size="sm" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${v.hotelLatitude},${v.hotelLongitude}`, "_blank")}>
                     <Navigation className="w-4 h-4 mr-1" />{t("myPage.directions")}
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => window.open(`https://grab.onelink.me/2695613898?af_dp=grab://open?screenType=BOOKING&dropOffLatitude=${v.hotelLatitude}&dropOffLongitude=${v.hotelLongitude}&dropOffAddress=${encodeURIComponent(v.hotelName)}`, "_blank")}>
-                    <ExternalLink className="w-4 h-4 mr-1" />{t("myPage.callGrab")}
-                  </Button>
+
                 </>
               ) : (
                 <Button variant="outline" size="sm" onClick={() => window.open(`https://www.google.com/maps/search/${encodeURIComponent(v.hotelAddress)}`, "_blank")}>

@@ -1,13 +1,13 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
-  Home as HomeIcon, CalendarDays, MessageCircle, Bot, Car, LogIn
+  Home as HomeIcon, CalendarDays, MessageCircle, Bot, User, LogIn
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 
 /**
  * 모바일 하단 네비게이션 바
- * - 5개 탭: 홈, 일정, 채팅, AI 도우미, 그랩
+ * - 5개 탭: 홈, 일정, 채팅, AI 도우미, 나의 정보
  * - md 이상에서는 숨김
  * - admin 페이지에서는 표시하지 않음
  */
@@ -35,7 +35,7 @@ export default function MobileBottomNav() {
         { icon: CalendarDays, label: t("nav.schedule", "일정"), href: "/schedule" },
         { icon: MessageCircle, label: t("nav.chat", "채팅"), href: "/community" },
         { icon: Bot, label: t("nav.ai", "AI 도우미"), href: "/chatbot" },
-        { icon: Car, label: t("nav.grab", "그랩"), href: "/ride" },
+        { icon: User, label: t("nav.mypage", "나의 정보"), href: "/my-page" },
       ]
     : [
         { icon: HomeIcon, label: t("nav.home", "홈"), href: "/" },

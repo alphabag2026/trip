@@ -65,7 +65,7 @@ const USER_ROW1: ServiceIcon[] = [
 
 const USER_ROW2: ServiceIcon[] = [
   { icon: Hotel, label: "home.u_hotel_info", href: "/booking", gradient: "from-rose-500 to-pink-600", ring: "ring-rose-200 dark:ring-rose-900" },
-  { icon: Car, label: "home.u_ride", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900", badge: "NEW" },
+  { icon: User, label: "home.u_myinfo", href: "/my-page", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900" },
   { icon: Globe, label: "home.u_country", href: "/countries", gradient: "from-emerald-500 to-cyan-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
   { icon: Map, label: "home.u_map", href: "/nearby", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900", tourId: "nearby" },
 ];
@@ -93,7 +93,7 @@ const ORG_ROW1: ServiceIcon[] = [
 
 const ORG_ROW2: ServiceIcon[] = [
   { icon: Train, label: "home.o_rail", href: "/booking", gradient: "from-slate-500 to-gray-600", ring: "ring-slate-200 dark:ring-slate-900" },
-  { icon: Car, label: "home.o_vehicle", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900" },
+  { icon: CalendarDays, label: "home.o_schedule", href: "/schedule", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900" },
   { icon: Globe, label: "home.o_country", href: "/countries", gradient: "from-emerald-500 to-cyan-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
   { icon: Megaphone, label: "home.o_announce", href: "/community", gradient: "from-amber-500 to-orange-600", ring: "ring-amber-200 dark:ring-amber-900" },
 ];
@@ -113,8 +113,8 @@ const ORG_EXTRA: ServiceIcon[] = [
 // 기사(driver) - 배차 현황 중심
 // ═══════════════════════════════════════════════════════
 const DRIVER_ROW1: ServiceIcon[] = [
-  { icon: Car, label: "home.d_today_pickup", href: "/ride", gradient: "from-blue-500 to-indigo-600", ring: "ring-blue-200 dark:ring-blue-900" },
-  { icon: Navigation, label: "home.d_route", href: "/ride", gradient: "from-emerald-500 to-teal-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
+  { icon: Car, label: "home.d_today_pickup", href: "/driver-dashboard", gradient: "from-blue-500 to-indigo-600", ring: "ring-blue-200 dark:ring-blue-900" },
+  { icon: Navigation, label: "home.d_route", href: "/driver-dashboard", gradient: "from-emerald-500 to-teal-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
   { icon: CalendarDays, label: "home.d_schedule", href: "/schedule", gradient: "from-violet-500 to-purple-600", ring: "ring-violet-200 dark:ring-violet-900" },
   { icon: Phone, label: "home.d_contact", href: "/community", gradient: "from-sky-500 to-cyan-600", ring: "ring-sky-200 dark:ring-sky-900" },
 ];
@@ -154,7 +154,7 @@ const GUEST_ROW1: ServiceIcon[] = [
 ];
 
 const GUEST_ROW2: ServiceIcon[] = [
-  { icon: Car, label: "home.g_ride", href: "/ride", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900" },
+  { icon: CalendarDays, label: "home.g_schedule", href: "/schedule", gradient: "from-purple-500 to-fuchsia-600", ring: "ring-purple-200 dark:ring-purple-900" },
   { icon: Globe, label: "home.g_country", href: "/countries", gradient: "from-emerald-500 to-cyan-600", ring: "ring-emerald-200 dark:ring-emerald-900" },
   { icon: Bot, label: "home.g_ai", href: "/chatbot", gradient: "from-cyan-500 to-blue-600", ring: "ring-cyan-200 dark:ring-cyan-900" },
   { icon: Map, label: "home.g_map", href: "/nearby", gradient: "from-teal-500 to-green-600", ring: "ring-teal-200 dark:ring-teal-900" },
@@ -246,7 +246,7 @@ function getServiceMenus(role: string | undefined, isAuthenticated: boolean, t: 
         desc: t("home.svc_guest_desc", "로그인 없이 체험해보세요"),
         items: [
           { icon: ClipboardList, color: "text-blue-500", label: t("home.u_apply"), href: "/register" },
-          { icon: Car, color: "text-purple-500", label: t("home.g_ride"), href: "/ride", badge: "NEW" },
+          { icon: CalendarDays, color: "text-purple-500", label: t("home.g_schedule", "일정"), href: "/schedule", badge: "NEW" },
           { icon: UtensilsCrossed, color: "text-orange-500", label: t("home.g_delivery"), href: "/delivery", badge: "NEW" },
           { icon: Bot, color: "text-cyan-500", label: t("home.g_ai"), href: "/chatbot" },
         ],
@@ -261,8 +261,8 @@ function getServiceMenus(role: string | undefined, isAuthenticated: boolean, t: 
         title: t("home.svc_driver_pickup_title", "오늘의 픽업"),
         desc: t("home.svc_driver_pickup_desc", "배정된 픽업 스케줄"),
         items: [
-          { icon: Car, color: "text-blue-500", label: t("home.d_today_pickup", "오늘 배차"), href: "/ride" },
-          { icon: Navigation, color: "text-emerald-500", label: t("home.d_route", "경로 안내"), href: "/ride" },
+          { icon: Car, color: "text-blue-500", label: t("home.d_today_pickup", "오늘 배차"), href: "/driver-dashboard" },
+          { icon: Navigation, color: "text-emerald-500", label: t("home.d_route", "경로 안내"), href: "/driver-dashboard" },
           { icon: Users, color: "text-rose-500", label: t("home.d_passengers", "탑승자 목록"), href: "/lookup" },
           { icon: CalendarDays, color: "text-violet-500", label: t("home.d_schedule", "일정"), href: "/schedule" },
         ],
@@ -327,7 +327,7 @@ function getServiceMenus(role: string | undefined, isAuthenticated: boolean, t: 
         title: t("home.svc_org_ops_title", "운영 도구"),
         desc: t("home.svc_org_ops_desc", "차량, 소통, 공지를 관리"),
         items: [
-          { icon: Car, color: "text-purple-500", label: t("home.o_vehicle"), href: "/ride" },
+          { icon: Car, color: "text-purple-500", label: t("home.o_vehicle"), href: "/admin" },
           { icon: Megaphone, color: "text-amber-500", label: t("home.o_announce"), href: "/community" },
           { icon: MessageCircle, color: "text-sky-500", label: t("home.o_comms"), href: "/community" },
           { icon: Languages, color: "text-cyan-500", label: t("home.o_translator"), href: "/translator", badge: "NEW" },
@@ -356,7 +356,7 @@ function getServiceMenus(role: string | undefined, isAuthenticated: boolean, t: 
       title: t("home.svc_user_onsite_title", "현장 서비스"),
       desc: t("home.svc_user_onsite_desc", "도착 후 필요한 모든 것"),
       items: [
-        { icon: Car, color: "text-purple-500", label: t("home.u_ride"), href: "/ride", badge: "NEW" },
+        { icon: CalendarDays, color: "text-purple-500", label: t("home.u_schedule", "일정"), href: "/schedule", badge: "NEW" },
         { icon: UtensilsCrossed, color: "text-orange-500", label: t("home.u_delivery"), href: "/delivery", badge: "NEW" },
         { icon: Hotel, color: "text-rose-500", label: t("home.u_hotel_info"), href: "/booking" },
         { icon: Map, color: "text-teal-500", label: t("home.u_map"), href: "/nearby" },
@@ -615,8 +615,8 @@ export default function Home() {
             <PromoCarousel
               slides={[
                 { id: "usdt", imageUrl: IMAGES.promoUsdt, href: "/booking" },
-                { id: "vat", imageUrl: IMAGES.promoVat, href: "/ride" },
-                { id: "ride", imageUrl: IMAGES.promoRide, href: "/ride" },
+                { id: "vat", imageUrl: IMAGES.promoVat, href: "/schedule" },
+                { id: "ride", imageUrl: IMAGES.promoRide, href: "/schedule" },
                 { id: "delivery", imageUrl: IMAGES.promoDelivery, href: "/delivery" },
                 { id: "cruise", imageUrl: IMAGES.promoCruise, href: "/booking" },
               ]}
@@ -894,7 +894,7 @@ export default function Home() {
           <p className="text-xs text-muted-foreground mb-4">{t("home.footer_desc", "글로벌 밋업 & 출장 관리 플랫폼")}</p>
           <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
             <Link href="/register" className="hover:text-foreground transition-colors">{t("home.u_apply", "밋업 신청")}</Link>
-            <Link href="/ride" className="hover:text-foreground transition-colors">{t("home.u_ride", "차량 호출")}</Link>
+            <Link href="/schedule" className="hover:text-foreground transition-colors">{t("home.u_schedule", "일정")}</Link>
             <Link href="/delivery" className="hover:text-foreground transition-colors">{t("home.u_delivery", "음식 배달")}</Link>
             <a href="https://t.me/alphatrip" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Telegram</a>
           </div>

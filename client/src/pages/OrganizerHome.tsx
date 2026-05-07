@@ -618,9 +618,9 @@ export default function OrganizerHome() {
             <Bot className="h-5 w-5" />
             <span className="text-[10px] font-medium">{t("nav.ai", "AI 도우미")}</span>
           </Link>
-          <Link href="/ride" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground hover:text-foreground transition-colors">
-            <Car className="h-5 w-5" />
-            <span className="text-[10px] font-medium">{t("nav.grab", "그랩")}</span>
+          <Link href="/my-page" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground hover:text-foreground transition-colors">
+            <User className="h-5 w-5" />
+            <span className="text-[10px] font-medium">{t("nav.mypage", "나의 정보")}</span>
           </Link>
         </div>
       </nav>

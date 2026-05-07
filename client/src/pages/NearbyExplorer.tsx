@@ -1184,19 +1184,7 @@ export default function NearbyExplorer() {
                     <ExternalLink className="h-4 w-4 mr-1.5" />
                     {t("nearby.google_maps", "Google Maps")}
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() =>
-                      window.open(
-                        `https://grab.onelink.me/2695613898?af_dp=grab://open?screenType=BOOKING&dropOffLatitude=${selectedPlace.lat}&dropOffLongitude=${selectedPlace.lng}`,
-                        "_blank"
-                      )
-                    }
-                  >
-                    <Navigation className="h-4 w-4 mr-1.5" />
-                    {t("nearby.grab", "Grab")}
-                  </Button>
+
                   {selectedPlace.website && (
                     <Button
                       variant="outline"

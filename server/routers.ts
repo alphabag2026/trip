@@ -7646,6 +7646,63 @@ Return ONLY valid JSON.`,
       }
       return results;
     }),
+    // 여행지 정보 조회 (등록된 밋업의 목적지 기반)
+    travelInfo: protectedProcedure.query(async ({ ctx }) => {
+      const regs = await db.getRegistrations({ userId: ctx.user.id });
+      if (!regs.length) return null;
+      const latestReg = regs[regs.length - 1];
+      const meetup = await db.getMeetupById(latestReg.meetupId!);
+      if (!meetup) return null;
+      const destination = (meetup as any).destination || meetup.location || "";
+      const travelMeta = (meetup as any).travelMeta;
+      if (travelMeta && typeof travelMeta === "object") {
+        return {
+          country: travelMeta.country || "",
+          city: travelMeta.city || destination,
+          timezone: travelMeta.timezone || "UTC+7",
+          currency: travelMeta.currency || "THB",
+          currencySymbol: travelMeta.currencySymbol || "\u0e3f",
+          language: travelMeta.language || "Thai",
+          emergencyNumber: travelMeta.emergencyNumber || "191",
+          policeNumber: travelMeta.policeNumber || "191",
+          ambulanceNumber: travelMeta.ambulanceNumber || "1669",
+          embassyPhone: travelMeta.embassyPhone || "",
+          electricPlug: travelMeta.electricPlug || "Type A/B/C",
+          voltage: travelMeta.voltage || "220V",
+          tipping: travelMeta.tipping || "",
+          waterSafety: travelMeta.waterSafety || "",
+          visaInfo: travelMeta.visaInfo || "",
+          transportTips: travelMeta.transportTips || "",
+          wifiInfo: travelMeta.wifiInfo || "",
+          usefulLinks: travelMeta.usefulLinks || [],
+        };
+      }
+      // 기본 태국 여행 정보
+      return {
+        country: "Thailand",
+        city: destination || "Bangkok",
+        timezone: "UTC+7 (ICT)",
+        currency: "THB (Thai Baht)",
+        currencySymbol: "\u0e3f",
+        language: "Thai (ไทย)",
+        emergencyNumber: "191",
+        policeNumber: "191",
+        ambulanceNumber: "1669",
+        embassyPhone: "+66-2-247-7537",
+        electricPlug: "Type A/B/C",
+        voltage: "220V / 50Hz",
+        tipping: "타이에서는 팁 문화가 일반적이지 않지만, 고급 레스토랑에서는 10% 정도가 적절합니다.",
+        waterSafety: "수돗물은 마시지 마세요. 병입 생수를 구매하세요.",
+        visaInfo: "한국 여권 소지자는 90일 무비자 입국 가능합니다.",
+        transportTips: "BTS/MRT 지하철, Grab 택시, 툭툭 이용 가능. 미터기 택시는 피하세요.",
+        wifiInfo: "공항에서 SIM 카드 구매 가능 (AIS, DTAC, TrueMove). 7일 299바트부터.",
+        usefulLinks: [
+          { title: "태국 관광청", url: "https://www.tourismthailand.org" },
+          { title: "환율 계산기", url: "https://www.xe.com/currencyconverter/convert/?From=KRW&To=THB" },
+          { title: "날씨 예보", url: "https://weather.com" },
+        ],
+      };
+    }),
   }),
 
   // ── Excel Templates & Export ─────────────────────────────
