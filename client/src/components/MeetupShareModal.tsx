@@ -1,12 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   Copy, MessageCircle, Send, X, Check, ChevronRight,
-  Globe, Gift, Rocket, FileText, Sparkles
+  Globe, Gift, Rocket, FileText, Sparkles, Pencil, RotateCcw
 } from "lucide-react";
 
 interface MeetupData {
@@ -47,6 +48,9 @@ export function MeetupShareModal({ open, onOpenChange, meetup, shareUrl }: Meetu
   const [step, setStep] = useState<"select" | "share">("select");
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [generatedText, setGeneratedText] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [originalText, setOriginalText] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const formatDate = (d: string | Date | null | undefined) => {
     if (!d) return "";
@@ -206,9 +210,22 @@ export function MeetupShareModal({ open, onOpenChange, meetup, shareUrl }: Meetu
     const template = templates.find(t => t.id === templateId);
     if (template) {
       setSelectedTemplate(templateId);
-      setGeneratedText(template.generate(meetup, shareUrl));
+      const text = template.generate(meetup, shareUrl);
+      setGeneratedText(text);
+      setOriginalText(text);
+      setIsEditing(false);
       setStep("share");
     }
+  };
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  };
+
+  const handleResetText = () => {
+    setGeneratedText(originalText);
+    setIsEditing(false);
   };
 
   const handleBack = () => {
@@ -257,6 +274,8 @@ export function MeetupShareModal({ open, onOpenChange, meetup, shareUrl }: Meetu
     setStep("select");
     setSelectedTemplate(null);
     setGeneratedText("");
+    setOriginalText("");
+    setIsEditing(false);
     onOpenChange(false);
   };
 
@@ -305,13 +324,58 @@ export function MeetupShareModal({ open, onOpenChange, meetup, shareUrl }: Meetu
         ) : (
           /* Step 2: 공유 방법 선택 */
           <div className="p-4 space-y-4">
-            {/* 생성된 추천글 미리보기 */}
+            {/* 생성된 추천글 미리보기 / 편집 */}
             <div className="relative">
-              <ScrollArea className="max-h-[150px] rounded-lg border border-border bg-muted/30 p-3">
-                <pre className="text-xs whitespace-pre-wrap text-foreground font-sans leading-relaxed">
-                  {generatedText}
-                </pre>
-              </ScrollArea>
+              {isEditing ? (
+                <Textarea
+                  ref={textareaRef}
+                  value={generatedText}
+                  onChange={(e) => setGeneratedText(e.target.value)}
+                  className="min-h-[150px] max-h-[200px] text-xs font-sans leading-relaxed resize-none bg-muted/30 border-primary/50"
+                  placeholder={t("meetupShare.editPlaceholder", "추천글을 자유롭게 수정하세요...")}
+                />
+              ) : (
+                <ScrollArea className="max-h-[150px] rounded-lg border border-border bg-muted/30 p-3">
+                  <pre className="text-xs whitespace-pre-wrap text-foreground font-sans leading-relaxed">
+                    {generatedText}
+                  </pre>
+                </ScrollArea>
+              )}
+              {/* 편집/초기화 버튼 */}
+              <div className="flex items-center gap-1 mt-2">
+                {!isEditing ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+                    onClick={handleStartEdit}
+                  >
+                    <Pencil className="w-3 h-3" />
+                    {t("meetupShare.editText", "수정하기")}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+                    onClick={() => setIsEditing(false)}
+                  >
+                    <Check className="w-3 h-3" />
+                    {t("meetupShare.doneEdit", "완료")}
+                  </Button>
+                )}
+                {generatedText !== originalText && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive gap-1"
+                    onClick={handleResetText}
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    {t("meetupShare.resetText", "초기화")}
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* 공유 방법 그리드 */}

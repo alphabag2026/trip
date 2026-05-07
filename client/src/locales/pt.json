@@ -4892,5 +4892,12 @@
   "meetupShare.twitter": "X (Twitter)",
   "meetupShare.backToTemplates": "Select another template",
   "meetupPortal.shareRecommend": "Share Recommendation",
-  "register.shareRecommend": "Share Recommendation"
+  "register.shareRecommend": "Share Recommendation",
+  "translate.showOriginal": "Show Original",
+  "translate.showTranslation": "Show Translation",
+  "translate.originalText": "Original",
+  "meetupShare.editText": "Edit",
+  "meetupShare.doneEdit": "Done",
+  "meetupShare.resetText": "Reset",
+  "meetupShare.editPlaceholder": "Edit the recommendation text freely..."
 }

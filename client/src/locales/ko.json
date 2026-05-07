@@ -4121,5 +4121,12 @@
   "meetupShare.twitter": "X (트위터)",
   "meetupShare.backToTemplates": "다른 추천글 선택",
   "meetupPortal.shareRecommend": "추천글 공유",
-  "register.shareRecommend": "추천글 공유하기"
+  "register.shareRecommend": "추천글 공유하기",
+  "translate.showOriginal": "원문 보기",
+  "translate.showTranslation": "번역 보기",
+  "translate.originalText": "원문",
+  "meetupShare.editText": "수정하기",
+  "meetupShare.doneEdit": "완료",
+  "meetupShare.resetText": "초기화",
+  "meetupShare.editPlaceholder": "추천글을 자유롭게 수정하세요..."
 }
