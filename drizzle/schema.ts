@@ -2300,3 +2300,14 @@ export const userAccommodations = mysqlTable("user_accommodations", {
 });
 export type UserAccommodation = typeof userAccommodations.$inferSelect;
 export type InsertUserAccommodation = typeof userAccommodations.$inferInsert;
+
+// ── 번역 캐시 테이블 ──────────────────────────────────────────────────────────
+export const translationCache = mysqlTable("translation_cache", {
+  id: int("id").autoincrement().primaryKey(),
+  sourceHash: varchar("source_hash", { length: 64 }).notNull(),
+  targetLang: varchar("target_lang", { length: 10 }).notNull(),
+  sourceText: text("source_text").notNull(),
+  translatedText: text("translated_text").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type TranslationCache = typeof translationCache.$inferSelect;

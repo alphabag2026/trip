@@ -28,6 +28,12 @@ import {
   type HotelSearchParams,
 } from "./affiliateHelper";
 
+import { createHash } from "crypto";
+
+// ── 환율 API 메모리 캐시 (10분 TTL) ──────────────────────────────────────────
+const exchangeRateCache: { data: any; timestamp: number; key: string } = { data: null, timestamp: 0, key: "" };
+const EXCHANGE_RATE_CACHE_TTL = 10 * 60 * 1000; // 10분
+
 // adminProcedure: admin, superadmin, organizer 모두 접근 가능 (행사 운영 메뉴)
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   const allowed = ["admin", "superadmin", "organizer"];
@@ -4544,7 +4550,7 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         return { id, url };
       }),
 
-    // 메시지 번역 (LLM 기반)
+    // 메시지 번역 (LLM 기반 + DB 캐싱)
     translate: protectedProcedure
       .input(z.object({
         messageId: z.number(),
@@ -4553,6 +4559,12 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
       .mutation(async ({ input }) => {
         const msg = await db.getChatMessageById(input.messageId);
         if (!msg || !msg.content) throw new TRPCError({ code: "NOT_FOUND" });
+        // DB 캐시 확인
+        const sourceHash = createHash("md5").update(msg.content).digest("hex");
+        const cached = await db.getTranslationFromCache(sourceHash, input.targetLang);
+        if (cached) {
+          return { translated: cached.translatedText, originalLang: msg.originalLang || "unknown", targetLang: input.targetLang, cached: true };
+        }
         try {
           const langNames: Record<string, string> = {
             ko: "Korean", en: "English", ja: "Japanese", zh: "Chinese", th: "Thai",
@@ -4570,13 +4582,15 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
             ],
           });
           const translated = response.choices[0]?.message?.content || msg.content;
-          return { translated, originalLang: msg.originalLang || "unknown", targetLang: input.targetLang };
+          // DB 캐시 저장
+          await db.saveTranslationToCache(sourceHash, input.targetLang, msg.content as string, translated as string);
+          return { translated, originalLang: msg.originalLang || "unknown", targetLang: input.targetLang, cached: false };
         } catch {
           return { translated: msg.content, originalLang: "unknown", targetLang: input.targetLang };
         }
       }),
 
-    // 텍스트 번역 (직접 입력)
+    // 텍스트 번역 (직접 입력 + DB 캐싱)
     translateText: publicProcedure
       .input(z.object({
         text: z.string().min(1).max(5000),
@@ -4584,6 +4598,12 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         sourceLang: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
+        // DB 캐시 확인
+        const sourceHash = createHash("md5").update(input.text).digest("hex");
+        const cached = await db.getTranslationFromCache(sourceHash, input.targetLang);
+        if (cached) {
+          return { translated: cached.translatedText, targetLang: input.targetLang, cached: true };
+        }
         try {
           const langNames: Record<string, string> = {
             ko: "Korean", en: "English", ja: "Japanese", zh: "Chinese", th: "Thai",
@@ -4602,7 +4622,9 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
             ],
           });
           const translated = response.choices[0]?.message?.content || input.text;
-          return { translated, targetLang: input.targetLang };
+          // DB 캐시 저장
+          await db.saveTranslationToCache(sourceHash, input.targetLang, input.text, translated as string);
+          return { translated, targetLang: input.targetLang, cached: false };
         } catch {
           return { translated: input.text, targetLang: input.targetLang };
         }
@@ -7743,6 +7765,12 @@ Return ONLY valid JSON.`,
       .query(async ({ input }) => {
         const c1 = input?.currency1 || "KRW";
         const c2 = input?.currency2 || "THB";
+        const cacheKey = `${c1}_${c2}`;
+        const now = Date.now();
+        // 캐시 히트: 같은 통화 조합이고 10분 이내
+        if (exchangeRateCache.data && exchangeRateCache.key === cacheKey && (now - exchangeRateCache.timestamp) < EXCHANGE_RATE_CACHE_TTL) {
+          return { ...exchangeRateCache.data, cached: true };
+        }
         try {
           const ratesRes = await fetch(`https://open.er-api.com/v6/latest/USD`);
           const ratesData = await ratesRes.json();
@@ -7752,7 +7780,7 @@ Return ONLY valid JSON.`,
             const usdtFetch = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=usd,${c1.toLowerCase()},${c2.toLowerCase()}`);
             usdtData = await usdtFetch.json();
           } catch {}
-          return {
+          const result = {
             base: "USD",
             rates: {
               [c1]: rates[c1] || null,
@@ -7760,8 +7788,18 @@ Return ONLY valid JSON.`,
             },
             usdt: usdtData?.tether || { usd: 1 },
             lastUpdate: ratesData.time_last_update_utc || new Date().toISOString(),
+            cached: false,
           };
+          // 캐시 저장
+          exchangeRateCache.data = result;
+          exchangeRateCache.timestamp = now;
+          exchangeRateCache.key = cacheKey;
+          return result;
         } catch {
+          // 캐시가 있으면 만료되었더라도 반환
+          if (exchangeRateCache.data && exchangeRateCache.key === cacheKey) {
+            return { ...exchangeRateCache.data, cached: true, stale: true };
+          }
           return null;
         }
       }),

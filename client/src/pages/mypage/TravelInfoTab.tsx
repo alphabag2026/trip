@@ -14,7 +14,7 @@ import {
   Utensils, ShieldCheck, Ambulance, Building2, Train,
   CloudSun, CloudRain, Cloud, Sun, Wind, Droplets,
   TrendingUp, TrendingDown, ArrowUpDown, RefreshCw,
-  Hotel, Plus, Pencil, Trash2, CalendarDays, DoorOpen,
+  Hotel, Plus, Pencil, Trash2, CalendarDays, DoorOpen, Navigation, Car,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -523,7 +523,29 @@ function AccommodationCard({ accommodations, isLoading, showForm, setShowForm, e
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <p className="font-medium text-sm">{acc.hotelName}</p>
-                  {acc.hotelAddress && <p className="text-xs text-muted-foreground mt-0.5">{acc.hotelAddress}</p>}
+                  {acc.hotelAddress && (
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <p className="text-xs text-muted-foreground flex-1">{acc.hotelAddress}</p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 shrink-0"
+                        title={t("myPage.openGoogleMaps", "구글맵 열기")}
+                        onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(acc.hotelAddress)}`, "_blank")}
+                      >
+                        <Navigation className="w-3 h-3 text-blue-500" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 shrink-0"
+                        title={t("myPage.openGrab", "그랩으로 길찾기")}
+                        onClick={() => window.open(`https://grab.onelink.me/2695613898?af_dp=grab://open?screenType=BOOKING&dropOffAddress=${encodeURIComponent(acc.hotelAddress)}&af_force_deeplink=true&af_web_dp=https://www.grab.com`, "_blank")}
+                      >
+                        <Car className="w-3 h-3 text-green-500" />
+                      </Button>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2 mt-2">
                     {acc.checkInDate && (
                       <Badge variant="outline" className="text-[10px] gap-1">

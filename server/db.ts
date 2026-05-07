@@ -4163,3 +4163,20 @@ export async function deleteUserAccommodation(id: number, userId: number) {
   await db.delete(userAccommodations).where(and(eq(userAccommodations.id, id), eq(userAccommodations.userId, userId)));
 }
 export { userAccommodations } from "../drizzle/schema";
+
+// ── Translation Cache ──────────────────────────────────────────────────────────
+import { translationCache } from "../drizzle/schema";
+export { translationCache } from "../drizzle/schema";
+
+export async function getTranslationFromCache(sourceHash: string, targetLang: string) {
+  const db = await getDb(); if (!db) return null;
+  const rows = await db.select().from(translationCache)
+    .where(and(eq(translationCache.sourceHash, sourceHash), eq(translationCache.targetLang, targetLang)))
+    .limit(1);
+  return rows[0] || null;
+}
+
+export async function saveTranslationToCache(sourceHash: string, targetLang: string, sourceText: string, translatedText: string) {
+  const db = await getDb(); if (!db) return;
+  await db.insert(translationCache).values({ sourceHash, targetLang, sourceText, translatedText });
+}
