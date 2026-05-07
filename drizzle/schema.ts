@@ -2280,3 +2280,23 @@ export const eventCheckins = mysqlTable("event_checkins", {
 });
 export type EventCheckin = typeof eventCheckins.$inferSelect;
 export type InsertEventCheckin = typeof eventCheckins.$inferInsert;
+
+// ── User Accommodations (사용자 직접 입력 숙박 정보) ────────────────────────
+export const userAccommodations = mysqlTable("user_accommodations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  hotelName: varchar("hotelName", { length: 255 }).notNull(),
+  hotelAddress: text("hotelAddress"),
+  checkInDate: varchar("checkInDate", { length: 20 }),
+  checkInTime: varchar("checkInTime", { length: 10 }),
+  checkOutDate: varchar("checkOutDate", { length: 20 }),
+  checkOutTime: varchar("checkOutTime", { length: 10 }),
+  bookingId: varchar("bookingId", { length: 100 }),
+  roomType: varchar("roomType", { length: 100 }),
+  phone: varchar("phone", { length: 100 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type UserAccommodation = typeof userAccommodations.$inferSelect;
+export type InsertUserAccommodation = typeof userAccommodations.$inferInsert;

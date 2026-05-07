@@ -889,13 +889,24 @@ function RemoteVideo({ stream }: { stream: MediaStream }) {
 }
 
 // ── 메시지 버블 ────────────────────────────────────────────
-function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onUnpin, myLang }: {
-  msg: any; isMe: boolean; isAdmin: boolean; user: any; onReply: (m: any) => void; onDelete: (id: number) => void; onPin?: (id: number) => void; onUnpin?: (id: number) => void; myLang: string;
+function MessageBubble({ msg, isMe, isAdmin, user, onReply, onDelete, onPin, onUnpin, myLang, autoTranslate }: {
+  msg: any; isMe: boolean; isAdmin: boolean; user: any; onReply: (m: any) => void; onDelete: (id: number) => void; onPin?: (id: number) => void; onUnpin?: (id: number) => void; myLang: string; autoTranslate?: boolean;
 }) {
   const { t } = useTranslation();
   const [showTranslation, setShowTranslation] = useState(false);
   const translateMutation = trpc.chatMessage.translate.useMutation();
   const [translated, setTranslated] = useState("");
+  const [autoTranslated, setAutoTranslated] = useState(false);
+
+  // 자동번역: autoTranslate가 true이고 내 메시지가 아니면 자동으로 번역
+  useEffect(() => {
+    if (autoTranslate && !isMe && msg.messageType === "text" && msg.content && !translated && !autoTranslated) {
+      setAutoTranslated(true);
+      translateMutation.mutate({ messageId: msg.id, targetLang: myLang }, {
+        onSuccess: (r) => { setTranslated(r.translated as string); setShowTranslation(true); },
+      });
+    }
+  }, [autoTranslate, isMe, msg.id, msg.messageType, msg.content, myLang]);
 
   const handleTranslate = () => {
     if (translated) { setShowTranslation(!showTranslation); return; }
@@ -1066,6 +1077,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
   const [showPinnedList, setShowPinnedList] = useState(false);
   const [mediaFilter, setMediaFilter] = useState<"all" | "image" | "video" | "file">("all");
   const [myLang, setMyLang] = useState("ko");
+  const [autoTranslate, setAutoTranslate] = useState(false);
   const [activeCall, setActiveCall] = useState<{ callId: string; callType: "voice" | "video"; callerName: string; isOutgoing: boolean } | null>(null);
   const [groupCall, setGroupCall] = useState<{ callId: string; callType: "voice" | "video" } | null>(null);
   const [showAppDownload, setShowAppDownload] = useState(false);
@@ -1451,6 +1463,9 @@ function ChatRoomView({ roomId }: { roomId: number }) {
             <DropdownMenuItem onClick={() => setShowTranslator(!showTranslator)}>
               <Languages className="h-4 w-4 mr-2" /> {t("communityChat.t46", "통번역기")}
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { setAutoTranslate(!autoTranslate); toast.success(autoTranslate ? "자동번역 OFF" : `자동번역 ON (${LANGUAGES.find(l => l.code === myLang)?.name || myLang})`); }}>
+              <Zap className="h-4 w-4 mr-2" /> {t("communityChat.autoTranslate", "자동번역")} {autoTranslate ? "✓" : ""}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleAiSummarize} disabled={aiSummarizeMutation.isPending}>
               <FileSearch className="h-4 w-4 mr-2" /> {aiSummarizeMutation.isPending ? t("communityChat.aiSummarizing", "AI 요약 중...") : t("communityChat.aiSummaryBtn", "AI 대화 요약")}
             </DropdownMenuItem>
@@ -1491,6 +1506,14 @@ function ChatRoomView({ roomId }: { roomId: number }) {
         </div>
       )}
 
+      {/* 자동번역 활성화 배너 */}
+      {autoTranslate && (
+        <div className="px-4 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center gap-2">
+          <Zap className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+          <span className="text-xs text-blue-300 flex-1">{t("communityChat.autoTranslateActive", "자동번역 활성화됨")} ({LANGUAGES.find(l => l.code === myLang)?.flag} {LANGUAGES.find(l => l.code === myLang)?.name})</span>
+          <Button variant="ghost" size="sm" className="h-6 text-xs text-blue-400" onClick={() => setAutoTranslate(false)}>OFF</Button>
+        </div>
+      )}
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
         {messages?.map((msg: any) => (
@@ -1505,6 +1528,7 @@ function ChatRoomView({ roomId }: { roomId: number }) {
             onPin={(id) => pinMutation.mutate({ messageId: id })}
             onUnpin={(id) => unpinMutation.mutate({ messageId: id })}
             myLang={myLang}
+            autoTranslate={autoTranslate}
           />
         ))}
       </div>

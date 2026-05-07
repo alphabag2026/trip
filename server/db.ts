@@ -78,6 +78,7 @@ import {
   snsPosts, InsertSnsPost,
   snsTemplates, InsertSnsTemplate,
   eventCheckins, InsertEventCheckin,
+  userAccommodations, InsertUserAccommodation,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -4142,3 +4143,23 @@ export async function deleteEventCheckin(id: number) {
   const db = await getDb(); if (!db) throw new Error("DB not available");
   await db.delete(eventCheckins).where(eq(eventCheckins.id, id));
 }
+
+// ── User Accommodations (사용자 직접 입력 숙박 정보) ────────────────────────
+export async function getUserAccommodations(userId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(userAccommodations).where(eq(userAccommodations.userId, userId)).orderBy(desc(userAccommodations.createdAt));
+}
+export async function createUserAccommodation(data: InsertUserAccommodation) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const [result] = await db.insert(userAccommodations).values(data);
+  return result.insertId;
+}
+export async function updateUserAccommodation(id: number, userId: number, data: Partial<InsertUserAccommodation>) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.update(userAccommodations).set(data).where(and(eq(userAccommodations.id, id), eq(userAccommodations.userId, userId)));
+}
+export async function deleteUserAccommodation(id: number, userId: number) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(userAccommodations).where(and(eq(userAccommodations.id, id), eq(userAccommodations.userId, userId)));
+}
+export { userAccommodations } from "../drizzle/schema";

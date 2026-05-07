@@ -7703,8 +7703,136 @@ Return ONLY valid JSON.`,
         ],
       };
     }),
+    // ── 실시간 날씨 API (Open-Meteo) ──────────────────────────────────────
+    weather: protectedProcedure
+      .input(z.object({
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+      }).optional())
+      .query(async ({ ctx, input }) => {
+        let lat = input?.latitude || 13.7563;
+        let lon = input?.longitude || 100.5018;
+        let cityName = "Bangkok";
+        try {
+          const regs = await db.getRegistrations({ userId: ctx.user.id });
+          if (regs.length) {
+            const latestReg = regs[regs.length - 1];
+            const meetup = await db.getMeetupById(latestReg.meetupId!);
+            if (meetup) {
+              const loc = (meetup as any).location || "";
+              if (loc) cityName = loc;
+            }
+          }
+        } catch {}
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,apparent_temperature&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=5`;
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error("Weather API failed");
+          const data = await res.json();
+          return { city: cityName, ...data };
+        } catch {
+          return null;
+        }
+      }),
+    // ── 환율 정보 (USDT + 사용자 지정 2개 통화) ──────────────────────────────
+    exchangeRates: protectedProcedure
+      .input(z.object({
+        currency1: z.string().default("KRW"),
+        currency2: z.string().default("THB"),
+      }).optional())
+      .query(async ({ input }) => {
+        const c1 = input?.currency1 || "KRW";
+        const c2 = input?.currency2 || "THB";
+        try {
+          const ratesRes = await fetch(`https://open.er-api.com/v6/latest/USD`);
+          const ratesData = await ratesRes.json();
+          const rates = ratesData.rates || {};
+          let usdtData: any = null;
+          try {
+            const usdtFetch = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=usd,${c1.toLowerCase()},${c2.toLowerCase()}`);
+            usdtData = await usdtFetch.json();
+          } catch {}
+          return {
+            base: "USD",
+            rates: {
+              [c1]: rates[c1] || null,
+              [c2]: rates[c2] || null,
+            },
+            usdt: usdtData?.tether || { usd: 1 },
+            lastUpdate: ratesData.time_last_update_utc || new Date().toISOString(),
+          };
+        } catch {
+          return null;
+        }
+      }),
+    // ── 사용자 숙박 정보 직접 입력/수정/조회 ──────────────────────────────────
+    myAccommodationInfo: protectedProcedure.query(async ({ ctx }) => {
+      return db.getUserAccommodations(ctx.user.id);
+    }),
+    saveAccommodation: protectedProcedure
+      .input(z.object({
+        id: z.number().optional(),
+        hotelName: z.string().min(1).max(255),
+        hotelAddress: z.string().optional(),
+        checkInDate: z.string().optional(),
+        checkInTime: z.string().optional(),
+        checkOutDate: z.string().optional(),
+        checkOutTime: z.string().optional(),
+        bookingId: z.string().optional(),
+        roomType: z.string().optional(),
+        phone: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        if (id) {
+          await db.updateUserAccommodation(id, ctx.user.id, data as any);
+          return { success: true, id };
+        } else {
+          const newId = await db.createUserAccommodation({ userId: ctx.user.id, ...data } as any);
+          return { success: true, id: newId };
+        }
+      }),
+    deleteAccommodation: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteUserAccommodation(input.id, ctx.user.id);
+        return { success: true };
+      }),
+    // ── 일괄 번역 (통번역) ──────────────────────────────────────────────────
+    bulkTranslate: protectedProcedure
+      .input(z.object({
+        texts: z.array(z.string().max(2000)).max(20),
+        targetLang: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const langNames: Record<string, string> = {
+          ko: "Korean", en: "English", ja: "Japanese", zh: "Chinese", th: "Thai",
+          vi: "Vietnamese", id: "Indonesian", ms: "Malay", tl: "Filipino",
+          hi: "Hindi", ar: "Arabic", ru: "Russian", es: "Spanish", fr: "French",
+          de: "German", pt: "Portuguese", it: "Italian", tr: "Turkish", pl: "Polish",
+          nl: "Dutch", sv: "Swedish", uk: "Ukrainian", cs: "Czech", ro: "Romanian",
+          mn: "Mongolian",
+        };
+        const targetName = langNames[input.targetLang] || input.targetLang;
+        const results: string[] = [];
+        for (const text of input.texts) {
+          if (!text.trim()) { results.push(text); continue; }
+          try {
+            const response = await invokeLLM({
+              messages: [
+                { role: "system", content: `You are a professional translator. Translate the following text to ${targetName}. Return ONLY the translated text, nothing else.` },
+                { role: "user", content: text },
+              ],
+            });
+            results.push((response.choices[0]?.message?.content as string) || text);
+          } catch {
+            results.push(text);
+          }
+        }
+        return { translations: results, targetLang: input.targetLang };
+      }),
   }),
-
   // ── Excel Templates & Export ─────────────────────────────
   excelExport: router({
     // Template downloads

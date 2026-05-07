@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   User, Phone, Building2, Heart, Edit2, Save, Loader2, CheckCircle, AlertTriangle,
 } from "lucide-react";
+import { TranslateButton } from "@/components/TranslateButton";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
@@ -170,7 +171,7 @@ export default function ProfileTab({ user }: { user: any }) {
                 <div><span className="text-muted-foreground">{t("myPage.position")}</span><p className="font-medium">{profile?.position || "-"}</p></div>
                 <div><span className="text-muted-foreground">{t("myPage.department")}</span><p className="font-medium">{profile?.department || "-"}</p></div>
               </div>
-              {profile?.bio && <div className="mt-3 text-sm"><span className="text-muted-foreground">{t("myPage.bio")}</span><p className="mt-1">{profile.bio}</p></div>}
+              {profile?.bio && <div className="mt-3 text-sm"><span className="text-muted-foreground">{t("myPage.bio")}</span><p className="mt-1">{profile.bio}</p><TranslateButton text={profile.bio} variant="compact" className="mt-1" /></div>}
             </CardContent>
           </Card>
 
