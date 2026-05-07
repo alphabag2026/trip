@@ -12,14 +12,28 @@ const KAKAO_CLIENT_SECRET = process.env.KAKAO_CLIENT_SECRET || "";
 
 export const kakaoRouter = Router();
 
+// Normalize origin: strip www prefix to ensure consistent redirect URIs
+function normalizeOrigin(origin: string): string {
+  try {
+    const url = new URL(origin);
+    if (url.hostname.startsWith("www.")) {
+      url.hostname = url.hostname.replace(/^www\./, "");
+    }
+    return url.origin;
+  } catch {
+    return origin;
+  }
+}
+
 // Step 1: Redirect to Kakao authorization
 kakaoRouter.get("/api/auth/kakao", (req: Request, res: Response) => {
-  const { origin, returnPath } = req.query;
+  const { origin: rawOrigin, returnPath } = req.query;
   if (!KAKAO_CLIENT_ID) {
     res.status(500).json({ error: "Kakao login not configured" });
     return;
   }
-  const redirectUri = `${origin || ""}/api/auth/kakao/callback`;
+  const origin = normalizeOrigin(String(rawOrigin || ""));
+  const redirectUri = `${origin}/api/auth/kakao/callback`;
   const state = JSON.stringify({ origin: origin || "", returnPath: returnPath || "/" });
   const stateEncoded = Buffer.from(state).toString("base64");
   const url = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${encodeURIComponent(stateEncoded)}`;
@@ -41,7 +55,7 @@ kakaoRouter.get("/api/auth/kakao/callback", async (req: Request, res: Response) 
     if (state && typeof state === "string") {
       try {
         const parsed = JSON.parse(Buffer.from(state, "base64").toString("utf-8"));
-        origin = parsed.origin || "";
+        origin = normalizeOrigin(parsed.origin || "");
         returnPath = parsed.returnPath || "/";
       } catch {}
     }

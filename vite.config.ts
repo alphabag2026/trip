@@ -159,7 +159,11 @@ const plugins = [
   jsxLocPlugin(),
   ...(!isExternalBuild ? [vitePluginManusRuntime(), vitePluginManusDebugCollector()] : []),
   VitePWA({
+    strategies: "injectManifest",
+    srcDir: ".",
+    filename: "sw-source.ts",
     registerType: "autoUpdate",
+    injectRegister: false,
     includeAssets: ["favicon.ico"],
     manifest: {
       name: "Alpha Trip - Event & Protocol Automation",
@@ -180,40 +184,8 @@ const plugins = [
         { src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663373200888/9L2UFkGMTFNGvGrFPN8jYv/pwa-icon-maskable-CkrAKnSwy9uFjefuA5ZjEh.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
       ],
     },
-    workbox: {
+    injectManifest: {
       globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-      runtimeCaching: [
-        {
-          urlPattern: /^\/api\//,
-          handler: "NetworkFirst",
-          options: {
-            cacheName: "api-cache",
-            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 5 },
-            networkTimeoutSeconds: 3,
-          },
-        },
-        {
-          urlPattern: /^https:\/\/.*\.cloudfront\.net\//,
-          handler: "CacheFirst",
-          options: {
-            cacheName: "cdn-images",
-            expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
-          },
-        },
-        {
-          urlPattern: /^https:\/\/fonts\.googleapis\.com\//,
-          handler: "StaleWhileRevalidate",
-          options: { cacheName: "google-fonts-stylesheets" },
-        },
-        {
-          urlPattern: /^https:\/\/fonts\.gstatic\.com\//,
-          handler: "CacheFirst",
-          options: {
-            cacheName: "google-fonts-webfonts",
-            expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
-          },
-        },
-      ],
     },
   }),
 ];

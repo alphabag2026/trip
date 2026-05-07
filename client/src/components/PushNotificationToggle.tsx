@@ -59,7 +59,7 @@ export function PushNotificationToggle() {
         return;
       }
 
-      const registration = await navigator.serviceWorker.register("/sw.js");
+      const registration = await navigator.serviceWorker.register("/sw-source.js");
       await navigator.serviceWorker.ready;
 
       const subscription = await registration.pushManager.subscribe({

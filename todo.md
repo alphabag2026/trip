@@ -2550,9 +2550,9 @@
 
 ## v6.23.1 - 로그인/회원가입 오류 수정
 
-- [ ] 카카오 OAuth 로그인 시 빈 화면 문제 수정 (alphatrip.org/api/auth/kakao)
-- [ ] origin 파라미터에 www.alphatrip.org가 포함되어 리다이렉트 실패 가능성 확인
-- [ ] 커스텀 도메인(alphatrip.org) 환경에서 OAuth 콜백 정상 동작 확인
+- [x] 카카오 OAuth 로그인 시 빈 화면 문제 수정 (v6.35에서 해결)
+- [x] origin 파라미터에 www.alphatrip.org가 포함되어 리다이렉트 실패 가능성 확인 (normalizeOrigin 함수 추가)
+- [x] 커스텀 도메인(alphatrip.org) 환경에서 OAuth 콜백 정상 동작 확인
 
 ## v6.24 - 관리자 계정 설정 + 비밀번호 변경 + 카카오 로그인 수정
 
@@ -2637,3 +2637,10 @@
 - [x] vite.config.ts manualChunks 수정 (react + i18n을 동일 청크로 병합)
 - [x] 빌드 후 순환 의존성 제거 확인
 - [x] AWS Lightsail 서버 배포 및 정상 작동 확인
+
+## v6.35 - 카카오 OAuth 수정 + SW 캐시 무효화 + 에러 모니터링
+- [x] 카카오 OAuth 로그인 빈 화면 문제 수정 (www origin 정규화 + nginx www→non-www 리다이렉트)
+- [x] 서비스 워커 캐시 무효화 - injectManifest 전략으로 전환, workbox precaching + push 통합
+- [x] 프로덕션 에러 모니터링 추가 (errorMonitor.ts + /api/error-reports 엔드포인트)
+- [x] 빌드 및 테스트 (injectManifest + workbox 성공)
+- [x] AWS Lightsail 서버 배포 (13.213.239.217)

@@ -50,6 +50,21 @@ async function startServer() {
   app.use("/api/v1", createExternalApiRouter());
   // Telegram Bot Webhook
   app.use("/api/telegram/webhook", createTelegramWebhookRouter());
+  // Client Error Reporting (lightweight error monitoring)
+  app.post("/api/error-reports", (req, res) => {
+    try {
+      const { errors } = req.body || {};
+      if (Array.isArray(errors) && errors.length > 0) {
+        const timestamp = new Date().toISOString();
+        for (const err of errors.slice(0, 20)) {
+          console.error(`[ClientError] ${timestamp} | ${err.type} | ${err.message} | ${err.url} | ${err.source || ''}:${err.lineno || ''}:${err.colno || ''}`);
+        }
+      }
+      res.status(204).end();
+    } catch {
+      res.status(204).end();
+    }
+  });
   // tRPC API
   app.use(
     "/api/trpc",

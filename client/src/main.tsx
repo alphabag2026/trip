@@ -9,6 +9,10 @@ import App from "./App";
 import "./index.css";
 import { initLocales } from "./lib/i18n";
 import { registerSW } from "virtual:pwa-register";
+import { initErrorMonitor } from "./lib/errorMonitor";
+
+// Initialize production error monitoring
+initErrorMonitor();
 
 const queryClient = new QueryClient();
 
