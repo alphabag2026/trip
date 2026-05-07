@@ -2311,3 +2311,42 @@ export const translationCache = mysqlTable("translation_cache", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type TranslationCache = typeof translationCache.$inferSelect;
+
+// ── 숙소 공유 테이블 ──────────────────────────────────────────────────────────
+export const sharedAccommodations = mysqlTable("shared_accommodations", {
+  id: int("id").autoincrement().primaryKey(),
+  accommodationId: int("accommodationId").notNull(),
+  meetupId: int("meetupId").notNull(),
+  sharedByUserId: varchar("sharedByUserId", { length: 255 }).notNull(),
+  sharedByName: varchar("sharedByName", { length: 255 }),
+  hotelName: varchar("hotelName", { length: 255 }).notNull(),
+  hotelAddress: text("hotelAddress"),
+  checkInDate: varchar("checkInDate", { length: 50 }),
+  checkInTime: varchar("checkInTime", { length: 20 }),
+  checkOutDate: varchar("checkOutDate", { length: 50 }),
+  checkOutTime: varchar("checkOutTime", { length: 20 }),
+  roomType: varchar("roomType", { length: 100 }),
+  phone: varchar("phone", { length: 100 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SharedAccommodation = typeof sharedAccommodations.$inferSelect;
+export type InsertSharedAccommodation = typeof sharedAccommodations.$inferInsert;
+
+// ── 나라별 입국카드 설정 테이블 ──────────────────────────────────────────────────
+export const immigrationCards = mysqlTable("immigration_cards", {
+  id: int("id").autoincrement().primaryKey(),
+  countryCode: varchar("countryCode", { length: 10 }).notNull(),
+  countryName: varchar("countryName", { length: 100 }).notNull(),
+  countryNameLocal: varchar("countryNameLocal", { length: 100 }),
+  cardUrl: text("cardUrl").notNull(),
+  cardName: varchar("cardName", { length: 255 }).notNull(),
+  description: text("description"),
+  requiredFields: text("requiredFields"), // JSON string: ["passport_number","flight_number","hotel_address",...]
+  fieldLabels: text("fieldLabels"), // JSON string: {"passport_number":"여권번호","flight_number":"항공편명",...}
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+export type ImmigrationCard = typeof immigrationCards.$inferSelect;
+export type InsertImmigrationCard = typeof immigrationCards.$inferInsert;

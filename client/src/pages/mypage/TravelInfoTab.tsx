@@ -14,7 +14,7 @@ import {
   Utensils, ShieldCheck, Ambulance, Building2, Train,
   CloudSun, CloudRain, Cloud, Sun, Wind, Droplets,
   TrendingUp, TrendingDown, ArrowUpDown, RefreshCw,
-  Hotel, Plus, Pencil, Trash2, CalendarDays, DoorOpen, Navigation, Car,
+  Hotel, Plus, Pencil, Trash2, CalendarDays, DoorOpen, Navigation, Car, Share2, Users, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -76,6 +76,8 @@ export default function TravelInfoTab() {
   const [currency2, setCurrency2] = useState("THB");
   const [showAccommodationForm, setShowAccommodationForm] = useState(false);
   const [editingAccommodation, setEditingAccommodation] = useState<any>(null);
+  const [shareDialogAccId, setShareDialogAccId] = useState<number | null>(null);
+  const [selectedMeetupId, setSelectedMeetupId] = useState<number | null>(null);
 
   const travelInfoQuery = trpc.myTravel.travelInfo.useQuery(undefined, { enabled: !!user });
   const weatherQuery = trpc.myTravel.weather.useQuery(undefined, { enabled: !!user });
@@ -94,6 +96,23 @@ export default function TravelInfoTab() {
     onSuccess: () => {
       toast.success(t("myPage.accommodationDeleted", "삭제되었습니다"));
       accommodationsQuery.refetch();
+    },
+  });
+  const meetupsQuery = trpc.meetup.list.useQuery({}, { enabled: !!user });
+  const mySharedQuery = trpc.myTravel.getMySharedList.useQuery(undefined, { enabled: !!user });
+  const shareAccMutation = trpc.myTravel.shareAccommodation.useMutation({
+    onSuccess: () => {
+      toast.success(t("myPage.accommodationShared", "숙소 정보가 공유되었습니다"));
+      mySharedQuery.refetch();
+      setShareDialogAccId(null);
+      setSelectedMeetupId(null);
+    },
+    onError: (err) => toast.error(err.message || t("myPage.shareFailed", "공유 실패")),
+  });
+  const unshareAccMutation = trpc.myTravel.unshareAccommodation.useMutation({
+    onSuccess: () => {
+      toast.success(t("myPage.accommodationUnshared", "공유가 취소되었습니다"));
+      mySharedQuery.refetch();
     },
   });
 
@@ -145,7 +164,19 @@ export default function TravelInfoTab() {
         }}
         isSaving={saveAccommodationMutation.isPending}
         t={t}
+        shareDialogAccId={shareDialogAccId}
+        setShareDialogAccId={setShareDialogAccId}
+        selectedMeetupId={selectedMeetupId}
+        setSelectedMeetupId={setSelectedMeetupId}
+        meetups={meetupsQuery.data || []}
+        mySharedList={mySharedQuery.data || []}
+        onShare={(accId: number, meetupId: number) => shareAccMutation.mutate({ accommodationId: accId, meetupId })}
+        onUnshare={(accId: number, meetupId: number) => unshareAccMutation.mutate({ accommodationId: accId, meetupId })}
+        isSharing={shareAccMutation.isPending}
       />
+
+      {/* 입국카드 정보 */}
+      {info && <ImmigrationCardSection countryCode={info.countryCode} t={t} copyToClipboard={copyToClipboard} />}
 
       {/* 기본 여행지 정보 */}
       {info && (
@@ -456,10 +487,16 @@ function RateRow({ code, rate, flag, name }: { code: string; rate: number; flag:
 }
 
 // ── 숙박 정보 카드 ──────────────────────────────────────────────────
-function AccommodationCard({ accommodations, isLoading, showForm, setShowForm, editingAccommodation, setEditingAccommodation, onSave, onDelete, isSaving, t }: {
+function AccommodationCard({ accommodations, isLoading, showForm, setShowForm, editingAccommodation, setEditingAccommodation, onSave, onDelete, isSaving, t, shareDialogAccId, setShareDialogAccId, selectedMeetupId, setSelectedMeetupId, meetups, mySharedList, onShare, onUnshare, isSharing }: {
   accommodations: any[]; isLoading: boolean; showForm: boolean; setShowForm: (v: boolean) => void;
   editingAccommodation: any; setEditingAccommodation: (v: any) => void;
   onSave: (data: any) => void; onDelete: (id: number) => void; isSaving: boolean; t: any;
+  shareDialogAccId: number | null; setShareDialogAccId: (v: number | null) => void;
+  selectedMeetupId: number | null; setSelectedMeetupId: (v: number | null) => void;
+  meetups: any[]; mySharedList: any[];
+  onShare: (accId: number, meetupId: number) => void;
+  onUnshare: (accId: number, meetupId: number) => void;
+  isSharing: boolean;
 }) {
   const [form, setForm] = useState({
     hotelName: "", hotelAddress: "", checkInDate: "", checkInTime: "",
@@ -489,12 +526,12 @@ function AccommodationCard({ accommodations, isLoading, showForm, setShowForm, e
     setShowForm(true);
   };
 
-  const handleSubmit = () => {
+   const handleSubmit = () => {
     if (!form.hotelName.trim()) { toast.error(t("myPage.hotelNameRequired", "호텔명을 입력해주세요")); return; }
     onSave({ ...form, id: editingAccommodation?.id });
   };
-
   return (
+    <>
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
@@ -564,6 +601,9 @@ function AccommodationCard({ accommodations, isLoading, showForm, setShowForm, e
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0">
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500" title={t("myPage.shareAccommodation", "밋업에 공유")} onClick={() => setShareDialogAccId(acc.id)}>
+                    <Share2 className="w-3.5 h-3.5" />
+                  </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditForm(acc)}>
                     <Pencil className="w-3.5 h-3.5" />
                   </Button>
@@ -571,6 +611,28 @@ function AccommodationCard({ accommodations, isLoading, showForm, setShowForm, e
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 </div>
+                {/* 공유 상태 표시 */}
+                {mySharedList.filter((s: any) => s.accommodationId === acc.id).length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-border/30">
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <Users className="w-3 h-3" />
+                      {t("myPage.sharedTo", "공유 중")}:
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {mySharedList.filter((s: any) => s.accommodationId === acc.id).map((s: any) => {
+                        const meetup = meetups.find((m: any) => m.id === s.meetupId);
+                        return (
+                          <Badge key={s.id} variant="outline" className="text-[10px] gap-1 pr-0.5">
+                            {meetup?.title || `Meetup #${s.meetupId}`}
+                            <button className="ml-0.5 hover:text-red-500" onClick={() => onUnshare(acc.id, s.meetupId)}>
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))
@@ -641,10 +703,49 @@ function AccommodationCard({ accommodations, isLoading, showForm, setShowForm, e
         </Dialog>
       </CardContent>
     </Card>
+
+    {/* 숙소 공유 다이얼로그 */}
+    <Dialog open={shareDialogAccId !== null} onOpenChange={(open) => { if (!open) { setShareDialogAccId(null); setSelectedMeetupId(null); } }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Share2 className="w-4 h-4" />
+            {t("myPage.shareToMeetup", "밋업에 숙소 공유")}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {t("myPage.shareDescription", "숙소 정보를 공유할 밋업을 선택하세요. 해당 밋업의 다른 참석자들이 숙소 정보를 볼 수 있습니다.")}
+          </p>
+          <Select value={selectedMeetupId ? String(selectedMeetupId) : ""} onValueChange={(v) => setSelectedMeetupId(Number(v))}>
+            <SelectTrigger>
+              <SelectValue placeholder={t("myPage.selectMeetup", "밋업 선택")} />
+            </SelectTrigger>
+            <SelectContent>
+              {meetups.map((m: any) => (
+                <SelectItem key={m.id} value={String(m.id)}>{m.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            className="w-full"
+            disabled={!selectedMeetupId || isSharing}
+            onClick={() => {
+              if (shareDialogAccId && selectedMeetupId) {
+                onShare(shareDialogAccId, selectedMeetupId);
+              }
+            }}
+          >
+            {isSharing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Share2 className="w-4 h-4 mr-2" />}
+            {t("myPage.shareNow", "공유하기")}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
-
-// ── 공통 컴포넌트 ──────────────────────────────────────────────────
+// ── 공통 컴포넌트 ──────────────────────────────────────────────────────────────
 function InfoCard({ icon: Icon, label, value, color, bgColor }: {
   icon: any; label: string; value: string; color: string; bgColor: string;
 }) {
@@ -689,5 +790,104 @@ function PracticalRow({ icon: Icon, label, value }: {
         <p className="text-sm text-muted-foreground">{value}</p>
       </div>
     </div>
+  );
+}
+
+// ── 입국카드 정보 섹션 ──────────────────────────────────────────────
+function ImmigrationCardSection({ countryCode, t, copyToClipboard }: { countryCode: string; t: any; copyToClipboard: (text: string) => void }) {
+  const fieldsQuery = trpc.immigrationCard.getFieldsForUser.useQuery(
+    { countryCode },
+    { enabled: !!countryCode }
+  );
+
+  if (fieldsQuery.isLoading) {
+    return (
+      <Card>
+        <CardContent className="py-6 flex justify-center">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!fieldsQuery.data) return null;
+
+  const { card, filledFields } = fieldsQuery.data;
+  const fields = Object.entries(filledFields);
+
+  return (
+    <Card className="border-orange-200 dark:border-orange-800">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-orange-500" />
+          {t("myPage.immigrationCard", "입국카드")} - {card.countryName}
+          {card.countryNameLocal && <span className="text-sm text-muted-foreground">({card.countryNameLocal})</span>}
+        </CardTitle>
+        {card.description && (
+          <p className="text-sm text-muted-foreground mt-1">{card.description}</p>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* 입국카드 작성 링크 */}
+        <Button
+          variant="outline"
+          className="w-full justify-between border-orange-300 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/30"
+          onClick={() => window.open(card.cardUrl, "_blank")}
+        >
+          <span className="flex items-center gap-2">
+            <ExternalLink className="w-4 h-4 text-orange-500" />
+            {card.cardName}
+          </span>
+          <Badge variant="secondary" className="bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
+            {t("myPage.openForm", "작성하기")}
+          </Badge>
+        </Button>
+
+        {/* 복사-붙여넣기용 필드 목록 */}
+        {fields.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+              <Copy className="w-3.5 h-3.5" />
+              {t("myPage.copyPasteFields", "복사-붙여넣기용 정보 (클릭하면 복사됩니다)")}
+            </p>
+            <div className="grid gap-2">
+              {fields.map(([key, { label, value }]) => (
+                <div
+                  key={key}
+                  className={`flex items-center justify-between p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                    value
+                      ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-950/40"
+                      : "bg-muted/30 border-border hover:bg-muted/50"
+                  }`}
+                  onClick={() => {
+                    if (value) {
+                      copyToClipboard(value);
+                    } else {
+                      toast.error(t("myPage.noValueToCopy", "복사할 값이 없습니다. 여권/프로필 정보를 먼저 등록해주세요."));
+                    }
+                  }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className={`text-sm font-mono truncate ${value ? "text-foreground" : "text-muted-foreground italic"}`}>
+                      {value || t("myPage.notRegistered", "미등록")}
+                    </p>
+                  </div>
+                  {value && <Copy className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0 ml-2" />}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 안내 메시지 */}
+        <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-amber-700 dark:text-amber-300">
+            {t("myPage.immigrationCardTip", "위 정보를 클릭하여 복사한 후, 입국카드 작성 페이지에 붙여넣기 하세요. 빈 항목은 여권/프로필 정보를 먼저 등록해주세요.")}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

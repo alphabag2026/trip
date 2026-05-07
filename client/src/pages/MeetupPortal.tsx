@@ -11,7 +11,7 @@ import {
   Plane, MapPin, Calendar, Users, ArrowLeft, Sparkles, ScanLine,
   Loader2, MessageCircle, Send, Clock, Globe, Share2, Copy, CheckCircle,
   FileText, Info, AlertTriangle, Download, ExternalLink, Car, UtensilsCrossed,
-  XCircle, HelpCircle
+  XCircle, HelpCircle, Hotel, Navigation, Phone
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { QRCodeSVG } from "qrcode.react";
@@ -169,7 +169,7 @@ export default function MeetupPortal() {
       {/* Tabs */}
       <div className="container max-w-3xl py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full grid grid-cols-3">
+          <TabsList className="w-full grid grid-cols-4">
             <TabsTrigger value="info" className="gap-1.5">
               <FileText className="h-4 w-4" />
               {t("meetupPortal.tabInfo", "정보")}
@@ -181,6 +181,10 @@ export default function MeetupPortal() {
             <TabsTrigger value="chat" className="gap-1.5">
               <MessageCircle className="h-4 w-4" />
               {t("meetupPortal.tabChat", "소통")}
+            </TabsTrigger>
+            <TabsTrigger value="accommodations" className="gap-1.5">
+              <Hotel className="h-4 w-4" />
+              {t("meetupPortal.tabAccommodations", "숙소")}
             </TabsTrigger>
           </TabsList>
 
@@ -304,6 +308,11 @@ export default function MeetupPortal() {
           {/* 소통 탭 */}
           <TabsContent value="chat" className="mt-6 space-y-4">
             <MeetupChat meetupId={meetup.id} meetupTitle={meetup.title} isAuthenticated={isAuthenticated} />
+          </TabsContent>
+
+          {/* 공유 숙소 탭 */}
+          <TabsContent value="accommodations" className="mt-6 space-y-4">
+            <SharedAccommodationsSection meetupId={meetup.id} />
           </TabsContent>
          </Tabs>
       </div>
@@ -645,6 +654,101 @@ function ScheduleRsvpResponder({ scheduleId, meetupId }: { scheduleId: number; m
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── 공유 숙소 섹션 ───────────────────────────────────────────
+function SharedAccommodationsSection({ meetupId }: { meetupId: number }) {
+  const { t } = useTranslation();
+  const { data: sharedList, isLoading } = trpc.myTravel.sharedAccommodationsByMeetup.useQuery({ meetupId });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!sharedList || sharedList.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Hotel className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+          <p className="text-muted-foreground">{t("meetupPortal.noSharedAccommodations", "아직 공유된 숙소 정보가 없습니다.")}</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">{t("meetupPortal.shareAccommodationHint", "참석자들이 숙소 정보를 공유하면 여기에 표시됩니다.")}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 mb-2">
+        <Hotel className="h-5 w-5 text-primary" />
+        <h3 className="font-semibold">{t("meetupPortal.sharedAccommodations", "공유된 숙소 정보")}</h3>
+        <Badge variant="secondary" className="ml-auto">{sharedList.length}개</Badge>
+      </div>
+      {sharedList.map((item: any) => (
+        <Card key={item.id} className="overflow-hidden">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-medium text-sm truncate">{item.hotelName}</h4>
+                </div>
+                {item.hotelAddress && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+                    <MapPin className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{item.hotelAddress}</span>
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  {item.checkIn && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {item.checkIn} ~ {item.checkOut || ""}
+                    </span>
+                  )}
+                  {item.roomType && (
+                    <Badge variant="outline" className="text-[10px] h-5">{item.roomType}</Badge>
+                  )}
+                </div>
+                {item.sharedByName && (
+                  <p className="text-[10px] text-muted-foreground/60 mt-2">
+                    {t("meetupPortal.sharedBy", "공유자")}: {item.sharedByName}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col gap-1">
+                {item.hotelAddress && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.hotelAddress)}`, "_blank")}
+                      title="Google Maps"
+                    >
+                      <Navigation className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => window.open(`https://grab.onelink.me/2695613898?af_dp=grab://open?screenType=BOOKING&dropOffAddress=${encodeURIComponent(item.hotelAddress)}`, "_blank")}
+                      title="Grab"
+                    >
+                      <Car className="h-3.5 w-3.5" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

@@ -88,6 +88,7 @@ const menuGroups: MenuGroup[] = [
       { icon: CalendarDays, labelKey: "admin.sidebar.scheduleEvents", path: "/schedule-events", roles: ["all"] },
       { icon: MapPin, labelKey: "admin.sidebar.itineraries", path: "/itineraries", roles: ["all"] },
       { icon: Globe, labelKey: "admin.sidebar.travelInfo", path: "/travel-info", roles: ["all"] },
+      { icon: ShieldCheck, labelKey: "admin.sidebar.immigrationCards", path: "/immigration-cards", roles: ["all"] },
     ],
   },
   // ─── 5. 현장 운영 ───

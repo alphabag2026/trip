@@ -7679,6 +7679,7 @@ Return ONLY valid JSON.`,
       const travelMeta = (meetup as any).travelMeta;
       if (travelMeta && typeof travelMeta === "object") {
         return {
+          countryCode: meetup.destinationCountry || travelMeta.countryCode || "TH",
           country: travelMeta.country || "",
           city: travelMeta.city || destination,
           timezone: travelMeta.timezone || "UTC+7",
@@ -7701,6 +7702,7 @@ Return ONLY valid JSON.`,
       }
       // 기본 태국 여행 정보
       return {
+        countryCode: meetup.destinationCountry || "TH",
         country: "Thailand",
         city: destination || "Bangkok",
         timezone: "UTC+7 (ICT)",
@@ -7869,6 +7871,192 @@ Return ONLY valid JSON.`,
           }
         }
         return { translations: results, targetLang: input.targetLang };
+      }),
+    // ── 숙소 공유 기능 ──────────────────────────────────────────────────────────
+    shareAccommodation: protectedProcedure
+      .input(z.object({
+        accommodationId: z.number(),
+        meetupId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // 숙소 정보 가져오기
+        const accs = await db.getUserAccommodations(ctx.user.id);
+        const acc = accs.find((a: any) => a.id === input.accommodationId);
+        if (!acc) throw new TRPCError({ code: "NOT_FOUND", message: "숙소 정보를 찾을 수 없습니다" });
+        // 이미 공유된 건 중복 방지
+        const existing = await db.getMySharedAccommodations(String(ctx.user.id));
+        const alreadyShared = existing.find((s: any) => s.accommodationId === input.accommodationId && s.meetupId === input.meetupId);
+        if (alreadyShared) throw new TRPCError({ code: "CONFLICT", message: "이미 해당 밋업에 공유된 숙소입니다" });
+        const id = await db.shareAccommodation({
+          accommodationId: input.accommodationId,
+          meetupId: input.meetupId,
+          sharedByUserId: String(ctx.user.id),
+          sharedByName: ctx.user.name || null,
+          hotelName: acc.hotelName,
+          hotelAddress: acc.hotelAddress,
+          checkInDate: acc.checkInDate,
+          checkInTime: acc.checkInTime,
+          checkOutDate: acc.checkOutDate,
+          checkOutTime: acc.checkOutTime,
+          roomType: acc.roomType,
+          phone: acc.phone,
+          notes: acc.notes,
+        });
+        return { success: true, id };
+      }),
+    unshareAccommodation: protectedProcedure
+      .input(z.object({
+        accommodationId: z.number(),
+        meetupId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.unshareAccommodation(input.accommodationId, input.meetupId, String(ctx.user.id));
+        return { success: true };
+      }),
+    getSharedAccommodations: protectedProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getSharedAccommodationsByMeetup(input.meetupId);
+      }),
+    getMySharedList: protectedProcedure
+      .query(async ({ ctx }) => {
+        return db.getMySharedAccommodations(String(ctx.user.id));
+      }),
+    sharedAccommodationsByMeetup: publicProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getSharedAccommodationsByMeetup(input.meetupId);
+      }),
+  }),
+  // ── 입국카드 관리 ──────────────────────────────────────────────────
+  immigrationCard: router({
+    list: publicProcedure.query(async () => {
+      return db.getImmigrationCards(true);
+    }),
+    listAll: adminProcedure.query(async () => {
+      return db.getImmigrationCards(false);
+    }),
+    getByCountry: publicProcedure
+      .input(z.object({ countryCode: z.string() }))
+      .query(async ({ input }) => {
+        return db.getImmigrationCardByCountry(input.countryCode);
+      }),
+    upsert: adminProcedure
+      .input(z.object({
+        id: z.number().optional(),
+        countryCode: z.string(),
+        countryName: z.string(),
+        countryNameLocal: z.string().optional(),
+        cardUrl: z.string(),
+        cardName: z.string(),
+        description: z.string().optional(),
+        requiredFields: z.string().optional(),
+        fieldLabels: z.string().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return db.upsertImmigrationCard(input);
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteImmigrationCard(input.id);
+        return { success: true };
+      }),
+    // 여권 정보 기반 입국카드 필드 자동 출력 (복사-붙여넣기용)
+    getFieldsForUser: protectedProcedure
+      .input(z.object({ countryCode: z.string() }))
+      .query(async ({ ctx, input }) => {
+        const card = await db.getImmigrationCardByCountry(input.countryCode);
+        if (!card) return null;
+        // 사용자 여권 정보 가져오기
+        const passport = await db.getPassportInfo(ctx.user.id);
+        // 사용자 프로필 가져오기
+        const profile = await db.getUserProfile(ctx.user.id);
+        // 사용자 항공편 정보 가져오기 (최신 배정된 항공편)
+        const flights = await db.getFlightSchedules({ registrationId: ctx.user.id });
+        const latestFlight = flights && flights.length > 0 ? flights[0] : null;
+        // 사용자 숙소 정보
+        const accommodations = await db.getUserAccommodations(ctx.user.id);
+        const latestAccommodation = accommodations && accommodations.length > 0 ? accommodations[0] : null;
+
+        // 필드 매핑: 입국카드 필드에 맞춰 사용자 데이터 자동 채우기
+        const requiredFields = card.requiredFields ? JSON.parse(card.requiredFields) : [];
+        const fieldLabels = card.fieldLabels ? JSON.parse(card.fieldLabels) : {};
+        const filledFields: Record<string, { label: string; value: string }> = {};
+
+        for (const field of requiredFields) {
+          const label = fieldLabels[field] || field;
+          let value = "";
+          switch (field) {
+            case "passport_number":
+              value = passport?.passportNumber || ""; break;
+            case "full_name":
+            case "name":
+              value = passport?.fullName || ctx.user.name || ""; break;
+            case "surname":
+            case "family_name":
+              value = passport?.fullName ? passport.fullName.split(" ").pop() || "" : ""; break;
+            case "given_name":
+            case "first_name":
+              value = passport?.fullName ? passport.fullName.split(" ").slice(0, -1).join(" ") : ""; break;
+            case "nationality":
+              value = passport?.nationality || ""; break;
+            case "date_of_birth":
+            case "birth_date":
+              value = passport?.birthDate || ""; break;
+            case "gender":
+            case "sex":
+              value = passport?.gender || ""; break;
+            case "passport_expiry":
+            case "expiry_date":
+              value = passport?.expiryDate || ""; break;
+            case "passport_issue_date":
+            case "issue_date":
+              value = passport?.issueDate || ""; break;
+            case "issuing_country":
+            case "place_of_issue":
+              value = passport?.issuingCountry || ""; break;
+            case "flight_number":
+              value = latestFlight?.flightNo || ""; break;
+            case "arrival_flight":
+              value = latestFlight?.flightNo || ""; break;
+            case "departure_flight":
+              value = latestFlight?.flightNo || ""; break;
+            case "hotel_name":
+            case "accommodation_name":
+              value = latestAccommodation?.hotelName || ""; break;
+            case "hotel_address":
+            case "accommodation_address":
+            case "address_in_country":
+              value = latestAccommodation?.hotelAddress || ""; break;
+            case "phone":
+            case "contact_number":
+              value = profile?.phone || ""; break;
+            case "email":
+              value = ctx.user.email || ""; break;
+            case "purpose_of_visit":
+              value = "Business"; break;
+            case "length_of_stay":
+              value = ""; break;
+            default:
+              value = ""; break;
+          }
+          filledFields[field] = { label, value };
+        }
+
+        return {
+          card: {
+            id: card.id,
+            countryCode: card.countryCode,
+            countryName: card.countryName,
+            countryNameLocal: card.countryNameLocal,
+            cardUrl: card.cardUrl,
+            cardName: card.cardName,
+            description: card.description,
+          },
+          filledFields,
+        };
       }),
   }),
   // ── Excel Templates & Export ─────────────────────────────

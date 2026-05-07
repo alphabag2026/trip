@@ -79,6 +79,7 @@ import {
   snsTemplates, InsertSnsTemplate,
   eventCheckins, InsertEventCheckin,
   userAccommodations, InsertUserAccommodation,
+  immigrationCards, InsertImmigrationCard,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -4179,4 +4180,108 @@ export async function getTranslationFromCache(sourceHash: string, targetLang: st
 export async function saveTranslationToCache(sourceHash: string, targetLang: string, sourceText: string, translatedText: string) {
   const db = await getDb(); if (!db) return;
   await db.insert(translationCache).values({ sourceHash, targetLang, sourceText, translatedText });
+}
+
+// ── Shared Accommodations ──────────────────────────────────────────────────────
+import { sharedAccommodations } from "../drizzle/schema";
+export { sharedAccommodations } from "../drizzle/schema";
+
+export async function shareAccommodation(data: {
+  accommodationId: number;
+  meetupId: number;
+  sharedByUserId: string;
+  sharedByName: string | null;
+  hotelName: string;
+  hotelAddress?: string | null;
+  checkInDate?: string | null;
+  checkInTime?: string | null;
+  checkOutDate?: string | null;
+  checkOutTime?: string | null;
+  roomType?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+}) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const [result] = await db.insert(sharedAccommodations).values(data);
+  return result.insertId;
+}
+
+export async function unshareAccommodation(accommodationId: number, meetupId: number, userId: string) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  await db.delete(sharedAccommodations).where(
+    and(
+      eq(sharedAccommodations.accommodationId, accommodationId),
+      eq(sharedAccommodations.meetupId, meetupId),
+      eq(sharedAccommodations.sharedByUserId, userId)
+    )
+  );
+}
+
+export async function getSharedAccommodationsByMeetup(meetupId: number) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(sharedAccommodations)
+    .where(eq(sharedAccommodations.meetupId, meetupId))
+    .orderBy(desc(sharedAccommodations.createdAt));
+}
+
+export async function getMySharedAccommodations(userId: string) {
+  const db = await getDb(); if (!db) return [];
+  return db.select().from(sharedAccommodations)
+    .where(eq(sharedAccommodations.sharedByUserId, userId));
+}
+
+
+// ── Immigration Cards (나라별 입국카드) ──────────────────────────────
+export async function getImmigrationCards(activeOnly = true) {
+  const db = await getDb(); if (!db) return [];
+  if (activeOnly) {
+    return db.select().from(immigrationCards).where(eq(immigrationCards.isActive, true));
+  }
+  return db.select().from(immigrationCards);
+}
+
+export async function getImmigrationCardByCountry(countryCode: string) {
+  const db = await getDb(); if (!db) return null;
+  const rows = await db.select().from(immigrationCards)
+    .where(and(eq(immigrationCards.countryCode, countryCode), eq(immigrationCards.isActive, true)));
+  return rows[0] || null;
+}
+
+export async function upsertImmigrationCard(data: {
+  id?: number; countryCode: string; countryName: string; countryNameLocal?: string;
+  cardUrl: string; cardName: string; description?: string;
+  requiredFields?: string; fieldLabels?: string; isActive?: boolean;
+}) {
+  const db = await getDb(); if (!db) return null;
+  if (data.id) {
+    await db.update(immigrationCards).set({
+      countryCode: data.countryCode,
+      countryName: data.countryName,
+      countryNameLocal: data.countryNameLocal || null,
+      cardUrl: data.cardUrl,
+      cardName: data.cardName,
+      description: data.description || null,
+      requiredFields: data.requiredFields || null,
+      fieldLabels: data.fieldLabels || null,
+      isActive: data.isActive ?? true,
+    }).where(eq(immigrationCards.id, data.id));
+    return { id: data.id };
+  }
+  const result = await db.insert(immigrationCards).values({
+    countryCode: data.countryCode,
+    countryName: data.countryName,
+    countryNameLocal: data.countryNameLocal || null,
+    cardUrl: data.cardUrl,
+    cardName: data.cardName,
+    description: data.description || null,
+    requiredFields: data.requiredFields || null,
+    fieldLabels: data.fieldLabels || null,
+    isActive: data.isActive ?? true,
+  });
+  return { id: Number(result[0].insertId) };
+}
+
+export async function deleteImmigrationCard(id: number) {
+  const db = await getDb(); if (!db) return;
+  await db.delete(immigrationCards).where(eq(immigrationCards.id, id));
 }
