@@ -240,14 +240,13 @@ export default defineConfig({
         // The manualChunks config is only used in Manus dev environment.
         ...(isExternalBuild ? {} : {
           manualChunks(id: string) {
-            if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            // React + i18n must be in the same chunk to avoid circular dependency
+            // (react-i18next imports React, and Vite's CJS interop helper creates a back-reference)
+            if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next')) {
               return 'vendor-react';
             }
             if (id.includes('node_modules/@radix-ui/') || id.includes('node_modules/lucide-react/') || id.includes('node_modules/sonner/') || id.includes('/components/DashboardLayout')) {
               return 'vendor-ui';
-            }
-            if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next')) {
-              return 'vendor-i18n';
             }
             if (id.includes('node_modules/@trpc/') || id.includes('node_modules/@tanstack/')) {
               return 'vendor-data';

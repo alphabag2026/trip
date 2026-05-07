@@ -2631,3 +2631,9 @@
 - [x] 여권 정보 기반 입국카드 필드 자동 출력 (복사-붙여넣기용)
 - [x] 백오피스 입국카드 관리 페이지
 - [x] 테스트 및 AWS 배포
+
+## v6.34 - alphatrip.org 빈 화면(blank screen) 수정
+- [x] 순환 의존성 원인 분석 (vendor-react ↔ vendor-i18n 청크 간 circular import)
+- [x] vite.config.ts manualChunks 수정 (react + i18n을 동일 청크로 병합)
+- [x] 빌드 후 순환 의존성 제거 확인
+- [x] AWS Lightsail 서버 배포 및 정상 작동 확인
