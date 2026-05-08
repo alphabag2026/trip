@@ -3405,7 +3405,10 @@
     "roomNum": "Номер кімнати",
     "single": "Одномісний",
     "suite": "Люкс",
-    "twin": "Двомісний"
+    "twin": "Двомісний",
+    "editPassport": "Edit Passport",
+    "uploadImage": "Upload Image",
+    "passportImage": "Passport Image"
   },
   "nav": {
     "ai": "AI",

@@ -2983,7 +2983,10 @@
     "double": "Doppel",
     "twin": "Zweibett",
     "suite": "Suite",
-    "floor": "F"
+    "floor": "F",
+    "editPassport": "Edit Passport",
+    "uploadImage": "Upload Image",
+    "passportImage": "Passport Image"
   },
   "nav": {
     "ai": "KI",

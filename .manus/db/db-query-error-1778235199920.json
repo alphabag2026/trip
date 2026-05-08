@@ -1,0 +1,8 @@
+{
+  "query": "UPDATE user SET role = 'admin' WHERE email = 'bizband7@gmail.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute UPDATE user SET role = 'admin' WHERE email = 'bizband7@gmail.com';",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table '9l2ufkgmtfngvgrfpn8jyv.user' doesn't exist"
+  ]
+}

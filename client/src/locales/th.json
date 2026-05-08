@@ -3356,7 +3356,10 @@
     "pickupCompleted": "สมบูรณ์",
     "single": "เดี่ยว",
     "suite": "ห้องสวีท",
-    "twin": "แฝด"
+    "twin": "แฝด",
+    "editPassport": "แก้ไขหนังสือเดินทาง",
+    "uploadImage": "อัปโหลดรูปภาพ",
+    "passportImage": "รูปหนังสือเดินทาง"
   },
   "nav": {
     "ai": "AI",

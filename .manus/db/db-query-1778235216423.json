@@ -1,0 +1,25 @@
+{
+  "query": "SHOW TABLES LIKE '%user%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SHOW TABLES LIKE '%user%';",
+  "rows": [
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (%user%)": "user_accommodations"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (%user%)": "user_checklist_items"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (%user%)": "user_locations"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (%user%)": "user_profiles"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (%user%)": "users"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (%user%)\nuser_accommodations\nuser_checklist_items\nuser_locations\nuser_profiles\nusers\n",
+  "stderr": "",
+  "execution_time_ms": 1863
+}

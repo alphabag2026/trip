@@ -2872,7 +2872,10 @@
     "double": "Tweepersoons",
     "twin": "Twee aparte bedden",
     "suite": "Suite",
-    "floor": "Verd."
+    "floor": "Verd.",
+    "editPassport": "Edit Passport",
+    "uploadImage": "Upload Image",
+    "passportImage": "Passport Image"
   },
   "nav": {
     "ai": "AI",

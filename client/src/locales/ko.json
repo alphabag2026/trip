@@ -2872,7 +2872,10 @@
     "double": "더블",
     "twin": "트윈",
     "suite": "스위트",
-    "floor": "층"
+    "floor": "층",
+    "editPassport": "여권 수정",
+    "uploadImage": "이미지 업로드",
+    "passportImage": "여권 이미지"
   },
   "nav": {
     "ai": "AI 도우미",

@@ -3205,7 +3205,10 @@
     "double": "Podwójny",
     "twin": "Podwójny z dwoma łóżkami",
     "suite": "Apartament",
-    "floor": "F"
+    "floor": "F",
+    "editPassport": "Edit Passport",
+    "uploadImage": "Upload Image",
+    "passportImage": "Passport Image"
   },
   "nav": {
     "ai": "AI",

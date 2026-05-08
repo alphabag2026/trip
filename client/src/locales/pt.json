@@ -3282,7 +3282,10 @@
     "nextNationality": "Selecione sua nacionalidade",
     "profileCompletion": "Conclusão do Perfil",
     "nextStep": "Próximo Passo",
-    "nextPhone": "Por favor, insira seu número de telefone"
+    "nextPhone": "Por favor, insira seu número de telefone",
+    "editPassport": "Edit Passport",
+    "uploadImage": "Upload Image",
+    "passportImage": "Passport Image"
   },
   "nav": {
     "ai": "IA",

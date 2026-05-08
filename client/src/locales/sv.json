@@ -2872,7 +2872,10 @@
     "double": "Dubbel",
     "twin": "Tvåbädds",
     "suite": "Sviten",
-    "floor": "V"
+    "floor": "V",
+    "editPassport": "Edit Passport",
+    "uploadImage": "Upload Image",
+    "passportImage": "Passport Image"
   },
   "nav": {
     "ai": "AI",

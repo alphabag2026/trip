@@ -1,0 +1,307 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "accommodation_assignments"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "ad_banners"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "affiliate_revenue"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "affiliate_settings"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "api_keys"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "api_request_logs"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "attendee_tiers"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "audit_logs"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "baggage_tracking"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "booking_links"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "booking_searches"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "broadcast_messages"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "chat_messages"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "chat_room_members"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "chat_rooms"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "chatbot_logs"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "checkin_info"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "communication_channels"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "company_info"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "delivery_orders"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "delivery_providers"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "email_verification_tokens"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "emergency_contacts"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "event_checkins"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "flight_schedules"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "flight_tickets"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "geofence_events"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "geofences"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "hotel_vouchers"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "immigration_cards"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "immigration_checklist_templates"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "invitation_statistics"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "invitation_templates"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "invitations"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "itineraries"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "location_history"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "meetup_expenses"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "meetup_invitations"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "meetup_partners"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "meetup_schedules"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "meetups"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "messages"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "modification_requests"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "notes"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "onboarding_progress"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "organization_members"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "organizations"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "organizer_approvals"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "organizer_roles"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "participant_transportation"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "partner_categories"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "partners"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "passport_info"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "password_reset_tokens"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "payment_gateway_config"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "payment_transactions"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "pickup_assignments"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "pickup_photos"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "place_favorites"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "platform_wallets"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "push_subscriptions"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "registrations"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "ride_bookings"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "ride_providers"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "ride_searches"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "role_delegations"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "rsvp_reminder_logs"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "rsvp_reminder_settings"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "safety_alerts"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "schedule_events"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "schedule_reminders"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "schedule_rsvps"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "self_booking_requests"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "shared_accommodations"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "sns_accounts"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "sns_posts"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "sns_templates"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "survey_responses"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "surveys"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "team_schedules"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "telegram_config"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "telegram_uploads"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "translation_cache"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "translation_requests"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "transportation_apis"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "transportation_options"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "travel_bookings"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "travel_info"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "travel_policies"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "travel_searches"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "user_accommodations"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "user_checklist_items"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "user_locations"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "user_profiles"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "users"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "vat_rates"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "vouchers"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv": "wallet_transactions"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_9L2UFkGMTFNGvGrFPN8jYv\n__drizzle_migrations\naccommodation_assignments\nad_banners\naffiliate_revenue\naffiliate_settings\napi_keys\napi_request_logs\nattendee_tiers\naudit_logs\nbaggage_tracking\nbooking_links\nbooking_searches\nbroadcast_messages\nchat_messages\nchat_room_members\nchat_rooms\nchatbot_logs\ncheckin_info\ncommunication_channels\ncompany_info\ndelivery_orders\ndelivery_providers\nemail_verification_tokens\nemergency_contacts\nevent_checkins\nflight_schedules\nflight_tickets\ngeofence_events\ngeofences\nhotel_vouchers\nimmigration_cards\nimmigration_checklist_templates\ninvitation_statistics\ninvitation_templates\ninvitations\nitineraries\nlocation_history\nmeetup_expenses\nmeetup_invitations\nmeetup_partners\nmeetup_schedules\nmeetups\nmessages\nmodification_requests\nnotes\nonboarding_progress\norganization_members\norganizations\norganizer_approvals\norganizer_roles\nparticipant_transportation\npartner_categories\npartners\npassport_info\npassword_reset_tokens\npayment_gateway_config\npayment_transactions\npickup_assignments\npickup_photos\nplace_favorites\nplatform_wallets\npush_subscriptions\nregistrations\nride_bookings\nride_providers\nride_searches\nrole_delegations\nrsvp_reminder_logs\nrsvp_reminder_settings\nsafety_alerts\nschedule_events\nschedule_reminders\nschedule_rsvps\nself_booking_requests\nshared_accommodations\nsns_accounts\nsns_posts\nsns_templates\nsurvey_responses\nsurveys\nteam_schedules\ntelegram_config\ntelegram_uploads\ntranslation_cache\ntranslation_requests\ntransportation_apis\ntransportation_options\ntravel_bookings\ntravel_info\ntravel_policies\ntravel_searches\nuser_accommodations\nuser_checklist_items\nuser_locations\nuser_profiles\nusers\nvat_rates\nvouchers\nwallet_transactions\n",
+  "stderr": "",
+  "execution_time_ms": 1847
+}

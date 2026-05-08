@@ -2872,7 +2872,10 @@
     "twin": "Bilik Twin",
     "suite": "Suite",
     "floor": "L",
-    "persons": " orang"
+    "persons": " orang",
+    "editPassport": "Edit Passport",
+    "uploadImage": "Upload Image",
+    "passportImage": "Passport Image"
   },
   "nav": {
     "ai": "AI",

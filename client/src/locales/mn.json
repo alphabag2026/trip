@@ -3836,7 +3836,10 @@
       "sent": "Verification email sent",
       "sendBtn": "Send Verification",
       "resend": "Resend"
-    }
+    },
+    "editPassport": "Edit Passport",
+    "uploadImage": "Upload Image",
+    "passportImage": "Passport Image"
   },
   "nav": {
     "ai": "AI",

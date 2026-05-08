@@ -2872,7 +2872,10 @@
     "double": "ダブル",
     "twin": "ツイン",
     "suite": "スイート",
-    "floor": "階"
+    "floor": "階",
+    "editPassport": "パスポート編集",
+    "uploadImage": "画像アップロード",
+    "passportImage": "パスポート画像"
   },
   "nav": {
     "ai": "AI",

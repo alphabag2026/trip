@@ -2872,7 +2872,10 @@
     "double": "Çift Kişilik",
     "twin": "İki Yataklı",
     "suite": "Süit",
-    "floor": "F"
+    "floor": "F",
+    "editPassport": "Edit Passport",
+    "uploadImage": "Upload Image",
+    "passportImage": "Passport Image"
   },
   "nav": {
     "ai": "AI",

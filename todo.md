@@ -2680,3 +2680,13 @@
 - [x] 회원가입 시 에러 발생 원인 진단 및 수정 (DATABASE_URL이 잘못된 로컬 MySQL을 가리키고 있었음 → TiDB Cloud로 수정)
 - [x] 에러 발생 시 세부 에러 내용 표시 (프론트엔드) - HTTP 상태코드, 경로 포함
 - [x] 프로덕션 배포 (alphatrip.org) - .dockerignore에서 dist 제거 포함
+
+## v6.41 - E2E 전체 플로우 테스트 완료 + i18n 수정
+- [x] 로그인 테스트 (이메일/비밀번호) - 정상
+- [x] Google OAuth 리다이렉트 테스트 - 정상
+- [x] Kakao OAuth 리다이렉트 테스트 - 정상
+- [x] 밋업 생성 테스트 (해외, E2E 테스트 밋업 방콕) - 정상
+- [x] 여권 등록 테스트 (M12345678, BAE SUNG, KR, Male) - 정상
+- [x] 밋업 참가 신청 테스트 (해외, 2026-06-01~06-05) - 정상 (Application Complete!)
+- [x] i18n 번역키 누락 수정 (myPage.editPassport, uploadImage, passportImage) - 23개 언어
+- [x] 프로덕션 배포 (alphatrip.org)

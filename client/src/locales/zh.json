@@ -2967,7 +2967,10 @@
     "double": "双人间",
     "twin": "双床间",
     "suite": "套房",
-    "floor": "F"
+    "floor": "F",
+    "editPassport": "编辑护照",
+    "uploadImage": "上传图片",
+    "passportImage": "护照图片"
   },
   "nav": {
     "ai": "AI助手",

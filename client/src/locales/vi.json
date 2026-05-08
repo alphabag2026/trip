@@ -2872,7 +2872,10 @@
     "double": "Gấp đôi",
     "twin": "sinh đôi",
     "suite": "Suite",
-    "floor": "F"
+    "floor": "F",
+    "editPassport": "Chỉnh sửa hộ chiếu",
+    "uploadImage": "Tải ảnh lên",
+    "passportImage": "Ảnh hộ chiếu"
   },
   "nav": {
     "ai": "AI",

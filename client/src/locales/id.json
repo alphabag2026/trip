@@ -3197,7 +3197,10 @@
     "double": "Ganda",
     "twin": "Kembar",
     "suite": "Suite",
-    "floor": "L"
+    "floor": "L",
+    "editPassport": "Edit Passport",
+    "uploadImage": "Upload Image",
+    "passportImage": "Passport Image"
   },
   "nav": {
     "ai": "AI",
