@@ -2674,4 +2674,9 @@
 - [x] 여정표 관리 페이지에 일괄 발송 버튼 추가 (이메일/텔레그램)
 - [x] 전체 플로우 E2E 테스트 (로그아웃/참가자목록/여정표/호텔배정/프롬프트등록)
 - [x] 발견된 버그 수정 (로그아웃 드롭다운 side=top, 번역키 누락, getRegistrations LIMIT 추가)
-- [ ] 프로덕션 배포 (alphatrip.org)
+- [x] 프로덕션 배포 (alphatrip.org)
+
+## v6.40 - 회원가입 에러 수정 + 에러 세부내용 표시
+- [x] 회원가입 시 에러 발생 원인 진단 및 수정 (DATABASE_URL이 잘못된 로컬 MySQL을 가리키고 있었음 → TiDB Cloud로 수정)
+- [x] 에러 발생 시 세부 에러 내용 표시 (프론트엔드) - HTTP 상태코드, 경로 포함
+- [x] 프로덕션 배포 (alphatrip.org) - .dockerignore에서 dist 제거 포함

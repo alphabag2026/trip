@@ -68,19 +68,29 @@ export default function LoginPage() {
         window.location.href = returnPath;
       }
     },
-    onError: (err) => setError(err.message),
+    onError: (err: any) => {
+      const detail = err?.data?.httpStatus ? ` [HTTP ${err.data.httpStatus}]` : '';
+      setError(`${err.message || '로그인 실패'}${detail}`);
+    },
   });
-
   const verify2FA = trpc.auth.verify2FA.useMutation({
     onSuccess: () => { window.location.href = returnPath; },
-    onError: (err) => { setError(err.message); setTotpCode(""); },
+    onError: (err: any) => {
+      const detail = err?.data?.httpStatus ? ` [HTTP ${err.data.httpStatus}]` : '';
+      setError(`${err.message || '2FA 인증 실패'}${detail}`);
+      setTotpCode("");
+    },
   });
 
   const emailRegister = trpc.auth.emailRegister.useMutation({
     onSuccess: () => {
       window.location.href = `/welcome?type=${accountType}&name=${encodeURIComponent(regName)}`;
     },
-    onError: (err) => setError(err.message),
+    onError: (err: any) => {
+      const detail = err?.data?.httpStatus ? ` [HTTP ${err.data.httpStatus}]` : '';
+      const path = err?.data?.path ? ` (${err.data.path})` : '';
+      setError(`${err.message || '회원가입 처리 중 오류가 발생했습니다'}${detail}${path}`);
+    },
   });
 
   const handleLogin = (e: React.FormEvent) => {
