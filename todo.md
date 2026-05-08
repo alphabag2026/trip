@@ -2690,3 +2690,8 @@
 - [x] 밋업 참가 신청 테스트 (해외, 2026-06-01~06-05) - 정상 (Application Complete!)
 - [x] i18n 번역키 누락 수정 (myPage.editPassport, uploadImage, passportImage) - 23개 언어
 - [x] 프로덕션 배포 (alphatrip.org)
+
+## v6.42 - 회원가입 HTTP 500 에러 수정
+- [x] 회원가입 HTTP 500 에러 원인 진단 (배포 시 .env.production이 덮어씌워져 DATABASE_URL이 잘못된 로컬 MySQL로 복원됨)
+- [x] 서버 에러 세부 내용을 프론트엔드에 표시 (이미 구현됨 - HTTP 상태코드+경로 표시)
+- [x] 프로덕션 배포 - DATABASE_URL/OAuth 키 영구 수정 + .env.production에 포함하여 재배포 방지
