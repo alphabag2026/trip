@@ -1547,6 +1547,7 @@
       "selfBookingAdmin": "Solicitações de autorreserva",
       "snsManager": "Postagem automática de SNS",
       "aiBulkRegister": "Registro em massa de IA",
+      "passportFlightUpload": "여권+항공권 일괄 등록",
       "aiScheduleGenerator": "Geração de agendamento de IA",
       "checkinDashboard": "Check-in por QR",
       "checkinReport": "Estatísticas de check-in"

@@ -369,6 +369,16 @@ export const appRouter = router({
         } catch (e) {
           console.error("[Register] Auto email verify failed:", e);
         }
+        // v6.36: 비회원 참석자 정보 자동 연결 (이름 매칭)
+        try {
+          const linkedRegs = await db.linkRegistrationsToUser(user.id, input.name);
+          const linkedFlights = await db.linkFlightTicketsToUser(user.id, input.name);
+          if (linkedRegs > 0 || linkedFlights > 0) {
+            console.log(`[Register] Auto-linked ${linkedRegs} registrations, ${linkedFlights} flights for user ${user.id} (${input.name})`);
+          }
+        } catch (linkErr) {
+          console.error("[Register] Auto-link failed:", linkErr);
+        }
         // Auto-login after registration
         const sessionToken = await sdk.createSessionToken(user.openId, { name: user.name || "", expiresInMs: ONE_YEAR_MS });
         const cookieOptions = getSessionCookieOptions(ctx.req);
@@ -9817,9 +9827,126 @@ Rules:
         const ids = await db.bulkCreateRegistrations(dataList);
         return { success: true, count: ids.length, ids };
       }),
+    // v6.36: 여권+항공권 이미지 일괄 OCR 업로드
+    passportFlightOcr: adminProcedure
+      .input(z.object({
+        images: z.array(z.object({
+          base64: z.string(),
+          mimeType: z.string().default("image/jpeg"),
+          type: z.enum(["passport", "flight", "auto"]).default("auto"),
+        })),
+        meetupId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const results: any[] = [];
+        for (const img of input.images) {
+          try {
+            const buffer = Buffer.from(img.base64, "base64");
+            const key = `bulk-ocr/${nanoid(12)}.jpg`;
+            const { url } = await storagePut(key, buffer, img.mimeType);
+            const ocrResponse = await invokeLLM({
+              messages: [
+                { role: "system", content: `You are a document OCR system. Analyze this image and determine if it's a passport or flight booking/ticket.\nIf PASSPORT, extract: { "docType": "passport", "fullName": "...", "passportNumber": "...", "nationality": "...", "dateOfBirth": "YYYY-MM-DD", "expiryDate": "YYYY-MM-DD", "gender": "M/F", "issuingCountry": "..." }\nIf FLIGHT BOOKING/TICKET, extract all passengers: { "docType": "flight", "passengers": [{ "name": "...", "pnr": "...", "ticketNumber": "...", "airline": "...", "flightNo": "...", "departure": "...", "arrival": "...", "departureDate": "...", "departureTime": "..." }] }\nReturn ONLY valid JSON. For Korean names in English (e.g. KIM WOONGKI), keep as-is.` },
+                { role: "user", content: [
+                  { type: "text", text: "Analyze this document image:" },
+                  { type: "image_url", image_url: { url, detail: "high" } },
+                ]},
+              ],
+            });
+            const rawContent = ocrResponse.choices?.[0]?.message?.content;
+            const ocrText = typeof rawContent === "string" ? rawContent : "{}";
+            let ocrData: any = {};
+            try { const jsonMatch = ocrText.match(/\{[\s\S]*\}/); ocrData = jsonMatch ? JSON.parse(jsonMatch[0]) : {}; }
+            catch { ocrData = { raw: ocrText }; }
+            results.push({ imageUrl: url, ocrData, success: true });
+          } catch (e: any) {
+            console.error("[BulkOCR] Error:", e?.message);
+            results.push({ imageUrl: null, ocrData: null, success: false, error: e?.message || "OCR \uc2e4\ud328" });
+          }
+        }
+        return { results };
+      }),
+    // v6.36: OCR 결과로 참석자 자동 등록 (여권+항공 정보 통합)
+    passportFlightRegister: adminProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        participants: z.array(z.object({
+          name: z.string(),
+          passportNumber: z.string().optional(),
+          nationality: z.string().optional(),
+          dateOfBirth: z.string().optional(),
+          expiryDate: z.string().optional(),
+          gender: z.enum(["M", "F"]).optional(),
+          issuingCountry: z.string().optional(),
+          passportImageUrl: z.string().optional(),
+          pnr: z.string().optional(),
+          ticketNumber: z.string().optional(),
+          airline: z.string().optional(),
+          flightNo: z.string().optional(),
+          departure: z.string().optional(),
+          arrival: z.string().optional(),
+          departureDate: z.string().optional(),
+          departureTime: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const created: any[] = [];
+        for (const p of input.participants) {
+          try {
+            const regId = await db.createRegistration({
+              meetupId: input.meetupId,
+              name: p.name,
+              phone: "",
+              messengerId: "",
+              locationType: "overseas",
+              category: "meetup",
+              status: "approved",
+              passportImageUrl: p.passportImageUrl || null,
+              passportOcrData: { passportNumber: p.passportNumber, nationality: p.nationality, dateOfBirth: p.dateOfBirth, expiryDate: p.expiryDate, gender: p.gender },
+            });
+            if (p.passportNumber) {
+              try {
+                await db.createPassportInfoForGuest({
+                  passportNumber: p.passportNumber,
+                  fullName: p.name,
+                  nationality: p.nationality || null,
+                  birthDate: p.dateOfBirth || null,
+                  expiryDate: p.expiryDate || null,
+                  gender: p.gender || null,
+                  issuingCountry: p.issuingCountry || null,
+                  passportImageUrl: p.passportImageUrl || null,
+                });
+              } catch (e) { console.error("[BulkReg] PassportInfo create failed:", e); }
+            }
+            if (p.pnr || p.ticketNumber) {
+              try {
+                await db.createFlightTicket({
+                  meetupId: input.meetupId,
+                  registrationId: regId,
+                  passengerName: p.name,
+                  passportNumber: p.passportNumber || null,
+                  bookingReference: p.pnr || null,
+                  ticketNumber: p.ticketNumber || null,
+                  outboundAirline: p.airline || null,
+                  outboundFlightNo: p.flightNo || null,
+                  outboundDepartureAirport: p.departure || null,
+                  outboundArrivalAirport: p.arrival || null,
+                  outboundDepartureDate: p.departureDate || null,
+                  outboundDepartureTime: p.departureTime || null,
+                  status: "active",
+                });
+              } catch (e) { console.error("[BulkReg] FlightTicket create failed:", e); }
+            }
+            created.push({ name: p.name, registrationId: regId, success: true });
+          } catch (e: any) {
+            created.push({ name: p.name, registrationId: null, success: false, error: e?.message });
+          }
+        }
+        return { success: true, count: created.filter(c => c.success).length, results: created };
+      }),
   }),
 
-  // ── AI 스케줄 자동 생성 ─────────────────────────────────────
+  // ── AI 스케줄 자동 생성 ─────────────────────────────────────────
   aiSchedule: router({
     generate: adminProcedure
       .input(z.object({ meetupId: z.number(), preferences: z.string().optional() }))

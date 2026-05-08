@@ -1484,6 +1484,7 @@
       "selfBookingAdmin": "Richieste di prenotazione autonoma",
       "snsManager": "Posta automatica SNS",
       "aiBulkRegister": "Registro collettivo AI",
+      "passportFlightUpload": "여권+항공권 일괄 등록",
       "aiScheduleGenerator": "Programmazione AI Gen",
       "checkinDashboard": "Check-in QR",
       "checkinReport": "Statistiche del check-in"

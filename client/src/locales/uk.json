@@ -1556,6 +1556,7 @@
       "selfBookingAdmin": "Запити на самостійне бронювання",
       "snsManager": "Автоматична публікація в SNS",
       "aiBulkRegister": "Масова реєстрація за допомогою ШІ",
+      "passportFlightUpload": "여권+항공권 일괄 등록",
       "aiScheduleGenerator": "Генератор розкладу за допомогою ШІ",
       "checkinDashboard": "QR-реєстрація",
       "checkinReport": "Статистика реєстрації",

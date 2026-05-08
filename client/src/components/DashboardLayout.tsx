@@ -150,6 +150,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       { icon: Megaphone, labelKey: "admin.sidebar.snsManager", path: "/sns-manager", roles: ["all"] },
       { icon: UserPlus, labelKey: "admin.sidebar.aiBulkRegister", path: "/ai-bulk-register", roles: ["all"] },
+      { icon: Upload, labelKey: "admin.sidebar.passportFlightUpload", path: "/passport-flight-upload", roles: ["all"] },
       { icon: CalendarPlus, labelKey: "admin.sidebar.aiScheduleGenerator", path: "/ai-schedule-generator", roles: ["all"] },
       { icon: QrCode, labelKey: "admin.sidebar.checkinDashboard", path: "/checkin-dashboard", roles: ["all"] },
       { icon: BarChart3, labelKey: "admin.sidebar.checkinReport", path: "/checkin-report", roles: ["all"] },

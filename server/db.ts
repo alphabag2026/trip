@@ -4285,3 +4285,50 @@ export async function deleteImmigrationCard(id: number) {
   const db = await getDb(); if (!db) return;
   await db.delete(immigrationCards).where(eq(immigrationCards.id, id));
 }
+
+// ── v6.36: 여권+항공권 일괄 업로드 & 비회원→회원 연결 ──────────────────
+export async function findRegistrationsByName(name: string, meetupId?: number) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [eq(registrations.name, name)];
+  if (meetupId) conditions.push(eq(registrations.meetupId, meetupId));
+  return db.select().from(registrations).where(and(...conditions)).orderBy(desc(registrations.createdAt));
+}
+
+export async function findPassportInfoByPassportNumber(passportNumber: string) {
+  const db = await getDb(); if (!db) return null;
+  const rows = await db.select().from(passportInfo).where(eq(passportInfo.passportNumber, passportNumber));
+  return rows[0] || null;
+}
+
+export async function linkRegistrationsToUser(userId: number, name: string) {
+  const db = await getDb(); if (!db) return 0;
+  const result = await db.update(registrations)
+    .set({ userId })
+    .where(and(eq(registrations.name, name), isNull(registrations.userId)));
+  return (result as any)[0]?.affectedRows || 0;
+}
+
+export async function linkFlightTicketsToUser(userId: number, name: string) {
+  const db = await getDb(); if (!db) return 0;
+  const result = await db.update(flightTickets)
+    .set({ userId })
+    .where(and(eq(flightTickets.passengerName, name), isNull(flightTickets.userId)));
+  return (result as any)[0]?.affectedRows || 0;
+}
+
+export async function linkPassportInfoToUser(userId: number, passportNumber: string) {
+  const db = await getDb(); if (!db) return false;
+  const existing = await findPassportInfoByPassportNumber(passportNumber);
+  if (!existing) return false;
+  if (existing.userId === 0 || existing.userId === null) {
+    await db.update(passportInfo).set({ userId }).where(eq(passportInfo.id, existing.id));
+    return true;
+  }
+  return false;
+}
+
+export async function createPassportInfoForGuest(data: Partial<InsertPassportInfo> & { passportNumber: string }) {
+  const db = await getDb(); if (!db) throw new Error("DB not available");
+  const result = await db.insert(passportInfo).values({ ...data, userId: 0 } as any);
+  return Number((result as any)[0].insertId);
+}

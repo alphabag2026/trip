@@ -1484,6 +1484,7 @@
       "selfBookingAdmin": "Хувийн захиалгын хүсэлт",
       "snsManager": "SNS автомат пост",
       "aiBulkRegister": "AI бөөнөөр бүртгэх",
+      "passportFlightUpload": "여권+항공권 일괄 등록",
       "aiScheduleGenerator": "AI хуваарь үүсгэгч",
       "checkinDashboard": "QR бүртгэл",
       "checkinReport": "Бүртгэлийн статистик"
@@ -2400,6 +2401,7 @@
       "postSuccess": "Пост амжилттай нийтлэгдлээ"
     },
     "aiBulkRegister": {
+      "passportFlightUpload": "여권+항공권 일괄 등록",
       "title": "AI бөөнөөр бүртгэх",
       "subtitle": "Оролцогчдын мэдээллийг текст эсвэл файлаас бөөнөөр нь бүртгэх",
       "pasteText": "Текст буулгах",

@@ -1484,6 +1484,7 @@
       "selfBookingAdmin": "Kendi Kendine Rezervasyon Talepleri",
       "snsManager": "SNS Otomatik Gönderi",
       "aiBulkRegister": "AI Toplu Kayıt",
+      "passportFlightUpload": "여권+항공권 일괄 등록",
       "aiScheduleGenerator": "AI Program Oluşturucu",
       "checkinDashboard": "QR Check-in",
       "checkinReport": "Check-in İstatistikleri"

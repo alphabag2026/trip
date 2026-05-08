@@ -1484,6 +1484,7 @@
       "selfBookingAdmin": "Запросы на самостоятельное бронирование",
       "snsManager": "Автопубликация в соцсетях",
       "aiBulkRegister": "Массовая регистрация ИИ",
+      "passportFlightUpload": "여권+항공권 일괄 등록",
       "aiScheduleGenerator": "Генератор расписания ИИ",
       "checkinDashboard": "QR-регистрация",
       "checkinReport": "Статистика регистрации"

@@ -1484,6 +1484,7 @@
       "selfBookingAdmin": "طلبات الحجز الذاتي",
       "snsManager": "النشر التلقائي على SNS",
       "aiBulkRegister": "تسجيل جماعي بالذكاء الاصطناعي",
+      "passportFlightUpload": "여권+항공권 일괄 등록",
       "aiScheduleGenerator": "مولد الجداول بالذكاء الاصطناعي",
       "checkinDashboard": "تسجيل الوصول بـ QR",
       "checkinReport": "إحصائيات تسجيل الوصول"

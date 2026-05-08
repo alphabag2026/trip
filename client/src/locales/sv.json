@@ -1484,6 +1484,7 @@
       "selfBookingAdmin": "Självbokningsförfrågningar",
       "snsManager": "SNS Auto Post",
       "aiBulkRegister": "AI Massregistrering",
+      "passportFlightUpload": "여권+항공권 일괄 등록",
       "aiScheduleGenerator": "AI Schemaläggare",
       "checkinDashboard": "QR-incheckning",
       "checkinReport": "Incheckningsstatistik"

@@ -2644,3 +2644,14 @@
 - [x] 프로덕션 에러 모니터링 추가 (errorMonitor.ts + /api/error-reports 엔드포인트)
 - [x] 빌드 및 테스트 (injectManifest + workbox 성공)
 - [x] AWS Lightsail 서버 배포 (13.213.239.217)
+
+## v6.36 - 여권+항공권 일괄 업로드 원스톱 등록 + 비회원→회원 연결
+- [x] 프로젝트팀(organizer)용 여권+항공권 일괄 업로드 API (aiBulk.passportFlightOcr)
+- [x] 여권 OCR 자동 파싱 (LLM 기반 이름/여권번호/국적/생년월일/만료일 추출)
+- [x] 항공권 예약 이미지 OCR 자동 파싱 (이름/PNR/전자항공권번호 추출)
+- [x] OCR 결과로 참석자 자동 등록 (aiBulk.passportFlightRegister)
+- [x] 이름 매칭으로 여권+항공권 정보 자동 연결
+- [x] 비회원 참석자가 회원가입 시 기존 정보 자동 연결 (이름 매칭, auth.register에 추가)
+- [x] 프론트엔드 원스톱 업로드 UI (PassportFlightUpload.tsx)
+- [x] 빌드 및 테스트
+- [x] AWS Lightsail 서버 배포 (meetup-app 컨테이너)

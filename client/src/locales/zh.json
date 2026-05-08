@@ -1484,6 +1484,7 @@
       "selfBookingAdmin": "自助预订请求",
       "snsManager": "SNS 自动发布",
       "aiBulkRegister": "AI 批量注册",
+      "passportFlightUpload": "护照+机票批量上传",
       "aiScheduleGenerator": "AI 日程生成器",
       "checkinDashboard": "二维码签到",
       "checkinReport": "签到统计"
