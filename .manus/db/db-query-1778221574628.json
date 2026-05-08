@@ -1,0 +1,30 @@
+{
+  "query": "SELECT * FROM meetups WHERE id = 510001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT * FROM meetups WHERE id = 510001;",
+  "rows": [
+    {
+      "id": "510001",
+      "title": "하롱베이 2140 Xplay",
+      "type": "event",
+      "locationType": "overseas",
+      "destinationCountry": "VN",
+      "location": "Ha Long Bay, Vietnam",
+      "scheduleStart": "2026-05-10 00:00:00",
+      "scheduleEnd": "2026-05-13 23:59:59",
+      "description": "하롱베이 2140 Xplay 행사 - 박석봉팀",
+      "maxParticipants": "NULL",
+      "status": "open",
+      "createdBy": "NULL",
+      "createdAt": "2026-05-08 05:40:32",
+      "updatedAt": "2026-05-08 05:40:32",
+      "baggageNotice": "NULL",
+      "projectCode": "XPLAY2140",
+      "shareToken": "NULL",
+      "invitedCountries": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\ttype\tlocationType\tdestinationCountry\tlocation\tscheduleStart\tscheduleEnd\tdescription\tmaxParticipants\tstatus\tcreatedBy\tcreatedAt\tupdatedAt\tbaggageNotice\tprojectCode\tshareToken\tinvitedCountries\n510001\t하롱베이 2140 Xplay\tevent\toverseas\tVN\tHa Long Bay, Vietnam\t2026-05-10 00:00:00\t2026-05-13 23:59:59\t하롱베이 2140 Xplay 행사 - 박석봉팀\tNULL\topen\tNULL\t2026-05-08 05:40:32\t2026-05-08 05:40:32\tNULL\tXPLAY2140\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1845
+}

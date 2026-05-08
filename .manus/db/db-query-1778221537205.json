@@ -1,0 +1,130 @@
+{
+  "query": "SELECT r.id, r.meetupId, r.name, r.teamName FROM registrations r WHERE r.meetupId = 510001 LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT r.id, r.meetupId, r.name, r.teamName FROM registrations r WHERE r.meetupId = 510001 LIMIT 20;",
+  "rows": [
+    {
+      "id": "570001",
+      "meetupId": "510001",
+      "name": "KIM BONGMYUNG",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570002",
+      "meetupId": "510001",
+      "name": "KIM WOONGKI",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570003",
+      "meetupId": "510001",
+      "name": "CHO SEORAN",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570004",
+      "meetupId": "510001",
+      "name": "MYOUNG SUNG JIN",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570005",
+      "meetupId": "510001",
+      "name": "KIM YOONSEO",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570006",
+      "meetupId": "510001",
+      "name": "KIM YUN JA",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570007",
+      "meetupId": "510001",
+      "name": "PARK BYUNGRYANG",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570008",
+      "meetupId": "510001",
+      "name": "SEO YAMUN",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570009",
+      "meetupId": "510001",
+      "name": "PAK SEOKBONG",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570010",
+      "meetupId": "510001",
+      "name": "KIM DONGHEE",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570011",
+      "meetupId": "510001",
+      "name": "KIM YEAJA",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570012",
+      "meetupId": "510001",
+      "name": "DINH THI BANG",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570013",
+      "meetupId": "510001",
+      "name": "LEE DONGKUK",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570014",
+      "meetupId": "510001",
+      "name": "KIM SUNAE",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570015",
+      "meetupId": "510001",
+      "name": "YOO YUNSUNG",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570016",
+      "meetupId": "510001",
+      "name": "JO KWANG RYE",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570017",
+      "meetupId": "510001",
+      "name": "SO HUN YOUNG",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570018",
+      "meetupId": "510001",
+      "name": "RYU HYUNJIN",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570019",
+      "meetupId": "510001",
+      "name": "IM HYEONSUK",
+      "teamName": "박석봉팀"
+    },
+    {
+      "id": "570020",
+      "meetupId": "510001",
+      "name": "JEONG TAESU",
+      "teamName": "박석봉팀"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tmeetupId\tname\tteamName\n570001\t510001\tKIM BONGMYUNG\t박석봉팀\n570002\t510001\tKIM WOONGKI\t박석봉팀\n570003\t510001\tCHO SEORAN\t박석봉팀\n570004\t510001\tMYOUNG SUNG JIN\t박석봉팀\n570005\t510001\tKIM YOONSEO\t박석봉팀\n570006\t510001\tKIM YUN JA\t박석봉팀\n570007\t510001\tPARK BYUNGRYANG\t박석봉팀\n570008\t510001\tSEO YAMUN\t박석봉팀\n570009\t510001\tPAK SEOKBONG\t박석봉팀\n570010\t510001\tKIM DONGHEE\t박석봉팀\n570011\t510001\tKIM YEAJA\t박석봉팀\n570012\t510001\tDINH THI BANG\t박석봉팀\n570013\t510001\tLEE DONGKUK\t박석봉팀\n570014\t510001\tKIM SUNAE\t박석봉팀\n570015\t510001\tYOO YUNSUNG\t박석봉팀\n570016\t510001\tJO KWANG RYE\t박석봉팀\n570017\t510001\tSO HUN YOUNG\t박석봉팀\n570018\t510001\tRYU HYUNJIN\t박석봉팀\n570019\t510001\tIM HYEONSUK\t박석봉팀\n570020\t510001\tJEONG TAESU\t박석봉팀\n",
+  "stderr": "",
+  "execution_time_ms": 1918
+}

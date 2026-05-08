@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, title, location FROM meetups WHERE id = 510001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, title, location FROM meetups WHERE id = 510001;",
+  "rows": [
+    {
+      "id": "510001",
+      "title": "하롱베이 2140 Xplay",
+      "location": "Ha Long Bay, Vietnam"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tlocation\n510001\t하롱베이 2140 Xplay\tHa Long Bay, Vietnam\n",
+  "stderr": "",
+  "execution_time_ms": 1866
+}

@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, registrationId, passengerName, outboundAirline, outboundFlightNo, outboundDepartureCode, outboundArrivalCode, outboundDepartureDate FROM flight_tickets WHERE registrationId BETWEEN 570001 AND 570023 LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, registrationId, passengerName, outboundAirline, outboundFlightNo, outboundDepartureCode, outboundArrivalCode, outboundDepartureDate FROM flight_tickets WHERE registrationId BETWEEN 570001 AND 570023 LIMIT 5;",
+  "rows": [
+    {
+      "id": "420001",
+      "registrationId": "570006",
+      "passengerName": "KIM YUN JA",
+      "outboundAirline": "Korean Air",
+      "outboundFlightNo": "KE441",
+      "outboundDepartureCode": "ICN",
+      "outboundArrivalCode": "HAN",
+      "outboundDepartureDate": "2026-05-10"
+    },
+    {
+      "id": "420002",
+      "registrationId": "570012",
+      "passengerName": "DINH THI BANG",
+      "outboundAirline": "Korean Air",
+      "outboundFlightNo": "KE441",
+      "outboundDepartureCode": "ICN",
+      "outboundArrivalCode": "HAN",
+      "outboundDepartureDate": "2026-05-10"
+    },
+    {
+      "id": "420003",
+      "registrationId": "570007",
+      "passengerName": "PARK BYUNGRYANG",
+      "outboundAirline": "Korean Air",
+      "outboundFlightNo": "KE441",
+      "outboundDepartureCode": "ICN",
+      "outboundArrivalCode": "HAN",
+      "outboundDepartureDate": "2026-05-10"
+    },
+    {
+      "id": "420004",
+      "registrationId": "570008",
+      "passengerName": "SEO YAMUN",
+      "outboundAirline": "Korean Air",
+      "outboundFlightNo": "KE441",
+      "outboundDepartureCode": "ICN",
+      "outboundArrivalCode": "HAN",
+      "outboundDepartureDate": "2026-05-10"
+    },
+    {
+      "id": "420005",
+      "registrationId": "570013",
+      "passengerName": "LEE DONGKUK",
+      "outboundAirline": "Korean Air",
+      "outboundFlightNo": "KE441",
+      "outboundDepartureCode": "ICN",
+      "outboundArrivalCode": "HAN",
+      "outboundDepartureDate": "2026-05-10"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tregistrationId\tpassengerName\toutboundAirline\toutboundFlightNo\toutboundDepartureCode\toutboundArrivalCode\toutboundDepartureDate\n420001\t570006\tKIM YUN JA\tKorean Air\tKE441\tICN\tHAN\t2026-05-10\n420002\t570012\tDINH THI BANG\tKorean Air\tKE441\tICN\tHAN\t2026-05-10\n420003\t570007\tPARK BYUNGRYANG\tKorean Air\tKE441\tICN\tHAN\t2026-05-10\n420004\t570008\tSEO YAMUN\tKorean Air\tKE441\tICN\tHAN\t2026-05-10\n420005\t570013\tLEE DONGKUK\tKorean Air\tKE441\tICN\tHAN\t2026-05-10\n",
+  "stderr": "",
+  "execution_time_ms": 1816
+}
