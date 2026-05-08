@@ -122,6 +122,7 @@ const AdminSnsManager = lazy(() => import("./pages/admin/SnsManager"));
 const OrganizerQuickSetup = lazy(() => import("./pages/OrganizerQuickSetup"));
 const AdminAiBulkRegister = lazy(() => import("./pages/admin/AiBulkRegister"));
 const AdminPassportFlightUpload = lazy(() => import("./pages/admin/PassportFlightUpload"));
+const AdminPromptRegister = lazy(() => import("./pages/admin/PromptRegister"));
 const AdminAiScheduleGenerator = lazy(() => import("./pages/admin/AiScheduleGenerator"));
 const AdminCheckinDashboard = lazy(() => import("./pages/admin/CheckinDashboard"));
 const AdminCheckinReport = lazy(() => import("./pages/admin/CheckinReport"));
@@ -241,6 +242,7 @@ function AdminRouter() {
           <Route path="/sns-manager" component={AdminSnsManager} />
           <Route path="/ai-bulk-register" component={AdminAiBulkRegister} />
           <Route path="/passport-flight-upload" component={AdminPassportFlightUpload} />
+          <Route path="/prompt-register" component={AdminPromptRegister} />
           <Route path="/ai-schedule-generator" component={AdminAiScheduleGenerator} />
           <Route path="/checkin-dashboard" component={AdminCheckinDashboard} />
           <Route path="/checkin-report" component={AdminCheckinReport} />

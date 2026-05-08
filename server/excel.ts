@@ -323,3 +323,47 @@ export async function exportStatsToExcel(stats: {
 
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
+
+
+// v6.37: 여권정보 포함 엑셀 다운로드 (사진URL, 이름, 생년월일, 국가, 만료일, 성별)
+export async function exportPassportFullToExcel(data: any[]): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("여권정보 목록");
+  ws.columns = [
+    { header: "ID", key: "regId", width: 6 },
+    { header: "이름", key: "regName", width: 15 },
+    { header: "전화번호", key: "regPhone", width: 18 },
+    { header: "팀명", key: "regTeamName", width: 15 },
+    { header: "상태", key: "regStatus", width: 10 },
+    { header: "여권 영문이름", key: "passportFullName", width: 25 },
+    { header: "여권번호", key: "passportNumber", width: 15 },
+    { header: "생년월일", key: "passportBirthDate", width: 14 },
+    { header: "국적", key: "passportNationality", width: 10 },
+    { header: "발급국", key: "passportIssuingCountry", width: 10 },
+    { header: "만료일", key: "passportExpiryDate", width: 14 },
+    { header: "성별", key: "passportGender", width: 8 },
+    { header: "여권사진 URL", key: "passportImageUrl", width: 50 },
+    { header: "인증여부", key: "passportVerified", width: 10 },
+  ];
+  styleHeader(ws);
+  data.forEach((d) => {
+    ws.addRow({
+      regId: d.regId,
+      regName: d.regName,
+      regPhone: d.regPhone,
+      regTeamName: d.regTeamName || "",
+      regStatus: d.regStatus,
+      passportFullName: d.passportFullName || "",
+      passportNumber: d.passportNumber || "",
+      passportBirthDate: d.passportBirthDate || "",
+      passportNationality: d.passportNationality || "",
+      passportIssuingCountry: d.passportIssuingCountry || "",
+      passportExpiryDate: d.passportExpiryDate || "",
+      passportGender: d.passportGender === "M" ? "남" : d.passportGender === "F" ? "여" : d.passportGender || "",
+      passportImageUrl: d.passportImageUrl || "",
+      passportVerified: d.passportVerified ? "인증" : "미인증",
+    });
+  });
+  styleDataRows(ws, 2, data.length + 1);
+  return Buffer.from(await wb.xlsx.writeBuffer());
+}

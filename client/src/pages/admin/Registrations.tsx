@@ -121,6 +121,11 @@ export default function AdminRegistrations() {
           <Button variant="outline" size="sm" onClick={handleExportPassportOcr}>
             <FileSpreadsheet className="h-4 w-4 mr-2" />{t("admin.registrations.t1", "여권 OCR 엑셀")}
           </Button>
+          <ExcelDownloadButton
+            icon="export"
+            fetchData={() => fetchTrpcQuery("excelExport.exportPassportFull")}
+            label={t("admin.excel.exportPassportFull", "여권정보 엑셀")}
+          />
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />{t("admin.registrations.t2", "전체 엑셀")}
           </Button>

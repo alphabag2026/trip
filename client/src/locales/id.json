@@ -1485,6 +1485,7 @@
       "snsManager": "Posting Otomatis SNS",
       "aiBulkRegister": "Daftar Massal AI",
       "passportFlightUpload": "여권+항공권 일괄 등록",
+      "promptRegister": "프롬프트 등록",
       "aiScheduleGenerator": "Gen Jadwal AI",
       "checkinDashboard": "Check-in QR",
       "checkinReport": "Statistik Check-in"

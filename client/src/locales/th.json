@@ -1827,6 +1827,7 @@
       "snsManager": "โพสต์อัตโนมัติบน SNS",
       "aiBulkRegister": "ลงทะเบียนจำนวนมากด้วย AI",
       "passportFlightUpload": "อัปโหลดพาสปอร์ต+ตั๋วเครื่องบิน",
+      "promptRegister": "ลงทะเบียนด้วยข้อความ",
       "aiScheduleGenerator": "สร้างตารางเวลาด้วย AI",
       "checkinDashboard": "เช็คอินด้วย QR",
       "checkinReport": "สถิติการเช็คอิน"

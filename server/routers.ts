@@ -8146,6 +8146,14 @@ Return ONLY valid JSON.`,
         });
         return { base64: buf.toString("base64"), filename: `stats_export_${Date.now()}.xlsx` };
       }),
+    // v6.37: 여권정보 포함 엑셀 다운로드 (사진URL, 이름, 생년월일, 국가, 만료일, 성별)
+    exportPassportFull: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        const passportList = await db.getMeetupPassportList(input?.meetupId);
+        const buf = await excel.exportPassportFullToExcel(passportList);
+        return { base64: buf.toString("base64"), filename: `passport_full_${Date.now()}.xlsx` };
+      }),
   }),
 
   // ── Calendar Integration (캘린더 연동) ──────────────────────
@@ -9936,6 +9944,182 @@ Rules:
                   status: "active",
                 });
               } catch (e) { console.error("[BulkReg] FlightTicket create failed:", e); }
+            }
+            created.push({ name: p.name, registrationId: regId, success: true });
+          } catch (e: any) {
+            created.push({ name: p.name, registrationId: null, success: false, error: e?.message });
+          }
+        }
+        return { success: true, count: created.filter(c => c.success).length, results: created };
+      }),
+    // v6.37: 프롬프트 형태 등록 (텍스트 입력으로 항공+여권+참가자 자동 등록)
+    promptRegister: adminProcedure
+      .input(z.object({
+        text: z.string().min(5),
+        meetupId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a travel booking data extraction assistant. Parse the following text and extract participant, flight, and passport information.
+
+Return ONLY valid JSON:
+{
+  "participants": [
+    {
+      "name": "string - 영문 이름 (대문자)",
+      "koreanName": "string - 한글 이름 (있으면)",
+      "phone": "string",
+      "messengerId": "string",
+      "teamName": "string",
+      "locationType": "domestic" | "overseas",
+      "category": "meetup" | "pre_visit" | "event" | "meeting" | "other",
+      "passport": {
+        "passportNumber": "string",
+        "nationality": "string - 국가코드 (KOR, USA 등)",
+        "dateOfBirth": "string - YYYY-MM-DD",
+        "expiryDate": "string - YYYY-MM-DD",
+        "gender": "M" | "F",
+        "issuingCountry": "string"
+      },
+      "flight": {
+        "airline": "string - 항공사명",
+        "flightNo": "string - 편명",
+        "pnr": "string - 예약번호",
+        "departureAirport": "string",
+        "departureCode": "string",
+        "arrivalAirport": "string",
+        "arrivalCode": "string",
+        "departureDate": "string - YYYY-MM-DD",
+        "departureTime": "string - HH:mm",
+        "arrivalTime": "string - HH:mm",
+        "returnFlightNo": "string",
+        "returnDepartureDate": "string - YYYY-MM-DD",
+        "returnDepartureTime": "string - HH:mm",
+        "returnArrivalTime": "string - HH:mm"
+      }
+    }
+  ],
+  "totalCount": number
+}
+
+Rules:
+- Parse Korean, English names
+- If airline is mentioned (e.g. 대한항공=Korean Air, 아시아나=Asiana Airlines), include it
+- If flight number is mentioned, include it
+- If dates are mentioned, parse them into YYYY-MM-DD format
+- If passport info is mentioned, include it
+- Default locationType to "overseas" for international flights
+- Always respond in valid JSON only.`,
+            },
+            { role: "user", content: input.text },
+          ],
+          response_format: { type: "json_object" },
+        });
+        const content = response.choices[0]?.message?.content;
+        if (typeof content !== "string") return { success: false, data: null, error: "AI 응답 없음" };
+        try {
+          const parsed = JSON.parse(content);
+          return { success: true, data: parsed };
+        } catch {
+          return { success: false, data: null, error: "AI 응답 파싱 실패" };
+        }
+      }),
+    // v6.37: 프롬프트 파싱 결과를 DB에 등록
+    promptBulkCreate: adminProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        participants: z.array(z.object({
+          name: z.string(),
+          koreanName: z.string().optional(),
+          phone: z.string().optional(),
+          messengerId: z.string().optional(),
+          teamName: z.string().optional(),
+          locationType: z.enum(["domestic", "overseas"]).default("overseas"),
+          category: z.enum(["meetup", "pre_visit", "event", "meeting", "other"]).default("event"),
+          passport: z.object({
+            passportNumber: z.string().optional(),
+            nationality: z.string().optional(),
+            dateOfBirth: z.string().optional(),
+            expiryDate: z.string().optional(),
+            gender: z.enum(["M", "F"]).optional(),
+            issuingCountry: z.string().optional(),
+          }).optional(),
+          flight: z.object({
+            airline: z.string().optional(),
+            flightNo: z.string().optional(),
+            pnr: z.string().optional(),
+            departureAirport: z.string().optional(),
+            departureCode: z.string().optional(),
+            arrivalAirport: z.string().optional(),
+            arrivalCode: z.string().optional(),
+            departureDate: z.string().optional(),
+            departureTime: z.string().optional(),
+            arrivalTime: z.string().optional(),
+            returnFlightNo: z.string().optional(),
+            returnDepartureDate: z.string().optional(),
+            returnDepartureTime: z.string().optional(),
+            returnArrivalTime: z.string().optional(),
+          }).optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const created: any[] = [];
+        for (const p of input.participants) {
+          try {
+            const regId = await db.createRegistration({
+              meetupId: input.meetupId,
+              name: p.name,
+              phone: p.phone || "",
+              messengerId: p.messengerId || "",
+              locationType: p.locationType as any,
+              category: p.category as any,
+              status: "approved",
+              teamName: p.teamName || "",
+              passportOcrData: p.passport ? { passportNumber: p.passport.passportNumber, nationality: p.passport.nationality, dateOfBirth: p.passport.dateOfBirth, expiryDate: p.passport.expiryDate, gender: p.passport.gender } : null,
+            });
+            // 여권 정보 등록
+            if (p.passport?.passportNumber) {
+              try {
+                await db.createPassportInfoForGuest({
+                  passportNumber: p.passport.passportNumber,
+                  fullName: p.name,
+                  nationality: p.passport.nationality || null,
+                  birthDate: p.passport.dateOfBirth || null,
+                  expiryDate: p.passport.expiryDate || null,
+                  gender: p.passport.gender || null,
+                  issuingCountry: p.passport.issuingCountry || null,
+                });
+              } catch (e) { console.error("[PromptReg] PassportInfo create failed:", e); }
+            }
+            // 항공권 정보 등록
+            if (p.flight?.flightNo || p.flight?.pnr) {
+              try {
+                await db.createFlightTicket({
+                  meetupId: input.meetupId,
+                  registrationId: regId,
+                  passengerName: p.name,
+                  passportNumber: p.passport?.passportNumber || null,
+                  bookingReference: p.flight.pnr || null,
+                  outboundAirline: p.flight.airline || null,
+                  outboundFlightNo: p.flight.flightNo || null,
+                  outboundDepartureAirport: p.flight.departureAirport || null,
+                  outboundDepartureCode: p.flight.departureCode || null,
+                  outboundArrivalAirport: p.flight.arrivalAirport || null,
+                  outboundArrivalCode: p.flight.arrivalCode || null,
+                  outboundDepartureDate: p.flight.departureDate || null,
+                  outboundDepartureTime: p.flight.departureTime || null,
+                  outboundArrivalTime: p.flight.arrivalTime || null,
+                  returnAirline: p.flight.airline || null,
+                  returnFlightNo: p.flight.returnFlightNo || null,
+                  returnDepartureDate: p.flight.returnDepartureDate || null,
+                  returnDepartureTime: p.flight.returnDepartureTime || null,
+                  returnArrivalTime: p.flight.returnArrivalTime || null,
+                  status: "active",
+                });
+              } catch (e) { console.error("[PromptReg] FlightTicket create failed:", e); }
             }
             created.push({ name: p.name, registrationId: regId, success: true });
           } catch (e: any) {

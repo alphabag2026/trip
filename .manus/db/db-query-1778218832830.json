@@ -1,0 +1,13 @@
+{
+  "query": "INSERT INTO meetups (title, type, locationType, destinationCountry, location, scheduleStart, scheduleEnd, description, status, projectCode) VALUES ('하롱베이 2140 Xplay', 'event', 'overseas', 'VN', 'Ha Long Bay, Vietnam', '2026-05-10 00:00:00', '2026-05-13 23:59:59', '하롱베이 2140 Xplay 행사 - 박석봉팀', 'open', 'XPLAY2140'); SELECT LAST_INSERT_ID() as meetupId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute INSERT INTO meetups (title, type, locationType, destinationCountry, location, scheduleStart, scheduleEnd, description, status, projectCode) VALUES ('하롱베이 2140 Xplay', 'event', 'overseas', 'VN', 'Ha Long Bay, Vietnam', '2026-05-10 00:00:00', '2026-05-13 23:59:59', '하롱베이 2140 Xplay 행사 - 박석봉팀', 'open', 'XPLAY2140'); SELECT LAST_INSERT_ID() as meetupId;",
+  "rows": [
+    {
+      "meetupId": "510001"
+    }
+  ],
+  "messages": [],
+  "stdout": "meetupId\n510001\n",
+  "stderr": "",
+  "execution_time_ms": 2107
+}

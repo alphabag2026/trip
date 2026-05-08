@@ -1485,6 +1485,7 @@
       "snsManager": "Đăng bài tự động trên SNS",
       "aiBulkRegister": "Đăng ký hàng loạt AI",
       "passportFlightUpload": "Tải lên hộ chiếu + vé máy bay",
+      "promptRegister": "Đăng ký bằng văn bản",
       "aiScheduleGenerator": "AI Schedule Gen",
       "checkinDashboard": "Đăng ký QR",
       "checkinReport": "Thống kê đăng ký"

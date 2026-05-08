@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, name FROM registrations WHERE meetupId = 510001 AND id > 570020 ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name FROM registrations WHERE meetupId = 510001 AND id > 570020 ORDER BY id;",
+  "rows": [
+    {
+      "id": "570021",
+      "name": "YUN DANIM"
+    },
+    {
+      "id": "570022",
+      "name": "CHA BOKSOON"
+    },
+    {
+      "id": "570023",
+      "name": "YI KUNCHI"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n570021\tYUN DANIM\n570022\tCHA BOKSOON\n570023\tYI KUNCHI\n",
+  "stderr": "",
+  "execution_time_ms": 1746
+}

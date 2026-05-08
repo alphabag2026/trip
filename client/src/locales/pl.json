@@ -1818,6 +1818,7 @@
       "snsManager": "Automatyczny post SNS",
       "aiBulkRegister": "Masowa rejestracja AI",
       "passportFlightUpload": "여권+항공권 일괄 등록",
+      "promptRegister": "프롬프트 등록",
       "aiScheduleGenerator": "Generator harmonogramu AI",
       "checkinDashboard": "Odprawa QR",
       "checkinReport": "Statystyki odpraw"

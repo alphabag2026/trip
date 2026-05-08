@@ -1,0 +1,34 @@
+{
+  "query": "SHOW CREATE TABLE passport_info;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SHOW CREATE TABLE passport_info;",
+  "rows": [
+    {
+      "Table": "passport_info",
+      "Create Table": "CREATE TABLE `passport_info` ("
+    }
+  ],
+  "messages": [
+    "  `id` int NOT NULL AUTO_INCREMENT,",
+    "  `userId` int NOT NULL,",
+    "  `passportNumber` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `issuingCountry` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `nationality` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `fullName` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `birthDate` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `gender` enum('M','F') COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `issueDate` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `expiryDate` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `passportImageUrl` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `passportImageKey` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `ocrData` json DEFAULT NULL,",
+    "  `isVerified` tinyint(1) DEFAULT '0',",
+    "  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+    "  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,",
+    "  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,",
+    "  UNIQUE KEY `passport_info_userId_unique` (`userId`)",
+    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=60001"
+  ],
+  "stdout": "Table\tCreate Table\npassport_info\tCREATE TABLE `passport_info` (\n  `id` int NOT NULL AUTO_INCREMENT,\n  `userId` int NOT NULL,\n  `passportNumber` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `issuingCountry` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `nationality` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `fullName` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `birthDate` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `gender` enum('M','F') COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `issueDate` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `expiryDate` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `passportImageUrl` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `passportImageKey` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `ocrData` json DEFAULT NULL,\n  `isVerified` tinyint(1) DEFAULT '0',\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,\n  UNIQUE KEY `passport_info_userId_unique` (`userId`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=60001\n",
+  "stderr": "",
+  "execution_time_ms": 1816
+}
