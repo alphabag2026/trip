@@ -2497,7 +2497,8 @@
     "o_create_meetup": "밋업 생성",
     "g_country": "국가/지역",
     "u_country": "국가/지역",
-    "o_country": "국가/지역"
+    "o_country": "국가/지역",
+    "u_myinfo": "내 정보"
   },
   "immigration": {
     "allReady": "출입국에 필요한 모든 서류가 준비되었습니다.",

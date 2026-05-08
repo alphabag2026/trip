@@ -2497,7 +2497,8 @@
     "o_create_meetup": "Создать встречу",
     "g_country": "Страны",
     "u_country": "Страны",
-    "o_country": "Страны"
+    "o_country": "Страны",
+    "u_myinfo": "Мои данные"
   },
   "immigration": {
     "allReady": "Все необходимые документы готовы для иммиграции.",

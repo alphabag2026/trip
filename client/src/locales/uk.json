@@ -2958,7 +2958,8 @@
     "o_create_meetup": "Створити зустріч",
     "g_country": "Країни",
     "u_country": "Країни",
-    "o_country": "Країни"
+    "o_country": "Країни",
+    "u_myinfo": "My Info"
   },
   "immigration": {
     "allReady": "Усі необхідні документи готові до імміграції.",

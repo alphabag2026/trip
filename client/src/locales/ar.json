@@ -2892,7 +2892,8 @@
     "svc_interp_support_desc": "المذكرة والخريطة وجهات الاتصال",
     "role_interpreter": "مترجم",
     "o_create_meetup": "إنشاء لقاء",
-    "g_country": "الدولة"
+    "g_country": "الدولة",
+    "u_myinfo": "معلوماتي"
   },
   "immigration": {
     "allReady": "جميع المستندات المطلوبة جاهزة للهجرة.",

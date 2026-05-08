@@ -2587,7 +2587,8 @@
     "u_memo": "备忘录",
     "u_share": "分享",
     "u_transport": "交通",
-    "u_video": "视频通话"
+    "u_video": "视频通话",
+    "u_myinfo": "我的信息"
   },
   "immigration": {
     "allReady": "所有出入境所需文件已准备就绪。",

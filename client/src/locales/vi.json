@@ -2497,7 +2497,8 @@
     "o_create_meetup": "Tạo buổi gặp mặt",
     "g_country": "Quốc gia",
     "u_country": "Quốc gia",
-    "o_country": "Quốc gia"
+    "o_country": "Quốc gia",
+    "u_myinfo": "Thông tin của tôi"
   },
   "immigration": {
     "allReady": "Tất cả giấy tờ đã sẵn sàng.",

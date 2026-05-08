@@ -2497,7 +2497,8 @@
     "o_create_meetup": "ミートアップを作成",
     "g_country": "国",
     "u_country": "国",
-    "o_country": "国"
+    "o_country": "国",
+    "u_myinfo": "マイ情報"
   },
   "immigration": {
     "allReady": "入出国に必要な書類がすべて準備できました。",

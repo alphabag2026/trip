@@ -2830,7 +2830,8 @@
     "o_create_meetup": "Utwórz spotkanie",
     "g_country": "Kraj",
     "u_country": "Kraje",
-    "o_country": "Kraje"
+    "o_country": "Kraje",
+    "u_myinfo": "Moje info"
   },
   "immigration": {
     "allReady": "Wszystkie wymagane dokumenty są gotowe do odprawy imigracyjnej.",

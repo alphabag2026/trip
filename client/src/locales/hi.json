@@ -2497,7 +2497,8 @@
     "o_create_meetup": "मीटअप बनाएं",
     "g_country": "देश",
     "u_country": "देश",
-    "o_country": "देश"
+    "o_country": "देश",
+    "u_myinfo": "मेरी जानकारी"
   },
   "immigration": {
     "allReady": "आप्रवासन के लिए सभी आवश्यक दस्तावेज तैयार हैं।",

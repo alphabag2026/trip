@@ -2497,7 +2497,8 @@
     "o_create_meetup": "Create Meetup",
     "g_country": "Countries",
     "u_country": "Countries",
-    "o_country": "Countries"
+    "o_country": "Countries",
+    "u_myinfo": "Mi info"
   },
   "immigration": {
     "allReady": "Todos los documentos requeridos están listos para inmigración.",

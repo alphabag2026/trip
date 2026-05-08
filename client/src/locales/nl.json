@@ -2497,7 +2497,8 @@
     "o_create_meetup": "Meetup aanmaken",
     "g_country": "Landen",
     "u_country": "Landen",
-    "o_country": "Landen"
+    "o_country": "Landen",
+    "u_myinfo": "Mijn info"
   },
   "immigration": {
     "allReady": "Alle vereiste documenten zijn klaar voor immigratie.",

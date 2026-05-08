@@ -2497,7 +2497,8 @@
     "o_create_meetup": "Gumawa ng Meetup",
     "g_country": "Mga Bansa",
     "u_country": "Mga Bansa",
-    "o_country": "Mga Bansa"
+    "o_country": "Mga Bansa",
+    "u_myinfo": "Aking Info"
   },
   "immigration": {
     "allReady": "Handa na ang lahat ng kinakailangang dokumento para sa imigrasyon.",

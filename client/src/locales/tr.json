@@ -2497,7 +2497,8 @@
     "cat_user_core": "Gezi Esasları",
     "cat_user_onsite": "Yerinde Hizmetler",
     "cat_user_extra": "Yardımcı Programlar",
-    "svc_guest_title": "Hizmetleri Keşfedin"
+    "svc_guest_title": "Hizmetleri Keşfedin",
+    "u_myinfo": "Bilgilerim"
   },
   "immigration": {
     "allReady": "Gerekli tüm belgeler göçmenlik için hazır.",

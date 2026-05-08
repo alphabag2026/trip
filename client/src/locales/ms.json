@@ -2497,7 +2497,8 @@
     "o_create_meetup": "Buat Meetup",
     "g_country": "Negara",
     "u_country": "Negara",
-    "o_country": "Negara"
+    "o_country": "Negara",
+    "u_myinfo": "Info Saya"
   },
   "immigration": {
     "allReady": "Semua dokumen yang diperlukan sedia untuk imigresen.",

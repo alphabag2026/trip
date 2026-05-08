@@ -2497,7 +2497,8 @@
     "o_create_meetup": "Skapa Meetup",
     "g_country": "Länder",
     "u_country": "Länder",
-    "o_country": "Länder"
+    "o_country": "Länder",
+    "u_myinfo": "Min info"
   },
   "immigration": {
     "allReady": "Alla nödvändiga dokument är redo för immigration.",

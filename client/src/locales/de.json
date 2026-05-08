@@ -2608,7 +2608,8 @@
     "o_create_meetup": "Meetup erstellen",
     "g_country": "Land",
     "o_country": "Länder",
-    "u_country": "Länder"
+    "u_country": "Länder",
+    "u_myinfo": "Meine Info"
   },
   "immigration": {
     "allReady": "Alle erforderlichen Dokumente liegen für die Einwanderung bereit.",
