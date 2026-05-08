@@ -1488,7 +1488,8 @@
       "promptRegister": "Đăng ký bằng văn bản",
       "aiScheduleGenerator": "AI Schedule Gen",
       "checkinDashboard": "Đăng ký QR",
-      "checkinReport": "Thống kê đăng ký"
+      "checkinReport": "Thống kê đăng ký",
+      "immigrationCards": "Immigration Cards"
     },
     "survey": {
       "addQuestion": "Add Question",

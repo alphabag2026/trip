@@ -205,7 +205,7 @@ export async function getRegistrations(filters?: {
       like(registrations.notes, s),
     ));
   }
-  return db.select().from(registrations).where(conditions.length ? and(...conditions) : undefined).orderBy(desc(registrations.createdAt));
+  return db.select().from(registrations).where(conditions.length ? and(...conditions) : undefined).orderBy(desc(registrations.createdAt)).limit(500);
 }
 
 export async function getRegistrationById(id: number) {

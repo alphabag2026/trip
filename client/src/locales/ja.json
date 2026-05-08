@@ -1488,7 +1488,8 @@
       "promptRegister": "プロンプト登録",
       "aiScheduleGenerator": "AIスケジュール生成",
       "checkinDashboard": "QRチェックイン",
-      "checkinReport": "チェックイン統計"
+      "checkinReport": "チェックイン統計",
+      "immigrationCards": "Immigration Cards"
     },
     "survey": {
       "addQuestion": "Add Question",

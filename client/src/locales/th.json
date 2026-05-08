@@ -1830,7 +1830,8 @@
       "promptRegister": "ลงทะเบียนด้วยข้อความ",
       "aiScheduleGenerator": "สร้างตารางเวลาด้วย AI",
       "checkinDashboard": "เช็คอินด้วย QR",
-      "checkinReport": "สถิติการเช็คอิน"
+      "checkinReport": "สถิติการเช็คอิน",
+      "immigrationCards": "Immigration Cards"
     },
     "survey": {
       "addQuestion": "Add Question",

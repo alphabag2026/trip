@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, Plane, Hotel, Send, RefreshCw } from "lucide-react";
+import { Plus, Trash2, Plane, Hotel, Send, RefreshCw, Mail, MessageCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ExcelToolbar, fetchTrpcQuery } from "@/components/ExcelButtons";
@@ -14,6 +15,16 @@ import AIUploader from "@/components/AIUploader";
 export default function AdminItineraries() {
   const { t } = useTranslation();
   const [showCreate, setShowCreate] = useState(false);
+  const [selectedMeetupId, setSelectedMeetupId] = useState<number | null>(null);
+  const { data: meetups } = trpc.meetup.list.useQuery();
+  const bulkEmailMut = trpc.itinerary.bulkSendEmail.useMutation({
+    onSuccess: (d) => toast.success(`이메일 발송 완료: ${d.sent}건 성공, ${d.failed}건 실패`),
+    onError: (e) => toast.error(e.message),
+  });
+  const bulkTelegramMut = trpc.itinerary.bulkSendTelegram.useMutation({
+    onSuccess: (d) => toast.success(`텔레그램 발송 완료: ${d.sent}건 성공, ${d.failed}건 실패`),
+    onError: (e) => toast.error(e.message),
+  });
   const { data: itineraries, refetch } = trpc.itinerary.list.useQuery();
   const createMutation = trpc.itinerary.create.useMutation({
     onSuccess: () => { refetch(); setShowCreate(false); toast.success(t("admin.itineraries.created")); },
@@ -70,6 +81,18 @@ export default function AdminItineraries() {
             exportFetch={() => fetchTrpcQuery("excelExport.exportItineraries")}
           />
           <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />{t("admin.itineraries.newItinerary")}</Button>
+          <Select onValueChange={(v) => setSelectedMeetupId(Number(v))}>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="밋업 선택" /></SelectTrigger>
+            <SelectContent>
+              {meetups?.map((m: any) => <SelectItem key={m.id} value={String(m.id)}>{m.title}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" disabled={!selectedMeetupId || bulkEmailMut.isPending} onClick={() => selectedMeetupId && bulkEmailMut.mutate({ meetupId: selectedMeetupId })}>
+            <Mail className="h-4 w-4 mr-1" />일괄 이메일
+          </Button>
+          <Button variant="outline" disabled={!selectedMeetupId || bulkTelegramMut.isPending} onClick={() => selectedMeetupId && bulkTelegramMut.mutate({ meetupId: selectedMeetupId })}>
+            <MessageCircle className="h-4 w-4 mr-1" />일괄 텔레그램
+          </Button>
         </div>
       </div>
 

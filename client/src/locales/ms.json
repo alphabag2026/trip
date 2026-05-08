@@ -1488,7 +1488,8 @@
       "promptRegister": "프롬프트 등록",
       "aiScheduleGenerator": "Penjana Jadual AI",
       "checkinDashboard": "Daftar Masuk QR",
-      "checkinReport": "Statistik Daftar Masuk"
+      "checkinReport": "Statistik Daftar Masuk",
+      "immigrationCards": "Immigration Cards"
     },
     "survey": {
       "addQuestion": "Add Question",

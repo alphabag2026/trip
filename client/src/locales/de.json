@@ -1488,7 +1488,8 @@
       "promptRegister": "프롬프트 등록",
       "aiScheduleGenerator": "AI-Zeitplangenerator",
       "checkinDashboard": "QR-Check-in",
-      "checkinReport": "Check-in-Statistiken"
+      "checkinReport": "Check-in-Statistiken",
+      "immigrationCards": "Immigration Cards"
     },
     "survey": {
       "addQuestion": "Add Question",

@@ -1713,6 +1713,43 @@ export const appRouter = router({
       }),
     delete: adminProcedure.input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => { await db.deleteItinerary(input.id); return { success: true }; }),
+    bulkSendEmail: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .mutation(async ({ input }) => {
+        const allRegs = await db.getRegistrations({ meetupId: input.meetupId });
+        const allItineraries = await db.getAllItineraries();
+        let sent = 0, failed = 0;
+        for (const reg of allRegs) {
+          if (!reg.email) { failed++; continue; }
+          const itinerary = allItineraries.find((it: any) => it.registrationId === reg.id);
+          if (!itinerary) { failed++; continue; }
+          try {
+            await sendEmail({
+              to: reg.email,
+              subject: `[Alpha Trip] ${reg.name}\uB2D8\uC758 \uC5EC\uD589 \uC77C\uC815\uD45C`,
+              html: `<h2>\uC5EC\uD589 \uC77C\uC815\uD45C</h2><p><strong>${itinerary.title}</strong></p><p>\uCD9C\uBC1C: ${itinerary.departureFlightNo || ''} ${itinerary.departureAirport || ''} ${itinerary.departureTime ? new Date(itinerary.departureTime).toLocaleString('ko-KR') : ''}</p><p>\uD638\uD154: ${itinerary.hotelName || ''}</p><p>\uCCB4\uD06C\uC778: ${itinerary.hotelCheckIn ? new Date(itinerary.hotelCheckIn).toLocaleDateString('ko-KR') : ''}</p>`,
+            });
+            sent++;
+          } catch { failed++; }
+        }
+        return { sent, failed, total: allRegs.length };
+      }),
+    bulkSendTelegram: adminProcedure
+      .input(z.object({ meetupId: z.number() }))
+      .mutation(async ({ input }) => {
+        const allRegs = await db.getRegistrations({ meetupId: input.meetupId });
+        const allItineraries = await db.getAllItineraries();
+        let sent = 0, failed = 0;
+        for (const reg of allRegs) {
+          if (!reg.messengerId) { failed++; continue; }
+          const itinerary = allItineraries.find((it: any) => it.registrationId === reg.id);
+          if (!itinerary) { failed++; continue; }
+          const msg = `\uD83D\uDCCB \uC5EC\uD589 \uC77C\uC815\uD45C\n${itinerary.title}\n\uCD9C\uBC1C: ${itinerary.departureFlightNo || ''} ${itinerary.departureAirport || ''}\n\uD638\uD154: ${itinerary.hotelName || ''}`;
+          const ok = await sendTelegram(msg);
+          if (ok) sent++; else failed++;
+        }
+        return { sent, failed, total: allRegs.length };
+      }),
   }),
 
   // ── Communication Channels (v3.0) ────────────────

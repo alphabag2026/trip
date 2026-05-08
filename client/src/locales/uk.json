@@ -1566,7 +1566,8 @@
       "chatDashboard": "Панель чату",
       "passportOcr": "Сканування паспортів",
       "userManagement": "Управління користувачами",
-      "settings": "Налаштування"
+      "settings": "Налаштування",
+      "immigrationCards": "Immigration Cards"
     },
     "survey": {
       "addQuestion": "Add Question",

@@ -1488,7 +1488,8 @@
       "promptRegister": "文本提示注册",
       "aiScheduleGenerator": "AI 日程生成器",
       "checkinDashboard": "二维码签到",
-      "checkinReport": "签到统计"
+      "checkinReport": "签到统计",
+      "immigrationCards": "Immigration Cards"
     },
     "survey": {
       "addQuestion": "Add Question",

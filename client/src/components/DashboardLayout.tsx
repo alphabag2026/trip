@@ -438,7 +438,7 @@ function DashboardLayoutContent({
                   </div>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent side="top" align="start" className="w-48">
                 <DropdownMenuItem
                   onClick={async () => { await logout(); window.location.href = "/"; }}
                   className="cursor-pointer text-destructive focus:text-destructive"
