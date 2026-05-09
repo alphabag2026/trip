@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, flightNo, airline, departureAirport, arrivalAirport FROM flight_schedules ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, flightNo, airline, departureAirport, arrivalAirport FROM flight_schedules ORDER BY id;",
+  "rows": [
+    {
+      "id": "60001",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60029",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tflightNo\tairline\tdepartureAirport\tarrivalAirport\n60001\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60029\tKE441\t대한항공\tICN T2\tHAN T2\n",
+  "stderr": "",
+  "execution_time_ms": 1724
+}

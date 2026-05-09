@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM registrations WHERE name IN ('DINH THI BANG', 'LEE DONGKUK');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute DELETE FROM registrations WHERE name IN ('DINH THI BANG', 'LEE DONGKUK');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1769
+}

@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, name, JSON_EXTRACT(passportOcrData, '$.koreanName') as koreanName FROM registrations WHERE name LIKE '%DONG%' OR JSON_EXTRACT(passportOcrData, '$.koreanName') LIKE '%동희%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, JSON_EXTRACT(passportOcrData, '$.koreanName') as koreanName FROM registrations WHERE name LIKE '%DONG%' OR JSON_EXTRACT(passportOcrData, '$.koreanName') LIKE '%동희%';",
+  "rows": [
+    {
+      "id": "630039",
+      "name": "LEE DONGKUK",
+      "koreanName": "\"이동국\""
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tkoreanName\n630039\tLEE DONGKUK\t\"이동국\"\n",
+  "stderr": "",
+  "execution_time_ms": 1790
+}

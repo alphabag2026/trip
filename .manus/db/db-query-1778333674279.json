@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM registrations WHERE name = 'PAEK JEEHYUN 2';\nUPDATE registrations SET name = 'DINH THI BANG', passportOcrData = '{\"passportNo\":\"\",\"surname\":\"DINH\",\"givenNames\":\"THI BANG\",\"nationality\":\"VNM\",\"koreanName\":\"딘티방\"}' WHERE name = 'PAEK JEEHYUN 2';\nINSERT INTO registrations (name, phone, messengerId, locationType, passportOcrData) VALUES\n('DINH THI BANG', '', '', 'overseas', '{\"passportNo\":\"\",\"surname\":\"DINH\",\"givenNames\":\"THI BANG\",\"nationality\":\"VNM\",\"koreanName\":\"딘티방\"}'),\n('LEE DONGKUK', '', '', 'overseas', '{\"passportNo\":\"\",\"surname\":\"LEE\",\"givenNames\":\"DONGKUK\",\"nationality\":\"KOR\",\"koreanName\":\"이동국\"}');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute DELETE FROM registrations WHERE name = 'PAEK JEEHYUN 2';\nUPDATE registrations SET name = 'DINH THI BANG', passportOcrData = '{\"passportNo\":\"\",\"surname\":\"DINH\",\"givenNames\":\"THI BANG\",\"nationality\":\"VNM\",\"koreanName\":\"딘티방\"}' WHERE name = 'PAEK JEEHYUN 2';\nINSERT INTO registrations (name, phone, messengerId, locationType, passportOcrData) VALUES\n('DINH THI BANG', '', '', 'overseas', '{\"passportNo\":\"\",\"surname\":\"DINH\",\"givenNames\":\"THI BANG\",\"nationality\":\"VNM\",\"koreanName\":\"딘티방\"}'),\n('LEE DONGKUK', '', '', 'overseas', '{\"passportNo\":\"\",\"surname\":\"LEE\",\"givenNames\":\"DONGKUK\",\"nationality\":\"KOR\",\"koreanName\":\"이동국\"}');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2238
+}

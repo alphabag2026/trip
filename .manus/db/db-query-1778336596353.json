@@ -1,0 +1,158 @@
+{
+  "query": "SELECT id, name FROM registrations ORDER BY name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name FROM registrations ORDER BY name;",
+  "rows": [
+    {
+      "id": "630006",
+      "name": "AN YEONGOK"
+    },
+    {
+      "id": "630027",
+      "name": "CHA BOKSOON"
+    },
+    {
+      "id": "630029",
+      "name": "CHO SEORAN"
+    },
+    {
+      "id": "630003",
+      "name": "CHOI YONG SUK"
+    },
+    {
+      "id": "630007",
+      "name": "HWANG MYEONGSUK"
+    },
+    {
+      "id": "630024",
+      "name": "IM HYEONSUK"
+    },
+    {
+      "id": "630025",
+      "name": "JEONG TAESU"
+    },
+    {
+      "id": "630021",
+      "name": "JO KWANG RYE"
+    },
+    {
+      "id": "630016",
+      "name": "KIM BONGMYUNG"
+    },
+    {
+      "id": "630009",
+      "name": "KIM CHUNOCK"
+    },
+    {
+      "id": "630041",
+      "name": "KIM DONGHEE"
+    },
+    {
+      "id": "630013",
+      "name": "KIM IN HWAN"
+    },
+    {
+      "id": "630001",
+      "name": "KIM JUN HO"
+    },
+    {
+      "id": "630018",
+      "name": "KIM SAMRYE"
+    },
+    {
+      "id": "630031",
+      "name": "KIM SUNAE"
+    },
+    {
+      "id": "630004",
+      "name": "KIM TAEHEE"
+    },
+    {
+      "id": "630015",
+      "name": "KIM WOONGKI"
+    },
+    {
+      "id": "630035",
+      "name": "KIM YEAJA"
+    },
+    {
+      "id": "630030",
+      "name": "KIM YOONSEO"
+    },
+    {
+      "id": "630033",
+      "name": "KIM YUN JA"
+    },
+    {
+      "id": "630019",
+      "name": "LEE DEAGUN"
+    },
+    {
+      "id": "630011",
+      "name": "LEE JAEMIN"
+    },
+    {
+      "id": "630017",
+      "name": "LI ZHENJIN"
+    },
+    {
+      "id": "630014",
+      "name": "MYOUNG SUNG JIN"
+    },
+    {
+      "id": "630008",
+      "name": "PAEK JEEHYUN"
+    },
+    {
+      "id": "630034",
+      "name": "PAK SEOKBONG"
+    },
+    {
+      "id": "630032",
+      "name": "PARK BYUNGRYANG"
+    },
+    {
+      "id": "630010",
+      "name": "PARK CHONG BOK"
+    },
+    {
+      "id": "630012",
+      "name": "PARK MEE A"
+    },
+    {
+      "id": "630002",
+      "name": "RYU DAE SUNG"
+    },
+    {
+      "id": "630023",
+      "name": "RYU HYUNJIN"
+    },
+    {
+      "id": "630036",
+      "name": "SEO YAMUN"
+    },
+    {
+      "id": "630022",
+      "name": "SO HUN YOUNG"
+    },
+    {
+      "id": "630028",
+      "name": "YI KUNCHI"
+    },
+    {
+      "id": "630020",
+      "name": "YOO YUNSUNG"
+    },
+    {
+      "id": "630005",
+      "name": "YU KUMSOOK"
+    },
+    {
+      "id": "630026",
+      "name": "YUN DANIM"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n630006\tAN YEONGOK\n630027\tCHA BOKSOON\n630029\tCHO SEORAN\n630003\tCHOI YONG SUK\n630007\tHWANG MYEONGSUK\n630024\tIM HYEONSUK\n630025\tJEONG TAESU\n630021\tJO KWANG RYE\n630016\tKIM BONGMYUNG\n630009\tKIM CHUNOCK\n630041\tKIM DONGHEE\n630013\tKIM IN HWAN\n630001\tKIM JUN HO\n630018\tKIM SAMRYE\n630031\tKIM SUNAE\n630004\tKIM TAEHEE\n630015\tKIM WOONGKI\n630035\tKIM YEAJA\n630030\tKIM YOONSEO\n630033\tKIM YUN JA\n630019\tLEE DEAGUN\n630011\tLEE JAEMIN\n630017\tLI ZHENJIN\n630014\tMYOUNG SUNG JIN\n630008\tPAEK JEEHYUN\n630034\tPAK SEOKBONG\n630032\tPARK BYUNGRYANG\n630010\tPARK CHONG BOK\n630012\tPARK MEE A\n630002\tRYU DAE SUNG\n630023\tRYU HYUNJIN\n630036\tSEO YAMUN\n630022\tSO HUN YOUNG\n630028\tYI KUNCHI\n630020\tYOO YUNSUNG\n630005\tYU KUMSOOK\n630026\tYUN DANIM\n",
+  "stderr": "",
+  "execution_time_ms": 1878
+}

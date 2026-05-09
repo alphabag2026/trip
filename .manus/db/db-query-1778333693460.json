@@ -1,0 +1,200 @@
+{
+  "query": "SELECT id, name, JSON_EXTRACT(passportOcrData, '$.passportNo') as passportNo FROM registrations ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, JSON_EXTRACT(passportOcrData, '$.passportNo') as passportNo FROM registrations ORDER BY id;",
+  "rows": [
+    {
+      "id": "630001",
+      "name": "KIM JUN HO",
+      "passportNo": "\"M983Y7767\""
+    },
+    {
+      "id": "630002",
+      "name": "RYU DAE SUNG",
+      "passportNo": "NULL"
+    },
+    {
+      "id": "630003",
+      "name": "CHOI YONG SUK",
+      "passportNo": "NULL"
+    },
+    {
+      "id": "630004",
+      "name": "KIM TAEHEE",
+      "passportNo": "NULL"
+    },
+    {
+      "id": "630005",
+      "name": "YU KUMSOOK",
+      "passportNo": "\"M71152020\""
+    },
+    {
+      "id": "630006",
+      "name": "AN YEONGOK",
+      "passportNo": "NULL"
+    },
+    {
+      "id": "630007",
+      "name": "HWANG MYEONGSUK",
+      "passportNo": "\"M97988778\""
+    },
+    {
+      "id": "630008",
+      "name": "PAEK JEEHYUN",
+      "passportNo": "NULL"
+    },
+    {
+      "id": "630009",
+      "name": "KIM CHUNOCK",
+      "passportNo": "\"M543T7348\""
+    },
+    {
+      "id": "630010",
+      "name": "PARK CHONG BOK",
+      "passportNo": "\"M277P4108\""
+    },
+    {
+      "id": "630011",
+      "name": "LEE JAEMIN",
+      "passportNo": "\"M16347329\""
+    },
+    {
+      "id": "630012",
+      "name": "PARK MEE A",
+      "passportNo": "\"M67714226\""
+    },
+    {
+      "id": "630013",
+      "name": "KIM IN HWAN",
+      "passportNo": "\"M476B0698\""
+    },
+    {
+      "id": "630014",
+      "name": "MYOUNG SUNG JIN",
+      "passportNo": "\"\""
+    },
+    {
+      "id": "630015",
+      "name": "KIM WOONGKI",
+      "passportNo": "\"\""
+    },
+    {
+      "id": "630016",
+      "name": "KIM BONGMYUNG",
+      "passportNo": "\"\""
+    },
+    {
+      "id": "630017",
+      "name": "LI ZHENJIN",
+      "passportNo": "\"ED6199048\""
+    },
+    {
+      "id": "630018",
+      "name": "KIM SAMRYE",
+      "passportNo": "\"M879J9997\""
+    },
+    {
+      "id": "630019",
+      "name": "LEE DEAGUN",
+      "passportNo": "\"M00568858\""
+    },
+    {
+      "id": "630020",
+      "name": "YOO YUNSUNG",
+      "passportNo": "\"M124M6981\""
+    },
+    {
+      "id": "630021",
+      "name": "JO KWANG RYE",
+      "passportNo": "\"\""
+    },
+    {
+      "id": "630022",
+      "name": "SO HUN YOUNG",
+      "passportNo": "\"\""
+    },
+    {
+      "id": "630023",
+      "name": "RYU HYUNJIN",
+      "passportNo": "\"M338V2996\""
+    },
+    {
+      "id": "630024",
+      "name": "IM HYEONSUK",
+      "passportNo": "\"M543R5060\""
+    },
+    {
+      "id": "630025",
+      "name": "JEONG TAESU",
+      "passportNo": "\"M86550207\""
+    },
+    {
+      "id": "630026",
+      "name": "YUN DANIM",
+      "passportNo": "\"M364G3372\""
+    },
+    {
+      "id": "630027",
+      "name": "CHA BOKSOON",
+      "passportNo": "\"M716X7042\""
+    },
+    {
+      "id": "630028",
+      "name": "YI KUNCHI",
+      "passportNo": "\"\""
+    },
+    {
+      "id": "630029",
+      "name": "CHO SEORAN",
+      "passportNo": "\"\""
+    },
+    {
+      "id": "630030",
+      "name": "KIM YOONSEO",
+      "passportNo": "\"\""
+    },
+    {
+      "id": "630031",
+      "name": "KIM SUNAE",
+      "passportNo": "\"M541M3482\""
+    },
+    {
+      "id": "630032",
+      "name": "PARK BYUNGRYANG",
+      "passportNo": "\"M885W2187\""
+    },
+    {
+      "id": "630033",
+      "name": "KIM YUN JA",
+      "passportNo": "\"546356990\""
+    },
+    {
+      "id": "630034",
+      "name": "PAK SEOKBONG",
+      "passportNo": "\"M43120353\""
+    },
+    {
+      "id": "630035",
+      "name": "KIM YEAJA",
+      "passportNo": "\"M00751602\""
+    },
+    {
+      "id": "630036",
+      "name": "SEO YAMUN",
+      "passportNo": "\"M323G8076\""
+    },
+    {
+      "id": "630038",
+      "name": "DINH THI BANG",
+      "passportNo": "\"\""
+    },
+    {
+      "id": "630039",
+      "name": "LEE DONGKUK",
+      "passportNo": "\"\""
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tpassportNo\n630001\tKIM JUN HO\t\"M983Y7767\"\n630002\tRYU DAE SUNG\tNULL\n630003\tCHOI YONG SUK\tNULL\n630004\tKIM TAEHEE\tNULL\n630005\tYU KUMSOOK\t\"M71152020\"\n630006\tAN YEONGOK\tNULL\n630007\tHWANG MYEONGSUK\t\"M97988778\"\n630008\tPAEK JEEHYUN\tNULL\n630009\tKIM CHUNOCK\t\"M543T7348\"\n630010\tPARK CHONG BOK\t\"M277P4108\"\n630011\tLEE JAEMIN\t\"M16347329\"\n630012\tPARK MEE A\t\"M67714226\"\n630013\tKIM IN HWAN\t\"M476B0698\"\n630014\tMYOUNG SUNG JIN\t\"\"\n630015\tKIM WOONGKI\t\"\"\n630016\tKIM BONGMYUNG\t\"\"\n630017\tLI ZHENJIN\t\"ED6199048\"\n630018\tKIM SAMRYE\t\"M879J9997\"\n630019\tLEE DEAGUN\t\"M00568858\"\n630020\tYOO YUNSUNG\t\"M124M6981\"\n630021\tJO KWANG RYE\t\"\"\n630022\tSO HUN YOUNG\t\"\"\n630023\tRYU HYUNJIN\t\"M338V2996\"\n630024\tIM HYEONSUK\t\"M543R5060\"\n630025\tJEONG TAESU\t\"M86550207\"\n630026\tYUN DANIM\t\"M364G3372\"\n630027\tCHA BOKSOON\t\"M716X7042\"\n630028\tYI KUNCHI\t\"\"\n630029\tCHO SEORAN\t\"\"\n630030\tKIM YOONSEO\t\"\"\n630031\tKIM SUNAE\t\"M541M3482\"\n630032\tPARK BYUNGRYANG\t\"M885W2187\"\n630033\tKIM YUN JA\t\"546356990\"\n630034\tPAK SEOKBONG\t\"M43120353\"\n630035\tKIM YEAJA\t\"M00751602\"\n630036\tSEO YAMUN\t\"M323G8076\"\n630038\tDINH THI BANG\t\"\"\n630039\tLEE DONGKUK\t\"\"\n",
+  "stderr": "",
+  "execution_time_ms": 1946
+}

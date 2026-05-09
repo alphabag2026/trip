@@ -1,0 +1,136 @@
+{
+  "query": "SELECT hotelName, roomNumber, roomType, notes FROM accommodation_assignments ORDER BY hotelName, roomNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT hotelName, roomNumber, roomType, notes FROM accommodation_assignments ORDER BY hotelName, roomNumber;",
+  "rows": [
+    {
+      "hotelName": "별장 1 (A조)",
+      "roomNumber": "101호",
+      "roomType": "twin",
+      "notes": "여자 2인실 - 김윤자, 김순애"
+    },
+    {
+      "hotelName": "별장 1 (A조)",
+      "roomNumber": "102호",
+      "roomType": "twin",
+      "notes": "여자 2인실 - 조광례, 차복순"
+    },
+    {
+      "hotelName": "별장 1 (A조)",
+      "roomNumber": "103호",
+      "roomType": "twin",
+      "notes": "여자 2인실 - LI ZHENJIN, 김삼례"
+    },
+    {
+      "hotelName": "별장 1 (A조)",
+      "roomNumber": "4층 더블베드룸",
+      "roomType": "double",
+      "notes": "부부방 - 박병량, 서야문"
+    },
+    {
+      "hotelName": "별장 2 (A조)",
+      "roomNumber": "201호",
+      "roomType": "twin",
+      "notes": "여자 2인실 - 윤단임, 박미아"
+    },
+    {
+      "hotelName": "별장 2 (A조)",
+      "roomNumber": "202호",
+      "roomType": "single",
+      "notes": "개인방 - 이근지"
+    },
+    {
+      "hotelName": "별장 2 (A조)",
+      "roomNumber": "4층 더블베드룸",
+      "roomType": "double",
+      "notes": "부부방 - 박석봉, 김예자"
+    },
+    {
+      "hotelName": "별장 3 (A조)",
+      "roomNumber": "301호",
+      "roomType": "twin",
+      "notes": "남자 2인실 - 유연성, 소훈영"
+    },
+    {
+      "hotelName": "별장 3 (A조)",
+      "roomNumber": "302호",
+      "roomType": "twin",
+      "notes": "남자 2인실 - 김동희, 이재민"
+    },
+    {
+      "hotelName": "별장 3 (A조)",
+      "roomNumber": "303호",
+      "roomType": "twin",
+      "notes": "남자 2인실 - 정태수, 김인환"
+    },
+    {
+      "hotelName": "별장 3 (A조)",
+      "roomNumber": "304호",
+      "roomType": "single",
+      "notes": "개인방 - 박충복"
+    },
+    {
+      "hotelName": "별장 3 (A조)",
+      "roomNumber": "4층 더블베드룸",
+      "roomType": "double",
+      "notes": "부부방 - 류현진, 임현숙"
+    },
+    {
+      "hotelName": "별장 4 (B조)",
+      "roomNumber": "401호",
+      "roomType": "twin",
+      "notes": "여자 2인실 - 김윤서, 박지현"
+    },
+    {
+      "hotelName": "별장 4 (B조)",
+      "roomNumber": "402호",
+      "roomType": "twin",
+      "notes": "여자 2인실 - 김춘옥, 안영옥"
+    },
+    {
+      "hotelName": "별장 4 (B조)",
+      "roomNumber": "403호",
+      "roomType": "twin",
+      "notes": "여자 2인실 - 조서란, 황명숙"
+    },
+    {
+      "hotelName": "별장 4 (B조)",
+      "roomNumber": "4층 더블베드룸",
+      "roomType": "double",
+      "notes": "단독 사용 - 유금숙"
+    },
+    {
+      "hotelName": "별장 5 (B조)",
+      "roomNumber": "4층 더블베드룸",
+      "roomType": "double",
+      "notes": "단독 사용 - 최용석"
+    },
+    {
+      "hotelName": "별장 5 (B조)",
+      "roomNumber": "501호",
+      "roomType": "twin",
+      "notes": "남자 2인실 - 김태희, 김봉명"
+    },
+    {
+      "hotelName": "별장 5 (B조)",
+      "roomNumber": "502호",
+      "roomType": "twin",
+      "notes": "남자 2인실 - 류대성, 김준호"
+    },
+    {
+      "hotelName": "별장 5 (B조)",
+      "roomNumber": "503호",
+      "roomType": "twin",
+      "notes": "남자 2인실 - 명성진, 김웅기"
+    },
+    {
+      "hotelName": "별장 5 (B조)",
+      "roomNumber": "504호",
+      "roomType": "single",
+      "notes": "개인방 - 이대근 (개별항공)"
+    }
+  ],
+  "messages": [],
+  "stdout": "hotelName\troomNumber\troomType\tnotes\n별장 1 (A조)\t101호\ttwin\t여자 2인실 - 김윤자, 김순애\n별장 1 (A조)\t102호\ttwin\t여자 2인실 - 조광례, 차복순\n별장 1 (A조)\t103호\ttwin\t여자 2인실 - LI ZHENJIN, 김삼례\n별장 1 (A조)\t4층 더블베드룸\tdouble\t부부방 - 박병량, 서야문\n별장 2 (A조)\t201호\ttwin\t여자 2인실 - 윤단임, 박미아\n별장 2 (A조)\t202호\tsingle\t개인방 - 이근지\n별장 2 (A조)\t4층 더블베드룸\tdouble\t부부방 - 박석봉, 김예자\n별장 3 (A조)\t301호\ttwin\t남자 2인실 - 유연성, 소훈영\n별장 3 (A조)\t302호\ttwin\t남자 2인실 - 김동희, 이재민\n별장 3 (A조)\t303호\ttwin\t남자 2인실 - 정태수, 김인환\n별장 3 (A조)\t304호\tsingle\t개인방 - 박충복\n별장 3 (A조)\t4층 더블베드룸\tdouble\t부부방 - 류현진, 임현숙\n별장 4 (B조)\t401호\ttwin\t여자 2인실 - 김윤서, 박지현\n별장 4 (B조)\t402호\ttwin\t여자 2인실 - 김춘옥, 안영옥\n별장 4 (B조)\t403호\ttwin\t여자 2인실 - 조서란, 황명숙\n별장 4 (B조)\t4층 더블베드룸\tdouble\t단독 사용 - 유금숙\n별장 5 (B조)\t4층 더블베드룸\tdouble\t단독 사용 - 최용석\n별장 5 (B조)\t501호\ttwin\t남자 2인실 - 김태희, 김봉명\n별장 5 (B조)\t502호\ttwin\t남자 2인실 - 류대성, 김준호\n별장 5 (B조)\t503호\ttwin\t남자 2인실 - 명성진, 김웅기\n별장 5 (B조)\t504호\tsingle\t개인방 - 이대근 (개별항공)\n",
+  "stderr": "",
+  "execution_time_ms": 1731
+}

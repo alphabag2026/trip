@@ -1,0 +1,14 @@
+{
+  "query": "SELECT id, name FROM registrations WHERE passportOcrData IS NULL OR JSON_EXTRACT(passportOcrData, '$.passportNo') IS NULL OR JSON_EXTRACT(passportOcrData, '$.passportNo') = '';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name FROM registrations WHERE passportOcrData IS NULL OR JSON_EXTRACT(passportOcrData, '$.passportNo') IS NULL OR JSON_EXTRACT(passportOcrData, '$.passportNo') = '';",
+  "rows": [
+    {
+      "id": "630030",
+      "name": "KIM YOONSEO"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n630030\tKIM YOONSEO\n",
+  "stderr": "",
+  "execution_time_ms": 1714
+}

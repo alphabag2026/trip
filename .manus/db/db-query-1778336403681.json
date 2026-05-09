@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE registrations SET passportOcrData = '{\"fullName\":\"KIM YOONSEO\",\"koreanName\":\"김윤서\",\"passportNo\":\"M661B2637\",\"nationality\":\"KOR\",\"dateOfBirth\":\"1950-12-04\",\"sex\":\"F\",\"dateOfExpiry\":\"2032-07-01\",\"dateOfIssue\":\"2022-07-01\"}' WHERE name = 'KIM YOONSEO';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute UPDATE registrations SET passportOcrData = '{\"fullName\":\"KIM YOONSEO\",\"koreanName\":\"김윤서\",\"passportNo\":\"M661B2637\",\"nationality\":\"KOR\",\"dateOfBirth\":\"1950-12-04\",\"sex\":\"F\",\"dateOfExpiry\":\"2032-07-01\",\"dateOfIssue\":\"2022-07-01\"}' WHERE name = 'KIM YOONSEO';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1805
+}

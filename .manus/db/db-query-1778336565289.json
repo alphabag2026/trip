@@ -1,0 +1,82 @@
+{
+  "query": "SELECT id, name FROM registrations ORDER BY id LIMIT 20 OFFSET 18;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name FROM registrations ORDER BY id LIMIT 20 OFFSET 18;",
+  "rows": [
+    {
+      "id": "630019",
+      "name": "LEE DEAGUN"
+    },
+    {
+      "id": "630020",
+      "name": "YOO YUNSUNG"
+    },
+    {
+      "id": "630021",
+      "name": "JO KWANG RYE"
+    },
+    {
+      "id": "630022",
+      "name": "SO HUN YOUNG"
+    },
+    {
+      "id": "630023",
+      "name": "RYU HYUNJIN"
+    },
+    {
+      "id": "630024",
+      "name": "IM HYEONSUK"
+    },
+    {
+      "id": "630025",
+      "name": "JEONG TAESU"
+    },
+    {
+      "id": "630026",
+      "name": "YUN DANIM"
+    },
+    {
+      "id": "630027",
+      "name": "CHA BOKSOON"
+    },
+    {
+      "id": "630028",
+      "name": "YI KUNCHI"
+    },
+    {
+      "id": "630029",
+      "name": "CHO SEORAN"
+    },
+    {
+      "id": "630030",
+      "name": "KIM YOONSEO"
+    },
+    {
+      "id": "630031",
+      "name": "KIM SUNAE"
+    },
+    {
+      "id": "630032",
+      "name": "PARK BYUNGRYANG"
+    },
+    {
+      "id": "630033",
+      "name": "KIM YUN JA"
+    },
+    {
+      "id": "630034",
+      "name": "PAK SEOKBONG"
+    },
+    {
+      "id": "630035",
+      "name": "KIM YEAJA"
+    },
+    {
+      "id": "630036",
+      "name": "SEO YAMUN"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n630019\tLEE DEAGUN\n630020\tYOO YUNSUNG\n630021\tJO KWANG RYE\n630022\tSO HUN YOUNG\n630023\tRYU HYUNJIN\n630024\tIM HYEONSUK\n630025\tJEONG TAESU\n630026\tYUN DANIM\n630027\tCHA BOKSOON\n630028\tYI KUNCHI\n630029\tCHO SEORAN\n630030\tKIM YOONSEO\n630031\tKIM SUNAE\n630032\tPARK BYUNGRYANG\n630033\tKIM YUN JA\n630034\tPAK SEOKBONG\n630035\tKIM YEAJA\n630036\tSEO YAMUN\n",
+  "stderr": "",
+  "execution_time_ms": 1825
+}

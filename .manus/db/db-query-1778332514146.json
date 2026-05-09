@@ -1,0 +1,25 @@
+{
+  "query": "SELECT DISTINCT airline, MIN(id) as keep_id, COUNT(*) as cnt FROM flight_schedules GROUP BY airline;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT DISTINCT airline, MIN(id) as keep_id, COUNT(*) as cnt FROM flight_schedules GROUP BY airline;",
+  "rows": [
+    {
+      "airline": "대한항공",
+      "keep_id": "60029",
+      "cnt": "44"
+    },
+    {
+      "airline": "",
+      "keep_id": "1",
+      "cnt": "1"
+    },
+    {
+      "airline": "아시아나항공",
+      "keep_id": "60001",
+      "cnt": "28"
+    }
+  ],
+  "messages": [],
+  "stdout": "airline\tkeep_id\tcnt\n대한항공\t60029\t44\n\t1\t1\n아시아나항공\t60001\t28\n",
+  "stderr": "",
+  "execution_time_ms": 1821
+}

@@ -1,0 +1,78 @@
+{
+  "query": "SELECT id, name FROM registrations ORDER BY name LIMIT 20 OFFSET 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name FROM registrations ORDER BY name LIMIT 20 OFFSET 20;",
+  "rows": [
+    {
+      "id": "630019",
+      "name": "LEE DEAGUN"
+    },
+    {
+      "id": "630011",
+      "name": "LEE JAEMIN"
+    },
+    {
+      "id": "630017",
+      "name": "LI ZHENJIN"
+    },
+    {
+      "id": "630014",
+      "name": "MYOUNG SUNG JIN"
+    },
+    {
+      "id": "630008",
+      "name": "PAEK JEEHYUN"
+    },
+    {
+      "id": "630034",
+      "name": "PAK SEOKBONG"
+    },
+    {
+      "id": "630032",
+      "name": "PARK BYUNGRYANG"
+    },
+    {
+      "id": "630010",
+      "name": "PARK CHONG BOK"
+    },
+    {
+      "id": "630012",
+      "name": "PARK MEE A"
+    },
+    {
+      "id": "630002",
+      "name": "RYU DAE SUNG"
+    },
+    {
+      "id": "630023",
+      "name": "RYU HYUNJIN"
+    },
+    {
+      "id": "630036",
+      "name": "SEO YAMUN"
+    },
+    {
+      "id": "630022",
+      "name": "SO HUN YOUNG"
+    },
+    {
+      "id": "630028",
+      "name": "YI KUNCHI"
+    },
+    {
+      "id": "630020",
+      "name": "YOO YUNSUNG"
+    },
+    {
+      "id": "630005",
+      "name": "YU KUMSOOK"
+    },
+    {
+      "id": "630026",
+      "name": "YUN DANIM"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n630019\tLEE DEAGUN\n630011\tLEE JAEMIN\n630017\tLI ZHENJIN\n630014\tMYOUNG SUNG JIN\n630008\tPAEK JEEHYUN\n630034\tPAK SEOKBONG\n630032\tPARK BYUNGRYANG\n630010\tPARK CHONG BOK\n630012\tPARK MEE A\n630002\tRYU DAE SUNG\n630023\tRYU HYUNJIN\n630036\tSEO YAMUN\n630022\tSO HUN YOUNG\n630028\tYI KUNCHI\n630020\tYOO YUNSUNG\n630005\tYU KUMSOOK\n630026\tYUN DANIM\n",
+  "stderr": "",
+  "execution_time_ms": 1784
+}

@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name FROM registrations WHERE name LIKE '%LEE%' OR name LIKE '%DINH%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name FROM registrations WHERE name LIKE '%LEE%' OR name LIKE '%DINH%';",
+  "rows": [
+    {
+      "id": "630011",
+      "name": "LEE JAEMIN"
+    },
+    {
+      "id": "630019",
+      "name": "LEE DEAGUN"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n630011\tLEE JAEMIN\n630019\tLEE DEAGUN\n",
+  "stderr": "",
+  "execution_time_ms": 1853
+}

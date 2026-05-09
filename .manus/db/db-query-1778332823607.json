@@ -1,0 +1,75 @@
+{
+  "query": "SELECT id, name, passportOcrData FROM registrations ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, passportOcrData FROM registrations ORDER BY id;",
+  "rows": [
+    {
+      "id": "630001",
+      "name": "KIM JUN HO",
+      "passportOcrData": "NULL"
+    },
+    {
+      "id": "630002",
+      "name": "RYU DAE SUNG",
+      "passportOcrData": "NULL"
+    },
+    {
+      "id": "630003",
+      "name": "CHOI YONG SUK",
+      "passportOcrData": "NULL"
+    },
+    {
+      "id": "630004",
+      "name": "KIM TAEHEE",
+      "passportOcrData": "NULL"
+    },
+    {
+      "id": "630005",
+      "name": "YU KUMSOOK",
+      "passportOcrData": "NULL"
+    },
+    {
+      "id": "630006",
+      "name": "AN YEONGOK",
+      "passportOcrData": "NULL"
+    },
+    {
+      "id": "630007",
+      "name": "HWANG MYEONGSUK",
+      "passportOcrData": "NULL"
+    },
+    {
+      "id": "630008",
+      "name": "PAEK JEEHYUN",
+      "passportOcrData": "NULL"
+    },
+    {
+      "id": "630009",
+      "name": "KIM CHUNOCK",
+      "passportOcrData": "NULL"
+    },
+    {
+      "id": "630010",
+      "name": "PARK CHONG BOK",
+      "passportOcrData": "NULL"
+    },
+    {
+      "id": "630011",
+      "name": "LEE JAEMIN",
+      "passportOcrData": "NULL"
+    },
+    {
+      "id": "630012",
+      "name": "PARK MEE A",
+      "passportOcrData": "NULL"
+    },
+    {
+      "id": "630013",
+      "name": "KIM IN HWAN",
+      "passportOcrData": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tpassportOcrData\n630001\tKIM JUN HO\tNULL\n630002\tRYU DAE SUNG\tNULL\n630003\tCHOI YONG SUK\tNULL\n630004\tKIM TAEHEE\tNULL\n630005\tYU KUMSOOK\tNULL\n630006\tAN YEONGOK\tNULL\n630007\tHWANG MYEONGSUK\tNULL\n630008\tPAEK JEEHYUN\tNULL\n630009\tKIM CHUNOCK\tNULL\n630010\tPARK CHONG BOK\tNULL\n630011\tLEE JAEMIN\tNULL\n630012\tPARK MEE A\tNULL\n630013\tKIM IN HWAN\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1853
+}

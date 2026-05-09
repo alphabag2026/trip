@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(CASE WHEN passportOcrData IS NOT NULL AND JSON_EXTRACT(passportOcrData, '$.passportNo') IS NOT NULL THEN 1 ELSE 0 END) as with_passport FROM registrations;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT COUNT(*) as total, SUM(CASE WHEN passportOcrData IS NOT NULL AND JSON_EXTRACT(passportOcrData, '$.passportNo') IS NOT NULL THEN 1 ELSE 0 END) as with_passport FROM registrations;",
+  "rows": [
+    {
+      "total": "37",
+      "with_passport": "37"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\twith_passport\n37\t37\n",
+  "stderr": "",
+  "execution_time_ms": 1704
+}

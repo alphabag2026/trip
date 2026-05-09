@@ -1,0 +1,370 @@
+{
+  "query": "DESCRIBE registrations;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute DESCRIBE registrations;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "meetupId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "phone",
+      "Type": "varchar(50)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "messengerId",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "locationType",
+      "Type": "enum('domestic','overseas')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "domestic",
+      "Extra": ""
+    },
+    {
+      "Field": "scheduleStart",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "scheduleEnd",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "walletAddress",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "referrerName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teamName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teamIntro",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "notes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "roommatePreference",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "passportImageUrl",
+      "Type": "varchar(1000)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "passportOcrData",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "profilePhotoUrl",
+      "Type": "varchar(1000)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nationality",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "region",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "category",
+      "Type": "enum('meetup','pre_visit','event','meeting','other')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "meetup",
+      "Extra": ""
+    },
+    {
+      "Field": "customCategory",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "enum('pending','approved','rejected','completed')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "pending",
+      "Extra": ""
+    },
+    {
+      "Field": "immigrationAssist",
+      "Type": "enum('self','agency','pending')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "pending",
+      "Extra": ""
+    },
+    {
+      "Field": "telegramNotified",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "flightConfirmed",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "accommodationConfirmed",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "pickupConfirmed",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "checkedBagRequest",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "checkedBagCount",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "checkedBagWeight",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "checkedBagNotes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "preferredDepartureTime",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "mealPreference",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "allergies",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "drinkAlcohol",
+      "Type": "enum('yes','no','sometimes')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "smoking",
+      "Type": "enum('yes','no')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "hotelRoomNumber",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "hotelFloor",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "hotelNotes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "transportType",
+      "Type": "enum('flight','ktx','none','other')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "transportNotes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "email",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "userId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nmeetupId\tint\tYES\t\tNULL\t\nname\tvarchar(255)\tNO\t\tNULL\t\nphone\tvarchar(50)\tNO\t\tNULL\t\nmessengerId\tvarchar(255)\tNO\t\tNULL\t\nlocationType\tenum('domestic','overseas')\tNO\t\tdomestic\t\nscheduleStart\ttimestamp\tYES\t\tNULL\t\nscheduleEnd\ttimestamp\tYES\t\tNULL\t\nwalletAddress\tvarchar(500)\tYES\t\tNULL\t\nreferrerName\tvarchar(255)\tYES\t\tNULL\t\nteamName\tvarchar(255)\tYES\t\tNULL\t\nteamIntro\ttext\tYES\t\tNULL\t\nnotes\ttext\tYES\t\tNULL\t\nroommatePreference\tvarchar(255)\tYES\t\tNULL\t\npassportImageUrl\tvarchar(1000)\tYES\t\tNULL\t\npassportOcrData\tjson\tYES\t\tNULL\t\nprofilePhotoUrl\tvarchar(1000)\tYES\t\tNULL\t\nnationality\tvarchar(100)\tYES\t\tNULL\t\nregion\tvarchar(100)\tYES\t\tNULL\t\ncategory\tenum('meetup','pre_visit','event','meeting','other')\tNO\t\tmeetup\t\ncustomCategory\tvarchar(255)\tYES\t\tNULL\t\nstatus\tenum('pending','approved','rejected','completed')\tNO\t\tpending\t\nimmigrationAssist\tenum('self','agency','pending')\tNO\t\tpending\t\ntelegramNotified\ttinyint(1)\tYES\t\t0\t\nflightConfirmed\ttinyint(1)\tYES\t\t0\t\naccommodationConfirmed\ttinyint(1)\tYES\t\t0\t\npickupConfirmed\ttinyint(1)\tYES\t\t0\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\ncheckedBagRequest\ttinyint(1)\tYES\t\t0\t\ncheckedBagCount\tint\tYES\t\t0\t\ncheckedBagWeight\tvarchar(50)\tYES\t\tNULL\t\ncheckedBagNotes\ttext\tYES\t\tNULL\t\npreferredDepartureTime\tvarchar(50)\tYES\t\tNULL\t\nmealPreference\tvarchar(100)\tYES\t\tNULL\t\nallergies\ttext\tYES\t\tNULL\t\ndrinkAlcohol\tenum('yes','no','sometimes')\tYES\t\tNULL\t\nsmoking\tenum('yes','no')\tYES\t\tNULL\t\nhotelRoomNumber\tvarchar(50)\tYES\t\tNULL\t\nhotelFloor\tvarchar(20)\tYES\t\tNULL\t\nhotelNotes\ttext\tYES\t\tNULL\t\ntransportType\tenum('flight','ktx','none','other')\tYES\t\tNULL\t\ntransportNotes\ttext\tYES\t\tNULL\t\nemail\tvarchar(255)\tYES\t\tNULL\t\nuserId\tint\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 1768
+}

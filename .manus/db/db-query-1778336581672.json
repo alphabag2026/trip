@@ -1,0 +1,13 @@
+{
+  "query": "INSERT INTO registrations (meetupId, name, phone, messengerId, locationType, status, passportOcrData, createdAt) VALUES (1, 'KIM DONGHEE', '', '', 'overseas', 'approved', '{\"fullName\":\"KIM DONGHEE\",\"koreanName\":\"김동희\",\"nationality\":\"KOR\"}', NOW());\nSELECT COUNT(*) as total FROM registrations;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute INSERT INTO registrations (meetupId, name, phone, messengerId, locationType, status, passportOcrData, createdAt) VALUES (1, 'KIM DONGHEE', '', '', 'overseas', 'approved', '{\"fullName\":\"KIM DONGHEE\",\"koreanName\":\"김동희\",\"nationality\":\"KOR\"}', NOW());\nSELECT COUNT(*) as total FROM registrations;",
+  "rows": [
+    {
+      "total": "37"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n37\n",
+  "stderr": "",
+  "execution_time_ms": 2085
+}

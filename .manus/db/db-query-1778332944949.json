@@ -1,0 +1,62 @@
+{
+  "query": "SELECT id, name FROM registrations ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name FROM registrations ORDER BY id;",
+  "rows": [
+    {
+      "id": "630001",
+      "name": "KIM JUN HO"
+    },
+    {
+      "id": "630002",
+      "name": "RYU DAE SUNG"
+    },
+    {
+      "id": "630003",
+      "name": "CHOI YONG SUK"
+    },
+    {
+      "id": "630004",
+      "name": "KIM TAEHEE"
+    },
+    {
+      "id": "630005",
+      "name": "YU KUMSOOK"
+    },
+    {
+      "id": "630006",
+      "name": "AN YEONGOK"
+    },
+    {
+      "id": "630007",
+      "name": "HWANG MYEONGSUK"
+    },
+    {
+      "id": "630008",
+      "name": "PAEK JEEHYUN"
+    },
+    {
+      "id": "630009",
+      "name": "KIM CHUNOCK"
+    },
+    {
+      "id": "630010",
+      "name": "PARK CHONG BOK"
+    },
+    {
+      "id": "630011",
+      "name": "LEE JAEMIN"
+    },
+    {
+      "id": "630012",
+      "name": "PARK MEE A"
+    },
+    {
+      "id": "630013",
+      "name": "KIM IN HWAN"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n630001\tKIM JUN HO\n630002\tRYU DAE SUNG\n630003\tCHOI YONG SUK\n630004\tKIM TAEHEE\n630005\tYU KUMSOOK\n630006\tAN YEONGOK\n630007\tHWANG MYEONGSUK\n630008\tPAEK JEEHYUN\n630009\tKIM CHUNOCK\n630010\tPARK CHONG BOK\n630011\tLEE JAEMIN\n630012\tPARK MEE A\n630013\tKIM IN HWAN\n",
+  "stderr": "",
+  "execution_time_ms": 1767
+}

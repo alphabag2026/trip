@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO registrations (id, meetupId, name, phone, status, passportOcrData, createdAt) VALUES ('630039', '1', 'LEE DONGKUK', '', 'approved', '{\"fullName\":\"LEE DONGKUK\",\"koreanName\":\"이동국\",\"passportNo\":\"M60032944\",\"nationality\":\"KOR\",\"dateOfBirth\":\"1971-02-05\",\"sex\":\"M\",\"dateOfExpiry\":\"2028-07-10\",\"dateOfIssue\":\"2018-07-10\"}', NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute INSERT INTO registrations (id, meetupId, name, phone, status, passportOcrData, createdAt) VALUES ('630039', '1', 'LEE DONGKUK', '', 'approved', '{\"fullName\":\"LEE DONGKUK\",\"koreanName\":\"이동국\",\"passportNo\":\"M60032944\",\"nationality\":\"KOR\",\"dateOfBirth\":\"1971-02-05\",\"sex\":\"M\",\"dateOfExpiry\":\"2028-07-10\",\"dateOfIssue\":\"2018-07-10\"}', NOW());",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1364 (HY000) at line 1: Field 'messengerId' doesn't have a default value"
+  ]
+}

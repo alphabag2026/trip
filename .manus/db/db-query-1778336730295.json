@@ -1,0 +1,9 @@
+{
+  "query": "-- A조 대한항공팀 22명\nUPDATE registrations SET teamName = 'A조 (대한항공)' WHERE id IN (630032, 630036, 630033, 630031, 630021, 630027, 630017, 630018, 630034, 630035, 630026, 630012, 630028, 630023, 630024, 630020, 630022, 630041, 630011, 630025, 630013, 630010);\n\n-- B조 아시아나팀 + 이대근 15명\nUPDATE registrations SET teamName = 'B조 (아시아나)' WHERE id IN (630005, 630030, 630008, 630009, 630006, 630029, 630007, 630003, 630004, 630016, 630002, 630001, 630014, 630015, 630019);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute -- A조 대한항공팀 22명\nUPDATE registrations SET teamName = 'A조 (대한항공)' WHERE id IN (630032, 630036, 630033, 630031, 630021, 630027, 630017, 630018, 630034, 630035, 630026, 630012, 630028, 630023, 630024, 630020, 630022, 630041, 630011, 630025, 630013, 630010);\n\n-- B조 아시아나팀 + 이대근 15명\nUPDATE registrations SET teamName = 'B조 (아시아나)' WHERE id IN (630005, 630030, 630008, 630009, 630006, 630029, 630007, 630003, 630004, 630016, 630002, 630001, 630014, 630015, 630019);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1996
+}

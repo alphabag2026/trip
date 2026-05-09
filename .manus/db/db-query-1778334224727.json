@@ -1,0 +1,13 @@
+{
+  "query": "UPDATE registrations SET passportOcrData = '{\"fullName\":\"PARK JEEHYUN\",\"koreanName\":\"박지현\",\"passportNo\":\"M087A2750\",\"nationality\":\"KOR\",\"dateOfBirth\":\"1953-06-08\",\"sex\":\"F\",\"dateOfExpiry\":\"2035-07-10\",\"dateOfIssue\":\"2025-07-10\"}' WHERE name = 'PAEK JEEHYUN';\n\nSELECT COUNT(*) as total FROM registrations;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute UPDATE registrations SET passportOcrData = '{\"fullName\":\"PARK JEEHYUN\",\"koreanName\":\"박지현\",\"passportNo\":\"M087A2750\",\"nationality\":\"KOR\",\"dateOfBirth\":\"1953-06-08\",\"sex\":\"F\",\"dateOfExpiry\":\"2035-07-10\",\"dateOfIssue\":\"2025-07-10\"}' WHERE name = 'PAEK JEEHYUN';\n\nSELECT COUNT(*) as total FROM registrations;",
+  "rows": [
+    {
+      "total": "37"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n37\n",
+  "stderr": "",
+  "execution_time_ms": 1975
+}

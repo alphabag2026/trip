@@ -1,0 +1,75 @@
+{
+  "query": "SELECT id, name, createdAt FROM registrations ORDER BY createdAt DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, createdAt FROM registrations ORDER BY createdAt DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "630010",
+      "name": "PARK CHONG BOK",
+      "createdAt": "2026-05-09 08:37:30"
+    },
+    {
+      "id": "630013",
+      "name": "KIM IN HWAN",
+      "createdAt": "2026-05-09 08:37:30"
+    },
+    {
+      "id": "630011",
+      "name": "LEE JAEMIN",
+      "createdAt": "2026-05-09 08:37:30"
+    },
+    {
+      "id": "630012",
+      "name": "PARK MEE A",
+      "createdAt": "2026-05-09 08:37:30"
+    },
+    {
+      "id": "630008",
+      "name": "PAEK JEEHYUN",
+      "createdAt": "2026-05-09 08:37:19"
+    },
+    {
+      "id": "630003",
+      "name": "CHOI YONG SUK",
+      "createdAt": "2026-05-09 08:37:19"
+    },
+    {
+      "id": "630009",
+      "name": "KIM CHUNOCK",
+      "createdAt": "2026-05-09 08:37:19"
+    },
+    {
+      "id": "630004",
+      "name": "KIM TAEHEE",
+      "createdAt": "2026-05-09 08:37:19"
+    },
+    {
+      "id": "630005",
+      "name": "YU KUMSOOK",
+      "createdAt": "2026-05-09 08:37:19"
+    },
+    {
+      "id": "630006",
+      "name": "AN YEONGOK",
+      "createdAt": "2026-05-09 08:37:19"
+    },
+    {
+      "id": "630007",
+      "name": "HWANG MYEONGSUK",
+      "createdAt": "2026-05-09 08:37:19"
+    },
+    {
+      "id": "630002",
+      "name": "RYU DAE SUNG",
+      "createdAt": "2026-05-09 08:37:19"
+    },
+    {
+      "id": "630001",
+      "name": "KIM JUN HO",
+      "createdAt": "2026-05-09 08:37:19"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tcreatedAt\n630010\tPARK CHONG BOK\t2026-05-09 08:37:30\n630013\tKIM IN HWAN\t2026-05-09 08:37:30\n630011\tLEE JAEMIN\t2026-05-09 08:37:30\n630012\tPARK MEE A\t2026-05-09 08:37:30\n630008\tPAEK JEEHYUN\t2026-05-09 08:37:19\n630003\tCHOI YONG SUK\t2026-05-09 08:37:19\n630009\tKIM CHUNOCK\t2026-05-09 08:37:19\n630004\tKIM TAEHEE\t2026-05-09 08:37:19\n630005\tYU KUMSOOK\t2026-05-09 08:37:19\n630006\tAN YEONGOK\t2026-05-09 08:37:19\n630007\tHWANG MYEONGSUK\t2026-05-09 08:37:19\n630002\tRYU DAE SUNG\t2026-05-09 08:37:19\n630001\tKIM JUN HO\t2026-05-09 08:37:19\n",
+  "stderr": "",
+  "execution_time_ms": 1776
+}

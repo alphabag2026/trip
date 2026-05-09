@@ -1,0 +1,521 @@
+{
+  "query": "SELECT id, flightNo, airline, departureAirport, arrivalAirport FROM flight_schedules ORDER BY airline, id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, flightNo, airline, departureAirport, arrivalAirport FROM flight_schedules ORDER BY airline, id;",
+  "rows": [
+    {
+      "id": "1",
+      "flightNo": "QQ",
+      "airline": "",
+      "departureAirport": "",
+      "arrivalAirport": ""
+    },
+    {
+      "id": "60029",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60030",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60031",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60032",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60033",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60034",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60035",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60036",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60037",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60038",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60039",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60040",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60041",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60042",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60043",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60044",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60045",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60046",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60047",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60048",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60049",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60050",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60051",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60052",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60053",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60054",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60055",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60056",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60057",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60058",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60059",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60060",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60061",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60062",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60063",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60064",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60065",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60066",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60067",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60068",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60069",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60070",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60071",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60072",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60001",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60002",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60003",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60004",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60005",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60006",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60007",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60008",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60009",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60010",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60011",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60012",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60013",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60014",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2"
+    },
+    {
+      "id": "60015",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60016",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60017",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60018",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60019",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60020",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60021",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60022",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60023",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60024",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60025",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60026",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60027",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    },
+    {
+      "id": "60028",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tflightNo\tairline\tdepartureAirport\tarrivalAirport\n1\tQQ\t\t\t\n60029\tKE441\t대한항공\tICN T2\tHAN T2\n60030\tKE441\t대한항공\tICN T2\tHAN T2\n60031\tKE441\t대한항공\tICN T2\tHAN T2\n60032\tKE441\t대한항공\tICN T2\tHAN T2\n60033\tKE441\t대한항공\tICN T2\tHAN T2\n60034\tKE441\t대한항공\tICN T2\tHAN T2\n60035\tKE441\t대한항공\tICN T2\tHAN T2\n60036\tKE441\t대한항공\tICN T2\tHAN T2\n60037\tKE441\t대한항공\tICN T2\tHAN T2\n60038\tKE441\t대한항공\tICN T2\tHAN T2\n60039\tKE441\t대한항공\tICN T2\tHAN T2\n60040\tKE441\t대한항공\tICN T2\tHAN T2\n60041\tKE441\t대한항공\tICN T2\tHAN T2\n60042\tKE441\t대한항공\tICN T2\tHAN T2\n60043\tKE441\t대한항공\tICN T2\tHAN T2\n60044\tKE441\t대한항공\tICN T2\tHAN T2\n60045\tKE441\t대한항공\tICN T2\tHAN T2\n60046\tKE441\t대한항공\tICN T2\tHAN T2\n60047\tKE441\t대한항공\tICN T2\tHAN T2\n60048\tKE441\t대한항공\tICN T2\tHAN T2\n60049\tKE441\t대한항공\tICN T2\tHAN T2\n60050\tKE441\t대한항공\tICN T2\tHAN T2\n60051\tKE442\t대한항공\tHAN T2\tICN T2\n60052\tKE442\t대한항공\tHAN T2\tICN T2\n60053\tKE442\t대한항공\tHAN T2\tICN T2\n60054\tKE442\t대한항공\tHAN T2\tICN T2\n60055\tKE442\t대한항공\tHAN T2\tICN T2\n60056\tKE442\t대한항공\tHAN T2\tICN T2\n60057\tKE442\t대한항공\tHAN T2\tICN T2\n60058\tKE442\t대한항공\tHAN T2\tICN T2\n60059\tKE442\t대한항공\tHAN T2\tICN T2\n60060\tKE442\t대한항공\tHAN T2\tICN T2\n60061\tKE442\t대한항공\tHAN T2\tICN T2\n60062\tKE442\t대한항공\tHAN T2\tICN T2\n60063\tKE442\t대한항공\tHAN T2\tICN T2\n60064\tKE442\t대한항공\tHAN T2\tICN T2\n60065\tKE442\t대한항공\tHAN T2\tICN T2\n60066\tKE442\t대한항공\tHAN T2\tICN T2\n60067\tKE442\t대한항공\tHAN T2\tICN T2\n60068\tKE442\t대한항공\tHAN T2\tICN T2\n60069\tKE442\t대한항공\tHAN T2\tICN T2\n60070\tKE442\t대한항공\tHAN T2\tICN T2\n60071\tKE442\t대한항공\tHAN T2\tICN T2\n60072\tKE442\t대한항공\tHAN T2\tICN T2\n60001\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60002\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60003\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60004\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60005\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60006\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60007\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60008\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60009\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60010\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60011\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60012\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60013\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60014\tOZ729\t아시아나항공\tICN T2\tHAN T2\n60015\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60016\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60017\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60018\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60019\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60020\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60021\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60022\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60023\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60024\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60025\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60026\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60027\tOZ730\t아시아나항공\tHAN T2\tICN T2\n60028\tOZ730\t아시아나항공\tHAN T2\tICN T2\n",
+  "stderr": "",
+  "execution_time_ms": 1762
+}

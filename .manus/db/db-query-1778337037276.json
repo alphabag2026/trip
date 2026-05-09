@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, flightNo, airline, departureAirport, arrivalAirport, scheduledDeparture, scheduledArrival, direction FROM flight_schedules ORDER BY direction, scheduledDeparture;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, flightNo, airline, departureAirport, arrivalAirport, scheduledDeparture, scheduledArrival, direction FROM flight_schedules ORDER BY direction, scheduledDeparture;",
+  "rows": [
+    {
+      "id": "60073",
+      "flightNo": "VN311",
+      "airline": "베트남항공",
+      "departureAirport": "NRT",
+      "arrivalAirport": "HAN",
+      "scheduledDeparture": "NULL",
+      "scheduledArrival": "2025-05-10 04:10:00",
+      "direction": "outbound"
+    },
+    {
+      "id": "60029",
+      "flightNo": "KE441",
+      "airline": "대한항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2",
+      "scheduledDeparture": "2025-05-09 23:00:00",
+      "scheduledArrival": "2025-05-10 01:50:00",
+      "direction": "outbound"
+    },
+    {
+      "id": "60001",
+      "flightNo": "OZ729",
+      "airline": "아시아나항공",
+      "departureAirport": "ICN T2",
+      "arrivalAirport": "HAN T2",
+      "scheduledDeparture": "2025-05-10 00:15:00",
+      "scheduledArrival": "2025-05-10 03:15:00",
+      "direction": "outbound"
+    },
+    {
+      "id": "60074",
+      "flightNo": "KE442",
+      "airline": "대한항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2",
+      "scheduledDeparture": "2025-05-13 03:05:00",
+      "scheduledArrival": "2025-05-13 09:35:00",
+      "direction": "return"
+    },
+    {
+      "id": "60075",
+      "flightNo": "OZ730",
+      "airline": "아시아나항공",
+      "departureAirport": "HAN T2",
+      "arrivalAirport": "ICN T2",
+      "scheduledDeparture": "2025-05-13 04:25:00",
+      "scheduledArrival": "2025-05-13 10:35:00",
+      "direction": "return"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tflightNo\tairline\tdepartureAirport\tarrivalAirport\tscheduledDeparture\tscheduledArrival\tdirection\n60073\tVN311\t베트남항공\tNRT\tHAN\tNULL\t2025-05-10 04:10:00\toutbound\n60029\tKE441\t대한항공\tICN T2\tHAN T2\t2025-05-09 23:00:00\t2025-05-10 01:50:00\toutbound\n60001\tOZ729\t아시아나항공\tICN T2\tHAN T2\t2025-05-10 00:15:00\t2025-05-10 03:15:00\toutbound\n60074\tKE442\t대한항공\tHAN T2\tICN T2\t2025-05-13 03:05:00\t2025-05-13 09:35:00\treturn\n60075\tOZ730\t아시아나항공\tHAN T2\tICN T2\t2025-05-13 04:25:00\t2025-05-13 10:35:00\treturn\n",
+  "stderr": "",
+  "execution_time_ms": 1795
+}

@@ -1,0 +1,13 @@
+{
+  "query": "DELETE FROM registrations WHERE name = 'DINH THI BANG';\nDELETE FROM registrations WHERE name = 'LEE DONGKUK';\nSELECT COUNT(*) as total FROM registrations;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute DELETE FROM registrations WHERE name = 'DINH THI BANG';\nDELETE FROM registrations WHERE name = 'LEE DONGKUK';\nSELECT COUNT(*) as total FROM registrations;",
+  "rows": [
+    {
+      "total": "36"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n36\n",
+  "stderr": "",
+  "execution_time_ms": 2271
+}

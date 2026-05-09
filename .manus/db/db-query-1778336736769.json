@@ -1,0 +1,18 @@
+{
+  "query": "SELECT teamName, COUNT(*) as cnt FROM registrations GROUP BY teamName;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT teamName, COUNT(*) as cnt FROM registrations GROUP BY teamName;",
+  "rows": [
+    {
+      "teamName": "A조 (대한항공)",
+      "cnt": "22"
+    },
+    {
+      "teamName": "B조 (아시아나)",
+      "cnt": "15"
+    }
+  ],
+  "messages": [],
+  "stdout": "teamName\tcnt\nA조 (대한항공)\t22\nB조 (아시아나)\t15\n",
+  "stderr": "",
+  "execution_time_ms": 1780
+}

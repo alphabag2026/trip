@@ -1,0 +1,124 @@
+{
+  "query": "SELECT COUNT(*) as total FROM registrations;\nSELECT id, name FROM registrations ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT COUNT(*) as total FROM registrations;\nSELECT id, name FROM registrations ORDER BY id;",
+  "rows": [
+    {
+      "total": "36"
+    },
+    {
+      "total": "id\tname"
+    },
+    {
+      "total": "630001\tKIM JUN HO"
+    },
+    {
+      "total": "630002\tRYU DAE SUNG"
+    },
+    {
+      "total": "630003\tCHOI YONG SUK"
+    },
+    {
+      "total": "630004\tKIM TAEHEE"
+    },
+    {
+      "total": "630005\tYU KUMSOOK"
+    },
+    {
+      "total": "630006\tAN YEONGOK"
+    },
+    {
+      "total": "630007\tHWANG MYEONGSUK"
+    },
+    {
+      "total": "630008\tPAEK JEEHYUN"
+    },
+    {
+      "total": "630009\tKIM CHUNOCK"
+    },
+    {
+      "total": "630010\tPARK CHONG BOK"
+    },
+    {
+      "total": "630011\tLEE JAEMIN"
+    },
+    {
+      "total": "630012\tPARK MEE A"
+    },
+    {
+      "total": "630013\tKIM IN HWAN"
+    },
+    {
+      "total": "630014\tMYOUNG SUNG JIN"
+    },
+    {
+      "total": "630015\tKIM WOONGKI"
+    },
+    {
+      "total": "630016\tKIM BONGMYUNG"
+    },
+    {
+      "total": "630017\tLI ZHENJIN"
+    },
+    {
+      "total": "630018\tKIM SAMRYE"
+    },
+    {
+      "total": "630019\tLEE DEAGUN"
+    },
+    {
+      "total": "630020\tYOO YUNSUNG"
+    },
+    {
+      "total": "630021\tJO KWANG RYE"
+    },
+    {
+      "total": "630022\tSO HUN YOUNG"
+    },
+    {
+      "total": "630023\tRYU HYUNJIN"
+    },
+    {
+      "total": "630024\tIM HYEONSUK"
+    },
+    {
+      "total": "630025\tJEONG TAESU"
+    },
+    {
+      "total": "630026\tYUN DANIM"
+    },
+    {
+      "total": "630027\tCHA BOKSOON"
+    },
+    {
+      "total": "630028\tYI KUNCHI"
+    },
+    {
+      "total": "630029\tCHO SEORAN"
+    },
+    {
+      "total": "630030\tKIM YOONSEO"
+    },
+    {
+      "total": "630031\tKIM SUNAE"
+    },
+    {
+      "total": "630032\tPARK BYUNGRYANG"
+    },
+    {
+      "total": "630033\tKIM YUN JA"
+    },
+    {
+      "total": "630034\tPAK SEOKBONG"
+    },
+    {
+      "total": "630035\tKIM YEAJA"
+    },
+    {
+      "total": "630036\tSEO YAMUN"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n36\nid\tname\n630001\tKIM JUN HO\n630002\tRYU DAE SUNG\n630003\tCHOI YONG SUK\n630004\tKIM TAEHEE\n630005\tYU KUMSOOK\n630006\tAN YEONGOK\n630007\tHWANG MYEONGSUK\n630008\tPAEK JEEHYUN\n630009\tKIM CHUNOCK\n630010\tPARK CHONG BOK\n630011\tLEE JAEMIN\n630012\tPARK MEE A\n630013\tKIM IN HWAN\n630014\tMYOUNG SUNG JIN\n630015\tKIM WOONGKI\n630016\tKIM BONGMYUNG\n630017\tLI ZHENJIN\n630018\tKIM SAMRYE\n630019\tLEE DEAGUN\n630020\tYOO YUNSUNG\n630021\tJO KWANG RYE\n630022\tSO HUN YOUNG\n630023\tRYU HYUNJIN\n630024\tIM HYEONSUK\n630025\tJEONG TAESU\n630026\tYUN DANIM\n630027\tCHA BOKSOON\n630028\tYI KUNCHI\n630029\tCHO SEORAN\n630030\tKIM YOONSEO\n630031\tKIM SUNAE\n630032\tPARK BYUNGRYANG\n630033\tKIM YUN JA\n630034\tPAK SEOKBONG\n630035\tKIM YEAJA\n630036\tSEO YAMUN\n",
+  "stderr": "",
+  "execution_time_ms": 2063
+}
