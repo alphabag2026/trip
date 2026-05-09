@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Upload, RefreshCw, Check, X, Trash2, Eye, Plane, Hotel, Calendar, Truck, HelpCircle, FileText, Bot, Send, MessageSquare, Users, BarChart3, Search, Image } from "lucide-react";
+import { Upload, RefreshCw, Check, X, Trash2, Eye, Plane, Hotel, Calendar, Truck, HelpCircle, FileText, Bot, Send, MessageSquare, Users, BarChart3, Search, Image, Bell, BellRing, Settings, Shield, Edit, Save, Plus, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -46,36 +47,81 @@ export default function TelegramUploads() {
   const [selectedUpload, setSelectedUpload] = useState<any>(null);
   const [reviewNotes, setReviewNotes] = useState("");
   const [meetupIdInput, setMeetupIdInput] = useState("");
-  const [testMessage, setTestMessage] = useState("");
-  const [activeTab, setActiveTab] = useState("history");
+  const [activeTab, setActiveTab] = useState("notifications");
 
+  // Settings state
+  const [newTelegramId, setNewTelegramId] = useState("");
+  const [newTelegramName, setNewTelegramName] = useState("");
+
+  // OCR Review state
+  const [editingOcr, setEditingOcr] = useState<any>(null);
+  const [ocrEditData, setOcrEditData] = useState<any>({});
+
+  // Queries
   const { data: uploads, refetch } = trpc.telegramUpload.list.useQuery({
     status: statusFilter !== "all" ? statusFilter : undefined,
     parsedType: typeFilter !== "all" ? typeFilter : undefined,
   });
   const { data: stats } = trpc.telegramUpload.stats.useQuery();
   const { data: meetups } = trpc.meetup.list.useQuery();
+  const { data: notifications, refetch: refetchNotifications } = trpc.telegramUpload.notifications.useQuery({ unreadOnly: false, limit: 50 });
+  const { data: unreadCountData, refetch: refetchUnreadCount } = trpc.telegramUpload.unreadCount.useQuery();
+  const { data: telegramConfig, refetch: refetchConfig } = trpc.telegramUpload.getConfig.useQuery();
 
+  // Auto-refresh notifications every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchNotifications();
+      refetchUnreadCount();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Mutations
   const reparseMutation = trpc.telegramUpload.reparse.useMutation({
     onSuccess: () => { toast.success("재파싱 완료"); refetch(); },
-    onError: (e) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message),
   });
   const approveMutation = trpc.telegramUpload.approve.useMutation({
-    onSuccess: (r) => { toast.success(`승인 완료 (${r.appliedToTable})`); setSelectedUpload(null); refetch(); },
-    onError: (e) => toast.error(e.message),
+    onSuccess: (r: any) => { toast.success(`승인 완료 (${r.appliedToTable})`); setSelectedUpload(null); refetch(); },
+    onError: (e: any) => toast.error(e.message),
   });
   const rejectMutation = trpc.telegramUpload.reject.useMutation({
     onSuccess: () => { toast.success("거절 완료"); setSelectedUpload(null); refetch(); },
-    onError: (e) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message),
   });
   const deleteMutation = trpc.telegramUpload.delete.useMutation({
     onSuccess: () => { toast.success("삭제 완료"); refetch(); },
-    onError: (e) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message),
+  });
+  const markReadMutation = trpc.telegramUpload.markNotificationsRead.useMutation({
+    onSuccess: () => { refetchNotifications(); refetchUnreadCount(); },
+  });
+  const markAllReadMutation = trpc.telegramUpload.markAllNotificationsRead.useMutation({
+    onSuccess: () => { refetchNotifications(); refetchUnreadCount(); toast.success("모든 알림을 읽음 처리했습니다"); },
+  });
+  const saveConfigMutation = trpc.telegramUpload.updateConfig.useMutation({
+    onSuccess: () => { toast.success("설정 저장 완료"); refetchConfig(); },
+    onError: (e: any) => toast.error(e.message),
+  });
+  const updateOcrMutation = trpc.telegramUpload.updateParsedData.useMutation({
+    onSuccess: () => { toast.success("OCR 결과 수정 완료"); setEditingOcr(null); refetch(); },
+    onError: (e: any) => toast.error(e.message),
   });
 
-  const filteredUploads = useMemo(() => {
-    return uploads || [];
+  // OCR pending items
+  const ocrPendingItems = useMemo(() => {
+    return (uploads || []).filter((u: any) =>
+      u.parsedType === "ocr_passport" && (u.status === "parsed" || u.status === "pending")
+    );
   }, [uploads]);
+
+  // Allowed telegram IDs
+  const allowedIds = useMemo(() => {
+    try {
+      return JSON.parse(telegramConfig?.allowedTelegramIds || "[]");
+    } catch { return []; }
+  }, [telegramConfig]);
 
   return (
     <div className="p-6 space-y-6">
@@ -88,9 +134,11 @@ export default function TelegramUploads() {
           </h1>
           <p className="text-muted-foreground mt-1">텔레그램에서 자연어로 전송된 명령을 AI가 자동으로 분석하고 실행합니다</p>
         </div>
-        <Button variant="outline" onClick={() => refetch()} size="sm">
-          <RefreshCw className="h-4 w-4 mr-1" /> 새로고침
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => { refetch(); refetchNotifications(); refetchUnreadCount(); }} size="sm">
+            <RefreshCw className="h-4 w-4 mr-1" /> 새로고침
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -116,21 +164,228 @@ export default function TelegramUploads() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="notifications" className="gap-1 relative">
+            <BellRing className="h-4 w-4" /> 실시간 알림
+            {(unreadCountData?.count || 0) > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                {unreadCountData?.count}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="ocr-review" className="gap-1 relative">
+            <Image className="h-4 w-4" /> OCR 확인/수정
+            {ocrPendingItems.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                {ocrPendingItems.length}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="history" className="gap-1">
             <MessageSquare className="h-4 w-4" /> 명령 이력
+          </TabsTrigger>
+          <TabsTrigger value="admin-ids" className="gap-1">
+            <Shield className="h-4 w-4" /> 관리자 ID
           </TabsTrigger>
           <TabsTrigger value="commands" className="gap-1">
             <Bot className="h-4 w-4" /> 사용 가능 명령
           </TabsTrigger>
           <TabsTrigger value="settings" className="gap-1">
-            <FileText className="h-4 w-4" /> 봇 설정
+            <Settings className="h-4 w-4" /> 봇 설정
           </TabsTrigger>
         </TabsList>
 
-        {/* History Tab */}
+        {/* ═══ Notifications Tab ═══ */}
+        <TabsContent value="notifications" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Bell className="h-5 w-5" /> 실시간 푸시 알림
+              {(unreadCountData?.count || 0) > 0 && <Badge variant="destructive">{unreadCountData?.count}개 읽지 않음</Badge>}
+            </h3>
+            {(unreadCountData?.count || 0) > 0 && (
+              <Button variant="outline" size="sm" onClick={() => markAllReadMutation.mutate()}>
+                <Check className="h-4 w-4 mr-1" /> 모두 읽음
+              </Button>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            {!notifications || notifications.length === 0 ? (
+              <Card className="bg-card/50">
+                <CardContent className="p-8 text-center text-muted-foreground">
+                  <Bell className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>아직 알림이 없습니다</p>
+                  <p className="text-xs mt-1">텔레그램에서 명령을 보내면 여기에 실시간으로 표시됩니다</p>
+                </CardContent>
+              </Card>
+            ) : (
+              notifications.map((notif: any) => (
+                <Card
+                  key={notif.id}
+                  className={`bg-card/50 transition-all cursor-pointer hover:bg-card/80 ${!notif.isRead ? "border-l-4 border-l-blue-500" : "opacity-70"}`}
+                  onClick={() => {
+                    if (!notif.isRead) {
+                      markReadMutation.mutate({ ids: [notif.id] });
+                    }
+                  }}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={`mt-0.5 p-1.5 rounded-full ${
+                        notif.type === "success" ? "bg-green-500/20 text-green-400" :
+                        notif.type === "warning" ? "bg-amber-500/20 text-amber-400" :
+                        notif.type === "error" ? "bg-red-500/20 text-red-400" :
+                        "bg-blue-500/20 text-blue-400"
+                      }`}>
+                        {notif.type === "success" ? <Check className="h-4 w-4" /> :
+                         notif.type === "warning" ? <AlertTriangle className="h-4 w-4" /> :
+                         notif.type === "error" ? <X className="h-4 w-4" /> :
+                         <Bell className="h-4 w-4" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{notif.title}</span>
+                          {!notif.isRead && <span className="w-2 h-2 bg-blue-500 rounded-full" />}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap line-clamp-3">{notif.message}</p>
+                        <span className="text-[10px] text-muted-foreground mt-1 block">
+                          {new Date(notif.createdAt).toLocaleString("ko-KR")}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ═══ OCR Review Tab ═══ */}
+        <TabsContent value="ocr-review" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Image className="h-5 w-5" /> OCR 분석 결과 확인/수정
+            </h3>
+            <Badge variant="outline">{ocrPendingItems.length}건 대기중</Badge>
+          </div>
+
+          {ocrPendingItems.length === 0 ? (
+            <Card className="bg-card/50">
+              <CardContent className="p-8 text-center text-muted-foreground">
+                <Image className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                <p>확인 대기중인 OCR 결과가 없습니다</p>
+                <p className="text-xs mt-1">텔레그램으로 여권/항공권 이미지를 보내면 여기에 표시됩니다</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {ocrPendingItems.map((item: any) => (
+                <Card key={item.id} className="bg-card/50 border-l-4 border-l-amber-500">
+                  <CardContent className="p-4">
+                    <div className="flex gap-4">
+                      {item.rawFileUrl && (
+                        <div className="shrink-0">
+                          <img
+                            src={item.rawFileUrl}
+                            alt="OCR 이미지"
+                            className="w-32 h-40 object-cover rounded-lg border cursor-pointer hover:opacity-80"
+                            onClick={() => window.open(item.rawFileUrl, "_blank")}
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-amber-500/20 text-amber-400">OCR 대기</Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(item.createdAt).toLocaleString("ko-KR")}
+                            </span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {item.uploadedBy || "알 수 없음"}
+                          </span>
+                        </div>
+
+                        {item.parsedData && (
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                            {item.parsedData.name && (
+                              <div><span className="text-xs text-muted-foreground">이름</span><p className="font-medium">{item.parsedData.name}</p></div>
+                            )}
+                            {item.parsedData.passportNumber && (
+                              <div><span className="text-xs text-muted-foreground">여권번호</span><p className="font-medium">{item.parsedData.passportNumber}</p></div>
+                            )}
+                            {item.parsedData.nationality && (
+                              <div><span className="text-xs text-muted-foreground">국적</span><p className="font-medium">{item.parsedData.nationality}</p></div>
+                            )}
+                            {item.parsedData.birthDate && (
+                              <div><span className="text-xs text-muted-foreground">생년월일</span><p className="font-medium">{item.parsedData.birthDate}</p></div>
+                            )}
+                            {item.parsedData.expiryDate && (
+                              <div><span className="text-xs text-muted-foreground">만료일</span><p className="font-medium">{item.parsedData.expiryDate}</p></div>
+                            )}
+                            {item.parsedData.gender && (
+                              <div><span className="text-xs text-muted-foreground">성별</span><p className="font-medium">{item.parsedData.gender}</p></div>
+                            )}
+                            {item.parsedData.flightNo && (
+                              <div><span className="text-xs text-muted-foreground">항공편</span><p className="font-medium">{item.parsedData.flightNo}</p></div>
+                            )}
+                            {item.parsedData.departure && (
+                              <div><span className="text-xs text-muted-foreground">출발</span><p className="font-medium">{item.parsedData.departure}</p></div>
+                            )}
+                            {item.parsedData.arrival && (
+                              <div><span className="text-xs text-muted-foreground">도착</span><p className="font-medium">{item.parsedData.arrival}</p></div>
+                            )}
+                          </div>
+                        )}
+
+                        {item.parsedSummary && (
+                          <p className="text-xs text-muted-foreground bg-background/50 rounded p-2">{item.parsedSummary}</p>
+                        )}
+
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingOcr(item);
+                              setOcrEditData(item.parsedData || {});
+                            }}
+                          >
+                            <Edit className="h-3.5 w-3.5 mr-1" /> 수정
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setMeetupIdInput("");
+                              setReviewNotes("");
+                              setSelectedUpload(item);
+                            }}
+                          >
+                            <Check className="h-3.5 w-3.5 mr-1" /> 승인 & 적용
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => {
+                              if (confirm("이 OCR 결과를 거절하시겠습니까?")) {
+                                rejectMutation.mutate({ id: item.id });
+                              }
+                            }}
+                          >
+                            <X className="h-3.5 w-3.5 mr-1" /> 거절
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ═══ History Tab ═══ */}
         <TabsContent value="history" className="space-y-4">
-          {/* Filters */}
           <div className="flex gap-3 flex-wrap">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[140px]"><SelectValue placeholder="상태 필터" /></SelectTrigger>
@@ -149,50 +404,46 @@ export default function TelegramUploads() {
                 <SelectItem value="all">전체 유형</SelectItem>
                 <SelectItem value="flight">항공편</SelectItem>
                 <SelectItem value="hotel">숙소</SelectItem>
-                <SelectItem value="schedule">일정</SelectItem>
-                <SelectItem value="transfer">교통</SelectItem>
                 <SelectItem value="register_participants">참가자 등록</SelectItem>
                 <SelectItem value="ocr_passport">여권 OCR</SelectItem>
-                <SelectItem value="general">일반</SelectItem>
+                <SelectItem value="assign_flight">항공편 배정</SelectItem>
+                <SelectItem value="assign_hotel">숙소 배정</SelectItem>
+                <SelectItem value="get_stats">통계</SelectItem>
+                <SelectItem value="search">검색</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Upload List */}
           <div className="space-y-2">
-            {filteredUploads.length === 0 ? (
+            {!uploads || uploads.length === 0 ? (
               <Card className="bg-card/50">
                 <CardContent className="p-8 text-center text-muted-foreground">
-                  <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>텔레그램 명령 이력이 없습니다</p>
-                  <p className="text-xs mt-1">텔레그램 봇에 메시지를 보내면 여기에 표시됩니다</p>
+                  <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>명령 이력이 없습니다</p>
                 </CardContent>
               </Card>
             ) : (
-              filteredUploads.map((upload: any) => {
+              uploads.map((upload: any) => {
                 const typeInfo = TYPE_MAP[upload.parsedType] || TYPE_MAP.unknown;
+                const statusInfo = STATUS_MAP[upload.status] || STATUS_MAP.pending;
                 const TypeIcon = typeInfo.icon;
                 return (
-                  <Card key={upload.id} className="bg-card/50 hover:bg-card/80 transition-colors cursor-pointer" onClick={() => setSelectedUpload(upload)}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <div className={`mt-0.5 ${typeInfo.color}`}>
-                            <TypeIcon className="h-5 w-5" />
+                  <Card key={upload.id} className="bg-card/50 hover:bg-card/80 transition-all cursor-pointer" onClick={() => { setSelectedUpload(upload); setReviewNotes(""); setMeetupIdInput(""); }}>
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg bg-background/50 ${typeInfo.color}`}>
+                          <TypeIcon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className={`text-[10px] ${typeInfo.color}`}>{typeInfo.label}</Badge>
+                            <Badge variant="outline" className={`text-[10px] ${statusInfo.color}`}>{statusInfo.label}</Badge>
+                            {upload.parsedConfidence && <span className="text-[10px] text-muted-foreground">{upload.parsedConfidence}%</span>}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant="outline" className="text-xs">{typeInfo.label}</Badge>
-                              <Badge className={`text-xs ${STATUS_MAP[upload.status]?.color}`}>{STATUS_MAP[upload.status]?.label}</Badge>
-                              {upload.parsedConfidence && (
-                                <span className="text-xs text-muted-foreground">{upload.parsedConfidence}%</span>
-                              )}
-                            </div>
-                            <p className="text-sm mt-1 truncate">{upload.parsedSummary || upload.rawText?.substring(0, 80) || "(내용 없음)"}</p>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                              <span>👤 {upload.uploadedBy || "알 수 없음"}</span>
-                              <span>{new Date(upload.createdAt).toLocaleString("ko-KR")}</span>
-                            </div>
+                          <p className="text-sm mt-1 truncate">{upload.parsedSummary || upload.rawText?.substring(0, 80) || "(이미지)"}</p>
+                          <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
+                            <span>{upload.uploadedBy || "알 수 없음"}</span>
+                            <span>{new Date(upload.createdAt).toLocaleString("ko-KR")}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
@@ -212,129 +463,218 @@ export default function TelegramUploads() {
           </div>
         </TabsContent>
 
-        {/* Commands Tab */}
-        <TabsContent value="commands" className="space-y-4">
+        {/* ═══ Admin IDs Tab ═══ */}
+        <TabsContent value="admin-ids" className="space-y-4">
           <Card className="bg-card/50">
             <CardHeader>
-              <CardTitle className="text-lg">🤖 AI 자연어 명령 가이드</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Shield className="h-5 w-5 text-green-400" /> 허용된 관리자 텔레그램 ID
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="font-semibold text-sm text-blue-400 mb-2">👥 참가자 관리</h3>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <p>• "김철수 M12345678 KOR 1990-01-01 남 만료 2030-12-31 등록해줘"</p>
-                  <p>• "참가자 목록 보여줘"</p>
-                  <p>• "김철수 검색해줘"</p>
-                  <p>• "승인된 참가자만 보여줘"</p>
-                </div>
+            <CardContent className="space-y-4">
+              <div className="bg-blue-500/10 rounded-lg p-4 text-sm">
+                <p className="text-muted-foreground">
+                  여기에 등록된 텔레그램 ID만 봇 명령을 실행할 수 있습니다.
+                  텔레그램에서 <code className="bg-background/50 px-1 rounded">@userinfobot</code>에게 메시지를 보내면 자신의 ID를 확인할 수 있습니다.
+                </p>
               </div>
-              <div>
-                <h3 className="font-semibold text-sm text-indigo-400 mb-2">📋 밋업 관리</h3>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <p>• "밋업 목록 보여줘"</p>
-                  <p>• "하롱베이 2140 Xplay 행사 5/10~5/13 생성해줘"</p>
-                  <p>• "현재 모집중인 밋업 알려줘"</p>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-sky-400 mb-2">✈️ 항공편/숙소</h3>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <p>• "아시아나항공 OZ733 ICN→HAN 08:00-10:50 등록해줘"</p>
-                  <p>• "귀국편 OZ734 HAN→ICN 12:05-18:35 추가"</p>
-                  <p>• "Grand Plaza 호텔 5/10~5/13 배정해줘"</p>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-pink-400 mb-2">📊 통계/현황</h3>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <p>• "현황 알려줘"</p>
-                  <p>• "통계 보여줘"</p>
-                  <p>• "오늘 등록된 참가자 수"</p>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-rose-400 mb-2">📸 이미지 분석</h3>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <p>• 여권 사진 전송 → 자동 OCR 분석</p>
-                  <p>• 항공권 사진 전송 → 항공편 정보 추출</p>
-                  <p>• 예약 확인서 전송 → 예약 정보 파싱</p>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-lime-400 mb-2">📝 프롬프트 일괄 등록</h3>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <p>• 프롬프트 형식으로 한번에 여러 참가자 등록:</p>
-                  <pre className="bg-background/50 rounded p-2 mt-1 text-xs">
-{`하롱베이 2140 Xplay 행사 박석봉팀 5월 10일부터 5월 13일까지
-항공: 아시아나항공 OZ733 ICN→HAN 08:00-10:50
-귀국: OZ734 HAN→ICN 12:05-18:35
-예약번호: BQ9VVN
 
-참가자:
-김철수 M99731754 KOR 1959-02-10 남 만료 2027-06-28
-박영희 M28411732 KOR 1946-03-10 남 만료 2028-08-28`}
-                  </pre>
+              <div className="space-y-2">
+                {allowedIds.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    등록된 관리자 ID가 없습니다. (모든 사용자가 접근 가능)
+                  </p>
+                ) : (
+                  allowedIds.map((item: any, idx: number) => (
+                    <div key={idx} className="flex items-center justify-between bg-background/50 rounded-lg p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                          <Users className="h-4 w-4 text-green-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{item.name || "이름 없음"}</p>
+                          <p className="text-xs text-muted-foreground">ID: {item.id}</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-red-400"
+                        onClick={() => {
+                          const updated = allowedIds.filter((_: any, i: number) => i !== idx);
+                          saveConfigMutation.mutate({
+                            allowedTelegramIds: JSON.stringify(updated),
+                          });
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-medium mb-3">새 관리자 추가</h4>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="텔레그램 ID (숫자)"
+                    value={newTelegramId}
+                    onChange={(e) => setNewTelegramId(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Input
+                    placeholder="이름 (선택)"
+                    value={newTelegramName}
+                    onChange={(e) => setNewTelegramName(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={() => {
+                      if (!newTelegramId.trim()) { toast.error("텔레그램 ID를 입력하세요"); return; }
+                      const updated = [...allowedIds, { id: newTelegramId.trim(), name: newTelegramName.trim() || `관리자 ${allowedIds.length + 1}` }];
+                      saveConfigMutation.mutate({
+                        allowedTelegramIds: JSON.stringify(updated),
+                      });
+                      setNewTelegramId("");
+                      setNewTelegramName("");
+                    }}
+                    disabled={saveConfigMutation.isPending}
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> 추가
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Settings Tab */}
+        {/* ═══ Commands Tab ═══ */}
+        <TabsContent value="commands" className="space-y-4">
+          <Card className="bg-card/50">
+            <CardHeader>
+              <CardTitle className="text-lg">AI 자연어 명령 가이드</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="font-semibold text-sm text-blue-400 mb-2">참가자 관리</h3>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>• "김철수 M12345678 KOR 1990-01-01 남 만료 2030-12-31 등록해줘"</p>
+                  <p>• "참가자 목록 보여줘"</p>
+                  <p>• "김철수 검색해줘"</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm text-indigo-400 mb-2">밋업 관리</h3>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>• "밋업 목록 보여줘"</p>
+                  <p>• "하롱베이 2140 Xplay 행사 5/10~5/13 생성해줘"</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm text-sky-400 mb-2">항공편/숙소</h3>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>• "아시아나항공 OZ733 ICN-HAN 08:00-10:50 등록해줘"</p>
+                  <p>• "Grand Plaza 호텔 5/10~5/13 배정해줘"</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm text-pink-400 mb-2">통계/현황</h3>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>• "현황 알려줘" / "통계 보여줘"</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm text-rose-400 mb-2">이미지 분석</h3>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>• 여권/항공권 사진 전송 → 자동 OCR 분석 → 백오피스에서 확인/수정 후 적용</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm text-lime-400 mb-2">프롬프트 일괄 등록</h3>
+                <pre className="bg-background/50 rounded p-2 mt-1 text-xs text-muted-foreground">
+{`하롱베이 2140 Xplay 행사 박석봉팀 5월 10일부터 5월 13일까지
+항공: 아시아나항공 OZ733 ICN→HAN 08:00-10:50
+참가자:
+김철수 M99731754 KOR 1959-02-10 남 만료 2027-06-28`}
+                </pre>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ═══ Settings Tab ═══ */}
         <TabsContent value="settings" className="space-y-4">
           <Card className="bg-card/50">
             <CardHeader>
-              <CardTitle className="text-lg">⚙️ 텔레그램 봇 설정</CardTitle>
+              <CardTitle className="text-lg">텔레그램 봇 설정</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-blue-500/10 rounded-lg p-4 text-sm">
-                <h4 className="font-semibold mb-2">📌 설정 방법</h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium">봇 활성화</label>
+                  <div className="flex items-center gap-3 mt-1">
+                    <Switch
+                      checked={telegramConfig?.enabled || false}
+                      onCheckedChange={(checked) => saveConfigMutation.mutate({ enabled: checked })}
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {telegramConfig?.enabled ? "활성화됨" : "비활성화됨"}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">봇 토큰</label>
+                  <p className="text-xs text-muted-foreground mb-1">@BotFather에서 발급받은 토큰</p>
+                  <div className="flex gap-2">
+                    <Input
+                      type="password"
+                      value={telegramConfig?.botToken || ""}
+                      placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+                      readOnly
+                      className="flex-1"
+                    />
+                    <Button variant="outline" size="sm" onClick={() => {
+                      const token = prompt("새 봇 토큰을 입력하세요:");
+                      if (token) saveConfigMutation.mutate({ botToken: token });
+                    }}>
+                      변경
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">웹훅 URL</label>
+                  <p className="text-xs text-muted-foreground mb-1">텔레그램이 메시지를 전달할 URL</p>
+                  <Input
+                    value={telegramConfig?.webhookUrl || `${window.location.origin}/api/telegram/webhook`}
+                    readOnly
+                    className="text-xs"
+                  />
+                </div>
+              </div>
+              <div className="bg-blue-500/10 rounded-lg p-4 text-sm mt-4">
+                <h4 className="font-semibold mb-2">설정 방법</h4>
                 <ol className="space-y-2 list-decimal list-inside text-muted-foreground">
                   <li>@BotFather에서 봇 생성 후 토큰 발급</li>
-                  <li>백오피스 설정 → 텔레그램 봇 토큰 입력</li>
-                  <li>웹훅 URL 자동 등록됨</li>
+                  <li>위에 봇 토큰 입력</li>
+                  <li>관리자 ID 탭에서 허용할 텔레그램 ID 등록</li>
                   <li>봇에 메시지 전송하면 자동 처리 시작</li>
                 </ol>
-              </div>
-              <div className="bg-amber-500/10 rounded-lg p-4 text-sm">
-                <h4 className="font-semibold mb-2">💡 사용 팁</h4>
-                <ul className="space-y-1 text-muted-foreground">
-                  <li>• 자연어로 자유롭게 입력하면 AI가 의도를 파악합니다</li>
-                  <li>• 여러 참가자를 한번에 등록할 때는 줄바꿈으로 구분</li>
-                  <li>• 이미지(여권/항공권)를 보내면 자동 OCR 분석</li>
-                  <li>• /help 명령으로 상세 도움말 확인</li>
-                  <li>• 모든 명령은 이력으로 저장되어 백오피스에서 확인 가능</li>
-                </ul>
-              </div>
-              <div className="bg-green-500/10 rounded-lg p-4 text-sm">
-                <h4 className="font-semibold mb-2">🔗 웹훅 상태</h4>
-                <p className="text-muted-foreground">
-                  엔드포인트: <code className="bg-background/50 px-1 rounded">/api/telegram/webhook</code>
-                </p>
-                <p className="text-muted-foreground mt-1">
-                  봇 설정에서 토큰이 등록되면 자동으로 웹훅이 연결됩니다.
-                </p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      {/* Detail Dialog */}
+      {/* ═══ Detail Dialog ═══ */}
       <Dialog open={!!selectedUpload} onOpenChange={(open) => !open && setSelectedUpload(null)}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5" /> 명령 상세
-            </DialogTitle>
+            <DialogTitle>명령 상세 정보</DialogTitle>
           </DialogHeader>
           {selectedUpload && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-muted-foreground">상태</label>
-                  <Badge className={STATUS_MAP[selectedUpload.status]?.color}>{STATUS_MAP[selectedUpload.status]?.label}</Badge>
-                </div>
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs text-muted-foreground">유형</label>
                   <Badge variant="outline">{TYPE_MAP[selectedUpload.parsedType]?.label || "미분류"}</Badge>
@@ -361,9 +701,7 @@ export default function TelegramUploads() {
                     {selectedUpload.rawFileType === "photo" || selectedUpload.rawFileType === "image" ? (
                       <img src={selectedUpload.rawFileUrl} alt="첨부 이미지" className="max-h-48 rounded-lg border" />
                     ) : (
-                      <a href={selectedUpload.rawFileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline text-sm">
-                        파일 보기 →
-                      </a>
+                      <a href={selectedUpload.rawFileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline text-sm">파일 보기</a>
                     )}
                   </div>
                 </div>
@@ -424,12 +762,65 @@ export default function TelegramUploads() {
                   </div>
                 </div>
               )}
-              {selectedUpload.reviewNotes && (
-                <div>
-                  <label className="text-xs text-muted-foreground">검토 메모</label>
-                  <p className="text-sm">{selectedUpload.reviewNotes}</p>
-                </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══ OCR Edit Dialog ═══ */}
+      <Dialog open={!!editingOcr} onOpenChange={(open) => !open && setEditingOcr(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>OCR 결과 수정</DialogTitle>
+          </DialogHeader>
+          {editingOcr && (
+            <div className="space-y-4">
+              {editingOcr.rawFileUrl && (
+                <img src={editingOcr.rawFileUrl} alt="원본 이미지" className="max-h-40 rounded-lg border mx-auto" />
               )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">이름</label>
+                  <Input value={ocrEditData.name || ""} onChange={(e) => setOcrEditData({ ...ocrEditData, name: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">여권번호</label>
+                  <Input value={ocrEditData.passportNumber || ""} onChange={(e) => setOcrEditData({ ...ocrEditData, passportNumber: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">국적</label>
+                  <Input value={ocrEditData.nationality || ""} onChange={(e) => setOcrEditData({ ...ocrEditData, nationality: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">생년월일</label>
+                  <Input value={ocrEditData.birthDate || ""} onChange={(e) => setOcrEditData({ ...ocrEditData, birthDate: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">성별</label>
+                  <Input value={ocrEditData.gender || ""} onChange={(e) => setOcrEditData({ ...ocrEditData, gender: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">만료일</label>
+                  <Input value={ocrEditData.expiryDate || ""} onChange={(e) => setOcrEditData({ ...ocrEditData, expiryDate: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">항공편</label>
+                  <Input value={ocrEditData.flightNo || ""} onChange={(e) => setOcrEditData({ ...ocrEditData, flightNo: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">예약번호</label>
+                  <Input value={ocrEditData.bookingRef || ""} onChange={(e) => setOcrEditData({ ...ocrEditData, bookingRef: e.target.value })} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditingOcr(null)}>취소</Button>
+                <Button
+                  onClick={() => updateOcrMutation.mutate({ id: editingOcr.id, parsedData: ocrEditData })}
+                  disabled={updateOcrMutation.isPending}
+                >
+                  <Save className="h-4 w-4 mr-1" /> 저장
+                </Button>
+              </DialogFooter>
             </div>
           )}
         </DialogContent>

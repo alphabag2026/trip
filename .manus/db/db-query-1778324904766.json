@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE telegram_config ADD COLUMN allowedTelegramIds TEXT DEFAULT NULL COMMENT '허용된 관리자 텔레그램 ID 목록 (JSON 배열)' AFTER enabled;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute ALTER TABLE telegram_config ADD COLUMN allowedTelegramIds TEXT DEFAULT NULL COMMENT '허용된 관리자 텔레그램 ID 목록 (JSON 배열)' AFTER enabled;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1927
+}

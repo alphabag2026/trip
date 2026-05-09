@@ -160,9 +160,25 @@ export const telegramConfig = mysqlTable("telegram_config", {
   botToken: varchar("botToken", { length: 500 }),
   chatId: varchar("chatId", { length: 100 }),
   enabled: boolean("enabled").default(true),
+  allowedTelegramIds: text("allowedTelegramIds"), // JSON array of allowed admin telegram IDs
+  webhookUrl: varchar("webhookUrl", { length: 1000 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
+
+// ── Telegram Notifications (텔레그램 실시간 알림) ────────────
+export const telegramNotifications = mysqlTable("telegram_notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  type: varchar("type", { length: 50 }).notNull().default("info"), // info/success/warning/error
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message"),
+  sourceUploadId: int("sourceUploadId"),
+  isRead: boolean("isRead").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TelegramNotification = typeof telegramNotifications.$inferSelect;
+export type InsertTelegramNotification = typeof telegramNotifications.$inferInsert;
 
 export type TelegramConfig = typeof telegramConfig.$inferSelect;
 export type InsertTelegramConfig = typeof telegramConfig.$inferInsert;

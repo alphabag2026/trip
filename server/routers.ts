@@ -4223,6 +4223,66 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         await db.deleteTelegramUpload(input.id);
         return { success: true };
       }),
+
+    // ── 실시간 알림 조회 ──
+    notifications: adminProcedure
+      .input(z.object({ unreadOnly: z.boolean().default(false), limit: z.number().default(50) }).optional())
+      .query(async ({ input }) => {
+        return db.getTelegramNotifications(input || {});
+      }),
+
+    // 알림 읽음 처리
+    markNotificationsRead: adminProcedure
+      .input(z.object({ ids: z.array(z.number()) }))
+      .mutation(async ({ input }) => {
+        await db.markTelegramNotificationsRead(input.ids);
+        return { success: true };
+      }),
+
+    // 전체 알림 읽음 처리
+    markAllNotificationsRead: adminProcedure
+      .mutation(async () => {
+        await db.markAllTelegramNotificationsRead();
+        return { success: true };
+      }),
+
+    // 읽지 않은 알림 수
+    unreadCount: adminProcedure.query(async () => {
+      return { count: await db.getTelegramNotificationUnreadCount() };
+    }),
+
+    // ── 텔레그램 설정 관리 ──
+    getConfig: adminProcedure.query(async () => {
+      return db.getTelegramConfig();
+    }),
+
+    updateConfig: adminProcedure
+      .input(z.object({
+        botToken: z.string().optional(),
+        chatId: z.string().optional(),
+        enabled: z.boolean().optional(),
+        allowedTelegramIds: z.string().optional(), // JSON array string
+        webhookUrl: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.upsertTelegramConfig(input as any);
+        return { success: true };
+      }),
+
+    // ── OCR 결과 수정 (최종 확인 후 수정) ──
+    updateParsedData: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        parsedData: z.any(),
+        parsedSummary: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateTelegramUpload(input.id, {
+          parsedData: input.parsedData,
+          parsedSummary: input.parsedSummary,
+        });
+        return { success: true };
+      }),
   }),
 
   // ── Community Chat Rooms (커뮤니티 채팅방) ──────────────────

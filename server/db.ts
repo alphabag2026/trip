@@ -80,6 +80,7 @@ import {
   eventCheckins, InsertEventCheckin,
   userAccommodations, InsertUserAccommodation,
   immigrationCards, InsertImmigrationCard,
+  telegramNotifications, InsertTelegramNotification,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -4331,4 +4332,36 @@ export async function createPassportInfoForGuest(data: Partial<InsertPassportInf
   const db = await getDb(); if (!db) throw new Error("DB not available");
   const result = await db.insert(passportInfo).values({ ...data, userId: 0 } as any);
   return Number((result as any)[0].insertId);
+}
+
+// ── Telegram Notifications (실시간 알림) ──────────────────────
+export async function createTelegramNotification(data: InsertTelegramNotification) {
+  const db = await getDb(); if (!db) return 0;
+  const result = await db.insert(telegramNotifications).values(data);
+  return (result as any)[0]?.insertId || 0;
+}
+
+export async function getTelegramNotifications(opts: { unreadOnly?: boolean; limit?: number }) {
+  const db = await getDb(); if (!db) return [];
+  if (opts.unreadOnly) {
+    return db.select().from(telegramNotifications).where(eq(telegramNotifications.isRead, false)).orderBy(desc(telegramNotifications.createdAt)).limit(opts.limit || 50);
+  }
+  return db.select().from(telegramNotifications).orderBy(desc(telegramNotifications.createdAt)).limit(opts.limit || 50);
+}
+
+export async function markTelegramNotificationsRead(ids: number[]) {
+  const db = await getDb(); if (!db) return;
+  if (ids.length === 0) return;
+  await db.update(telegramNotifications).set({ isRead: true }).where(inArray(telegramNotifications.id, ids));
+}
+
+export async function markAllTelegramNotificationsRead() {
+  const db = await getDb(); if (!db) return;
+  await db.update(telegramNotifications).set({ isRead: true }).where(eq(telegramNotifications.isRead, false));
+}
+
+export async function getTelegramNotificationUnreadCount() {
+  const db = await getDb(); if (!db) return 0;
+  const rows = await db.select({ count: sql<number>`count(*)` }).from(telegramNotifications).where(eq(telegramNotifications.isRead, false));
+  return rows[0]?.count || 0;
 }

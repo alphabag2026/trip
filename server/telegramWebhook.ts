@@ -25,6 +25,7 @@ import {
   getAccommodations,
   createAccommodation,
   getTelegramUploadStats,
+  createTelegramNotification,
 } from "./db";
 
 const webhookRouter = Router();
@@ -455,6 +456,18 @@ webhookRouter.post("/", async (req: Request, res: Response) => {
           commandResult.intent === "ASSIGN_HOTEL") {
         await updateTelegramUpload(uploadId, { status: "applied" });
       }
+
+      // Create real-time notification for backoffice
+      const notifType = commandResult.intent === "REGISTER_PARTICIPANTS" ? "success" :
+        commandResult.intent === "ASSIGN_FLIGHT" ? "success" :
+        commandResult.intent === "ASSIGN_HOTEL" ? "success" :
+        commandResult.intent === "OCR_PASSPORT" ? "warning" : "info";
+      await createTelegramNotification({
+        type: notifType,
+        title: `텔레그램: ${commandResult.action || commandResult.intent}`,
+        message: `@${fromUser}: ${rawText?.substring(0, 200) || '이미지 전송'}\n\n결과: ${executionResult.substring(0, 300)}`,
+        sourceUploadId: uploadId,
+      });
 
       // Send response
       await sendBotReply(config.botToken, chatId, executionResult);

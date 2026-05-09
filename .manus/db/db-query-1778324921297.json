@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS telegram_notifications (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  type VARCHAR(50) NOT NULL DEFAULT 'info' COMMENT 'info/success/warning/error',\n  title VARCHAR(255) NOT NULL,\n  message TEXT,\n  sourceUploadId INT DEFAULT NULL COMMENT '관련 텔레그램 업로드 ID',\n  isRead BOOLEAN DEFAULT FALSE,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute CREATE TABLE IF NOT EXISTS telegram_notifications (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  type VARCHAR(50) NOT NULL DEFAULT 'info' COMMENT 'info/success/warning/error',\n  title VARCHAR(255) NOT NULL,\n  message TEXT,\n  sourceUploadId INT DEFAULT NULL COMMENT '관련 텔레그램 업로드 ID',\n  isRead BOOLEAN DEFAULT FALSE,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1881
+}
