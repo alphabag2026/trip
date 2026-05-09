@@ -1,0 +1,97 @@
+{
+  "query": "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME LIKE '%meetup%' AND TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME LIMIT 50 OFFSET 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME LIKE '%meetup%' AND TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME LIMIT 50 OFFSET 20;",
+  "rows": [
+    {
+      "TABLE_NAME": "meetup_invitations"
+    },
+    {
+      "TABLE_NAME": "meetup_partners"
+    },
+    {
+      "TABLE_NAME": "meetup_schedules"
+    },
+    {
+      "TABLE_NAME": "notes"
+    },
+    {
+      "TABLE_NAME": "notes"
+    },
+    {
+      "TABLE_NAME": "onboarding_progress"
+    },
+    {
+      "TABLE_NAME": "onboarding_progress"
+    },
+    {
+      "TABLE_NAME": "pickup_assignments"
+    },
+    {
+      "TABLE_NAME": "pickup_photos"
+    },
+    {
+      "TABLE_NAME": "registrations"
+    },
+    {
+      "TABLE_NAME": "ride_bookings"
+    },
+    {
+      "TABLE_NAME": "ride_searches"
+    },
+    {
+      "TABLE_NAME": "rsvp_reminder_logs"
+    },
+    {
+      "TABLE_NAME": "rsvp_reminder_settings"
+    },
+    {
+      "TABLE_NAME": "safety_alerts"
+    },
+    {
+      "TABLE_NAME": "schedule_events"
+    },
+    {
+      "TABLE_NAME": "schedule_reminders"
+    },
+    {
+      "TABLE_NAME": "schedule_rsvps"
+    },
+    {
+      "TABLE_NAME": "self_booking_requests"
+    },
+    {
+      "TABLE_NAME": "shared_accommodations"
+    },
+    {
+      "TABLE_NAME": "sns_posts"
+    },
+    {
+      "TABLE_NAME": "surveys"
+    },
+    {
+      "TABLE_NAME": "team_schedules"
+    },
+    {
+      "TABLE_NAME": "telegram_uploads"
+    },
+    {
+      "TABLE_NAME": "translation_requests"
+    },
+    {
+      "TABLE_NAME": "transportation_options"
+    },
+    {
+      "TABLE_NAME": "travel_policies"
+    },
+    {
+      "TABLE_NAME": "user_locations"
+    },
+    {
+      "TABLE_NAME": "vouchers"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\nmeetup_invitations\nmeetup_partners\nmeetup_schedules\nnotes\nnotes\nonboarding_progress\nonboarding_progress\npickup_assignments\npickup_photos\nregistrations\nride_bookings\nride_searches\nrsvp_reminder_logs\nrsvp_reminder_settings\nsafety_alerts\nschedule_events\nschedule_reminders\nschedule_rsvps\nself_booking_requests\nshared_accommodations\nsns_posts\nsurveys\nteam_schedules\ntelegram_uploads\ntranslation_requests\ntransportation_options\ntravel_policies\nuser_locations\nvouchers\n",
+  "stderr": "",
+  "execution_time_ms": 1828
+}

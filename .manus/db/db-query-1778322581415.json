@@ -1,0 +1,206 @@
+{
+  "query": "SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME LIKE '%meetup%' AND TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME LIKE '%meetup%' AND TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME;",
+  "rows": [
+    {
+      "TABLE_NAME": "accommodation_assignments",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "affiliate_revenue",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "attendee_tiers",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "baggage_tracking",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "booking_links",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "booking_searches",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "broadcast_messages",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "chat_rooms",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "checkin_info",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "communication_channels",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "delivery_orders",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "emergency_contacts",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "event_checkins",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "flight_schedules",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "flight_tickets",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "geofences",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "hotel_vouchers",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "invitation_statistics",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "location_history",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "meetup_expenses",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "meetup_invitations",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "meetup_partners",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "meetup_schedules",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "notes",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "notes",
+      "COLUMN_NAME": "sharedWithMeetup"
+    },
+    {
+      "TABLE_NAME": "onboarding_progress",
+      "COLUMN_NAME": "firstMeetupJoined"
+    },
+    {
+      "TABLE_NAME": "onboarding_progress",
+      "COLUMN_NAME": "firstMeetupCreated"
+    },
+    {
+      "TABLE_NAME": "pickup_assignments",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "pickup_photos",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "registrations",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "ride_bookings",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "ride_searches",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "rsvp_reminder_logs",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "rsvp_reminder_settings",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "safety_alerts",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "schedule_events",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "schedule_reminders",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "schedule_rsvps",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "self_booking_requests",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "shared_accommodations",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "sns_posts",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "surveys",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "team_schedules",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "telegram_uploads",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "translation_requests",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "transportation_options",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "travel_policies",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "user_locations",
+      "COLUMN_NAME": "meetupId"
+    },
+    {
+      "TABLE_NAME": "vouchers",
+      "COLUMN_NAME": "meetupId"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\tCOLUMN_NAME\naccommodation_assignments\tmeetupId\naffiliate_revenue\tmeetupId\nattendee_tiers\tmeetupId\nbaggage_tracking\tmeetupId\nbooking_links\tmeetupId\nbooking_searches\tmeetupId\nbroadcast_messages\tmeetupId\nchat_rooms\tmeetupId\ncheckin_info\tmeetupId\ncommunication_channels\tmeetupId\ndelivery_orders\tmeetupId\nemergency_contacts\tmeetupId\nevent_checkins\tmeetupId\nflight_schedules\tmeetupId\nflight_tickets\tmeetupId\ngeofences\tmeetupId\nhotel_vouchers\tmeetupId\ninvitation_statistics\tmeetupId\nlocation_history\tmeetupId\nmeetup_expenses\tmeetupId\nmeetup_invitations\tmeetupId\nmeetup_partners\tmeetupId\nmeetup_schedules\tmeetupId\nnotes\tmeetupId\nnotes\tsharedWithMeetup\nonboarding_progress\tfirstMeetupJoined\nonboarding_progress\tfirstMeetupCreated\npickup_assignments\tmeetupId\npickup_photos\tmeetupId\nregistrations\tmeetupId\nride_bookings\tmeetupId\nride_searches\tmeetupId\nrsvp_reminder_logs\tmeetupId\nrsvp_reminder_settings\tmeetupId\nsafety_alerts\tmeetupId\nschedule_events\tmeetupId\nschedule_reminders\tmeetupId\nschedule_rsvps\tmeetupId\nself_booking_requests\tmeetupId\nshared_accommodations\tmeetupId\nsns_posts\tmeetupId\nsurveys\tmeetupId\nteam_schedules\tmeetupId\ntelegram_uploads\tmeetupId\ntranslation_requests\tmeetupId\ntransportation_options\tmeetupId\ntravel_policies\tmeetupId\nuser_locations\tmeetupId\nvouchers\tmeetupId\n",
+  "stderr": "",
+  "execution_time_ms": 1762
+}

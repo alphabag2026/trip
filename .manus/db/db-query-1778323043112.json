@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE registrations ADD COLUMN profilePhotoUrl varchar(1000) DEFAULT NULL AFTER passportOcrData; ALTER TABLE registrations ADD COLUMN nationality varchar(100) DEFAULT NULL AFTER profilePhotoUrl; ALTER TABLE registrations ADD COLUMN region varchar(100) DEFAULT NULL AFTER nationality;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute ALTER TABLE registrations ADD COLUMN profilePhotoUrl varchar(1000) DEFAULT NULL AFTER passportOcrData; ALTER TABLE registrations ADD COLUMN nationality varchar(100) DEFAULT NULL AFTER profilePhotoUrl; ALTER TABLE registrations ADD COLUMN region varchar(100) DEFAULT NULL AFTER nationality;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2772
+}

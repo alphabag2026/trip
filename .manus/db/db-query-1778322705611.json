@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM team_schedules WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM telegram_uploads WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM translation_requests WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM transportation_options WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM travel_policies WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM user_locations WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM vouchers WHERE meetupId NOT IN (510001, 570001, 570002);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute DELETE FROM team_schedules WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM telegram_uploads WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM translation_requests WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM transportation_options WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM travel_policies WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM user_locations WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM vouchers WHERE meetupId NOT IN (510001, 570001, 570002);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3258
+}

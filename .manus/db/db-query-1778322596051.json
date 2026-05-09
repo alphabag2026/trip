@@ -1,0 +1,37 @@
+{
+  "query": "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME LIKE '%meetup%' AND TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME LIMIT 50 OFFSET 40;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME LIKE '%meetup%' AND TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME LIMIT 50 OFFSET 40;",
+  "rows": [
+    {
+      "TABLE_NAME": "sns_posts"
+    },
+    {
+      "TABLE_NAME": "surveys"
+    },
+    {
+      "TABLE_NAME": "team_schedules"
+    },
+    {
+      "TABLE_NAME": "telegram_uploads"
+    },
+    {
+      "TABLE_NAME": "translation_requests"
+    },
+    {
+      "TABLE_NAME": "transportation_options"
+    },
+    {
+      "TABLE_NAME": "travel_policies"
+    },
+    {
+      "TABLE_NAME": "user_locations"
+    },
+    {
+      "TABLE_NAME": "vouchers"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\nsns_posts\nsurveys\nteam_schedules\ntelegram_uploads\ntranslation_requests\ntransportation_options\ntravel_policies\nuser_locations\nvouchers\n",
+  "stderr": "",
+  "execution_time_ms": 1729
+}

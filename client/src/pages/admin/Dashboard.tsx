@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Plane, Clock, Globe, CheckCircle } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Users, Plane, Clock, Globe, CheckCircle, FileText, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ExcelDownloadButton, fetchTrpcQuery } from "@/components/ExcelButtons";
 
@@ -49,6 +51,7 @@ export default function AdminDashboard() {
 function RecentRegistrations() {
   const { data: regs } = trpc.registration.list.useQuery({ });
   const { t } = useTranslation();
+  const [viewImage, setViewImage] = useState<string | null>(null);
 
   if (!regs || regs.length === 0) {
     return <CardContent className="text-muted-foreground text-sm">{t("admin.dashboard.noApps")}</CardContent>;
@@ -70,25 +73,62 @@ function RecentRegistrations() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-muted-foreground">
+              <th className="text-left py-2 px-2 w-8"></th>
               <th className="text-left py-2 px-2">{t("admin.dashboard.colName")}</th>
               <th className="text-left py-2 px-2">{t("admin.dashboard.colType")}</th>
+              <th className="text-left py-2 px-2">국가/지역</th>
+              <th className="text-left py-2 px-2">여권</th>
               <th className="text-left py-2 px-2">{t("admin.dashboard.colPhone")}</th>
-              <th className="text-left py-2 px-2">{t("admin.dashboard.colMessenger")}</th>
               <th className="text-left py-2 px-2">{t("admin.dashboard.colStatus")}</th>
               <th className="text-left py-2 px-2">{t("admin.dashboard.colDate")}</th>
             </tr>
           </thead>
           <tbody>
-            {regs.slice(0, 10).map((r: any) => (
+            {regs.slice(0, 20).map((r: any) => (
               <tr key={r.id} className="border-b border-border/50 hover:bg-secondary/30">
+                {/* Profile Photo */}
+                <td className="py-2 px-2">
+                  {r.profilePhotoUrl ? (
+                    <img
+                      src={r.profilePhotoUrl}
+                      alt=""
+                      className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 ring-blue-500"
+                      onClick={() => setViewImage(r.profilePhotoUrl)}
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
+                </td>
                 <td className="py-2 px-2 font-medium">{r.name}</td>
                 <td className="py-2 px-2">
                   <span className={`text-xs px-2 py-0.5 rounded ${r.locationType === "overseas" ? "bg-cyan-500/20 text-cyan-400" : "bg-purple-500/20 text-purple-400"}`}>
                     {r.locationType === "overseas" ? t("admin.dashboard.overseas") : t("admin.dashboard.domestic")}
                   </span>
                 </td>
-                <td className="py-2 px-2">{r.phone}</td>
-                <td className="py-2 px-2">{r.messengerId}</td>
+                {/* Nationality / Region */}
+                <td className="py-2 px-2">
+                  <div className="flex flex-col">
+                    {r.nationality && <span className="text-xs font-medium">{r.nationality}</span>}
+                    {r.region && <span className="text-[10px] text-muted-foreground">{r.region}</span>}
+                    {!r.nationality && !r.region && <span className="text-xs text-muted-foreground">-</span>}
+                  </div>
+                </td>
+                {/* Passport Image */}
+                <td className="py-2 px-2">
+                  {r.passportImageUrl ? (
+                    <button
+                      className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 hover:underline"
+                      onClick={() => setViewImage(r.passportImageUrl)}
+                    >
+                      <FileText className="h-3 w-3" /> 보기
+                    </button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">-</span>
+                  )}
+                </td>
+                <td className="py-2 px-2">{r.phone || "-"}</td>
                 <td className="py-2 px-2">
                   <span className={`text-xs px-2 py-0.5 rounded ${
                     r.status === "approved" ? "bg-green-500/20 text-green-400" :
@@ -105,6 +145,15 @@ function RecentRegistrations() {
           </tbody>
         </table>
       </div>
+
+      {/* Image Viewer Dialog */}
+      <Dialog open={!!viewImage} onOpenChange={() => setViewImage(null)}>
+        <DialogContent className="max-w-2xl p-2">
+          {viewImage && (
+            <img src={viewImage} alt="Document" className="w-full h-auto rounded-lg" />
+          )}
+        </DialogContent>
+      </Dialog>
     </CardContent>
   );
 }

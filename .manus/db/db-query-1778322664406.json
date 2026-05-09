@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM meetup_partners WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM meetup_schedules WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM notes WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM pickup_assignments WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM pickup_photos WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM registrations WHERE meetupId NOT IN (510001, 570001, 570002);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute DELETE FROM meetup_partners WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM meetup_schedules WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM notes WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM pickup_assignments WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM pickup_photos WHERE meetupId NOT IN (510001, 570001, 570002); DELETE FROM registrations WHERE meetupId NOT IN (510001, 570001, 570002);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3098
+}

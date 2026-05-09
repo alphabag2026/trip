@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, title FROM meetups WHERE LOWER(title) LIKE '%xplay%' OR LOWER(title) LIKE '%x-play%' OR LOWER(title) LIKE '%x play%' ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, title FROM meetups WHERE LOWER(title) LIKE '%xplay%' OR LOWER(title) LIKE '%x-play%' OR LOWER(title) LIKE '%x play%' ORDER BY id;",
+  "rows": [
+    {
+      "id": "510001",
+      "title": "하롱베이 2140 Xplay KOERANAIR"
+    },
+    {
+      "id": "570001",
+      "title": "하롱베이 2140 Xplay AsianAir"
+    },
+    {
+      "id": "570002",
+      "title": "하롱베이 2140 Xplay JAPAN"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\n510001\t하롱베이 2140 Xplay KOERANAIR\n570001\t하롱베이 2140 Xplay AsianAir\n570002\t하롱베이 2140 Xplay JAPAN\n",
+  "stderr": "",
+  "execution_time_ms": 1745
+}
