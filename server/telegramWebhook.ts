@@ -129,6 +129,8 @@ async function processNaturalLanguageCommand(text: string, imageUrl?: string): P
 - 차량 사진이나 "픽업 등록" "차량번호" 등의 메시지가 오면 CREATE_PICKUP으로 분류
 - CREATE_FLIGHT_TICKET params: { passengerName, passportNumber, nationality, outboundAirline, outboundFlightNo, outboundDepartureCode, outboundArrivalCode, outboundDepartureDate, outboundDepartureTime, returnAirline, returnFlightNo, returnDepartureCode, returnArrivalCode, returnDepartureDate, returnDepartureTime, bookingReference, ticketNumber }
 - CREATE_PICKUP params: { vehicleName, vehiclePlateNumber, vehicleColor, vehicleType, vehicleCapacity, driverName, driverPhone, pickupLocation, pickupTime }
+- ASSIGN_HOTEL params: { meetupId, hotels: [{ hotelName, roomNumber, roomType(single/double/twin/suite/family/dormitory), accommodationType(hotel/villa/apartment/resort/pension/other), assignedNames: ["배정자이름들"], checkIn, checkOut, notes }] }
+- "별장 배정" "숙소 등록" "방 배치" 등의 메시지가 오면 ASSIGN_HOTEL로 분류하고 hotels 배열로 파싱
 `,
       },
     ];
@@ -263,23 +265,38 @@ async function executeCommand(cmd: CommandResult): Promise<string> {
         if (!cmd.data?.hotels || !Array.isArray(cmd.data.hotels)) {
           return cmd.response;
         }
-        const results: string[] = [];
+        const hotelResults: string[] = [];
+        const allRegsForHotel = await getRegistrations({ meetupId: cmd.data.meetupId });
         for (const h of cmd.data.hotels) {
           try {
+            // Resolve assignedNames to registration IDs
+            let regIds: number[] = [];
+            if (h.assignedNames && Array.isArray(h.assignedNames)) {
+              for (const name of h.assignedNames) {
+                const found = (allRegsForHotel || []).find((r: any) =>
+                  (r.name || "").includes(name) || (r.englishName || "").toLowerCase().includes(name.toLowerCase())
+                );
+                if (found) regIds.push(found.id);
+              }
+            }
             await createAccommodation({
               meetupId: h.meetupId || cmd.data.meetupId,
               hotelName: h.hotelName || "미정",
+              roomNumber: h.roomNumber,
               roomType: h.roomType || "twin",
+              accommodationType: h.accommodationType || "hotel",
+              assignedRegistrationIds: regIds.length > 0 ? regIds : undefined,
               checkIn: h.checkIn ? new Date(h.checkIn) : undefined,
               checkOut: h.checkOut ? new Date(h.checkOut) : undefined,
               notes: h.notes,
             });
-            results.push(`✅ ${h.hotelName}`);
+            const names = h.assignedNames ? ` (${h.assignedNames.join(", ")})` : "";
+            hotelResults.push(`✅ ${h.hotelName} ${h.roomNumber || ""}${names}`);
           } catch (e: any) {
-            results.push(`❌ ${h.hotelName}: ${e.message || "등록 실패"}`);
+            hotelResults.push(`❌ ${h.hotelName}: ${e.message || "등록 실패"}`);
           }
         }
-        return `🏨 숙소 등록 결과:\n\n${results.join("\n")}`;
+        return `🏨 숙소 등록 결과:\n\n${hotelResults.join("\n")}`;
       }
 
       case "SEARCH": {

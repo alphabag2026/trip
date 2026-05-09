@@ -1159,7 +1159,9 @@ export const appRouter = router({
     create: adminProcedure
       .input(z.object({
         meetupId: z.number().optional(), hotelName: z.string().min(1),
-        roomNumber: z.string().optional(), roomType: z.enum(["single", "double", "twin", "suite"]).default("twin"),
+        roomNumber: z.string().optional(),
+        roomType: z.enum(["single", "double", "twin", "suite", "family", "dormitory"]).default("twin"),
+        accommodationType: z.enum(["hotel", "villa", "apartment", "resort", "pension", "other"]).default("hotel"),
         assignedRegistrationIds: z.array(z.number()).optional(),
         checkIn: z.string().optional(), checkOut: z.string().optional(), notes: z.string().optional(),
         accommodationPhotoUrl: z.string().optional(),
@@ -1175,7 +1177,8 @@ export const appRouter = router({
     update: adminProcedure
       .input(z.object({
         id: z.number(), hotelName: z.string().optional(), roomNumber: z.string().optional(),
-        roomType: z.enum(["single", "double", "twin", "suite"]).optional(),
+        roomType: z.enum(["single", "double", "twin", "suite", "family", "dormitory"]).optional(),
+        accommodationType: z.enum(["hotel", "villa", "apartment", "resort", "pension", "other"]).optional(),
         assignedRegistrationIds: z.array(z.number()).optional(),
         checkIn: z.string().optional(), checkOut: z.string().optional(), notes: z.string().optional(),
         accommodationPhotoUrl: z.string().optional(),
@@ -1191,6 +1194,109 @@ export const appRouter = router({
       }),
     delete: adminProcedure.input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => { await db.deleteAccommodation(input.id); return { success: true }; }),
+    bulkCreate: adminProcedure
+      .input(z.object({
+        rooms: z.array(z.object({
+          meetupId: z.number().optional(),
+          hotelName: z.string().min(1),
+          roomNumber: z.string().optional(),
+          roomType: z.enum(["single", "double", "twin", "suite", "family", "dormitory"]).default("twin"),
+          accommodationType: z.enum(["hotel", "villa", "apartment", "resort", "pension", "other"]).default("hotel"),
+          assignedRegistrationIds: z.array(z.number()).optional(),
+          assignedNames: z.array(z.string()).optional(),
+          checkIn: z.string().optional(),
+          checkOut: z.string().optional(),
+          notes: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const results: { roomNumber: string; hotelName: string; success: boolean; error?: string }[] = [];
+        for (const room of input.rooms) {
+          try {
+            let regIds = room.assignedRegistrationIds || [];
+            if (room.assignedNames && room.assignedNames.length > 0 && regIds.length === 0) {
+              const allRegs = await db.getRegistrations({ meetupId: room.meetupId });
+              for (const name of room.assignedNames) {
+                const found = allRegs.find((r: any) =>
+                  r.name?.toLowerCase().includes(name.toLowerCase()) ||
+                  r.englishName?.toLowerCase().includes(name.toLowerCase())
+                );
+                if (found) regIds.push(found.id);
+              }
+            }
+            await db.createAccommodation({
+              ...room,
+              assignedRegistrationIds: regIds.length > 0 ? regIds : undefined,
+              checkIn: room.checkIn ? new Date(room.checkIn) : undefined,
+              checkOut: room.checkOut ? new Date(room.checkOut) : undefined,
+            });
+            results.push({ roomNumber: room.roomNumber || "?", hotelName: room.hotelName, success: true });
+          } catch (e: any) {
+            results.push({ roomNumber: room.roomNumber || "?", hotelName: room.hotelName, success: false, error: e.message });
+          }
+        }
+        return { total: results.length, success: results.filter(r => r.success).length, failed: results.filter(r => !r.success).length, results };
+      }),
+    bulkDelete: adminProcedure
+      .input(z.object({ ids: z.array(z.number()) }))
+      .mutation(async ({ input }) => {
+        for (const id of input.ids) { await db.deleteAccommodation(id); }
+        return { deleted: input.ids.length };
+      }),
+    deleteAll: adminProcedure
+      .input(z.object({ meetupId: z.number().optional(), confirm: z.boolean() }))
+      .mutation(async ({ input }) => {
+        if (!input.confirm) throw new TRPCError({ code: "BAD_REQUEST", message: "confirm 필수" });
+        const all = await db.getAccommodations(input.meetupId);
+        for (const a of all) { await db.deleteAccommodation(a.id); }
+        return { deleted: all.length };
+      }),
+    aiAssign: adminProcedure
+      .input(z.object({ prompt: z.string().min(1), meetupId: z.number().optional() }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: `당신은 숙소 배치 전문가입니다. 사용자가 보내는 텍스트에서 숙소 배치 정보를 추출하여 JSON으로 반환합니다.\n\n반환 형식:\n{ "rooms": [{ "hotelName": "숙소명", "roomNumber": "방번호", "roomType": "single|double|twin|suite|family|dormitory", "accommodationType": "hotel|villa|apartment|resort|pension|other", "assignedNames": ["배정된 사람 이름들"], "checkIn": "YYYY-MM-DD", "checkOut": "YYYY-MM-DD", "notes": "비고" }] }\n\n규칙:\n- 별장(villa), 아파트(apartment), 리조트(resort), 펜션(pension) 등 숙소 유형을 정확히 분류\n- 방 번호가 없으면 순서대로 "1호실", "2호실" 등으로 부여\n- 부부방은 roomType: "double", 단독방은 "single", 2인실은 "twin", 가족방은 "family"\n- 이름은 한글/영문 그대로 추출\n- 체크인/체크아웃 날짜가 있으면 ISO 형식으로\nReturn ONLY valid JSON.` },
+            { role: "user", content: input.prompt },
+          ],
+        });
+        const text = (response.choices?.[0]?.message?.content || "") as string;
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 파싱 실패" });
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (!parsed.rooms || !Array.isArray(parsed.rooms)) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "rooms 배열 없음" });
+        
+        const results: string[] = [];
+        const allRegs = await db.getRegistrations({ meetupId: input.meetupId });
+        for (const room of parsed.rooms) {
+          try {
+            let regIds: number[] = [];
+            if (room.assignedNames && Array.isArray(room.assignedNames)) {
+              for (const name of room.assignedNames) {
+                const found = allRegs.find((r: any) =>
+                  r.name?.includes(name) || r.englishName?.toLowerCase().includes(name.toLowerCase())
+                );
+                if (found) regIds.push(found.id);
+              }
+            }
+            await db.createAccommodation({
+              meetupId: input.meetupId,
+              hotelName: room.hotelName || "미정",
+              roomNumber: room.roomNumber,
+              roomType: room.roomType || "twin",
+              accommodationType: room.accommodationType || "hotel",
+              assignedRegistrationIds: regIds.length > 0 ? regIds : undefined,
+              checkIn: room.checkIn ? new Date(room.checkIn) : undefined,
+              checkOut: room.checkOut ? new Date(room.checkOut) : undefined,
+              notes: room.notes,
+            });
+            results.push(`✅ ${room.hotelName} ${room.roomNumber || ""} (${(room.assignedNames || []).join(", ")})`);
+          } catch (e: any) {
+            results.push(`❌ ${room.hotelName}: ${e.message}`);
+          }
+        }
+        return { total: parsed.rooms.length, success: results.filter(r => r.startsWith("✅")).length, results };
+      }),
     // 자동 배치: 2인1실 자동 매칭 (roommatePreference 우선)
     autoAssign: adminProcedure
       .input(z.object({ meetupId: z.number(), hotelName: z.string() }))

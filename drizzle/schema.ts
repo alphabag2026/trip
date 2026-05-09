@@ -240,9 +240,10 @@ export type InsertPickupAssignment = typeof pickupAssignments.$inferInsert;
 export const accommodationAssignments = mysqlTable("accommodation_assignments", {
   id: int("id").autoincrement().primaryKey(),
   meetupId: int("meetupId"),
+  accommodationType: mysqlEnum("accommodationType", ["hotel", "villa", "apartment", "resort", "pension", "other"]).default("hotel").notNull(),
   hotelName: varchar("hotelName", { length: 255 }).notNull(),
   roomNumber: varchar("roomNumber", { length: 50 }),
-  roomType: mysqlEnum("roomType", ["single", "double", "twin", "suite"]).default("twin").notNull(),
+  roomType: mysqlEnum("roomType", ["single", "double", "twin", "suite", "family", "dormitory"]).default("twin").notNull(),
   assignedRegistrationIds: json("assignedRegistrationIds"), // [1,2]
   checkIn: timestamp("checkIn"),
   checkOut: timestamp("checkOut"),
