@@ -56,6 +56,7 @@ const DriverDashboard = lazy(() => import("./pages/DriverDashboard"));
 const InterpreterDashboard = lazy(() => import("./pages/InterpreterDashboard"));
 const CountryExplorer = lazy(() => import("./pages/CountryExplorer"));
 const MeetupPortal = lazy(() => import("./pages/MeetupPortal"));
+const ScheduleShareView = lazy(() => import("./pages/ScheduleShareView"));
 const NearbyExplorer = lazy(() => import("./pages/NearbyExplorer"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -144,6 +145,7 @@ function PublicRouter() {
         <Route path="/register" component={Register} />
         <Route path="/register/:meetupId" component={Register} />
         <Route path="/lookup" component={Lookup} />
+        <Route path="/schedule/share/:token" component={ScheduleShareView} />
         <Route path="/schedule/:meetupId" component={ScheduleView} />
         <Route path="/pickup/:meetupId" component={PickupBoard} />
         <Route path="/channel/:channelId" component={CommChannel} />

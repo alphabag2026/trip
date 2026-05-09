@@ -10838,6 +10838,217 @@ Rules:
         return { success: false, data: null, error: "AI 응답 없음" };
       }),
   }),
+  // ── 단체예약 비용 관리 ──────────────────────────────────────────────────
+  bookingCosts: router({
+    list: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }))
+      .query(async ({ input }) => {
+        const dbInstance = await db.getDb();
+        if (!dbInstance) return [];
+        const { bookingCosts: tbl } = await import("../drizzle/schema");
+        const { eq: eqOp, desc: descOp } = await import("drizzle-orm");
+        if (input.meetupId) {
+          return dbInstance.select().from(tbl).where(eqOp(tbl.meetupId, input.meetupId)).orderBy(descOp(tbl.createdAt));
+        }
+        return dbInstance.select().from(tbl).orderBy(descOp(tbl.createdAt));
+      }),
+    create: adminProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        category: z.string(),
+        itemName: z.string(),
+        description: z.string().optional(),
+        totalAmount: z.string(),
+        currency: z.string().default("KRW"),
+        usdtAmount: z.string().optional(),
+        headCount: z.number().default(1),
+        perPersonAmount: z.string().optional(),
+        perPersonUsdt: z.string().optional(),
+        vendor: z.string().optional(),
+        invoiceUrl: z.string().optional(),
+        notes: z.string().optional(),
+        sourceType: z.string().default("manual"),
+        telegramMessageId: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await db.getDb();
+        if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB not available" });
+        const { bookingCosts: tbl } = await import("../drizzle/schema");
+        const headCount = input.headCount || 1;
+        const totalNum = parseFloat(input.totalAmount);
+        const perPerson = (totalNum / headCount).toFixed(2);
+        const usdtTotal = input.usdtAmount ? parseFloat(input.usdtAmount) : null;
+        const perPersonUsdt = usdtTotal ? (usdtTotal / headCount).toFixed(2) : null;
+        await dbInstance.insert(tbl).values({
+          meetupId: input.meetupId,
+          category: input.category,
+          itemName: input.itemName,
+          description: input.description,
+          totalAmount: input.totalAmount,
+          currency: input.currency,
+          usdtAmount: input.usdtAmount || null,
+          headCount,
+          perPersonAmount: perPerson,
+          perPersonUsdt,
+          vendor: input.vendor,
+          invoiceUrl: input.invoiceUrl,
+          notes: input.notes,
+          sourceType: input.sourceType,
+          telegramMessageId: input.telegramMessageId,
+          createdBy: ctx.user.id,
+        });
+        return { success: true };
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await db.getDb();
+        if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const { bookingCosts: tbl } = await import("../drizzle/schema");
+        const { eq: eqOp } = await import("drizzle-orm");
+        await dbInstance.delete(tbl).where(eqOp(tbl.id, input.id));
+        return { success: true };
+      }),
+    summary: adminProcedure
+      .input(z.object({ meetupId: z.number().optional() }))
+      .query(async ({ input }) => {
+        const dbInstance = await db.getDb();
+        if (!dbInstance) return { totalItems: 0, byCurrency: {}, totalUsdt: 0 };
+        const { bookingCosts: tbl } = await import("../drizzle/schema");
+        const { eq: eqOp } = await import("drizzle-orm");
+        const rows = input.meetupId
+          ? await dbInstance.select().from(tbl).where(eqOp(tbl.meetupId, input.meetupId))
+          : await dbInstance.select().from(tbl);
+        const byCurrency: Record<string, number> = {};
+        let totalUsdt = 0;
+        for (const r of rows) {
+          const amt = parseFloat(r.totalAmount as string) || 0;
+          byCurrency[r.currency] = (byCurrency[r.currency] || 0) + amt;
+          totalUsdt += parseFloat(r.usdtAmount as string || "0");
+        }
+        return { totalItems: rows.length, byCurrency, totalUsdt };
+      }),
+  }),
+
+  // ── 스케줄표 템플릿 ──────────────────────────────────────────────────
+  scheduleTemplates: router({
+    list: adminProcedure.query(async () => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+      const { scheduleTemplates: tbl } = await import("../drizzle/schema");
+      const { desc: descOp } = await import("drizzle-orm");
+      return dbInstance.select().from(tbl).orderBy(descOp(tbl.createdAt));
+    }),
+    create: adminProcedure
+      .input(z.object({
+        name: z.string(),
+        description: z.string().optional(),
+        templateData: z.string(),
+        category: z.string().default("general"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await db.getDb();
+        if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const { scheduleTemplates: tbl } = await import("../drizzle/schema");
+        await dbInstance.insert(tbl).values({
+          name: input.name,
+          description: input.description,
+          templateData: input.templateData,
+          category: input.category,
+          createdBy: ctx.user.id,
+        });
+        return { success: true };
+      }),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        templateData: z.string().optional(),
+        category: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await db.getDb();
+        if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const { scheduleTemplates: tbl } = await import("../drizzle/schema");
+        const { eq: eqOp } = await import("drizzle-orm");
+        const updateData: any = {};
+        if (input.name) updateData.name = input.name;
+        if (input.description !== undefined) updateData.description = input.description;
+        if (input.templateData) updateData.templateData = input.templateData;
+        if (input.category) updateData.category = input.category;
+        await dbInstance.update(tbl).set(updateData).where(eqOp(tbl.id, input.id));
+        return { success: true };
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await db.getDb();
+        if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const { scheduleTemplates: tbl } = await import("../drizzle/schema");
+        const { eq: eqOp } = await import("drizzle-orm");
+        await dbInstance.delete(tbl).where(eqOp(tbl.id, input.id));
+        return { success: true };
+      }),
+  }),
+
+  // ── 스케줄표 공유 ──────────────────────────────────────────────────
+  scheduleShares: router({
+    create: adminProcedure
+      .input(z.object({
+        title: z.string(),
+        scheduleData: z.string(),
+        meetupId: z.number().optional(),
+        expiresInDays: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await db.getDb();
+        if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const { scheduleShares: tbl } = await import("../drizzle/schema");
+        const token = nanoid(48);
+        const expiresAt = input.expiresInDays ? new Date(Date.now() + input.expiresInDays * 86400000) : null;
+        await dbInstance.insert(tbl).values({
+          shareToken: token,
+          title: input.title,
+          scheduleData: input.scheduleData,
+          meetupId: input.meetupId,
+          expiresAt,
+          createdBy: ctx.user.id,
+        });
+        return { success: true, token };
+      }),
+    getByToken: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const dbInstance = await db.getDb();
+        if (!dbInstance) return null;
+        const { scheduleShares: tbl } = await import("../drizzle/schema");
+        const { eq: eqOp } = await import("drizzle-orm");
+        const [share] = await dbInstance.select().from(tbl).where(eqOp(tbl.shareToken, input.token));
+        if (!share) return null;
+        if (!share.isActive) return null;
+        if (share.expiresAt && new Date(share.expiresAt) < new Date()) return null;
+        await dbInstance.update(tbl).set({ viewCount: (share.viewCount || 0) + 1 }).where(eqOp(tbl.id, share.id));
+        return share;
+      }),
+    list: adminProcedure.query(async () => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+      const { scheduleShares: tbl } = await import("../drizzle/schema");
+      const { desc: descOp } = await import("drizzle-orm");
+      return dbInstance.select().from(tbl).orderBy(descOp(tbl.createdAt));
+    }),
+    deactivate: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await db.getDb();
+        if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const { scheduleShares: tbl } = await import("../drizzle/schema");
+        const { eq: eqOp } = await import("drizzle-orm");
+        await dbInstance.update(tbl).set({ isActive: false }).where(eqOp(tbl.id, input.id));
+        return { success: true };
+      }),
+  }),
 });
 // ── Haversine 거리 계산 (미터) ─────────────────────────────
 function getDistanceFromLatLon(lat1: number, lon1: number, lat2: number, lon2: number): number {

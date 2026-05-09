@@ -2369,3 +2369,60 @@ export const immigrationCards = mysqlTable("immigration_cards", {
 });
 export type ImmigrationCard = typeof immigrationCards.$inferSelect;
 export type InsertImmigrationCard = typeof immigrationCards.$inferInsert;
+
+// ── 단체예약 비용 관리 테이블 ──────────────────────────────────────────────────
+export const bookingCosts = mysqlTable("booking_costs", {
+  id: int("id").autoincrement().primaryKey(),
+  meetupId: int("meetupId"),
+  category: varchar("category", { length: 50 }).notNull(), // flight, hotel, transport, meal, activity, other
+  itemName: varchar("itemName", { length: 255 }).notNull(),
+  description: text("description"),
+  totalAmount: decimal("totalAmount", { precision: 12, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 10 }).notNull().default("KRW"),
+  usdtAmount: decimal("usdtAmount", { precision: 12, scale: 2 }),
+  headCount: int("headCount").default(1),
+  perPersonAmount: decimal("perPersonAmount", { precision: 12, scale: 2 }),
+  perPersonUsdt: decimal("perPersonUsdt", { precision: 12, scale: 2 }),
+  vendor: varchar("vendor", { length: 255 }),
+  invoiceUrl: text("invoiceUrl"),
+  notes: text("notes"),
+  sourceType: varchar("sourceType", { length: 20 }).default("manual"), // manual, telegram_ocr
+  telegramMessageId: varchar("telegramMessageId", { length: 50 }),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+export type BookingCost = typeof bookingCosts.$inferSelect;
+export type InsertBookingCost = typeof bookingCosts.$inferInsert;
+
+// ── 스케줄표 템플릿 테이블 ──────────────────────────────────────────────────
+export const scheduleTemplates = mysqlTable("schedule_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  templateData: text("templateData").notNull(), // JSON: full schedule structure
+  category: varchar("category", { length: 50 }).default("general"), // general, meetup, conference, trip
+  createdBy: int("createdBy"),
+  isPublic: boolean("isPublic").default(false),
+  usageCount: int("usageCount").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+export type ScheduleTemplate = typeof scheduleTemplates.$inferSelect;
+export type InsertScheduleTemplate = typeof scheduleTemplates.$inferInsert;
+
+// ── 스케줄표 공유 링크 테이블 ──────────────────────────────────────────────────
+export const scheduleShares = mysqlTable("schedule_shares", {
+  id: int("id").autoincrement().primaryKey(),
+  shareToken: varchar("shareToken", { length: 64 }).notNull().unique(),
+  title: varchar("title", { length: 255 }).notNull(),
+  scheduleData: text("scheduleData").notNull(), // JSON: full schedule data
+  meetupId: int("meetupId"),
+  expiresAt: timestamp("expiresAt"),
+  viewCount: int("viewCount").default(0),
+  isActive: boolean("isActive").default(true),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ScheduleShare = typeof scheduleShares.$inferSelect;
+export type InsertScheduleShare = typeof scheduleShares.$inferInsert;

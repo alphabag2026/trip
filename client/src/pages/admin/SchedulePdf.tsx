@@ -10,8 +10,10 @@ import { toast } from "sonner";
 import {
   FileText, Download, Loader2, Plane, Car, Calendar,
   Users, BedDouble, UtensilsCrossed, Phone, ClipboardList,
-  Sparkles, RefreshCw
+  Sparkles, RefreshCw, Save, FolderOpen, Share2, Link, Copy, Trash2
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 // PDF generation via jsPDF (client-side)
 async function generatePdfFromData(data: any) {
@@ -200,10 +202,20 @@ export default function SchedulePdf() {
   const [preferences, setPreferences] = useState("");
   const [scheduleData, setScheduleData] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   const { data: meetups } = trpc.meetup.list.useQuery();
   const generateMutation = trpc.schedulePdf.generate.useMutation();
   const generateFromTextMutation = trpc.schedulePdf.generateFromText.useMutation();
+  const { data: templates, refetch: refetchTemplates } = trpc.scheduleTemplates.list.useQuery();
+  const createTemplateMutation = trpc.scheduleTemplates.create.useMutation();
+  const deleteTemplateMutation = trpc.scheduleTemplates.delete.useMutation();
+  const createShareMutation = trpc.scheduleShares.create.useMutation();
+  const { data: shares, refetch: refetchShares } = trpc.scheduleShares.list.useQuery();
+  const deactivateShareMutation = trpc.scheduleShares.deactivate.useMutation();
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -246,6 +258,69 @@ export default function SchedulePdf() {
     }
   };
 
+  const handleSaveTemplate = async () => {
+    if (!scheduleData || !templateName.trim()) {
+      toast.error("스케줄표를 먼저 생성하고 템플릿 이름을 입력하세요");
+      return;
+    }
+    try {
+      await createTemplateMutation.mutateAsync({
+        name: templateName.trim(),
+        description: scheduleData.title || "",
+        templateData: JSON.stringify(scheduleData),
+        category: "meetup",
+      });
+      toast.success("템플릿이 저장되었습니다!");
+      setTemplateName("");
+      refetchTemplates();
+    } catch (e: any) {
+      toast.error(e.message || "저장 실패");
+    }
+  };
+
+  const handleLoadTemplate = (tpl: any) => {
+    try {
+      const data = JSON.parse(tpl.templateData);
+      setScheduleData(data);
+      setShowTemplates(false);
+      toast.success(`"${tpl.name}" 템플릿을 불러왔습니다`);
+    } catch {
+      toast.error("템플릿 데이터 파싱 실패");
+    }
+  };
+
+  const handleDeleteTemplate = async (id: number) => {
+    await deleteTemplateMutation.mutateAsync({ id });
+    refetchTemplates();
+    toast.success("삭제되었습니다");
+  };
+
+  const handleCreateShareLink = async () => {
+    if (!scheduleData) return;
+    try {
+      const result = await createShareMutation.mutateAsync({
+        title: scheduleData.title || "스케줄표",
+        scheduleData: JSON.stringify(scheduleData),
+        meetupId: selectedMeetupId ? parseInt(selectedMeetupId) : undefined,
+        expiresInDays: 30,
+      });
+      if (result.success && result.token) {
+        const url = `${window.location.origin}/schedule/share/${result.token}`;
+        setShareUrl(url);
+        setShowShareDialog(true);
+        refetchShares();
+        toast.success("공유 링크가 생성되었습니다!");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "공유 링크 생성 실패");
+    }
+  };
+
+  const handleCopyShareUrl = () => {
+    navigator.clipboard.writeText(shareUrl);
+    toast.success("링크가 복사되었습니다!");
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -259,12 +334,96 @@ export default function SchedulePdf() {
             내용을 입력하면 AI가 포맷화된 스케줄표를 생성하고 PDF로 다운로드할 수 있습니다
           </p>
         </div>
-        {scheduleData && (
-          <Button onClick={handleDownloadPdf} className="gap-2">
-            <Download className="h-4 w-4" /> PDF 다운로드
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowTemplates(!showTemplates)} className="gap-1">
+            <FolderOpen className="h-4 w-4" /> 템플릿
           </Button>
-        )}
+          {scheduleData && (
+            <>
+              <Button variant="outline" size="sm" onClick={handleCreateShareLink} className="gap-1">
+                <Share2 className="h-4 w-4" /> 공유
+              </Button>
+              <Button size="sm" onClick={handleDownloadPdf} className="gap-2">
+                <Download className="h-4 w-4" /> PDF
+              </Button>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Templates Panel */}
+      {showTemplates && (
+        <Card className="bg-card/50 border-dashed">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FolderOpen className="h-4 w-4" /> 저장된 템플릿
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(!templates || templates.length === 0) ? (
+              <p className="text-sm text-muted-foreground">저장된 템플릿이 없습니다. 스케줄표를 생성한 후 저장하세요.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {templates.map((tpl: any) => (
+                  <div key={tpl.id} className="border rounded-lg p-3 hover:bg-accent/50 cursor-pointer group">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm" onClick={() => handleLoadTemplate(tpl)}>{tpl.name}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => handleDeleteTemplate(tpl.id)}>
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{tpl.description || tpl.category}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(tpl.createdAt).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Link className="h-5 w-5" /> 스케줄표 공유 링크</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">아래 링크를 참석자에게 공유하면 웹에서 스케줄표를 확인할 수 있습니다. (30일 유효)</p>
+            <div className="flex gap-2">
+              <Input value={shareUrl} readOnly className="font-mono text-xs" />
+              <Button size="sm" onClick={handleCopyShareUrl} className="gap-1 shrink-0">
+                <Copy className="h-3 w-3" /> 복사
+              </Button>
+            </div>
+            {shares && shares.length > 0 && (
+              <div className="border-t pt-3">
+                <p className="text-sm font-medium mb-2">이전 공유 링크</p>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {shares.slice(0, 5).map((s: any) => (
+                    <div key={s.id} className="flex items-center justify-between text-xs border rounded p-2">
+                      <div>
+                        <span className="font-medium">{s.title}</span>
+                        <span className="text-muted-foreground ml-2">조회 {s.viewCount}회</span>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/schedule/share/${s.shareToken}`); toast.success("복사됨"); }}>
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        {s.isActive && (
+                          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={async () => { await deactivateShareMutation.mutateAsync({ id: s.id }); refetchShares(); toast.success("비활성화됨"); }}>
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Input Section */}
       <Card className="bg-card/50">
@@ -375,6 +534,9 @@ Day2: 09:00 조식 → 10:00 컨퍼런스 → 12:00 중식 → 14:00 네트워�
               </Button>
               <Button size="sm" onClick={handleDownloadPdf} className="gap-1">
                 <Download className="h-3 w-3" /> PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleCreateShareLink} className="gap-1">
+                <Share2 className="h-3 w-3" /> 공유
               </Button>
             </div>
           </CardHeader>
@@ -601,6 +763,20 @@ Day2: 09:00 조식 → 10:00 컨퍼런스 → 12:00 중식 → 14:00 네트워�
                 <p className="text-muted-foreground">{scheduleData.notes}</p>
               </div>
             )}
+
+            {/* Save as Template */}
+            <div className="border-t pt-4 flex gap-2 items-center">
+              <Save className="h-4 w-4 text-muted-foreground" />
+              <Input
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="템플릿 이름 입력..."
+                className="flex-1"
+              />
+              <Button variant="outline" size="sm" onClick={handleSaveTemplate} disabled={!templateName.trim()} className="gap-1 shrink-0">
+                <Save className="h-3 w-3" /> 템플릿 저장
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

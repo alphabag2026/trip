@@ -118,6 +118,10 @@ async function processNaturalLanguageCommand(text: string, imageUrl?: string): P
 - 프롬프트 형식 입력도 이해: "하롱베이 2140 Xplay 행사 박석봉팀 5월 10일부터 5월 13일까지"
 - 여러 참가자 정보가 한번에 올 수 있음 (줄바꿈으로 구분)
 - 이미지가 함께 온 경우 OCR_PASSPORT로 분류
+- 가격/비용 정보가 포함된 경우 params에 cost 객체 추가: { totalAmount, currency, headCount, itemName, category }
+- 항공권 이미지: 편명, 출발/도착 공항, 시간, 탑승자명 추출
+- 여권 이미지: 이름, 여권번호, 생년월일, 성별, 국적, 만료일 추출
+- 단체예약 가격표: 총액, 인원수, 객단가, 통화 추출
 - 불확실한 경우 확인 질문을 response에 포함`,
       },
     ];
@@ -288,7 +292,44 @@ async function executeCommand(cmd: CommandResult): Promise<string> {
       }
 
       case "OCR_PASSPORT": {
-        return cmd.response + "\n\n📸 이미지가 백오피스에 저장되었습니다. 관리자가 확인 후 처리합니다.";
+        let ocrResponse = cmd.response;
+        // Auto-detect and format cost info
+        if (cmd.data?.cost) {
+          const c = cmd.data.cost;
+          const headCount = c.headCount || 1;
+          const totalAmount = parseFloat(c.totalAmount || "0");
+          const perPerson = headCount > 0 ? (totalAmount / headCount).toFixed(2) : "0";
+          ocrResponse += `\n\n💰 비용 정보:\n` +
+            `• 총액: ${c.currency || "KRW"} ${totalAmount.toLocaleString()}\n` +
+            `• 인원: ${headCount}명\n` +
+            `• 객단가: ${c.currency || "KRW"} ${parseFloat(perPerson).toLocaleString()}`;
+          // Auto-save to booking_costs
+          try {
+            const dbInstance = await getDbForWebhook();
+            if (dbInstance) {
+              const { bookingCosts } = await import("../drizzle/schema");
+              await dbInstance.insert(bookingCosts).values({
+                category: c.category || "flight",
+                itemName: c.itemName || "텔레그램 OCR 자동등록",
+                totalAmount: String(totalAmount),
+                currency: c.currency || "KRW",
+                headCount,
+                perPersonAmount: perPerson,
+                sourceType: "telegram_ocr",
+                notes: `자동 OCR 추출: ${cmd.action}`,
+              });
+              ocrResponse += `\n\n✅ 비용이 자동 등록되었습니다.`;
+            }
+          } catch (e) {
+            console.error("[TelegramWebhook] Auto cost save error:", e);
+          }
+        }
+        // Show meetup assignment options
+        const meetups = await getMeetups();
+        if (meetups && meetups.length > 0) {
+          ocrResponse += `\n\n📋 행사 배정을 선택하세요:`;
+        }
+        return ocrResponse + "\n\n📸 이미지가 백오피스에 저장되었습니다.";
       }
 
       case "TRAVEL_INFO": {
@@ -331,6 +372,43 @@ webhookRouter.post("/", async (req: Request, res: Response) => {
   try {
     const update = req.body;
     
+    // ── Handle callback_query (inline keyboard buttons) ──────
+    if (update?.callback_query) {
+      const cbq = update.callback_query;
+      const cbConfig = await getTelegramConfig();
+      if (!cbConfig?.botToken) return res.json({ ok: true });
+      const cbChatId = String(cbq.message?.chat?.id || "");
+      const cbMessageId = cbq.message?.message_id;
+      const cbData = cbq.data || "";
+      const [action, uploadId] = cbData.split(":");
+      
+      if (action === "approve" || action === "reject") {
+        const status = action === "approve" ? "applied" : "rejected";
+        await updateTelegramUpload(Number(uploadId), { status });
+        const emoji = action === "approve" ? "✅" : "❌";
+        const label = action === "approve" ? "승인됨" : "거절됨";
+        await answerCallbackQuery(cbConfig.botToken, cbq.id, `${emoji} ${label}`);
+        if (cbMessageId) {
+          const originalText = cbq.message?.text || "";
+          await editBotMessage(cbConfig.botToken, cbChatId, cbMessageId, 
+            originalText + `\n\n${emoji} <b>${label}</b> (처리 완료)`);
+        }
+        // If approved and it's a flight/passport OCR, auto-register
+        if (action === "approve") {
+          await autoApplyOcrData(Number(uploadId), cbConfig.botToken, cbChatId);
+        }
+      } else if (action === "detail") {
+        await answerCallbackQuery(cbConfig.botToken, cbq.id, "백오피스에서 상세 확인하세요");
+      } else if (action === "assign_meetup") {
+        // assign_meetup:uploadId:meetupId
+        const parts = cbData.split(":");
+        const meetupId = Number(parts[2]);
+        await autoAssignToMeetup(Number(parts[1]), meetupId, cbConfig.botToken, cbChatId);
+        await answerCallbackQuery(cbConfig.botToken, cbq.id, "행사에 배정되었습니다");
+      }
+      return res.json({ ok: true, callback: true });
+    }
+
     const message = update?.message || update?.edited_message;
     if (!message) {
       return res.json({ ok: true, skipped: true });
@@ -408,6 +486,20 @@ webhookRouter.post("/", async (req: Request, res: Response) => {
           await sendBotReply(config.botToken, chatId, statsCmd);
           return res.json({ ok: true, command: "stats" });
         }
+        case "/schedule": {
+          await sendBotReply(config.botToken, chatId, 
+            "📋 스케줄표 PDF 생성\n\n" +
+            "일정 내용을 텍스트로 보내주세요. AI가 자동으로 포맷화된 스케줄표를 생성합니다.\n\n" +
+            "예시:\n" +
+            "5/10 인천출발 KE441 07:00\n" +
+            "5/10 하노이도착 10:50 픽업 2대\n" +
+            "5/10 호텔체크인 Grand Plaza\n" +
+            "5/11 오전 미팅 10:00-12:00\n" +
+            "5/11 오후 관광 14:00-18:00\n\n" +
+            "또는 \"/schedule 행사명\" 으로 기존 행사 스케줄을 PDF로 받을 수 있습니다."
+          );
+          return res.json({ ok: true, command: "schedule" });
+        }
 
         case "/meetups": {
           const meetupsCmd = await executeCommand({ intent: "LIST_MEETUPS", action: "", response: "" });
@@ -472,10 +564,17 @@ webhookRouter.post("/", async (req: Request, res: Response) => {
       // Send response
       // Send with inline keyboard for OCR/registration results
       if (commandResult.intent === "OCR_PASSPORT" || commandResult.intent === "REGISTER_PARTICIPANTS") {
-        await sendBotReplyWithKeyboard(config.botToken, chatId, executionResult, [
+        // Build keyboard with meetup assignment options
+        const activeMeetups = await getMeetups({ status: "recruiting" });
+        const meetupButtons = (activeMeetups || []).slice(0, 3).map((m: any) => 
+          ({ text: `📌 ${m.title.substring(0, 15)}`, callback_data: `assign_meetup:${uploadId}:${m.id}` })
+        );
+        const keyboard: any[][] = [
           [{ text: "✅ 승인", callback_data: `approve:${uploadId}` }, { text: "❌ 거절", callback_data: `reject:${uploadId}` }],
-          [{ text: "📋 상세보기", callback_data: `detail:${uploadId}` }],
-        ]);
+        ];
+        if (meetupButtons.length > 0) keyboard.push(meetupButtons);
+        keyboard.push([{ text: "📋 상세보기", callback_data: `detail:${uploadId}` }]);
+        await sendBotReplyWithKeyboard(config.botToken, chatId, executionResult, keyboard);
       } else {
         await sendBotReply(config.botToken, chatId, executionResult);
       }
@@ -638,6 +737,113 @@ async function sendBotReply(botToken: string, chatId: string, text: string) {
   } catch (e) {
     console.error("[TelegramWebhook] Reply failed:", e);
   }
+}
+
+// ── Auto-apply OCR data when approved ─────────────────────
+async function autoApplyOcrData(uploadId: number, botToken: string, chatId: string) {
+  try {
+    const dbInstance = await getDbForWebhook();
+    if (!dbInstance) return;
+    const { telegramUploads } = await import("../drizzle/schema");
+    const { eq: eqOp } = await import("drizzle-orm");
+    const [upload] = await dbInstance.select().from(telegramUploads).where(eqOp(telegramUploads.id, uploadId));
+    if (!upload || !upload.parsedData) return;
+    const data = typeof upload.parsedData === "string" ? JSON.parse(upload.parsedData) : upload.parsedData;
+    
+    // Auto-register passport info
+    if (data.passportNumber && data.name) {
+      const existing = await getRegistrations({});
+      const alreadyExists = existing.some((r: any) => r.passportNumber === data.passportNumber);
+      if (!alreadyExists) {
+        await createRegistration({
+          name: data.name,
+          phone: data.passportNumber || "",
+          messengerId: String(chatId),
+          nationality: data.nationality || "",
+          passportOcrData: data,
+          status: "approved",
+        });
+        await sendBotReply(botToken, chatId, `✅ 참가자 자동 등록 완료: ${data.name} (${data.passportNumber})`);
+      }
+    }
+    
+    // Auto-register flight
+    if (data.flightNo && data.departureAirport) {
+      await createFlightSchedule({
+        flightNo: data.flightNo,
+        airline: data.airline,
+        departureAirport: data.departureAirport,
+        arrivalAirport: data.arrivalAirport,
+        scheduledDeparture: data.departureTime ? new Date(data.departureTime) : undefined,
+        scheduledArrival: data.arrivalTime ? new Date(data.arrivalTime) : undefined,
+        direction: "outbound",
+      });
+      await sendBotReply(botToken, chatId, `✈️ 항공편 자동 등록: ${data.flightNo} (${data.departureAirport} → ${data.arrivalAirport})`);
+    }
+  } catch (e) {
+    console.error("[TelegramWebhook] Auto-apply error:", e);
+  }
+}
+
+// ── Auto-assign to meetup ────────────────────────────────
+async function autoAssignToMeetup(uploadId: number, meetupId: number, botToken: string, chatId: string) {
+  try {
+    const dbInstance = await getDbForWebhook();
+    if (!dbInstance) return;
+    const { telegramUploads } = await import("../drizzle/schema");
+    const { eq: eqOp } = await import("drizzle-orm");
+    const [upload] = await dbInstance.select().from(telegramUploads).where(eqOp(telegramUploads.id, uploadId));
+    if (!upload || !upload.parsedData) return;
+    const data = typeof upload.parsedData === "string" ? JSON.parse(upload.parsedData) : upload.parsedData;
+    
+    // If flight data, assign meetupId
+    if (data.flightNo) {
+      await createFlightSchedule({
+        flightNo: data.flightNo,
+        airline: data.airline,
+        departureAirport: data.departureAirport,
+        arrivalAirport: data.arrivalAirport,
+        scheduledDeparture: data.departureTime ? new Date(data.departureTime) : undefined,
+        scheduledArrival: data.arrivalTime ? new Date(data.arrivalTime) : undefined,
+        direction: "outbound",
+        meetupId,
+      });
+    }
+    
+    // If cost data, assign meetupId
+    if (data.cost) {
+      const { bookingCosts } = await import("../drizzle/schema");
+      const c = data.cost;
+      const headCount = c.headCount || 1;
+      const totalAmount = parseFloat(c.totalAmount || "0");
+      const perPerson = headCount > 0 ? (totalAmount / headCount).toFixed(2) : "0";
+      await dbInstance.insert(bookingCosts).values({
+        meetupId,
+        category: c.category || "flight",
+        itemName: c.itemName || "텔레그램 OCR",
+        totalAmount: String(totalAmount),
+        currency: c.currency || "KRW",
+        headCount,
+        perPersonAmount: perPerson,
+        sourceType: "telegram_ocr",
+      });
+    }
+    
+    const meetup = await getMeetups();
+    const meetupTitle = meetup?.find((m: any) => m.id === meetupId)?.title || `행사#${meetupId}`;
+    await sendBotReply(botToken, chatId, `📌 "${meetupTitle}" 행사에 배정되었습니다.`);
+    await updateTelegramUpload(uploadId, { status: "applied" });
+  } catch (e) {
+    console.error("[TelegramWebhook] Auto-assign error:", e);
+  }
+}
+
+// ── DB helper for webhook (avoids circular import) ───────
+async function getDbForWebhook() {
+  try {
+    const { getDb } = await import("./db");
+    return await getDb();
+  } catch { return null; }
 }
 
 export function createTelegramWebhookRouter() {
