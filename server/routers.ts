@@ -9891,7 +9891,7 @@ Rules:
             const { url } = await storagePut(key, buffer, img.mimeType);
             const ocrResponse = await invokeLLM({
               messages: [
-                { role: "system", content: `You are a document OCR system. Analyze this image and determine if it's a passport or flight booking/ticket.\nIf PASSPORT, extract: { "docType": "passport", "fullName": "...", "passportNumber": "...", "nationality": "...", "dateOfBirth": "YYYY-MM-DD", "expiryDate": "YYYY-MM-DD", "gender": "M/F", "issuingCountry": "..." }\nIf FLIGHT BOOKING/TICKET, extract all passengers: { "docType": "flight", "passengers": [{ "name": "...", "pnr": "...", "ticketNumber": "...", "airline": "...", "flightNo": "...", "departure": "...", "arrival": "...", "departureDate": "...", "departureTime": "..." }] }\nReturn ONLY valid JSON. For Korean names in English (e.g. KIM WOONGKI), keep as-is.` },
+                { role: "system", content: `You are a document OCR system. Analyze this image and determine if it's a passport or flight booking/ticket.\nIf PASSPORT, extract: { "docType": "passport", "fullName": "...", "passportNumber": "...", "nationality": "...", "dateOfBirth": "YYYY-MM-DD", "expiryDate": "YYYY-MM-DD", "gender": "M/F", "issuingCountry": "..." }\nIf FLIGHT BOOKING/TICKET, extract all passengers: { "docType": "flight", "passengers": [{ "name": "...", "pnr": "...", "ticketNumber": "...", "airline": "...", "flightNo": "...", "departure": "...", "arrival": "...", "departureDate": "...", "departureTime": "...", "seatNumber": "...", "baggageAllowance": "...", "cabinClass": "..." }] }\nIMPORTANT: For flight documents, also extract seat number (e.g. "12A", "23C"), baggage allowance (e.g. "23kg", "2PC", "20kg x 2"), and cabin class (economy/business/first) if visible.\nReturn ONLY valid JSON. For Korean names in English (e.g. KIM WOONGKI), keep as-is.` },
                 { role: "user", content: [
                   { type: "text", text: "Analyze this document image:" },
                   { type: "image_url", image_url: { url, detail: "high" } },
@@ -9932,6 +9932,9 @@ Rules:
           arrival: z.string().optional(),
           departureDate: z.string().optional(),
           departureTime: z.string().optional(),
+          seatNumber: z.string().optional(),
+          baggageAllowance: z.string().optional(),
+          cabinClass: z.string().optional(),
         })),
       }))
       .mutation(async ({ input }) => {

@@ -96,7 +96,7 @@ export default function MeetupPortal() {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
-        <div className="container flex items-center justify-between h-14 overflow-hidden">
+        <div className="container flex items-center justify-between h-14">
           <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
             <Plane className="h-5 w-5 text-primary" />

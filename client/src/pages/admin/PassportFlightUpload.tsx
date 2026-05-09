@@ -14,6 +14,7 @@ import {
   Plane, Loader2, Users, CheckCircle2, XCircle, Trash2, Edit,
   Upload, FileImage, AlertCircle, UserPlus, FileText, RotateCcw,
   ImagePlus, FolderOpen, X, Check, Minimize2, Merge,
+  Download, Luggage, Armchair,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,9 +28,10 @@ interface OcrResult {
 interface FileWithStatus {
   file: File;
   id: string;
-  status: "pending" | "uploading" | "success" | "error";
+  status: "pending" | "compressing" | "uploading" | "success" | "error";
   error?: string;
   previewUrl?: string;
+  compressedSize?: number;
 }
 
 interface ParsedParticipant {
@@ -49,8 +51,28 @@ interface ParsedParticipant {
   arrival?: string;
   departureDate?: string;
   departureTime?: string;
+  seatNumber?: string;
+  baggageAllowance?: string;
+  cabinClass?: string;
   selected?: boolean;
-  merged?: boolean; // 중복 병합된 항목 표시
+  merged?: boolean;
+}
+
+// ── 프로그레스 단계 정의 ──────────────────────────────────────────
+type ProcessPhase = "idle" | "compressing" | "uploading" | "analyzing" | "merging" | "complete";
+
+interface ProcessProgress {
+  phase: ProcessPhase;
+  currentBatch: number;
+  totalBatches: number;
+  currentFile: number;
+  totalFiles: number;
+  compressedCount: number;
+  uploadedCount: number;
+  analyzedCount: number;
+  failedCount: number;
+  startTime: number;
+  estimatedTimeLeft: number;
 }
 
 let fileIdCounter = 0;
@@ -63,7 +85,7 @@ const MAX_IMAGE_WIDTH = 2048;
 const MAX_IMAGE_HEIGHT = 2048;
 const COMPRESSION_QUALITY = 0.85;
 
-async function compressImage(file: File): Promise<{ base64: string; mimeType: string }> {
+async function compressImage(file: File): Promise<{ base64: string; mimeType: string; compressedSize: number }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -71,21 +93,18 @@ async function compressImage(file: File): Promise<{ base64: string; mimeType: st
       URL.revokeObjectURL(url);
       let { width, height } = img;
 
-      // 리사이즈 필요 여부 확인
       if (width <= MAX_IMAGE_WIDTH && height <= MAX_IMAGE_HEIGHT && file.size <= 4 * 1024 * 1024) {
-        // 4MB 이하이고 크기도 적당하면 원본 사용
         const reader = new FileReader();
         reader.onload = () => {
           const dataUrl = reader.result as string;
           const base64 = dataUrl.split(",")[1];
-          resolve({ base64, mimeType: file.type });
+          resolve({ base64, mimeType: file.type, compressedSize: file.size });
         };
         reader.onerror = reject;
         reader.readAsDataURL(file);
         return;
       }
 
-      // 비율 유지하면서 리사이즈
       const ratio = Math.min(MAX_IMAGE_WIDTH / width, MAX_IMAGE_HEIGHT / height, 1);
       width = Math.round(width * ratio);
       height = Math.round(height * ratio);
@@ -100,7 +119,8 @@ async function compressImage(file: File): Promise<{ base64: string; mimeType: st
       const outputType = "image/jpeg";
       const dataUrl = canvas.toDataURL(outputType, COMPRESSION_QUALITY);
       const base64 = dataUrl.split(",")[1];
-      resolve({ base64, mimeType: outputType });
+      const compressedSize = Math.round(base64.length * 0.75);
+      resolve({ base64, mimeType: outputType, compressedSize });
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
@@ -118,9 +138,7 @@ function mergeParticipantsByPassport(participants: ParsedParticipant[]): ParsedP
   for (const p of participants) {
     const passportKey = p.passportNumber?.trim().toUpperCase();
     if (passportKey && passportMap.has(passportKey)) {
-      // 기존 항목에 병합
       const existing = passportMap.get(passportKey)!;
-      // 빈 필드만 채우기 (기존 데이터 우선)
       if (!existing.name && p.name) existing.name = p.name;
       if (!existing.nationality && p.nationality) existing.nationality = p.nationality;
       if (!existing.dateOfBirth && p.dateOfBirth) existing.dateOfBirth = p.dateOfBirth;
@@ -128,7 +146,6 @@ function mergeParticipantsByPassport(participants: ParsedParticipant[]): ParsedP
       if (!existing.gender && p.gender) existing.gender = p.gender;
       if (!existing.issuingCountry && p.issuingCountry) existing.issuingCountry = p.issuingCountry;
       if (!existing.passportImageUrl && p.passportImageUrl) existing.passportImageUrl = p.passportImageUrl;
-      // 항공 정보 병합
       if (!existing.pnr && p.pnr) existing.pnr = p.pnr;
       if (!existing.ticketNumber && p.ticketNumber) existing.ticketNumber = p.ticketNumber;
       if (!existing.airline && p.airline) existing.airline = p.airline;
@@ -137,12 +154,14 @@ function mergeParticipantsByPassport(participants: ParsedParticipant[]): ParsedP
       if (!existing.arrival && p.arrival) existing.arrival = p.arrival;
       if (!existing.departureDate && p.departureDate) existing.departureDate = p.departureDate;
       if (!existing.departureTime && p.departureTime) existing.departureTime = p.departureTime;
+      if (!existing.seatNumber && p.seatNumber) existing.seatNumber = p.seatNumber;
+      if (!existing.baggageAllowance && p.baggageAllowance) existing.baggageAllowance = p.baggageAllowance;
+      if (!existing.cabinClass && p.cabinClass) existing.cabinClass = p.cabinClass;
       existing.merged = true;
     } else if (passportKey) {
       passportMap.set(passportKey, { ...p });
       result.push(passportMap.get(passportKey)!);
     } else {
-      // 여권번호 없는 항목은 이름 기반으로 병합 시도
       const nameKey = p.name?.replace(/\s+/g, "").toUpperCase();
       const existingByName = result.find(r => 
         r.name?.replace(/\s+/g, "").toUpperCase() === nameKey && nameKey
@@ -156,6 +175,9 @@ function mergeParticipantsByPassport(participants: ParsedParticipant[]): ParsedP
         if (!existingByName.arrival && p.arrival) existingByName.arrival = p.arrival;
         if (!existingByName.departureDate && p.departureDate) existingByName.departureDate = p.departureDate;
         if (!existingByName.departureTime && p.departureTime) existingByName.departureTime = p.departureTime;
+        if (!existingByName.seatNumber && p.seatNumber) existingByName.seatNumber = p.seatNumber;
+        if (!existingByName.baggageAllowance && p.baggageAllowance) existingByName.baggageAllowance = p.baggageAllowance;
+        if (!existingByName.cabinClass && p.cabinClass) existingByName.cabinClass = p.cabinClass;
         if (!existingByName.passportNumber && p.passportNumber) existingByName.passportNumber = p.passportNumber;
         existingByName.merged = true;
       } else {
@@ -167,14 +189,59 @@ function mergeParticipantsByPassport(participants: ParsedParticipant[]): ParsedP
   return result;
 }
 
+// ── 엑셀 내보내기 유틸리티 ──────────────────────────────────────────
+function exportToExcel(participants: ParsedParticipant[]) {
+  const headers = [
+    "이름", "여권번호", "국적", "생년월일", "여권만료일", "성별", "발급국",
+    "PNR", "전자항공권번호", "항공사", "편명", "출발지", "도착지",
+    "출발일", "출발시간", "좌석번호", "수하물", "좌석등급"
+  ];
+  
+  const rows = participants.map(p => [
+    p.name || "",
+    p.passportNumber || "",
+    p.nationality || "",
+    p.dateOfBirth || "",
+    p.expiryDate || "",
+    p.gender || "",
+    p.issuingCountry || "",
+    p.pnr || "",
+    p.ticketNumber || "",
+    p.airline || "",
+    p.flightNo || "",
+    p.departure || "",
+    p.arrival || "",
+    p.departureDate || "",
+    p.departureTime || "",
+    p.seatNumber || "",
+    p.baggageAllowance || "",
+    p.cabinClass || "",
+  ]);
+
+  // BOM + CSV 생성 (엑셀에서 한글 깨짐 방지)
+  const BOM = "\uFEFF";
+  const csvContent = BOM + [
+    headers.join(","),
+    ...rows.map(row => row.map(cell => `"${(cell || "").replace(/"/g, '""')}"`).join(","))
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `OCR_결과_${new Date().toISOString().slice(0, 10)}_${participants.length}명.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 export default function PassportFlightUpload() {
   const [meetupId, setMeetupId] = useState<number | undefined>(undefined);
   const [filesWithStatus, setFilesWithStatus] = useState<FileWithStatus[]>([]);
   const [ocrResults, setOcrResults] = useState<OcrResult[]>([]);
   const [participants, setParticipants] = useState<ParsedParticipant[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [processedCount, setProcessedCount] = useState(0);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [editIdx, setEditIdx] = useState<number | null>(null);
   const [showAllThumbnails, setShowAllThumbnails] = useState(false);
@@ -183,6 +250,21 @@ export default function PassportFlightUpload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
+  // 상세 프로그레스 상태
+  const [processProgress, setProcessProgress] = useState<ProcessProgress>({
+    phase: "idle",
+    currentBatch: 0,
+    totalBatches: 0,
+    currentFile: 0,
+    totalFiles: 0,
+    compressedCount: 0,
+    uploadedCount: 0,
+    analyzedCount: 0,
+    failedCount: 0,
+    startTime: 0,
+    estimatedTimeLeft: 0,
+  });
+
   const { data: meetups } = trpc.meetup.list.useQuery();
   const ocrMutation = trpc.aiBulk.passportFlightOcr.useMutation();
   const registerMutation = trpc.aiBulk.passportFlightRegister.useMutation();
@@ -190,7 +272,7 @@ export default function PassportFlightUpload() {
   // ── 브라우저 탭 닫기 방지 ──────────────────────────────────────────
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isProcessing || (filesWithStatus.length > 0 && filesWithStatus.some(f => f.status === "uploading"))) {
+      if (isProcessing || filesWithStatus.some(f => f.status === "uploading" || f.status === "compressing")) {
         e.preventDefault();
         e.returnValue = "업로드가 진행 중입니다. 페이지를 떠나시겠습니까?";
         return e.returnValue;
@@ -263,11 +345,17 @@ export default function PassportFlightUpload() {
     setFilesWithStatus(prev => prev.map(f => f.status === "error" ? { ...f, status: "pending" as const, error: undefined } : f));
   };
 
+  // 경과 시간 포맷
+  function formatTime(seconds: number): string {
+    if (seconds < 60) return `${Math.round(seconds)}초`;
+    const min = Math.floor(seconds / 60);
+    const sec = Math.round(seconds % 60);
+    return `${min}분 ${sec}초`;
+  }
+
   async function handleOcr() {
     if (filesWithStatus.length === 0) { toast.error("이미지를 업로드해주세요"); return; }
     setIsProcessing(true);
-    setProgress(0);
-    setProcessedCount(0);
 
     const pendingFilesList = filesWithStatus.filter(f => f.status === "pending" || f.status === "error");
     if (pendingFilesList.length === 0) {
@@ -276,27 +364,57 @@ export default function PassportFlightUpload() {
       return;
     }
 
+    const batchSize = 5;
+    const totalBatches = Math.ceil(pendingFilesList.length / batchSize);
+    const startTime = Date.now();
+
+    setProcessProgress({
+      phase: "compressing",
+      currentBatch: 0,
+      totalBatches,
+      currentFile: 0,
+      totalFiles: pendingFilesList.length,
+      compressedCount: 0,
+      uploadedCount: 0,
+      analyzedCount: 0,
+      failedCount: 0,
+      startTime,
+      estimatedTimeLeft: 0,
+    });
+
     try {
       const allResults: OcrResult[] = [...ocrResults];
-      const batchSize = 5;
       let processed = 0;
+      let failed = 0;
 
       for (let i = 0; i < pendingFilesList.length; i += batchSize) {
         const batch = pendingFilesList.slice(i, i + batchSize);
-        
+        const batchNum = Math.floor(i / batchSize) + 1;
         const batchIds = batch.map(f => f.id);
+
+        // Phase: Compressing
+        setProcessProgress(prev => ({
+          ...prev,
+          phase: "compressing",
+          currentBatch: batchNum,
+          currentFile: i + 1,
+        }));
+
         setFilesWithStatus(prev => prev.map(f => 
-          batchIds.includes(f.id) ? { ...f, status: "uploading" as const } : f
+          batchIds.includes(f.id) ? { ...f, status: "compressing" as const } : f
         ));
 
         try {
+          // 이미지 압축
           const images = await Promise.all(batch.map(async (fileItem) => {
             if (autoCompress) {
-              // 이미지 압축 사용
-              const { base64, mimeType } = await compressImage(fileItem.file);
+              const { base64, mimeType, compressedSize } = await compressImage(fileItem.file);
+              setFilesWithStatus(prev => prev.map(f => 
+                f.id === fileItem.id ? { ...f, compressedSize } : f
+              ));
+              setProcessProgress(prev => ({ ...prev, compressedCount: prev.compressedCount + 1 }));
               return { base64, mimeType, type: "auto" as const };
             } else {
-              // 원본 그대로 사용
               const buffer = await fileItem.file.arrayBuffer();
               const bytes = new Uint8Array(buffer);
               let binary = "";
@@ -308,10 +426,18 @@ export default function PassportFlightUpload() {
                 }
               }
               const base64 = btoa(binary);
+              setProcessProgress(prev => ({ ...prev, compressedCount: prev.compressedCount + 1 }));
               return { base64, mimeType: fileItem.file.type, type: "auto" as const };
             }
           }));
 
+          // Phase: Uploading & Analyzing
+          setProcessProgress(prev => ({ ...prev, phase: "uploading" }));
+          setFilesWithStatus(prev => prev.map(f => 
+            batchIds.includes(f.id) ? { ...f, status: "uploading" as const } : f
+          ));
+
+          setProcessProgress(prev => ({ ...prev, phase: "analyzing" }));
           const result = await ocrMutation.mutateAsync({ images, meetupId });
           
           result.results.forEach((r: OcrResult, idx: number) => {
@@ -323,6 +449,12 @@ export default function PassportFlightUpload() {
                   : f
               ));
             }
+            if (r.success) {
+              setProcessProgress(prev => ({ ...prev, analyzedCount: prev.analyzedCount + 1 }));
+            } else {
+              failed++;
+              setProcessProgress(prev => ({ ...prev, failedCount: prev.failedCount + 1 }));
+            }
           });
 
           allResults.push(...result.results);
@@ -330,16 +462,30 @@ export default function PassportFlightUpload() {
           setFilesWithStatus(prev => prev.map(f => 
             batchIds.includes(f.id) ? { ...f, status: "error" as const, error: e?.message || "처리 실패" } : f
           ));
+          failed += batch.length;
+          setProcessProgress(prev => ({ ...prev, failedCount: prev.failedCount + batch.length }));
         }
 
         processed += batch.length;
-        setProcessedCount(processed);
-        setProgress(Math.round((processed / pendingFilesList.length) * 100));
+        
+        // 예상 남은 시간 계산
+        const elapsed = (Date.now() - startTime) / 1000;
+        const avgPerFile = elapsed / processed;
+        const remaining = (pendingFilesList.length - processed) * avgPerFile;
+        
+        setProcessProgress(prev => ({
+          ...prev,
+          uploadedCount: processed,
+          estimatedTimeLeft: remaining,
+        }));
       }
+
+      // Phase: Merging
+      setProcessProgress(prev => ({ ...prev, phase: "merging" }));
 
       setOcrResults(allResults);
 
-      // Parse OCR results into participants
+      // Parse OCR results
       const rawParsed: ParsedParticipant[] = [];
       for (const r of allResults) {
         if (!r.success || !r.ocrData) continue;
@@ -368,18 +514,24 @@ export default function PassportFlightUpload() {
               arrival: p.arrival,
               departureDate: p.departureDate,
               departureTime: p.departureTime,
+              seatNumber: p.seatNumber,
+              baggageAllowance: p.baggageAllowance,
+              cabinClass: p.cabinClass,
               selected: true,
             });
           }
         }
       }
 
-      // 중복 여권번호/이름 자동 병합
       const merged = mergeParticipantsByPassport(rawParsed);
       const mergedItems = merged.filter(p => p.merged).length;
       setMergedCount(mergedItems);
 
       setParticipants(merged);
+      
+      // Phase: Complete
+      setProcessProgress(prev => ({ ...prev, phase: "complete" }));
+      
       if (merged.length > 0) setStep(2);
       const successCount = allResults.filter(r => r.success).length;
       
@@ -392,6 +544,7 @@ export default function PassportFlightUpload() {
       toast.error(e?.message || "OCR 처리 중 오류 발생");
     } finally {
       setIsProcessing(false);
+      setTimeout(() => setProcessProgress(prev => ({ ...prev, phase: "idle" })), 3000);
     }
   }
 
@@ -420,6 +573,9 @@ export default function PassportFlightUpload() {
           arrival: p.arrival,
           departureDate: p.departureDate,
           departureTime: p.departureTime,
+          seatNumber: p.seatNumber,
+          baggageAllowance: p.baggageAllowance,
+          cabinClass: p.cabinClass,
         })),
       });
       if (result.success) {
@@ -445,7 +601,6 @@ export default function PassportFlightUpload() {
 
   const selectedCount = participants.filter(p => p.selected !== false).length;
 
-  // Thumbnail display
   const displayFiles = useMemo(() => {
     if (showAllThumbnails || filesWithStatus.length <= 24) return filesWithStatus;
     return filesWithStatus.slice(0, 20);
@@ -453,10 +608,27 @@ export default function PassportFlightUpload() {
 
   const hiddenCount = filesWithStatus.length > 24 && !showAllThumbnails ? filesWithStatus.length - 20 : 0;
 
-  // 총 파일 크기 계산
   const totalSizeMB = useMemo(() => {
     return filesWithStatus.reduce((sum, f) => sum + f.file.size, 0) / (1024 * 1024);
   }, [filesWithStatus]);
+
+  // 전체 진행률 계산
+  const overallProgress = useMemo(() => {
+    if (processProgress.totalFiles === 0) return 0;
+    const total = processProgress.totalFiles;
+    const done = processProgress.analyzedCount + processProgress.failedCount;
+    return Math.round((done / total) * 100);
+  }, [processProgress]);
+
+  // 프로그레스 단계별 라벨
+  const phaseLabels: Record<ProcessPhase, string> = {
+    idle: "",
+    compressing: "이미지 압축 중",
+    uploading: "서버 업로드 중",
+    analyzing: "AI OCR 분석 중",
+    merging: "중복 데이터 병합 중",
+    complete: "처리 완료",
+  };
 
   return (
     <div className="space-y-6">
@@ -534,7 +706,7 @@ export default function PassportFlightUpload() {
                 <strong>50장 이상</strong> 한번에 업로드 가능 (JPG, PNG, WEBP, HEIC)
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                5장씩 배치 처리 | 중복 여권번호 자동 병합 | {autoCompress ? "자동 압축 ON" : "원본 업로드"}
+                5장씩 배치 처리 | 좌석번호·수하물 자동 인식 | 중복 여권번호 자동 병합
               </p>
               <input
                 ref={fileInputRef}
@@ -548,23 +720,11 @@ export default function PassportFlightUpload() {
 
             {/* Additional upload buttons */}
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-1"
-              >
-                <ImagePlus className="h-4 w-4 mr-1.5" />
-                파일 추가 선택
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="flex-1">
+                <ImagePlus className="h-4 w-4 mr-1.5" /> 파일 추가 선택
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => folderInputRef.current?.click()}
-                className="flex-1"
-              >
-                <FolderOpen className="h-4 w-4 mr-1.5" />
-                폴더 전체 선택
+              <Button variant="outline" size="sm" onClick={() => folderInputRef.current?.click()} className="flex-1">
+                <FolderOpen className="h-4 w-4 mr-1.5" /> 폴더 전체 선택
               </Button>
               <input
                 ref={folderInputRef}
@@ -624,6 +784,11 @@ export default function PassportFlightUpload() {
                         className="w-full h-full object-cover"
                         loading="lazy"
                       />
+                      {fileItem.status === "compressing" && (
+                        <div className="absolute inset-0 bg-yellow-500/30 flex items-center justify-center">
+                          <Minimize2 className="h-4 w-4 text-yellow-700 animate-pulse" />
+                        </div>
+                      )}
                       {fileItem.status === "uploading" && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                           <Loader2 className="h-5 w-5 text-white animate-spin" />
@@ -643,9 +808,7 @@ export default function PassportFlightUpload() {
                       )}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <Button 
-                          size="sm" 
-                          variant="destructive" 
-                          className="h-6 w-6 p-0"
+                          size="sm" variant="destructive" className="h-6 w-6 p-0"
                           onClick={(e) => { e.stopPropagation(); removeFile(fileItem.id); }}
                         >
                           <X className="h-3 w-3" />
@@ -673,21 +836,63 @@ export default function PassportFlightUpload() {
               </div>
             )}
 
-            {/* Progress */}
-            {isProcessing && (
-              <div className="space-y-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-blue-700 dark:text-blue-300">
-                    <Loader2 className="h-3.5 w-3.5 inline animate-spin mr-1.5" />
-                    AI OCR 처리 중... (탭을 닫지 마세요)
+            {/* ── 상세 프로그레스 바 ────────────────────────────────── */}
+            {isProcessing && processProgress.phase !== "idle" && (
+              <div className="space-y-3 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800">
+                {/* 전체 진행률 */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {phaseLabels[processProgress.phase]}
                   </span>
-                  <span className="text-blue-600 dark:text-blue-400">
-                    {processedCount}/{filesWithStatus.filter(f => f.status !== "success").length}장 ({progress}%)
+                  <span className="text-sm font-mono text-blue-600 dark:text-blue-400">
+                    {overallProgress}%
                   </span>
                 </div>
-                <Progress value={progress} className="h-2" />
-                <p className="text-xs text-blue-600/70 dark:text-blue-400/70">
-                  5장씩 배치 처리 중 | {autoCompress ? "이미지 자동 압축 적용" : "원본 이미지 사용"} | 중복 여권번호 자동 병합
+                <Progress value={overallProgress} className="h-2.5" />
+
+                {/* 단계별 상세 정보 */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <div className={`p-2 rounded-lg border ${processProgress.phase === "compressing" ? "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700" : "bg-white/50 dark:bg-white/5 border-border/50"}`}>
+                    <div className="flex items-center gap-1 mb-0.5">
+                      <Minimize2 className="h-3 w-3 text-yellow-600" />
+                      <span className="font-medium">압축</span>
+                    </div>
+                    <span className="text-muted-foreground">{processProgress.compressedCount}/{processProgress.totalFiles}</span>
+                  </div>
+                  <div className={`p-2 rounded-lg border ${processProgress.phase === "uploading" ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700" : "bg-white/50 dark:bg-white/5 border-border/50"}`}>
+                    <div className="flex items-center gap-1 mb-0.5">
+                      <Upload className="h-3 w-3 text-blue-600" />
+                      <span className="font-medium">업로드</span>
+                    </div>
+                    <span className="text-muted-foreground">{processProgress.uploadedCount}/{processProgress.totalFiles}</span>
+                  </div>
+                  <div className={`p-2 rounded-lg border ${processProgress.phase === "analyzing" ? "bg-indigo-100 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-700" : "bg-white/50 dark:bg-white/5 border-border/50"}`}>
+                    <div className="flex items-center gap-1 mb-0.5">
+                      <FileImage className="h-3 w-3 text-indigo-600" />
+                      <span className="font-medium">OCR 분석</span>
+                    </div>
+                    <span className="text-muted-foreground">{processProgress.analyzedCount}/{processProgress.totalFiles}</span>
+                  </div>
+                  <div className={`p-2 rounded-lg border ${processProgress.failedCount > 0 ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800" : "bg-white/50 dark:bg-white/5 border-border/50"}`}>
+                    <div className="flex items-center gap-1 mb-0.5">
+                      <XCircle className="h-3 w-3 text-red-500" />
+                      <span className="font-medium">실패</span>
+                    </div>
+                    <span className="text-muted-foreground">{processProgress.failedCount}</span>
+                  </div>
+                </div>
+
+                {/* 배치 정보 & 예상 시간 */}
+                <div className="flex items-center justify-between text-xs text-blue-600/80 dark:text-blue-400/80">
+                  <span>배치 {processProgress.currentBatch}/{processProgress.totalBatches} (5장씩)</span>
+                  {processProgress.estimatedTimeLeft > 0 && (
+                    <span>예상 남은 시간: {formatTime(processProgress.estimatedTimeLeft)}</span>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-blue-600/60 dark:text-blue-400/60 text-center">
+                  탭을 닫지 마세요 — 좌석번호·수하물 정보도 함께 추출합니다
                 </p>
               </div>
             )}
@@ -698,7 +903,7 @@ export default function PassportFlightUpload() {
               className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 h-12 text-base"
             >
               {isProcessing ? (
-                <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> OCR 처리 중... ({processedCount}/{pendingFiles})</>
+                <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> OCR 처리 중... ({processProgress.analyzedCount + processProgress.failedCount}/{processProgress.totalFiles})</>
               ) : (
                 <><FileImage className="h-5 w-5 mr-2" /> {pendingFiles > 0 ? `${pendingFiles}개` : `${totalFiles}개`} 이미지 AI 분석 시작</>
               )}
@@ -725,11 +930,15 @@ export default function PassportFlightUpload() {
                 OCR 결과 확인 ({selectedCount}/{participants.length}명 선택)
                 {mergedCount > 0 && (
                   <Badge variant="secondary" className="text-[10px] gap-0.5">
-                    <Merge className="h-2.5 w-2.5" /> {mergedCount}건 자동 병합됨
+                    <Merge className="h-2.5 w-2.5" /> {mergedCount}건 병합
                   </Badge>
                 )}
               </span>
               <div className="flex gap-2">
+                {/* 엑셀 내보내기 버튼 */}
+                <Button size="sm" variant="outline" onClick={() => exportToExcel(participants)} className="gap-1">
+                  <Download className="h-3.5 w-3.5" /> 엑셀 다운로드
+                </Button>
                 <Button size="sm" variant="outline" onClick={() => { setStep(1); setParticipants([]); }}>
                   다시 업로드
                 </Button>
@@ -775,6 +984,24 @@ export default function PassportFlightUpload() {
                         {p.flightNo && <span className="text-[10px] text-blue-500">편명: {p.flightNo}</span>}
                         {p.departure && p.arrival && <span className="text-[10px] text-muted-foreground">{p.departure} → {p.arrival}</span>}
                         {p.departureDate && <span className="text-[10px] text-muted-foreground">{p.departureDate} {p.departureTime || ""}</span>}
+                        {/* 좌석번호 표시 */}
+                        {p.seatNumber && (
+                          <span className="text-[10px] text-purple-600 dark:text-purple-400 flex items-center gap-0.5">
+                            <Armchair className="h-2.5 w-2.5" /> {p.seatNumber}
+                          </span>
+                        )}
+                        {/* 수하물 정보 표시 */}
+                        {p.baggageAllowance && (
+                          <span className="text-[10px] text-orange-600 dark:text-orange-400 flex items-center gap-0.5">
+                            <Luggage className="h-2.5 w-2.5" /> {p.baggageAllowance}
+                          </span>
+                        )}
+                        {/* 좌석등급 표시 */}
+                        {p.cabinClass && (
+                          <Badge variant="outline" className="text-[9px] text-emerald-600 dark:text-emerald-400 border-emerald-300">
+                            {p.cabinClass}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-1">
@@ -805,7 +1032,10 @@ export default function PassportFlightUpload() {
               비회원 참석자가 나중에 회원가입하면 기존 정보가 자동으로 연결됩니다.
             </p>
             <div className="flex gap-2 justify-center">
-              <Button variant="outline" onClick={() => { setStep(1); setFilesWithStatus([]); setParticipants([]); setOcrResults([]); setProgress(0); setProcessedCount(0); setMergedCount(0); }}>
+              <Button variant="outline" onClick={() => exportToExcel(participants)} className="gap-1">
+                <Download className="h-4 w-4" /> 결과 엑셀 다운로드
+              </Button>
+              <Button variant="outline" onClick={() => { setStep(1); setFilesWithStatus([]); setParticipants([]); setOcrResults([]); setMergedCount(0); setProcessProgress(p => ({ ...p, phase: "idle" })); }}>
                 추가 등록하기
               </Button>
             </div>
@@ -858,6 +1088,13 @@ export default function PassportFlightUpload() {
               <div className="grid grid-cols-2 gap-2">
                 <div><Label>출발일</Label><Input type="date" value={participants[editIdx].departureDate || ""} onChange={e => updateParticipant(editIdx, { departureDate: e.target.value })} /></div>
                 <div><Label>출발시간</Label><Input type="time" value={participants[editIdx].departureTime || ""} onChange={e => updateParticipant(editIdx, { departureTime: e.target.value })} /></div>
+              </div>
+              <hr className="my-2" />
+              <p className="text-sm font-medium flex items-center gap-1"><Armchair className="h-3.5 w-3.5" /> 좌석 & 수하물</p>
+              <div className="grid grid-cols-3 gap-2">
+                <div><Label>좌석번호</Label><Input value={participants[editIdx].seatNumber || ""} placeholder="12A" onChange={e => updateParticipant(editIdx, { seatNumber: e.target.value })} /></div>
+                <div><Label>수하물</Label><Input value={participants[editIdx].baggageAllowance || ""} placeholder="23kg" onChange={e => updateParticipant(editIdx, { baggageAllowance: e.target.value })} /></div>
+                <div><Label>좌석등급</Label><Input value={participants[editIdx].cabinClass || ""} placeholder="economy" onChange={e => updateParticipant(editIdx, { cabinClass: e.target.value })} /></div>
               </div>
             </div>
             <DialogFooter>
