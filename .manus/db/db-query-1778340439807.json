@@ -1,0 +1,25 @@
+{
+  "query": "SELECT name, JSON_EXTRACT(passportOcrData, '$.passportNumber') as pn, JSON_KEYS(passportOcrData) as jk FROM registrations WHERE passportOcrData IS NOT NULL LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT name, JSON_EXTRACT(passportOcrData, '$.passportNumber') as pn, JSON_KEYS(passportOcrData) as jk FROM registrations WHERE passportOcrData IS NOT NULL LIMIT 3;",
+  "rows": [
+    {
+      "name": "KIM JUN HO",
+      "pn": "NULL",
+      "jk": "[\"dateOfBirth\", \"dateOfExpiry\", \"givenNames\", \"koreanName\", \"nationality\", \"passportNo\", \"sex\", \"surname\"]"
+    },
+    {
+      "name": "RYU DAE SUNG",
+      "pn": "NULL",
+      "jk": "[\"dateOfBirth\", \"dateOfExpiry\", \"dateOfIssue\", \"fullName\", \"koreanName\", \"nationality\", \"passportNo\", \"sex\"]"
+    },
+    {
+      "name": "CHOI YONG SUK",
+      "pn": "NULL",
+      "jk": "[\"dateOfBirth\", \"dateOfExpiry\", \"dateOfIssue\", \"fullName\", \"koreanName\", \"nationality\", \"passportNo\", \"sex\"]"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tpn\tjk\nKIM JUN HO\tNULL\t[\"dateOfBirth\", \"dateOfExpiry\", \"givenNames\", \"koreanName\", \"nationality\", \"passportNo\", \"sex\", \"surname\"]\nRYU DAE SUNG\tNULL\t[\"dateOfBirth\", \"dateOfExpiry\", \"dateOfIssue\", \"fullName\", \"koreanName\", \"nationality\", \"passportNo\", \"sex\"]\nCHOI YONG SUK\tNULL\t[\"dateOfBirth\", \"dateOfExpiry\", \"dateOfIssue\", \"fullName\", \"koreanName\", \"nationality\", \"passportNo\", \"sex\"]\n",
+  "stderr": "",
+  "execution_time_ms": 1847
+}

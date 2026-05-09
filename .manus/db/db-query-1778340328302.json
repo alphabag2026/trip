@@ -1,0 +1,85 @@
+{
+  "query": "SELECT id, name, teamName FROM registrations WHERE teamName LIKE 'B조%' ORDER BY name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, teamName FROM registrations WHERE teamName LIKE 'B조%' ORDER BY name;",
+  "rows": [
+    {
+      "id": "630006",
+      "name": "AN YEONGOK",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630029",
+      "name": "CHO SEORAN",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630003",
+      "name": "CHOI YONG SUK",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630007",
+      "name": "HWANG MYEONGSUK",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630016",
+      "name": "KIM BONGMYUNG",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630009",
+      "name": "KIM CHUNOCK",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630001",
+      "name": "KIM JUN HO",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630004",
+      "name": "KIM TAEHEE",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630015",
+      "name": "KIM WOONGKI",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630030",
+      "name": "KIM YOONSEO",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630019",
+      "name": "LEE DEAGUN",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630014",
+      "name": "MYOUNG SUNG JIN",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630008",
+      "name": "PAEK JEEHYUN",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630002",
+      "name": "RYU DAE SUNG",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630005",
+      "name": "YU KUMSOOK",
+      "teamName": "B조 (아시아나)"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tteamName\n630006\tAN YEONGOK\tB조 (아시아나)\n630029\tCHO SEORAN\tB조 (아시아나)\n630003\tCHOI YONG SUK\tB조 (아시아나)\n630007\tHWANG MYEONGSUK\tB조 (아시아나)\n630016\tKIM BONGMYUNG\tB조 (아시아나)\n630009\tKIM CHUNOCK\tB조 (아시아나)\n630001\tKIM JUN HO\tB조 (아시아나)\n630004\tKIM TAEHEE\tB조 (아시아나)\n630015\tKIM WOONGKI\tB조 (아시아나)\n630030\tKIM YOONSEO\tB조 (아시아나)\n630019\tLEE DEAGUN\tB조 (아시아나)\n630014\tMYOUNG SUNG JIN\tB조 (아시아나)\n630008\tPAEK JEEHYUN\tB조 (아시아나)\n630002\tRYU DAE SUNG\tB조 (아시아나)\n630005\tYU KUMSOOK\tB조 (아시아나)\n",
+  "stderr": "",
+  "execution_time_ms": 1834
+}

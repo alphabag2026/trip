@@ -1,0 +1,16 @@
+{
+  "query": "SHOW TABLES LIKE '%flight%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SHOW TABLES LIKE '%flight%';",
+  "rows": [
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (%flight%)": "flight_schedules"
+    },
+    {
+      "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (%flight%)": "flight_tickets"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_9L2UFkGMTFNGvGrFPN8jYv (%flight%)\nflight_schedules\nflight_tickets\n",
+  "stderr": "",
+  "execution_time_ms": 1776
+}

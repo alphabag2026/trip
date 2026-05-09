@@ -1,0 +1,70 @@
+{
+  "query": "SELECT passengerName, passportNumber, outboundFlightNo, returnFlightNo FROM flight_tickets WHERE registrationId >= 630000 ORDER BY outboundFlightNo LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT passengerName, passportNumber, outboundFlightNo, returnFlightNo FROM flight_tickets WHERE registrationId >= 630000 ORDER BY outboundFlightNo LIMIT 10;",
+  "rows": [
+    {
+      "passengerName": "LEE JAEMIN",
+      "passportNumber": "NULL",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "passengerName": "PARK MEE A",
+      "passportNumber": "NULL",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "passengerName": "KIM IN HWAN",
+      "passportNumber": "NULL",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "passengerName": "LI ZHENJIN",
+      "passportNumber": "NULL",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "passengerName": "KIM SAMRYE",
+      "passportNumber": "NULL",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "passengerName": "YOO YUNSUNG",
+      "passportNumber": "NULL",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "passengerName": "JO KWANG RYE",
+      "passportNumber": "NULL",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "passengerName": "SO HUN YOUNG",
+      "passportNumber": "NULL",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "passengerName": "RYU HYUNJIN",
+      "passportNumber": "NULL",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "passengerName": "PARK CHONG BOK",
+      "passportNumber": "NULL",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    }
+  ],
+  "messages": [],
+  "stdout": "passengerName\tpassportNumber\toutboundFlightNo\treturnFlightNo\nLEE JAEMIN\tNULL\tKE441\tKE442\nPARK MEE A\tNULL\tKE441\tKE442\nKIM IN HWAN\tNULL\tKE441\tKE442\nLI ZHENJIN\tNULL\tKE441\tKE442\nKIM SAMRYE\tNULL\tKE441\tKE442\nYOO YUNSUNG\tNULL\tKE441\tKE442\nJO KWANG RYE\tNULL\tKE441\tKE442\nSO HUN YOUNG\tNULL\tKE441\tKE442\nRYU HYUNJIN\tNULL\tKE441\tKE442\nPARK CHONG BOK\tNULL\tKE441\tKE442\n",
+  "stderr": "",
+  "execution_time_ms": 1842
+}

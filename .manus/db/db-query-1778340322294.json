@@ -1,0 +1,195 @@
+{
+  "query": "SELECT id, name, teamName FROM registrations ORDER BY teamName, name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, teamName FROM registrations ORDER BY teamName, name;",
+  "rows": [
+    {
+      "id": "630027",
+      "name": "CHA BOKSOON",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630024",
+      "name": "IM HYEONSUK",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630025",
+      "name": "JEONG TAESU",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630021",
+      "name": "JO KWANG RYE",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630041",
+      "name": "KIM DONGHEE",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630013",
+      "name": "KIM IN HWAN",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630018",
+      "name": "KIM SAMRYE",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630031",
+      "name": "KIM SUNAE",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630035",
+      "name": "KIM YEAJA",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630033",
+      "name": "KIM YUN JA",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630011",
+      "name": "LEE JAEMIN",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630017",
+      "name": "LI ZHENJIN",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630034",
+      "name": "PAK SEOKBONG",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630032",
+      "name": "PARK BYUNGRYANG",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630010",
+      "name": "PARK CHONG BOK",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630012",
+      "name": "PARK MEE A",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630023",
+      "name": "RYU HYUNJIN",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630036",
+      "name": "SEO YAMUN",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630022",
+      "name": "SO HUN YOUNG",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630028",
+      "name": "YI KUNCHI",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630020",
+      "name": "YOO YUNSUNG",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630026",
+      "name": "YUN DANIM",
+      "teamName": "A조 (대한항공)"
+    },
+    {
+      "id": "630006",
+      "name": "AN YEONGOK",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630029",
+      "name": "CHO SEORAN",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630003",
+      "name": "CHOI YONG SUK",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630007",
+      "name": "HWANG MYEONGSUK",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630016",
+      "name": "KIM BONGMYUNG",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630009",
+      "name": "KIM CHUNOCK",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630001",
+      "name": "KIM JUN HO",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630004",
+      "name": "KIM TAEHEE",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630015",
+      "name": "KIM WOONGKI",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630030",
+      "name": "KIM YOONSEO",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630019",
+      "name": "LEE DEAGUN",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630014",
+      "name": "MYOUNG SUNG JIN",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630008",
+      "name": "PAEK JEEHYUN",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630002",
+      "name": "RYU DAE SUNG",
+      "teamName": "B조 (아시아나)"
+    },
+    {
+      "id": "630005",
+      "name": "YU KUMSOOK",
+      "teamName": "B조 (아시아나)"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tteamName\n630027\tCHA BOKSOON\tA조 (대한항공)\n630024\tIM HYEONSUK\tA조 (대한항공)\n630025\tJEONG TAESU\tA조 (대한항공)\n630021\tJO KWANG RYE\tA조 (대한항공)\n630041\tKIM DONGHEE\tA조 (대한항공)\n630013\tKIM IN HWAN\tA조 (대한항공)\n630018\tKIM SAMRYE\tA조 (대한항공)\n630031\tKIM SUNAE\tA조 (대한항공)\n630035\tKIM YEAJA\tA조 (대한항공)\n630033\tKIM YUN JA\tA조 (대한항공)\n630011\tLEE JAEMIN\tA조 (대한항공)\n630017\tLI ZHENJIN\tA조 (대한항공)\n630034\tPAK SEOKBONG\tA조 (대한항공)\n630032\tPARK BYUNGRYANG\tA조 (대한항공)\n630010\tPARK CHONG BOK\tA조 (대한항공)\n630012\tPARK MEE A\tA조 (대한항공)\n630023\tRYU HYUNJIN\tA조 (대한항공)\n630036\tSEO YAMUN\tA조 (대한항공)\n630022\tSO HUN YOUNG\tA조 (대한항공)\n630028\tYI KUNCHI\tA조 (대한항공)\n630020\tYOO YUNSUNG\tA조 (대한항공)\n630026\tYUN DANIM\tA조 (대한항공)\n630006\tAN YEONGOK\tB조 (아시아나)\n630029\tCHO SEORAN\tB조 (아시아나)\n630003\tCHOI YONG SUK\tB조 (아시아나)\n630007\tHWANG MYEONGSUK\tB조 (아시아나)\n630016\tKIM BONGMYUNG\tB조 (아시아나)\n630009\tKIM CHUNOCK\tB조 (아시아나)\n630001\tKIM JUN HO\tB조 (아시아나)\n630004\tKIM TAEHEE\tB조 (아시아나)\n630015\tKIM WOONGKI\tB조 (아시아나)\n630030\tKIM YOONSEO\tB조 (아시아나)\n630019\tLEE DEAGUN\tB조 (아시아나)\n630014\tMYOUNG SUNG JIN\tB조 (아시아나)\n630008\tPAEK JEEHYUN\tB조 (아시아나)\n630002\tRYU DAE SUNG\tB조 (아시아나)\n630005\tYU KUMSOOK\tB조 (아시아나)\n",
+  "stderr": "",
+  "execution_time_ms": 1765
+}

@@ -1,0 +1,25 @@
+{
+  "query": "SELECT outboundFlightNo, returnFlightNo, COUNT(*) as cnt FROM flight_tickets WHERE registrationId >= 630000 GROUP BY outboundFlightNo, returnFlightNo;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT outboundFlightNo, returnFlightNo, COUNT(*) as cnt FROM flight_tickets WHERE registrationId >= 630000 GROUP BY outboundFlightNo, returnFlightNo;",
+  "rows": [
+    {
+      "outboundFlightNo": "OZ729",
+      "returnFlightNo": "OZ730",
+      "cnt": "14"
+    },
+    {
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442",
+      "cnt": "22"
+    },
+    {
+      "outboundFlightNo": "VN311",
+      "returnFlightNo": "별도",
+      "cnt": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "outboundFlightNo\treturnFlightNo\tcnt\nOZ729\tOZ730\t14\nKE441\tKE442\t22\nVN311\t별도\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1857
+}

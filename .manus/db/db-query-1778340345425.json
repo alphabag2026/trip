@@ -1,0 +1,330 @@
+{
+  "query": "DESCRIBE flight_tickets;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute DESCRIBE flight_tickets;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "meetupId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "registrationId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "passengerName",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "passportNumber",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nationality",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "outboundAirline",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "outboundFlightNo",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "outboundDepartureAirport",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "outboundDepartureCode",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "outboundArrivalAirport",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "outboundArrivalCode",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "outboundDepartureDate",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "outboundDepartureTime",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "outboundArrivalDate",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "outboundArrivalTime",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "outboundSeatClass",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "outboundSeatNumber",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "returnAirline",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "returnFlightNo",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "returnDepartureAirport",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "returnDepartureCode",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "returnArrivalAirport",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "returnArrivalCode",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "returnDepartureDate",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "returnDepartureTime",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "returnArrivalDate",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "returnArrivalTime",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "returnSeatClass",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "returnSeatNumber",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "bookingReference",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "ticketNumber",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "ticketFileUrl",
+      "Type": "varchar(1000)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "ticketFileKey",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "ticketFileType",
+      "Type": "enum('image','pdf','generated')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "generated",
+      "Extra": ""
+    },
+    {
+      "Field": "isGenerated",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "enum('active','cancelled','used')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "active",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "userId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nmeetupId\tint\tYES\t\tNULL\t\nregistrationId\tint\tYES\t\tNULL\t\npassengerName\tvarchar(255)\tNO\t\tNULL\t\npassportNumber\tvarchar(50)\tYES\t\tNULL\t\nnationality\tvarchar(100)\tYES\t\tNULL\t\noutboundAirline\tvarchar(255)\tYES\t\tNULL\t\noutboundFlightNo\tvarchar(50)\tYES\t\tNULL\t\noutboundDepartureAirport\tvarchar(255)\tYES\t\tNULL\t\noutboundDepartureCode\tvarchar(10)\tYES\t\tNULL\t\noutboundArrivalAirport\tvarchar(255)\tYES\t\tNULL\t\noutboundArrivalCode\tvarchar(10)\tYES\t\tNULL\t\noutboundDepartureDate\tvarchar(20)\tYES\t\tNULL\t\noutboundDepartureTime\tvarchar(10)\tYES\t\tNULL\t\noutboundArrivalDate\tvarchar(20)\tYES\t\tNULL\t\noutboundArrivalTime\tvarchar(10)\tYES\t\tNULL\t\noutboundSeatClass\tvarchar(50)\tYES\t\tNULL\t\noutboundSeatNumber\tvarchar(20)\tYES\t\tNULL\t\nreturnAirline\tvarchar(255)\tYES\t\tNULL\t\nreturnFlightNo\tvarchar(50)\tYES\t\tNULL\t\nreturnDepartureAirport\tvarchar(255)\tYES\t\tNULL\t\nreturnDepartureCode\tvarchar(10)\tYES\t\tNULL\t\nreturnArrivalAirport\tvarchar(255)\tYES\t\tNULL\t\nreturnArrivalCode\tvarchar(10)\tYES\t\tNULL\t\nreturnDepartureDate\tvarchar(20)\tYES\t\tNULL\t\nreturnDepartureTime\tvarchar(10)\tYES\t\tNULL\t\nreturnArrivalDate\tvarchar(20)\tYES\t\tNULL\t\nreturnArrivalTime\tvarchar(10)\tYES\t\tNULL\t\nreturnSeatClass\tvarchar(50)\tYES\t\tNULL\t\nreturnSeatNumber\tvarchar(20)\tYES\t\tNULL\t\nbookingReference\tvarchar(50)\tYES\t\tNULL\t\nticketNumber\tvarchar(50)\tYES\t\tNULL\t\nticketFileUrl\tvarchar(1000)\tYES\t\tNULL\t\nticketFileKey\tvarchar(500)\tYES\t\tNULL\t\nticketFileType\tenum('image','pdf','generated')\tYES\t\tgenerated\t\nisGenerated\ttinyint(1)\tYES\t\t0\t\nstatus\tenum('active','cancelled','used')\tNO\t\tactive\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\nuserId\tint\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 1823
+}

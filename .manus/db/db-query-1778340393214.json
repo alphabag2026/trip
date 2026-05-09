@@ -1,0 +1,22 @@
+{
+  "query": "SELECT meetupId, COUNT(*) as cnt FROM registrations WHERE teamName LIKE 'A조%' OR teamName LIKE 'B조%' GROUP BY meetupId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT meetupId, COUNT(*) as cnt FROM registrations WHERE teamName LIKE 'A조%' OR teamName LIKE 'B조%' GROUP BY meetupId;",
+  "rows": [
+    {
+      "meetupId": "NULL",
+      "cnt": "23"
+    },
+    {
+      "meetupId": "510001",
+      "cnt": "13"
+    },
+    {
+      "meetupId": "1",
+      "cnt": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "meetupId\tcnt\nNULL\t23\n510001\t13\n1\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1841
+}

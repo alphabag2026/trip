@@ -1,0 +1,46 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'flight_tickets' AND COLUMN_NAME LIKE 'return%' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'flight_tickets' AND COLUMN_NAME LIKE 'return%' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "returnAirline"
+    },
+    {
+      "COLUMN_NAME": "returnFlightNo"
+    },
+    {
+      "COLUMN_NAME": "returnDepartureAirport"
+    },
+    {
+      "COLUMN_NAME": "returnDepartureCode"
+    },
+    {
+      "COLUMN_NAME": "returnArrivalAirport"
+    },
+    {
+      "COLUMN_NAME": "returnArrivalCode"
+    },
+    {
+      "COLUMN_NAME": "returnDepartureDate"
+    },
+    {
+      "COLUMN_NAME": "returnDepartureTime"
+    },
+    {
+      "COLUMN_NAME": "returnArrivalDate"
+    },
+    {
+      "COLUMN_NAME": "returnArrivalTime"
+    },
+    {
+      "COLUMN_NAME": "returnSeatClass"
+    },
+    {
+      "COLUMN_NAME": "returnSeatNumber"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nreturnAirline\nreturnFlightNo\nreturnDepartureAirport\nreturnDepartureCode\nreturnArrivalAirport\nreturnArrivalCode\nreturnDepartureDate\nreturnDepartureTime\nreturnArrivalDate\nreturnArrivalTime\nreturnSeatClass\nreturnSeatNumber\n",
+  "stderr": "",
+  "execution_time_ms": 1843
+}

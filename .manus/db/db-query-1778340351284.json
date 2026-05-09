@@ -1,0 +1,45 @@
+{
+  "query": "SELECT COUNT(*) as cnt, outboundFlightNo, returnFlightNo FROM flight_tickets GROUP BY outboundFlightNo, returnFlightNo;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT COUNT(*) as cnt, outboundFlightNo, returnFlightNo FROM flight_tickets GROUP BY outboundFlightNo, returnFlightNo;",
+  "rows": [
+    {
+      "cnt": "57",
+      "outboundFlightNo": "VJ123",
+      "returnFlightNo": "VJ124"
+    },
+    {
+      "cnt": "54",
+      "outboundFlightNo": "VR001",
+      "returnFlightNo": "NULL"
+    },
+    {
+      "cnt": "111",
+      "outboundFlightNo": "KE659",
+      "returnFlightNo": "KE660"
+    },
+    {
+      "cnt": "54",
+      "outboundFlightNo": "VJ123",
+      "returnFlightNo": "NULL"
+    },
+    {
+      "cnt": "23",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "cnt": "54",
+      "outboundFlightNo": "AK456",
+      "returnFlightNo": "NULL"
+    },
+    {
+      "cnt": "54",
+      "outboundFlightNo": "JL789",
+      "returnFlightNo": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "cnt\toutboundFlightNo\treturnFlightNo\n57\tVJ123\tVJ124\n54\tVR001\tNULL\n111\tKE659\tKE660\n54\tVJ123\tNULL\n23\tKE441\tKE442\n54\tAK456\tNULL\n54\tJL789\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1833
+}

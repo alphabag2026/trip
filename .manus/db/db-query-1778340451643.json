@@ -1,0 +1,30 @@
+{
+  "query": "SELECT passengerName, passportNumber FROM flight_tickets WHERE registrationId >= 630000 AND passportNumber IS NOT NULL AND passportNumber != 'null' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT passengerName, passportNumber FROM flight_tickets WHERE registrationId >= 630000 AND passportNumber IS NOT NULL AND passportNumber != 'null' LIMIT 5;",
+  "rows": [
+    {
+      "passengerName": "PARK CHONG BOK",
+      "passportNumber": "M277P4108"
+    },
+    {
+      "passengerName": "LEE JAEMIN",
+      "passportNumber": "M16347329"
+    },
+    {
+      "passengerName": "PARK MEE A",
+      "passportNumber": "M67714226"
+    },
+    {
+      "passengerName": "KIM IN HWAN",
+      "passportNumber": "M476B0698"
+    },
+    {
+      "passengerName": "LI ZHENJIN",
+      "passportNumber": "ED6199048"
+    }
+  ],
+  "messages": [],
+  "stdout": "passengerName\tpassportNumber\nPARK CHONG BOK\tM277P4108\nLEE JAEMIN\tM16347329\nPARK MEE A\tM67714226\nKIM IN HWAN\tM476B0698\nLI ZHENJIN\tED6199048\n",
+  "stderr": "",
+  "execution_time_ms": 1770
+}

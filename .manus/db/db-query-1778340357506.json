@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, registrationId, passengerName, outboundFlightNo, returnFlightNo FROM flight_tickets WHERE outboundFlightNo = 'KE441' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, registrationId, passengerName, outboundFlightNo, returnFlightNo FROM flight_tickets WHERE outboundFlightNo = 'KE441' LIMIT 5;",
+  "rows": [
+    {
+      "id": "420001",
+      "registrationId": "570006",
+      "passengerName": "KIM YUN JA",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "id": "420002",
+      "registrationId": "570012",
+      "passengerName": "DINH THI BANG",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "id": "420003",
+      "registrationId": "570007",
+      "passengerName": "PARK BYUNGRYANG",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "id": "420004",
+      "registrationId": "570008",
+      "passengerName": "SEO YAMUN",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    },
+    {
+      "id": "420005",
+      "registrationId": "570013",
+      "passengerName": "LEE DONGKUK",
+      "outboundFlightNo": "KE441",
+      "returnFlightNo": "KE442"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tregistrationId\tpassengerName\toutboundFlightNo\treturnFlightNo\n420001\t570006\tKIM YUN JA\tKE441\tKE442\n420002\t570012\tDINH THI BANG\tKE441\tKE442\n420003\t570007\tPARK BYUNGRYANG\tKE441\tKE442\n420004\t570008\tSEO YAMUN\tKE441\tKE442\n420005\t570013\tLEE DONGKUK\tKE441\tKE442\n",
+  "stderr": "",
+  "execution_time_ms": 1776
+}
