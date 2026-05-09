@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useRef, DragEvent } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect, DragEvent } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -158,6 +158,75 @@ export default function AccommodationDashboard() {
     setRemoveConfirm({ accomId: Number(fromAccomId), regId, name });
   };
 
+  // ── Mobile Touch Drag & Drop ──
+  const [touchDragRegId, setTouchDragRegId] = useState<number | null>(null);
+  const [touchDragFromAccom, setTouchDragFromAccom] = useState<number | null>(null);
+  const [touchActive, setTouchActive] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const handleTouchStart = useCallback((regId: number, fromAccomId?: number) => (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+    longPressTimer.current = setTimeout(() => {
+      setTouchDragRegId(regId);
+      setTouchDragFromAccom(fromAccomId || null);
+      setTouchActive(true);
+      // Haptic feedback if available
+      if (navigator.vibrate) navigator.vibrate(50);
+    }, 400); // 400ms long press
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchActive) {
+      // Cancel long press if moved too much
+      const touch = e.touches[0];
+      const dx = Math.abs(touch.clientX - touchStartPos.current.x);
+      const dy = Math.abs(touch.clientY - touchStartPos.current.y);
+      if (dx > 10 || dy > 10) {
+        if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+      }
+      return;
+    }
+    e.preventDefault(); // Prevent scrolling while dragging
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    // Find the closest drop target
+    const roomTarget = el?.closest('[data-room-id]');
+    const unassignedTarget = el?.closest('[data-unassigned-zone]');
+    if (roomTarget) {
+      setDragOverRoomId(Number(roomTarget.getAttribute('data-room-id')));
+      setDragOverUnassigned(false);
+    } else if (unassignedTarget) {
+      setDragOverRoomId(null);
+      setDragOverUnassigned(true);
+    } else {
+      setDragOverRoomId(null);
+      setDragOverUnassigned(false);
+    }
+  }, [touchActive]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+    if (!touchActive || !touchDragRegId) { setTouchActive(false); return; }
+    // Perform the drop action
+    if (dragOverRoomId && touchDragRegId) {
+      if (touchDragFromAccom) {
+        moveMutation.mutate({ fromAccommodationId: touchDragFromAccom, toAccommodationId: dragOverRoomId, registrationId: touchDragRegId });
+      } else {
+        assignMutation.mutate({ accommodationId: dragOverRoomId, registrationId: touchDragRegId });
+      }
+    } else if (dragOverUnassigned && touchDragFromAccom && touchDragRegId) {
+      const name = regMap[touchDragRegId]?.name || `ID:${touchDragRegId}`;
+      setRemoveConfirm({ accomId: touchDragFromAccom, regId: touchDragRegId, name });
+    }
+    setTouchDragRegId(null);
+    setTouchDragFromAccom(null);
+    setTouchActive(false);
+    setDragOverRoomId(null);
+    setDragOverUnassigned(false);
+  }, [touchActive, touchDragRegId, touchDragFromAccom, dragOverRoomId, dragOverUnassigned, regMap, assignMutation, moveMutation]);
+
   const handleExportExcel = useCallback(() => {
     const rows: string[][] = [];
     rows.push(["숙소명", "숙소유형", "방번호", "방유형", "배정인원수", "배정자 목록", "체크인", "체크아웃", "비고"]);
@@ -287,8 +356,15 @@ export default function AccommodationDashboard() {
       {/* Drag & Drop Guide */}
       <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg px-4 py-2 flex items-center gap-2">
         <GripVertical className="h-3.5 w-3.5" />
-        <span>참가자 이름을 드래그하여 원하는 방에 드롭하면 배정됩니다. 배정된 참가자를 다른 방으로 드래그하면 이동됩니다.</span>
+        <span className="hidden sm:inline">참가자 이름을 드래그하여 원하는 방에 드롭하면 배정됩니다. 배정된 참가자를 다른 방으로 드래그하면 이동됩니다.</span>
+        <span className="sm:hidden">이름을 길게 누르면 드래그 모드가 활성화됩니다. 원하는 방으로 이동하세요.</span>
       </div>
+      {/* Mobile drag indicator */}
+      {touchActive && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg text-sm font-medium animate-pulse">
+          {regMap[touchDragRegId!]?.name || ""} 이동 중... 원하는 방에 손을 놓으세요
+        </div>
+      )}
 
       {/* Visual Map by Hotel */}
       {Object.keys(grouped).length === 0 ? (
@@ -342,6 +418,7 @@ export default function AccommodationDashboard() {
                         const isDragOver = dragOverRoomId === room.id;
                         return (
                           <div key={room.id} ref={el => { roomRefs.current[room.id] = el; }}
+                            data-room-id={room.id}
                             onDragOver={e => { handleDragOver(e); setDragOverRoomId(room.id); }}
                             onDragLeave={() => setDragOverRoomId(null)} onDrop={e => handleDropOnRoom(e, room.id)}
                             className={`p-3 rounded-lg border-2 transition-all ${
@@ -365,9 +442,12 @@ export default function AccommodationDashboard() {
                                 const isSearchHighlighted = highlightedRegId === regId;
                                 return (
                                   <div key={regId} draggable onDragStart={e => handleDragStart(e, regId, room.id)}
-                                    className={`flex items-center gap-1.5 text-xs cursor-grab active:cursor-grabbing group rounded px-1 py-0.5 ${
+                                    onTouchStart={handleTouchStart(regId, room.id)}
+                                    onTouchMove={handleTouchMove}
+                                    onTouchEnd={handleTouchEnd}
+                                    className={`flex items-center gap-1.5 text-xs cursor-grab active:cursor-grabbing group rounded px-1 py-0.5 select-none ${
                                       isSearchHighlighted ? "bg-primary/20 ring-1 ring-primary font-bold" : "hover:bg-muted/50"
-                                    }`}>
+                                    } ${touchDragRegId === regId ? "opacity-50 ring-2 ring-primary" : ""}`}>
                                     <GripVertical className="h-3 w-3 text-muted-foreground/50 group-hover:text-muted-foreground shrink-0" />
                                     <UserCheck className="h-3 w-3 text-green-500 shrink-0" />
                                     <span className="truncate flex-1">{person?.name || `ID:${regId}`}</span>
@@ -400,7 +480,7 @@ export default function AccommodationDashboard() {
       )}
 
       {/* Unassigned People List */}
-      <Card onDragOver={e => { handleDragOver(e); setDragOverUnassigned(true); }}
+      <Card data-unassigned-zone="true" onDragOver={e => { handleDragOver(e); setDragOverUnassigned(true); }}
         onDragLeave={() => setDragOverUnassigned(false)} onDrop={handleDropOnUnassigned}
         className={`transition-all ${dragOverUnassigned ? "border-2 border-orange-500 bg-orange-500/5" : ""}`}>
         <CardHeader>
@@ -422,9 +502,12 @@ export default function AccommodationDashboard() {
                 const isSearchHighlighted = highlightedRegId === r.id;
                 return (
                   <div key={r.id} draggable onDragStart={e => handleDragStart(e, r.id)}
-                    className={`flex items-center gap-2 text-sm py-1.5 px-2 rounded cursor-grab active:cursor-grabbing group transition-all ${
+                    onTouchStart={handleTouchStart(r.id)}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    className={`flex items-center gap-2 text-sm py-1.5 px-2 rounded cursor-grab active:cursor-grabbing group transition-all select-none ${
                       isSearchHighlighted ? "bg-primary/20 ring-1 ring-primary font-bold" : "hover:bg-muted/50"
-                    }`}>
+                    } ${touchDragRegId === r.id ? "opacity-50 ring-2 ring-primary" : ""}`}>
                     <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-muted-foreground shrink-0" />
                     <UserX className="h-3.5 w-3.5 text-orange-500 shrink-0" />
                     <span className="truncate">{r.name || r.englishName}</span>

@@ -71,6 +71,7 @@ export default function AdminPassportList() {
 
   const [pdfFormat, setPdfFormat] = useState<"vietnam_police" | "cruise" | "generic">("generic");
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [includeImages, setIncludeImages] = useState(false);
   const generatePdfMutation = trpc.passport.generatePdf.useMutation({
     onSuccess: (data) => {
       window.open(data.url, "_blank");
@@ -85,6 +86,7 @@ export default function AdminPassportList() {
       meetupId: meetupFilter !== "all" ? Number(meetupFilter) : undefined,
       format,
       registrationIds: filtered.map((p: any) => p.regId).filter(Boolean),
+      includeImages,
     });
   };
 
@@ -108,6 +110,10 @@ export default function AdminPassportList() {
             {pdfGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
             일반 PDF
           </Button>
+          <label className="flex items-center gap-1.5 text-sm cursor-pointer ml-2">
+            <input type="checkbox" checked={includeImages} onChange={(e) => setIncludeImages(e.target.checked)} className="rounded border-border" />
+            여권 이미지 첨부
+          </label>
         </div>
       </div>
 

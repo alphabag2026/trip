@@ -1,6 +1,8 @@
 import PDFDocument from "pdfkit";
 import path from "path";
 import fs from "fs";
+import https from "https";
+import http from "http";
 
 const FONT_DIR = path.join(__dirname, "fonts");
 const FONT_REGULAR = path.join(FONT_DIR, "NotoSansKR-Regular.ttf");
@@ -8,28 +10,65 @@ const FONT_REGULAR = path.join(FONT_DIR, "NotoSansKR-Regular.ttf");
 // Check if font file exists at startup
 function getFontPath(): string {
   if (fs.existsSync(FONT_REGULAR)) return FONT_REGULAR;
-  // Fallback: use Helvetica (no Korean support but won't crash)
   return "Helvetica";
 }
 
 export interface PassportEntry {
-  stt: number; // 순번
-  fullName: string; // 이름 (영문 또는 현지어)
-  passportNumber: string; // 여권번호/CCCD
-  birthYear?: string; // 출생년도
-  birthDate?: string; // 생년월일 full
-  gender?: "M" | "F" | string; // 성별
-  nationality?: string; // 국적
-  phone?: string; // 전화번호
-  expiryDate?: string; // 여권 만료일
+  stt: number;
+  fullName: string;
+  passportNumber: string;
+  birthYear?: string;
+  birthDate?: string;
+  gender?: "M" | "F" | string;
+  nationality?: string;
+  phone?: string;
+  expiryDate?: string;
+  passportImageUrl?: string; // URL to passport scan image
 }
 
 export interface PassportPdfOptions {
-  title: string; // 문서 제목 (예: "DANH SÁCH KHÁCH DD-MM")
-  format: "vietnam_police" | "cruise" | "generic"; // 출력 형식
+  title: string;
+  format: "vietnam_police" | "cruise" | "generic";
   entries: PassportEntry[];
-  meetupName?: string; // 행사명
-  date?: string; // 날짜
+  meetupName?: string;
+  date?: string;
+  includeImages?: boolean; // Whether to include passport images as separate pages
+}
+
+/**
+ * Download an image from URL and return as Buffer.
+ * Returns null if download fails.
+ */
+async function downloadImage(url: string): Promise<Buffer | null> {
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => resolve(null), 10000); // 10s timeout
+    try {
+      const client = url.startsWith("https") ? https : http;
+      client.get(url, (res) => {
+        if (res.statusCode !== 200) {
+          clearTimeout(timeout);
+          resolve(null);
+          return;
+        }
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk: Buffer) => chunks.push(chunk));
+        res.on("end", () => {
+          clearTimeout(timeout);
+          resolve(Buffer.concat(chunks));
+        });
+        res.on("error", () => {
+          clearTimeout(timeout);
+          resolve(null);
+        });
+      }).on("error", () => {
+        clearTimeout(timeout);
+        resolve(null);
+      });
+    } catch {
+      clearTimeout(timeout);
+      resolve(null);
+    }
+  });
 }
 
 /**
@@ -37,7 +76,7 @@ export interface PassportPdfOptions {
  * Returns a Buffer containing the PDF data.
  */
 export async function generatePassportPdf(options: PassportPdfOptions): Promise<Buffer> {
-  const { title, format, entries, meetupName, date } = options;
+  const { title, format, entries, meetupName, date, includeImages = false } = options;
 
   const doc = new PDFDocument({
     size: "A4",
@@ -66,11 +105,72 @@ export async function generatePassportPdf(options: PassportPdfOptions): Promise<
     await renderGenericFormat(doc, { title, entries, meetupName, date, useCustomFont });
   }
 
+  // Add passport images as separate pages if requested
+  if (includeImages) {
+    await renderPassportImages(doc, entries, useCustomFont);
+  }
+
   doc.end();
 
   return new Promise((resolve) => {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
   });
+}
+
+// ── Passport Images Pages ──────────────────────────────────
+async function renderPassportImages(doc: PDFKit.PDFDocument, entries: PassportEntry[], useCustomFont: boolean) {
+  const entriesWithImages = entries.filter((e) => e.passportImageUrl);
+  if (entriesWithImages.length === 0) return;
+
+  // Add a separator page
+  doc.addPage({ size: "A4", layout: "portrait", margins: { top: 40, bottom: 40, left: 40, right: 40 } });
+  const pageW = doc.page.width - 80;
+
+  if (useCustomFont) doc.font("Korean");
+  doc.fontSize(18).fillColor("#333333");
+  doc.text("여권 이미지 (Passport Images)", 40, 40, { align: "center", width: pageW });
+  doc.moveDown(1);
+  doc.fontSize(10).fillColor("#666666");
+  doc.text(`총 ${entriesWithImages.length}명의 여권 이미지`, { align: "center", width: pageW });
+
+  // Render 2 passport images per page (portrait A4)
+  let imagesOnPage = 0;
+  const imgMaxWidth = 480;
+  const imgMaxHeight = 320;
+
+  for (const entry of entriesWithImages) {
+    if (!entry.passportImageUrl) continue;
+
+    const imgBuffer = await downloadImage(entry.passportImageUrl);
+    if (!imgBuffer) continue;
+
+    if (imagesOnPage >= 2) {
+      doc.addPage({ size: "A4", layout: "portrait", margins: { top: 40, bottom: 40, left: 40, right: 40 } });
+      imagesOnPage = 0;
+    }
+
+    const yOffset = imagesOnPage === 0 ? 80 : 440;
+
+    // Name and passport number label
+    if (useCustomFont) doc.font("Korean");
+    doc.fontSize(11).fillColor("#000000");
+    doc.text(`${entry.stt}. ${entry.fullName} | ${entry.passportNumber}`, 40, yOffset, { width: pageW });
+
+    // Draw passport image
+    try {
+      doc.image(imgBuffer, 60, yOffset + 20, {
+        fit: [imgMaxWidth, imgMaxHeight],
+        align: "center",
+        valign: "center",
+      });
+    } catch (e) {
+      // If image fails to render, add placeholder text
+      doc.fontSize(9).fillColor("#999999");
+      doc.text("(이미지를 불러올 수 없습니다)", 60, yOffset + 20);
+    }
+
+    imagesOnPage++;
+  }
 }
 
 interface RenderOptions {
@@ -84,9 +184,8 @@ interface RenderOptions {
 // ── Vietnam Police Format (DANH SÁCH KHÁCH) ──────────────────
 async function renderVietnamPoliceFormat(doc: PDFKit.PDFDocument, opts: RenderOptions) {
   const { title, entries, meetupName, date, useCustomFont } = opts;
-  const pageW = doc.page.width - 80; // margins
+  const pageW = doc.page.width - 80;
 
-  // Title
   doc.fontSize(18).fillColor("#cc0000");
   doc.text(title || "DANH SÁCH KHÁCH", 40, 40, { align: "center", width: pageW });
   doc.moveDown(0.5);
@@ -97,13 +196,11 @@ async function renderVietnamPoliceFormat(doc: PDFKit.PDFDocument, opts: RenderOp
     doc.moveDown(0.5);
   }
 
-  // Table header
   const tableTop = doc.y + 10;
-  const colWidths = [35, 150, 120, 60, 60, 80, 160]; // STT, Name, Passport, BirthM, BirthF, Nationality, Phone
+  const colWidths = [35, 150, 120, 60, 60, 80, 160];
   const headers = ["STT", "Họ và tên", "Số CCCD/Hộ chiếu/\nĐịnh danh", "Năm sinh\nNam", "Năm sinh\nNữ", "Quốc tịch", "Địa chỉ, Số Điện thoại\nhành khách (전화번호)"];
 
   let x = 40;
-  // Header background
   doc.rect(40, tableTop, pageW, 35).fill("#e8f5e9").stroke("#000000");
   doc.fillColor("#000000").fontSize(8);
 
@@ -113,7 +210,6 @@ async function renderVietnamPoliceFormat(doc: PDFKit.PDFDocument, opts: RenderOp
     x += colWidths[i];
   }
 
-  // Draw header borders
   x = 40;
   for (let i = 0; i <= headers.length; i++) {
     doc.moveTo(x, tableTop).lineTo(x, tableTop + 35).stroke();
@@ -122,7 +218,6 @@ async function renderVietnamPoliceFormat(doc: PDFKit.PDFDocument, opts: RenderOp
   doc.moveTo(40, tableTop).lineTo(40 + pageW, tableTop).stroke();
   doc.moveTo(40, tableTop + 35).lineTo(40 + pageW, tableTop + 35).stroke();
 
-  // Table rows
   let rowY = tableTop + 35;
   const rowHeight = 22;
 
@@ -134,8 +229,6 @@ async function renderVietnamPoliceFormat(doc: PDFKit.PDFDocument, opts: RenderOp
 
     x = 40;
     doc.fontSize(9).fillColor("#000000");
-
-    // Row border
     doc.rect(40, rowY, pageW, rowHeight).stroke();
 
     const values = [
@@ -150,7 +243,6 @@ async function renderVietnamPoliceFormat(doc: PDFKit.PDFDocument, opts: RenderOp
 
     for (let i = 0; i < values.length; i++) {
       doc.text(values[i], x + 3, rowY + 5, { width: colWidths[i] - 6, align: i === 0 ? "center" : "left" });
-      // Column border
       doc.moveTo(x, rowY).lineTo(x, rowY + rowHeight).stroke();
       x += colWidths[i];
     }
@@ -165,7 +257,6 @@ async function renderCruiseFormat(doc: PDFKit.PDFDocument, opts: RenderOptions) 
   const { title, entries, meetupName, date, useCustomFont } = opts;
   const pageW = doc.page.width - 80;
 
-  // Title
   doc.fontSize(16).fillColor("#003366");
   doc.text(title || "PASSENGER LIST", 40, 40, { align: "center", width: pageW });
   doc.moveDown(0.3);
@@ -176,9 +267,8 @@ async function renderCruiseFormat(doc: PDFKit.PDFDocument, opts: RenderOptions) 
     doc.moveDown(0.5);
   }
 
-  // Table header
   const tableTop = doc.y + 10;
-  const colWidths = [30, 140, 100, 80, 50, 80, 80, 100]; // No, Name, Passport, DOB, Gender, Nationality, Expiry, Phone
+  const colWidths = [30, 140, 100, 80, 50, 80, 80, 100];
   const headers = ["No.", "Full Name", "Passport No.", "Date of Birth", "Sex", "Nationality", "Expiry Date", "Phone"];
 
   let x = 40;
@@ -190,7 +280,6 @@ async function renderCruiseFormat(doc: PDFKit.PDFDocument, opts: RenderOptions) 
     x += colWidths[i];
   }
 
-  // Table rows
   let rowY = tableTop + 25;
   const rowHeight = 20;
 
@@ -227,7 +316,6 @@ async function renderCruiseFormat(doc: PDFKit.PDFDocument, opts: RenderOptions) 
     rowY += rowHeight;
   }
 
-  // Footer
   doc.moveDown(2);
   doc.fontSize(8).fillColor("#666666");
   doc.text(`Total Passengers: ${entries.length}`, 40, rowY + 20);

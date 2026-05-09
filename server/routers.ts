@@ -3321,6 +3321,7 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         format: z.enum(["vietnam_police", "cruise", "generic"]).default("generic"),
         title: z.string().optional(),
         registrationIds: z.array(z.number()).optional(), // 특정 참가자만 선택
+        includeImages: z.boolean().default(false), // 여권 이미지 첨부 여부
       }))
       .mutation(async ({ input }) => {
         const { generatePassportPdf } = await import("./passportPdf");
@@ -3359,6 +3360,7 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
             nationality: passportData?.nationality || reg.nationality || "",
             phone: reg.phone || "",
             expiryDate: passportData?.expiryDate || "",
+            passportImageUrl: passportData?.passportImageUrl || reg.passportImageUrl || "",
           });
         }
         // 밋업 이름 가져오기
@@ -3373,6 +3375,7 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
           entries,
           meetupName,
           date: new Date().toISOString().slice(0, 10),
+          includeImages: input.includeImages,
         });
         // S3에 업로드
         const fileName = `passport-list-${input.format}-${Date.now()}.pdf`;
