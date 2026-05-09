@@ -2,7 +2,8 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Users, Plane, Clock, Globe, CheckCircle, FileText, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Users, Plane, Clock, Globe, CheckCircle, FileText, User, Bot, MessageSquare, Image, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ExcelDownloadButton, fetchTrpcQuery } from "@/components/ExcelButtons";
 
@@ -25,7 +26,7 @@ export default function AdminDashboard() {
         <ExcelDownloadButton
           icon="export"
           fetchData={() => fetchTrpcQuery("excelExport.exportStats")}
-          label={t("admin.excel.exportStats", "통계 엑셀 내보내기")}
+          label={t("admin.excel.exportStats", "\ud1b5\uacc4 \uc5d1\uc140 \ub0b4\ubcf4\ub0b4\uae30")}
         />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -40,14 +41,122 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <Card className="bg-card border-border">
-        <CardHeader><CardTitle>{t("admin.dashboard.recentApps")}</CardTitle></CardHeader>
-        <RecentRegistrations />
-      </Card>
+      {/* Two-column layout: Recent Registrations + Telegram Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Registrations - 2/3 width */}
+        <Card className="bg-card border-border lg:col-span-2">
+          <CardHeader><CardTitle>{t("admin.dashboard.recentApps")}</CardTitle></CardHeader>
+          <RecentRegistrations />
+        </Card>
+
+        {/* Telegram Activity Feed Widget - 1/3 width */}
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Bot className="h-5 w-5 text-blue-500" />
+              텔레그램 봇 활동
+            </CardTitle>
+          </CardHeader>
+          <TelegramFeedWidget />
+        </Card>
+      </div>
     </div>
   );
 }
 
+// Telegram Activity Feed Widget
+function TelegramFeedWidget() {
+  const { data: notifications } = trpc.telegramUpload.notifications.useQuery(
+    { limit: 10 },
+    { refetchInterval: 10000 }
+  );
+  const { data: uploads } = trpc.telegramUpload.list.useQuery(
+    { limit: 5 },
+    { refetchInterval: 15000 }
+  );
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case "success": return <CheckCircle className="h-3.5 w-3.5 text-green-500" />;
+      case "error": return <AlertCircle className="h-3.5 w-3.5 text-red-500" />;
+      case "info": return <MessageSquare className="h-3.5 w-3.5 text-blue-500" />;
+      default: return <Bot className="h-3.5 w-3.5 text-muted-foreground" />;
+    }
+  };
+
+  const getUploadIcon = (type: string) => {
+    switch (type) {
+      case "photo": return <Image className="h-3.5 w-3.5 text-purple-500" />;
+      case "document": return <FileText className="h-3.5 w-3.5 text-orange-500" />;
+      default: return <MessageSquare className="h-3.5 w-3.5 text-blue-500" />;
+    }
+  };
+
+  const timeAgo = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "방금";
+    if (mins < 60) return `${mins}분 전`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}시간 전`;
+    return `${Math.floor(hours / 24)}일 전`;
+  };
+
+  return (
+    <CardContent className="pt-0">
+      {/* Recent Notifications */}
+      {notifications && notifications.length > 0 && (
+        <div className="space-y-2 mb-4">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">알림</p>
+          {notifications.slice(0, 5).map((n: any) => (
+            <div key={n.id} className="flex items-start gap-2 p-2 rounded-md bg-secondary/30 hover:bg-secondary/50 transition-colors">
+              {getTypeIcon(n.type)}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate">{n.title}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{n.message}</p>
+              </div>
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap">{timeAgo(n.createdAt)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Recent Uploads/Commands */}
+      {uploads && uploads.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">최근 명령</p>
+          {uploads.map((u: any) => (
+            <div key={u.id} className="flex items-start gap-2 p-2 rounded-md hover:bg-secondary/30 transition-colors">
+              {getUploadIcon(u.rawFileType)}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1">
+                  <p className="text-xs font-medium truncate">{u.parsedSummary || u.rawText?.substring(0, 30) || "이미지 업로드"}</p>
+                </div>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">
+                    {u.status === "applied" ? "✅ 승인" : u.status === "rejected" ? "❌ 거절" : u.status === "parsed" ? "⏳ 대기" : u.status}
+                  </Badge>
+                  <span className="text-[10px] text-muted-foreground">{u.uploadedBy?.split(" ")[0]}</span>
+                </div>
+              </div>
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap">{timeAgo(u.createdAt)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {(!notifications || notifications.length === 0) && (!uploads || uploads.length === 0) && (
+        <div className="text-center py-8 text-muted-foreground">
+          <Bot className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p className="text-xs">텔레그램 봇 활동이 없습니다</p>
+          <p className="text-[10px] mt-1">봇을 설정하면 여기에 활동이 표시됩니다</p>
+        </div>
+      )}
+    </CardContent>
+  );
+}
+
+// Recent Registrations Table
 function RecentRegistrations() {
   const { data: regs } = trpc.registration.list.useQuery({ });
   const { t } = useTranslation();

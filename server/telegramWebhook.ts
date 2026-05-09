@@ -470,7 +470,15 @@ webhookRouter.post("/", async (req: Request, res: Response) => {
       });
 
       // Send response
-      await sendBotReply(config.botToken, chatId, executionResult);
+      // Send with inline keyboard for OCR/registration results
+      if (commandResult.intent === "OCR_PASSPORT" || commandResult.intent === "REGISTER_PARTICIPANTS") {
+        await sendBotReplyWithKeyboard(config.botToken, chatId, executionResult, [
+          [{ text: "✅ 승인", callback_data: `approve:${uploadId}` }, { text: "❌ 거절", callback_data: `reject:${uploadId}` }],
+          [{ text: "📋 상세보기", callback_data: `detail:${uploadId}` }],
+        ]);
+      } else {
+        await sendBotReply(config.botToken, chatId, executionResult);
+      }
       return res.json({ ok: true, uploadId, intent: commandResult.intent });
     } else {
       // Non-saving commands (queries, help, etc.)
@@ -504,7 +512,7 @@ webhookRouter.post("/setup", async (req: Request, res: Response) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         url: webhookUrl,
-        allowed_updates: ["message", "edited_message"],
+        allowed_updates: ["message", "edited_message", "callback_query"],
         drop_pending_updates: false,
       }),
     });
@@ -557,6 +565,54 @@ webhookRouter.delete("/", async (_req: Request, res: Response) => {
 
 // ── Helper: Send reply to Telegram ────────────────────────
 
+// ── Helper: Send reply with inline keyboard ──────────────
+async function sendBotReplyWithKeyboard(botToken: string, chatId: string, text: string, keyboard: any[][]) {
+  try {
+    const msgText = text.length > 4000 ? text.substring(0, 4000) + "..." : text;
+    await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: msgText,
+        parse_mode: "HTML",
+        reply_markup: { inline_keyboard: keyboard },
+      }),
+    });
+  } catch (e) {
+    console.error("[TelegramWebhook] Reply with keyboard failed:", e);
+  }
+}
+// ── Helper: Edit message ─────────────────────────────────
+async function editBotMessage(botToken: string, chatId: string, messageId: number, text: string) {
+  try {
+    await fetch(`https://api.telegram.org/bot${botToken}/editMessageText`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        message_id: messageId,
+        text: text.substring(0, 4000),
+        parse_mode: "HTML",
+      }),
+    });
+  } catch (e) {
+    console.error("[TelegramWebhook] Edit message failed:", e);
+  }
+}
+// ── Helper: Answer callback query ────────────────────────
+async function answerCallbackQuery(botToken: string, callbackQueryId: string, text: string) {
+  try {
+    await fetch(`https://api.telegram.org/bot${botToken}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callback_query_id: callbackQueryId, text, show_alert: false }),
+    });
+  } catch (e) {
+    console.error("[TelegramWebhook] Answer callback failed:", e);
+  }
+}
+// ── Helper: Send reply to Telegram ───────────────────────
 async function sendBotReply(botToken: string, chatId: string, text: string) {
   try {
     // Telegram has a 4096 char limit per message
