@@ -3557,6 +3557,28 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
         }
         return { successCount, errorCount: errors.length, errors };
       }),
+    // 다중 삭제
+    bulkDelete: adminProcedure
+      .input(z.object({ ids: z.array(z.number()).min(1) }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await db.getDb();
+        if (!dbInstance) throw new Error("DB not available");
+        const { flightTickets } = await import("../drizzle/schema");
+        const { inArray } = await import("drizzle-orm");
+        await dbInstance.delete(flightTickets).where(inArray(flightTickets.id, input.ids));
+        return { deletedCount: input.ids.length };
+      }),
+    // 전체 삭제
+    deleteAll: adminProcedure
+      .input(z.object({ confirm: z.boolean() }))
+      .mutation(async ({ input }) => {
+        if (!input.confirm) throw new TRPCError({ code: "BAD_REQUEST", message: "삭제를 확인해주세요" });
+        const dbInstance = await db.getDb();
+        if (!dbInstance) throw new Error("DB not available");
+        const { flightTickets } = await import("../drizzle/schema");
+        const result = await dbInstance.delete(flightTickets);
+        return { deletedCount: result[0].affectedRows };
+      }),
   }),
 
   // ── Immigration Checklist ──────────────────────────────────
@@ -7548,7 +7570,7 @@ For phone numbers, prefer mobile numbers (starting with 010, +82, etc.).`,
       .input(z.object({
         imageBase64: z.string(),
         mimeType: z.string().default("image/jpeg"),
-        context: z.enum(["vehicle", "accommodation", "event", "itinerary", "channel"]),
+        context: z.enum(["vehicle", "accommodation", "event", "itinerary", "channel", "flightTicket"]),
       }))
       .mutation(async ({ input }) => {
         // S3에 이미지 업로드
@@ -7558,14 +7580,47 @@ For phone numbers, prefer mobile numbers (starting with 010, +82, etc.).`,
         const { url } = await storagePut(key, buffer, input.mimeType);
 
         const prompts: Record<string, string> = {
+          flightTicket: `You are a flight ticket/boarding pass information extractor. Analyze this image and extract:
+- passengerName: passenger full name (English, LAST FIRST format)
+- passportNumber: passport number if visible
+- nationality: nationality code (e.g. KOR, USA)
+- outboundAirline: airline name for outbound flight
+- outboundFlightNo: flight number (e.g. KE441)
+- outboundDepartureAirport: departure airport full name
+- outboundDepartureCode: departure airport IATA code (e.g. ICN)
+- outboundArrivalAirport: arrival airport full name
+- outboundArrivalCode: arrival airport IATA code (e.g. HAN)
+- outboundDepartureDate: departure date (YYYY-MM-DD)
+- outboundDepartureTime: departure time (HH:MM)
+- outboundArrivalDate: arrival date (YYYY-MM-DD)
+- outboundArrivalTime: arrival time (HH:MM)
+- outboundSeatClass: seat class (Economy/Business/First)
+- outboundSeatNumber: seat number if visible
+- returnAirline: return flight airline if visible
+- returnFlightNo: return flight number if visible
+- returnDepartureAirport: return departure airport
+- returnDepartureCode: return departure IATA code
+- returnArrivalAirport: return arrival airport
+- returnArrivalCode: return arrival IATA code
+- returnDepartureDate: return departure date (YYYY-MM-DD)
+- returnDepartureTime: return departure time (HH:MM)
+- returnArrivalDate: return arrival date (YYYY-MM-DD)
+- returnArrivalTime: return arrival time (HH:MM)
+- bookingReference: PNR/booking reference code
+- ticketNumber: ticket number (e.g. 180-1234567890)
+Extract ALL visible information. Return ONLY valid JSON.`,
           vehicle: `You are a vehicle information extractor. Analyze this image and extract:
 - vehicleName: vehicle model/name (e.g. "Toyota Alphard", "Grab Car")
-- vehiclePlateNumber: license plate number
+- vehiclePlateNumber: license plate number (any format - Korean, Vietnamese, etc.)
 - vehicleColor: vehicle color
-- vehicleType: vehicle type (sedan, SUV, van, bus, etc.)
+- vehicleType: vehicle type (sedan, SUV, van, bus, minibus, etc.)
 - vehicleCapacity: estimated passenger capacity (number)
-- driverName: driver name if visible
-- driverPhone: driver phone if visible
+- driverName: driver name if visible on any sign/card
+- driverPhone: driver phone number if visible
+- pickupLocation: pickup location if visible (airport terminal, hotel name, address, landmark)
+- pickupTime: pickup time if visible (ISO format YYYY-MM-DDTHH:mm)
+- pickupNotes: any additional notes about pickup (meeting point details, sign text, etc.)
+If the image is a schedule/timetable showing pickup times, extract ALL pickup entries as an array in "pickupSchedule": [{vehicleName, pickupTime, pickupLocation, passengers}]
 Return ONLY valid JSON.`,
           accommodation: `You are a hotel/accommodation information extractor. Analyze this image and extract:
 - hotelName: hotel or accommodation name
@@ -7630,12 +7685,42 @@ Return ONLY valid JSON.`,
     analyzePrompt: adminProcedure
       .input(z.object({
         prompt: z.string().min(1),
-        context: z.enum(["vehicle", "accommodation", "event", "itinerary", "channel"]),
+        context: z.enum(["vehicle", "accommodation", "event", "itinerary", "channel", "flightTicket"]),
       }))
       .mutation(async ({ input }) => {
         const prompts: Record<string, string> = {
+          flightTicket: `Parse this flight ticket/boarding pass/e-ticket image and return JSON:
+- passengerName: passenger full name (English, LAST FIRST format)
+- passportNumber: passport number if visible
+- nationality: nationality code (e.g. KOR, USA)
+- outboundAirline: airline name for outbound flight
+- outboundFlightNo: flight number (e.g. KE441)
+- outboundDepartureAirport: departure airport full name
+- outboundDepartureCode: departure airport IATA code (e.g. ICN)
+- outboundArrivalAirport: arrival airport full name
+- outboundArrivalCode: arrival airport IATA code (e.g. HAN)
+- outboundDepartureDate: departure date (YYYY-MM-DD)
+- outboundDepartureTime: departure time (HH:MM)
+- outboundArrivalDate: arrival date (YYYY-MM-DD)
+- outboundArrivalTime: arrival time (HH:MM)
+- outboundSeatClass: seat class (Economy/Business/First)
+- outboundSeatNumber: seat number if visible
+- returnAirline: return flight airline if visible
+- returnFlightNo: return flight number if visible
+- returnDepartureAirport: return departure airport
+- returnDepartureCode: return departure IATA code
+- returnArrivalAirport: return arrival airport
+- returnArrivalCode: return arrival IATA code
+- returnDepartureDate: return departure date (YYYY-MM-DD)
+- returnDepartureTime: return departure time (HH:MM)
+- returnArrivalDate: return arrival date (YYYY-MM-DD)
+- returnArrivalTime: return arrival time (HH:MM)
+- bookingReference: PNR/booking reference code
+- ticketNumber: ticket number (e.g. 180-1234567890)
+Extract ALL visible information. Return ONLY valid JSON.`,
           vehicle: `Parse this vehicle/pickup information and return JSON:
-- vehicleName, vehiclePlateNumber, vehicleColor, vehicleType, vehicleCapacity (number), driverName, driverPhone, pickupLocation, pickupTime (ISO format)
+- vehicleName, vehiclePlateNumber, vehicleColor, vehicleType, vehicleCapacity (number), driverName, driverPhone, pickupLocation, pickupTime (ISO format), pickupNotes
+If the text contains a schedule/timetable with multiple pickup entries, return "pickupSchedule": [{vehicleName, pickupTime, pickupLocation, passengers}]
 Return ONLY valid JSON.`,
           accommodation: `Parse this accommodation information and return JSON:
 - hotelName, roomNumber, roomType (single/double/twin/suite), floorNumber, checkIn (ISO), checkOut (ISO), address, notes

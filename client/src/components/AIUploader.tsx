@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Upload, Sparkles, Camera, FileText, Loader2, X, Image as ImageIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-type AIContext = "vehicle" | "accommodation" | "event" | "itinerary" | "channel";
+type AIContext = "vehicle" | "accommodation" | "event" | "itinerary" | "channel" | "flightTicket";
 
 interface AIUploaderProps {
   context: AIContext;
@@ -32,6 +32,7 @@ export default function AIUploader({ context, onExtracted, className = "", compa
     event: t("aiUploader.event", "이벤트"),
     itinerary: t("aiUploader.itinerary", "여정표"),
     channel: t("aiUploader.channel", "소통채널"),
+    flightTicket: t("aiUploader.flightTicket", "항공권"),
   };
 
   const handleFileSelect = useCallback(async (file: File) => {
@@ -269,6 +270,7 @@ function getPlaceholder(context: AIContext, t: any): string {
     event: t("aiUploader.eventPlaceholder", "예: 4/15 09:00 환영 만찬 롯데호텔 2층 볼룸, 4/16 10:00 비즈니스 미팅 회의실A, 4/16 19:00 저녁식사 레스토랑"),
     itinerary: t("aiUploader.itineraryPlaceholder", "예: 김철수 베트남 여정표, KE461 인천→하노이 4/15 09:00, 롯데호텔 하노이 1205호 4/15-4/18, 귀국편 KE462 하노이→인천 4/18 15:00"),
     channel: t("aiUploader.channelPlaceholder", "예: 두바이 공항 픽업 채널, 기사 홍길동 010-1234-5678, 픽업 기사와 실시간 소통"),
+    flightTicket: t("aiUploader.flightTicketPlaceholder", "예: 김철수 KE441 인천→하노이 2025-05-10 09:00, 좌석 25A 이코노미, 예약번호 ABC123, 귀국편 KE442 하노이→인천 5/13 14:00"),
   };
   return placeholders[context];
 }

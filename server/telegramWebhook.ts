@@ -97,6 +97,8 @@ async function processNaturalLanguageCommand(text: string, imageUrl?: string): P
 10. SEND_NOTICE - 공지 발송
 11. TRAVEL_INFO - 여행 정보 파싱 (항공편, 호텔, 일정 등)
 12. OCR_PASSPORT - 여권/항공권 이미지 OCR 분석
+15. CREATE_FLIGHT_TICKET - 항공권 생성 (이미지에서 항공권 정보 추출하여 자동 생성)
+16. CREATE_PICKUP - 픽업 차량 등록 (이미지/텍스트에서 차량번호, 기사, 픽업장소 추출)
 13. HELP - 도움말
 14. UNKNOWN - 알 수 없는 명령
 
@@ -122,7 +124,12 @@ async function processNaturalLanguageCommand(text: string, imageUrl?: string): P
 - 항공권 이미지: 편명, 출발/도착 공항, 시간, 탑승자명 추출
 - 여권 이미지: 이름, 여권번호, 생년월일, 성별, 국적, 만료일 추출
 - 단체예약 가격표: 총액, 인원수, 객단가, 통화 추출
-- 불확실한 경우 확인 질문을 response에 포함`,
+- 불확실한 경우 확인 질문을 response에 포함
+- 항공권 이미지와 함께 "항공권 등록" "티켓 생성" 등의 메시지가 오면 CREATE_FLIGHT_TICKET으로 분류
+- 차량 사진이나 "픽업 등록" "차량번호" 등의 메시지가 오면 CREATE_PICKUP으로 분류
+- CREATE_FLIGHT_TICKET params: { passengerName, passportNumber, nationality, outboundAirline, outboundFlightNo, outboundDepartureCode, outboundArrivalCode, outboundDepartureDate, outboundDepartureTime, returnAirline, returnFlightNo, returnDepartureCode, returnArrivalCode, returnDepartureDate, returnDepartureTime, bookingReference, ticketNumber }
+- CREATE_PICKUP params: { vehicleName, vehiclePlateNumber, vehicleColor, vehicleType, vehicleCapacity, driverName, driverPhone, pickupLocation, pickupTime }
+`,
       },
     ];
 
@@ -330,6 +337,64 @@ async function executeCommand(cmd: CommandResult): Promise<string> {
           ocrResponse += `\n\n📋 행사 배정을 선택하세요:`;
         }
         return ocrResponse + "\n\n📸 이미지가 백오피스에 저장되었습니다.";
+      }
+      case "CREATE_FLIGHT_TICKET": {
+        try {
+          const d = cmd.data || {};
+          const { createFlightTicket } = await import("./db");
+          const ticketId = await createFlightTicket({
+            passengerName: d.passengerName || "Unknown",
+            passportNumber: d.passportNumber,
+            nationality: d.nationality,
+            outboundAirline: d.outboundAirline,
+            outboundFlightNo: d.outboundFlightNo,
+            outboundDepartureAirport: d.outboundDepartureAirport,
+            outboundDepartureCode: d.outboundDepartureCode,
+            outboundArrivalAirport: d.outboundArrivalAirport,
+            outboundArrivalCode: d.outboundArrivalCode,
+            outboundDepartureDate: d.outboundDepartureDate,
+            outboundDepartureTime: d.outboundDepartureTime,
+            outboundArrivalDate: d.outboundArrivalDate,
+            outboundArrivalTime: d.outboundArrivalTime,
+            returnAirline: d.returnAirline,
+            returnFlightNo: d.returnFlightNo,
+            returnDepartureAirport: d.returnDepartureAirport,
+            returnDepartureCode: d.returnDepartureCode,
+            returnArrivalAirport: d.returnArrivalAirport,
+            returnArrivalCode: d.returnArrivalCode,
+            returnDepartureDate: d.returnDepartureDate,
+            returnDepartureTime: d.returnDepartureTime,
+            returnArrivalDate: d.returnArrivalDate,
+            returnArrivalTime: d.returnArrivalTime,
+            bookingReference: d.bookingReference,
+            ticketNumber: d.ticketNumber,
+            status: "active",
+          } as any);
+          return `✅ 항공권 자동 생성 완료!\n\n🎫 ID: ${ticketId}\n👤 ${d.passengerName || "Unknown"}\n✈️ ${d.outboundFlightNo || ""} ${d.outboundDepartureCode || ""}→${d.outboundArrivalCode || ""}\n📅 ${d.outboundDepartureDate || ""} ${d.outboundDepartureTime || ""}\n🔙 ${d.returnFlightNo || "미정"} ${d.returnDepartureDate || ""}`;
+        } catch (e: any) {
+          return `❌ 항공권 생성 실패: ${e.message}`;
+        }
+      }
+      case "CREATE_PICKUP": {
+        try {
+          const d = cmd.data || {};
+          const { createPickupAssignment } = await import("./db");
+          const pickupId = await createPickupAssignment({
+            vehicleName: d.vehicleName || d.vehicleType || "차량",
+            vehiclePlateNumber: d.vehiclePlateNumber,
+            vehicleColor: d.vehicleColor,
+            vehicleType: d.vehicleType,
+            vehicleCapacity: d.vehicleCapacity || 4,
+            driverName: d.driverName,
+            driverPhone: d.driverPhone,
+            pickupLocation: d.pickupLocation,
+            pickupTime: d.pickupTime ? new Date(d.pickupTime) : undefined,
+            notes: d.notes,
+          } as any);
+          return `✅ 픽업 차량 등록 완료!\n\n🚗 ${d.vehicleName || d.vehicleType || "차량"}\n🔢 ${d.vehiclePlateNumber || "미정"}\n👤 기사: ${d.driverName || "미정"}\n📞 ${d.driverPhone || "미정"}\n📍 ${d.pickupLocation || "미정"}\n⏰ ${d.pickupTime || "미정"}`;
+        } catch (e: any) {
+          return `❌ 픽업 등록 실패: ${e.message}`;
+        }
       }
 
       case "TRAVEL_INFO": {
@@ -545,7 +610,9 @@ webhookRouter.post("/", async (req: Request, res: Response) => {
       // Update status based on execution
       if (commandResult.intent === "REGISTER_PARTICIPANTS" || 
           commandResult.intent === "ASSIGN_FLIGHT" || 
-          commandResult.intent === "ASSIGN_HOTEL") {
+          commandResult.intent === "ASSIGN_HOTEL" ||
+          commandResult.intent === "CREATE_FLIGHT_TICKET" ||
+          commandResult.intent === "CREATE_PICKUP") {
         await updateTelegramUpload(uploadId, { status: "applied" });
       }
 
@@ -553,7 +620,9 @@ webhookRouter.post("/", async (req: Request, res: Response) => {
       const notifType = commandResult.intent === "REGISTER_PARTICIPANTS" ? "success" :
         commandResult.intent === "ASSIGN_FLIGHT" ? "success" :
         commandResult.intent === "ASSIGN_HOTEL" ? "success" :
-        commandResult.intent === "OCR_PASSPORT" ? "warning" : "info";
+        commandResult.intent === "OCR_PASSPORT" ? "warning" :
+        commandResult.intent === "CREATE_FLIGHT_TICKET" ? "success" :
+        commandResult.intent === "CREATE_PICKUP" ? "success" : "info";
       await createTelegramNotification({
         type: notifType,
         title: `텔레그램: ${commandResult.action || commandResult.intent}`,
@@ -774,10 +843,10 @@ async function autoApplyOcrData(uploadId: number, botToken: string, chatId: stri
         airline: data.airline,
         departureAirport: data.departureAirport,
         arrivalAirport: data.arrivalAirport,
-        scheduledDeparture: data.departureTime ? new Date(data.departureTime) : undefined,
-        scheduledArrival: data.arrivalTime ? new Date(data.arrivalTime) : undefined,
+        scheduledDeparture: data.departureTime ? new Date(data.departureTime) : new Date(),
+        scheduledArrival: data.arrivalTime ? new Date(data.arrivalTime) : null,
         direction: "outbound",
-      });
+      } as any);
       await sendBotReply(botToken, chatId, `✈️ 항공편 자동 등록: ${data.flightNo} (${data.departureAirport} → ${data.arrivalAirport})`);
     }
   } catch (e) {
