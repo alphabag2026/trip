@@ -3314,6 +3314,72 @@ Return ONLY valid JSON, no markdown code blocks, no explanation.` },
       .mutation(async ({ ctx, input }) => {
         return db.checkPassportDuplicate(ctx.user.id, input.passportNumber, input.fullName, input.birthDate);
       }),
+    // 여권 목록 PDF 생성 (베트남 공안/크루즈/일반 형식)
+    generatePdf: adminProcedure
+      .input(z.object({
+        meetupId: z.number().optional(),
+        format: z.enum(["vietnam_police", "cruise", "generic"]).default("generic"),
+        title: z.string().optional(),
+        registrationIds: z.array(z.number()).optional(), // 특정 참가자만 선택
+      }))
+      .mutation(async ({ input }) => {
+        const { generatePassportPdf } = await import("./passportPdf");
+        const { storagePut } = await import("./storage");
+        // 참가자 목록 가져오기
+        let regs: any[];
+        if (input.registrationIds && input.registrationIds.length > 0) {
+          const allRegs = await db.getRegistrations({ meetupId: input.meetupId });
+          regs = allRegs.filter(r => input.registrationIds!.includes(r.id));
+        } else {
+          regs = await db.getRegistrations({ meetupId: input.meetupId });
+        }
+        // 여권 정보 가져오기 (userId 기반)
+        const entries = [];
+        for (let i = 0; i < regs.length; i++) {
+          const reg = regs[i];
+          let passportData: any = null;
+          // 1. passportOcrData에서 가져오기
+          if (reg.passportOcrData) {
+            passportData = typeof reg.passportOcrData === "string" ? JSON.parse(reg.passportOcrData) : reg.passportOcrData;
+          }
+          // 2. userId가 있으면 passport_info 테이블에서 가져오기
+          if (reg.userId) {
+            const pInfo = await db.getPassportInfo(reg.userId);
+            if (pInfo?.passportNumber) {
+              passportData = { ...passportData, ...pInfo };
+            }
+          }
+          entries.push({
+            stt: i + 1,
+            fullName: passportData?.fullName || reg.name || "",
+            passportNumber: passportData?.passportNumber || "",
+            birthYear: passportData?.dateOfBirth?.substring(0, 4) || passportData?.birthDate?.substring(0, 4) || "",
+            birthDate: passportData?.dateOfBirth || passportData?.birthDate || "",
+            gender: passportData?.gender || "",
+            nationality: passportData?.nationality || reg.nationality || "",
+            phone: reg.phone || "",
+            expiryDate: passportData?.expiryDate || "",
+          });
+        }
+        // 밋업 이름 가져오기
+        let meetupName = "";
+        if (input.meetupId) {
+          const meetup = await db.getMeetupById(input.meetupId);
+          meetupName = meetup?.title || "";
+        }
+        const pdfBuffer = await generatePassportPdf({
+          title: input.title || (input.format === "vietnam_police" ? "DANH SÁCH KHÁCH" : input.format === "cruise" ? "PASSENGER LIST" : "여권 정보 목록"),
+          format: input.format,
+          entries,
+          meetupName,
+          date: new Date().toISOString().slice(0, 10),
+        });
+        // S3에 업로드
+        const fileName = `passport-list-${input.format}-${Date.now()}.pdf`;
+        const key = `exports/${fileName}`;
+        const { url } = await storagePut(key, pdfBuffer, "application/pdf");
+        return { url, fileName, totalEntries: entries.length };
+      }),
   }),
 
   tripHistory: router({

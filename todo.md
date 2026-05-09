@@ -2818,3 +2818,12 @@
 - [x] 숙소 대시보드에 미배정 참가자를 방으로 드래그 앤 드롭 배정 UI (assignToRoom/removeFromRoom/moveToRoom API)
 - [x] 숙소 대시보드 상단에 참가자 이름 검색 기능 (배정 방 하이라이트 + 스크롤 이동)
 - [x] 전체 숙소 배정 현황 + 룸메이트 목록 엑셀 내보내기 기능 (CSV BOM 포함)
+
+## v6.56 - 숙소 대시보드 개선 + 여권 PDF 생성 + 텔레그램 여권 명령어
+- [x] 숙소 대시보드: 미배정 참가자 필터링 + 방 타입 필터
+- [x] 숙소 대시보드: 배정 해제 시 확인 팝업 (AlertDialog)
+- [x] 숙소 대시보드: 상단 배정 완료율 진행률 바 (Progress bar)
+- [x] 여권 PDF 생성: 베트남 공안 제출용 (DANH SÁCH KHÁCH 형식) - pdfkit
+- [x] 여권 PDF 생성: 크루즈 여행사 제출용 여권 목록 (PASSENGER LIST)
+- [x] 프론트엔드: 여권 PDF 다운로드 UI (행사별 참가자 선택, 3가지 형식)
+- [x] 텔레그램: 행사명으로 여권 PDF 생성 및 발송 명령어 (PASSPORT_PDF intent)

@@ -131,6 +131,9 @@ async function processNaturalLanguageCommand(text: string, imageUrl?: string): P
 - CREATE_PICKUP params: { vehicleName, vehiclePlateNumber, vehicleColor, vehicleType, vehicleCapacity, driverName, driverPhone, pickupLocation, pickupTime }
 - ASSIGN_HOTEL params: { meetupId, hotels: [{ hotelName, roomNumber, roomType(single/double/twin/suite/family/dormitory), accommodationType(hotel/villa/apartment/resort/pension/other), assignedNames: ["배정자이름들"], checkIn, checkOut, notes }] }
 - "별장 배정" "숙소 등록" "방 배치" 등의 메시지가 오면 ASSIGN_HOTEL로 분류하고 hotels 배열로 파싱
+- PASSPORT_PDF params: { meetupTitle?: string, format: "vietnam_police" | "cruise" | "generic" }
+- "여권 PDF" "공안 제출" "크루즈 명단" "패신저 리스트" "여권 목록 출력" 등의 메시지가 오면 PASSPORT_PDF로 분류
+- 행사명이 언급되면 meetupTitle에 넣고, 베트남/공안 관련이면 vietnam_police, 크루즈/여행사면 cruise, 그 외 generic
 `,
       },
     ];
@@ -414,6 +417,68 @@ async function executeCommand(cmd: CommandResult): Promise<string> {
         }
       }
 
+      case "PASSPORT_PDF": {
+        try {
+          const d = cmd.data || {};
+          const meetupTitle = d.meetupTitle;
+          const format = d.format || "generic";
+          // Find meetup by title if provided
+          let meetupId: number | undefined;
+          if (meetupTitle) {
+            const meetups = await getMeetups();
+            const found = meetups?.find((m: any) => m.title?.toLowerCase().includes(meetupTitle.toLowerCase()));
+            if (found) meetupId = found.id;
+          }
+          // Get registrations
+          const dbInstance = await getDbForWebhook();
+          if (!dbInstance) return "⚠️ DB 연결 오류";
+          const { registrations, passportInfo } = await import("../drizzle/schema");
+          const { eq, and } = await import("drizzle-orm");
+          let conditions: any[] = [];
+          if (meetupId) conditions.push(eq(registrations.meetupId, meetupId));
+          const regs = await dbInstance.select().from(registrations).where(conditions.length ? and(...conditions) : undefined);
+          if (regs.length === 0) return `❌ ${meetupTitle ? `"${meetupTitle}" 행사의` : ""} 참가자가 없습니다.`;
+          // Build passport entries
+          const entries = [];
+          for (let i = 0; i < regs.length; i++) {
+            const reg = regs[i];
+            let passportData: any = reg.passportOcrData ? (typeof reg.passportOcrData === "string" ? JSON.parse(reg.passportOcrData as string) : reg.passportOcrData) : null;
+            if (reg.userId) {
+              const pRows = await dbInstance.select().from(passportInfo).where(eq(passportInfo.userId, reg.userId));
+              if (pRows[0]?.passportNumber) passportData = { ...passportData, ...pRows[0] };
+            }
+            entries.push({
+              stt: i + 1,
+              fullName: passportData?.fullName || reg.name || "",
+              passportNumber: passportData?.passportNumber || "",
+              birthYear: passportData?.dateOfBirth?.substring(0, 4) || passportData?.birthDate?.substring(0, 4) || "",
+              birthDate: passportData?.dateOfBirth || passportData?.birthDate || "",
+              gender: passportData?.gender || "",
+              nationality: passportData?.nationality || reg.nationality || "",
+              phone: reg.phone || "",
+              expiryDate: passportData?.expiryDate || "",
+            });
+          }
+          // Generate PDF
+          const { generatePassportPdf } = await import("./passportPdf");
+          const { storagePut } = await import("./storage");
+          const formatLabels: Record<string, string> = { vietnam_police: "DANH SÁCH KHÁCH", cruise: "PASSENGER LIST", generic: "여권 정보 목록" };
+          const pdfBuffer = await generatePassportPdf({
+            title: formatLabels[format] || "여권 정보 목록",
+            format: format as any,
+            entries,
+            meetupName: meetupTitle || "",
+            date: new Date().toISOString().slice(0, 10),
+          });
+          const fileName = `passport-${format}-${Date.now()}.pdf`;
+          const key = `exports/${fileName}`;
+          const { url } = await storagePut(key, pdfBuffer, "application/pdf");
+          return `✅ 여권 PDF 생성 완료!\n\n📄 형식: ${format === "vietnam_police" ? "베트남 공안용" : format === "cruise" ? "크루즈 여행사용" : "일반"}\n👥 인원: ${entries.length}명\n${meetupTitle ? `🎯 행사: ${meetupTitle}\n` : ""}\n📥 다운로드: ${url}`;
+        } catch (e) {
+          console.error("[TelegramWebhook] PASSPORT_PDF error:", e);
+          return "⚠️ PDF 생성 중 오류가 발생했습니다.";
+        }
+      }
       case "TRAVEL_INFO": {
         return cmd.response;
       }

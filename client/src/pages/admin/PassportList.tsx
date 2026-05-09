@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Search, Download, Eye, Users, ShieldCheck, AlertTriangle, FileSpreadsheet } from "lucide-react";
+import { Search, Download, Eye, Users, ShieldCheck, AlertTriangle, FileSpreadsheet, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
@@ -69,13 +69,46 @@ export default function AdminPassportList() {
     return exp < sixMonths;
   };
 
+  const [pdfFormat, setPdfFormat] = useState<"vietnam_police" | "cruise" | "generic">("generic");
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+  const generatePdfMutation = trpc.passport.generatePdf.useMutation({
+    onSuccess: (data) => {
+      window.open(data.url, "_blank");
+      toast.success(`PDF 생성 완료 (${data.totalEntries}명)`);
+      setPdfGenerating(false);
+    },
+    onError: (e) => { toast.error(e.message); setPdfGenerating(false); },
+  });
+  const handleGeneratePdf = (format: "vietnam_police" | "cruise" | "generic") => {
+    setPdfGenerating(true);
+    generatePdfMutation.mutate({
+      meetupId: meetupFilter !== "all" ? Number(meetupFilter) : undefined,
+      format,
+      registrationIds: filtered.map((p: any) => p.regId).filter(Boolean),
+    });
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold">{t("admin.passportList.t1", "출장자 여권 명단")}</h1>
-        <Button onClick={handleExportCSV} variant="outline" size="sm">
-          <FileSpreadsheet className="w-4 h-4 mr-2" /> {t("admin.passportList.t2", "CSV 내보내기")}
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button onClick={handleExportCSV} variant="outline" size="sm">
+            <FileSpreadsheet className="w-4 h-4 mr-2" /> {t("admin.passportList.t2", "CSV 내보내기")}
+          </Button>
+          <Button onClick={() => handleGeneratePdf("vietnam_police")} variant="outline" size="sm" disabled={pdfGenerating}>
+            {pdfGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+            베트남 공안용 PDF
+          </Button>
+          <Button onClick={() => handleGeneratePdf("cruise")} variant="outline" size="sm" disabled={pdfGenerating}>
+            {pdfGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+            크루즈용 PDF
+          </Button>
+          <Button onClick={() => handleGeneratePdf("generic")} variant="outline" size="sm" disabled={pdfGenerating}>
+            {pdfGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+            일반 PDF
+          </Button>
+        </div>
       </div>
 
       {/* 통계 카드 */}
