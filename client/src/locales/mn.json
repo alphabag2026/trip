@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "AI хуваарь үүсгэгч",
       "checkinDashboard": "QR бүртгэл",
       "checkinReport": "Бүртгэлийн статистик",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "Хуваарь PDF"
     },
     "survey": {
       "addQuestion": "Add Question",

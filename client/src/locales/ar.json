@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "مولد الجداول بالذكاء الاصطناعي",
       "checkinDashboard": "تسجيل الوصول بـ QR",
       "checkinReport": "إحصائيات تسجيل الوصول",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "جدول PDF"
     },
     "survey": {
       "addQuestion": "Add Question",

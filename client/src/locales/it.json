@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "Programmazione AI Gen",
       "checkinDashboard": "Check-in QR",
       "checkinReport": "Statistiche del check-in",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "PDF Programma"
     },
     "survey": {
       "addQuestion": "Add Question",

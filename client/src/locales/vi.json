@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "AI Schedule Gen",
       "checkinDashboard": "Đăng ký QR",
       "checkinReport": "Thống kê đăng ký",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "PDF Lịch trình"
     },
     "survey": {
       "addQuestion": "Add Question",

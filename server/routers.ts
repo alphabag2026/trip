@@ -10779,6 +10779,65 @@ Rules:
         return { sent, failed, total: checkins.length };
       }),
   }),
+  // ══ v6.48 - AI 종합 스케줄표 PDF 생성 ══
+  schedulePdf: router({
+    generate: adminProcedure
+      .input(z.object({
+        meetupId: z.number(),
+        rawText: z.string().optional(),
+        preferences: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const meetup = await db.getMeetupById(input.meetupId);
+        if (!meetup) throw new TRPCError({ code: "NOT_FOUND", message: "밋업을 찾을 수 없습니다" });
+        const registrations = await db.getRegistrations({ meetupId: input.meetupId });
+        const flights = await db.getFlightSchedules({ meetupId: input.meetupId });
+        const pickups = await db.getPickupAssignments(input.meetupId);
+        const accommodations = await db.getAccommodations(input.meetupId);
+        const scheduleEvents = await db.getScheduleEvents(input.meetupId);
+        const channels = await db.getChannels(input.meetupId);
+        const contextData = {
+          meetup: { title: meetup.title, location: meetup.location, type: meetup.type, start: meetup.scheduleStart, end: meetup.scheduleEnd },
+          totalParticipants: registrations.length,
+          participants: registrations.map((r: any) => ({ name: r.name, phone: r.phone, type: r.type, country: r.country, hotelRoom: r.hotelRoomNumber, hotelFloor: r.hotelFloor, mealPreference: r.mealPreference, departureTime: r.departureTimeSlot })),
+          flights: flights.map((f: any) => ({ name: f.passengerName || f.registrationName, airline: f.airline, flightNo: f.flightNumber || f.flightNo, departure: f.departureAirport || f.origin, arrival: f.arrivalAirport || f.destination, departureTime: f.scheduledDeparture || f.departureTime, arrivalTime: f.scheduledArrival || f.arrivalTime, direction: f.direction })),
+          pickups: pickups.map((p: any) => ({ vehicleName: p.vehicleName, driverName: p.driverName, driverPhone: p.driverPhone, capacity: p.capacity, assignedCount: p.assignedCount, pickupLocation: p.pickupLocation })),
+          accommodations: accommodations.map((a: any) => ({ roomNumber: a.roomNumber, roomType: a.roomType, floor: a.floor, guest1: a.guest1Name, guest2: a.guest2Name })),
+          scheduleEvents: scheduleEvents.map((s: any) => ({ title: s.title, location: s.location, time: s.eventTime, endTime: s.endTime, description: s.description })),
+          channels: channels.map((c: any) => ({ name: c.channelName, role: c.role })),
+        };
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: `You are a professional meetup schedule report generator. Based on the provided data and optional raw text input, generate a comprehensive structured schedule report in Korean.\nReturn ONLY valid JSON with this structure:\n{\n  "title": "밋업 제목",\n  "period": "기간",\n  "location": "장소",\n  "summary": { "totalParticipants": number, "totalFlights": number, "totalVehicles": number, "totalRooms": number },\n  "departureInfo": [{ "airport": "", "count": number, "flights": [{ "flightNo": "", "time": "", "passengers": [] }] }],\n  "pickupPlan": [{ "vehicle": "", "driver": "", "driverPhone": "", "capacity": number, "passengers": [], "pickupLocation": "", "pickupTime": "" }],\n  "dailySchedule": [{ "date": "YYYY-MM-DD", "dayLabel": "Day 1", "events": [{ "time": "HH:MM", "endTime": "HH:MM", "title": "", "location": "", "description": "", "staff": "" }] }],\n  "staffList": [{ "name": "", "role": "", "phone": "", "responsibility": "" }],\n  "roomAssignments": [{ "room": "", "floor": "", "guests": [] }],\n  "mealPlan": [{ "date": "", "meals": [{ "type": "조식/중식/석식", "location": "", "time": "", "note": "" }] }],\n  "contacts": [{ "name": "", "role": "", "phone": "" }],\n  "notes": ""\n}\nRules: Use Korean. If data is missing, make reasonable assumptions or leave empty. Group flights by airport. Create daily schedule from events. Include meal times.` },
+            { role: "user", content: `데이터:\n${JSON.stringify(contextData, null, 2)}\n\n${input.rawText ? `추가 입력:\n${input.rawText}` : ""}\n${input.preferences ? `선호사항: ${input.preferences}` : ""}` },
+          ],
+          response_format: { type: "json_object" },
+        });
+        const content = response.choices[0]?.message?.content;
+        if (typeof content === "string") {
+          try { return { success: true, data: JSON.parse(content) }; }
+          catch { return { success: false, data: null, error: "AI 응답 파싱 실패" }; }
+        }
+        return { success: false, data: null, error: "AI 응답 없음" };
+      }),
+    generateFromText: adminProcedure
+      .input(z.object({ rawText: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: `You are a professional meetup schedule report generator. The user will provide raw text about a trip/meetup schedule. Parse it and generate a comprehensive structured schedule report in Korean.\nReturn ONLY valid JSON with this structure:\n{\n  "title": "",\n  "period": "",\n  "location": "",\n  "summary": { "totalParticipants": 0, "totalFlights": 0, "totalVehicles": 0, "totalRooms": 0 },\n  "departureInfo": [{ "airport": "", "count": 0, "flights": [{ "flightNo": "", "time": "", "passengers": [] }] }],\n  "pickupPlan": [{ "vehicle": "", "driver": "", "driverPhone": "", "capacity": 0, "passengers": [], "pickupLocation": "", "pickupTime": "" }],\n  "dailySchedule": [{ "date": "", "dayLabel": "", "events": [{ "time": "", "endTime": "", "title": "", "location": "", "description": "", "staff": "" }] }],\n  "staffList": [{ "name": "", "role": "", "phone": "", "responsibility": "" }],\n  "roomAssignments": [{ "room": "", "floor": "", "guests": [] }],\n  "mealPlan": [{ "date": "", "meals": [{ "type": "", "location": "", "time": "", "note": "" }] }],\n  "contacts": [{ "name": "", "role": "", "phone": "" }],\n  "notes": ""\n}\nRules: Use Korean. Parse all info from raw text. If info not provided, use reasonable defaults or empty arrays.` },
+            { role: "user", content: input.rawText },
+          ],
+          response_format: { type: "json_object" },
+        });
+        const content = response.choices[0]?.message?.content;
+        if (typeof content === "string") {
+          try { return { success: true, data: JSON.parse(content) }; }
+          catch { return { success: false, data: null, error: "AI 응답 파싱 실패" }; }
+        }
+        return { success: false, data: null, error: "AI 응답 없음" };
+      }),
+  }),
 });
 // ── Haversine 거리 계산 (미터) ─────────────────────────────
 function getDistanceFromLatLon(lat1: number, lon1: number, lat2: number, lon2: number): number {

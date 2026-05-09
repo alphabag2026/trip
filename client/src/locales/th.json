@@ -1831,7 +1831,8 @@
       "aiScheduleGenerator": "สร้างตารางเวลาด้วย AI",
       "checkinDashboard": "เช็คอินด้วย QR",
       "checkinReport": "สถิติการเช็คอิน",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "PDF ตารางเวลา"
     },
     "survey": {
       "addQuestion": "Add Question",

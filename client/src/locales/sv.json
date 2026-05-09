@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "AI Schemaläggare",
       "checkinDashboard": "QR-incheckning",
       "checkinReport": "Incheckningsstatistik",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "Schema-PDF"
     },
     "survey": {
       "addQuestion": "Add Question",

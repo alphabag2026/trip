@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "Penjana Jadual AI",
       "checkinDashboard": "Daftar Masuk QR",
       "checkinReport": "Statistik Daftar Masuk",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "PDF Jadual"
     },
     "survey": {
       "addQuestion": "Add Question",

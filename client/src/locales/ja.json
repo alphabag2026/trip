@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "AIスケジュール生成",
       "checkinDashboard": "QRチェックイン",
       "checkinReport": "チェックイン統計",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "スケジュールPDF"
     },
     "survey": {
       "addQuestion": "Add Question",

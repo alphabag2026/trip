@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "Gen Jadwal AI",
       "checkinDashboard": "Check-in QR",
       "checkinReport": "Statistik Check-in",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "PDF Jadwal"
     },
     "survey": {
       "addQuestion": "Add Question",

@@ -193,6 +193,9 @@ export default function TelegramUploads() {
           <TabsTrigger value="settings" className="gap-1">
             <Settings className="h-4 w-4" /> 봇 설정
           </TabsTrigger>
+          <TabsTrigger value="guide" className="gap-1">
+            <HelpCircle className="h-4 w-4" /> 등록 가이드
+          </TabsTrigger>
         </TabsList>
 
         {/* ═══ Notifications Tab ═══ */}
@@ -598,6 +601,130 @@ export default function TelegramUploads() {
 참가자:
 김철수 M99731754 KOR 1959-02-10 남 만료 2027-06-28`}
                 </pre>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ═══ Guide Tab ═══ */}
+        <TabsContent value="guide" className="space-y-4">
+          <Card className="bg-card/50">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Bot className="h-5 w-5 text-blue-400" />
+                텔레그램 봇 등록 가이드
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Step 1 */}
+              <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-xl p-5 border border-blue-500/20">
+                <h3 className="font-bold text-base mb-3 flex items-center gap-2">
+                  <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">1</span>
+                  텔레그램에서 봇 생성
+                </h3>
+                <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+                  <li>텔레그램 앱을 열고 검색창에 <code className="bg-background/80 px-1.5 py-0.5 rounded text-blue-400">@BotFather</code> 를 검색합니다</li>
+                  <li>BotFather와 대화를 시작하고 <code className="bg-background/80 px-1.5 py-0.5 rounded text-blue-400">/newbot</code> 명령어를 입력합니다</li>
+                  <li>봇 이름을 입력합니다 (예: <span className="text-foreground">Alpha Trip Bot</span>)</li>
+                  <li>봇 username을 입력합니다 (예: <span className="text-foreground">alphatrip_bot</span>) — 반드시 <code className="text-amber-400">_bot</code>으로 끝나야 합니다</li>
+                  <li>BotFather가 <span className="text-green-400 font-medium">API Token</span>을 발급해줍니다</li>
+                </ol>
+                <div className="mt-3 bg-background/50 rounded-lg p-3 text-xs font-mono text-muted-foreground">
+                  토큰 형태 예시: <span className="text-green-400">8111456656:AAGpeiLmG2GW2aXBqg3Q_HTTWw4GMcFir4U</span>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-5 border border-purple-500/20">
+                <h3 className="font-bold text-base mb-3 flex items-center gap-2">
+                  <span className="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">2</span>
+                  봇 토큰 등록
+                </h3>
+                <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+                  <li>위의 <span className="text-foreground font-medium">"봇 설정"</span> 탭으로 이동합니다</li>
+                  <li><span className="text-foreground font-medium">"변경"</span> 버튼을 클릭합니다</li>
+                  <li>BotFather에서 발급받은 토큰을 붙여넣기 합니다</li>
+                  <li>봇 활성화 스위치를 켭니다</li>
+                </ol>
+              </div>
+
+              {/* Step 3 */}
+              <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-5 border border-green-500/20">
+                <h3 className="font-bold text-base mb-3 flex items-center gap-2">
+                  <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">3</span>
+                  관리자 텔레그램 ID 등록
+                </h3>
+                <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+                  <li>텔레그램에서 <code className="bg-background/80 px-1.5 py-0.5 rounded text-blue-400">@userinfobot</code> 을 검색합니다</li>
+                  <li><code className="bg-background/80 px-1.5 py-0.5 rounded text-blue-400">/start</code> 를 보내면 본인의 숫자 ID가 표시됩니다</li>
+                  <li>위의 <span className="text-foreground font-medium">"관리자 ID"</span> 탭으로 이동합니다</li>
+                  <li>본인의 텔레그램 숫자 ID를 등록합니다</li>
+                </ol>
+                <div className="mt-3 bg-background/50 rounded-lg p-3 text-xs">
+                  <span className="text-muted-foreground">ID 예시:</span> <span className="text-green-400 font-mono">8250367913</span>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-xl p-5 border border-amber-500/20">
+                <h3 className="font-bold text-base mb-3 flex items-center gap-2">
+                  <span className="bg-amber-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">4</span>
+                  Webhook 설정 (자동)
+                </h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  봇 토큰을 등록하면 Webhook이 자동으로 설정됩니다. 수동으로 설정하려면:
+                </p>
+                <div className="bg-background/50 rounded-lg p-3 text-xs font-mono break-all">
+                  <span className="text-muted-foreground">URL:</span> <span className="text-amber-400">{window.location.origin}/api/telegram/webhook</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  또는 브라우저에서 아래 URL을 방문하세요:
+                </p>
+                <div className="bg-background/50 rounded-lg p-3 text-xs font-mono break-all mt-1">
+                  <span className="text-cyan-400">https://api.telegram.org/bot[토큰]/setWebhook?url={window.location.origin}/api/telegram/webhook</span>
+                </div>
+              </div>
+
+              {/* Step 5 */}
+              <div className="bg-gradient-to-r from-teal-500/10 to-cyan-500/10 rounded-xl p-5 border border-teal-500/20">
+                <h3 className="font-bold text-base mb-3 flex items-center gap-2">
+                  <span className="bg-teal-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">5</span>
+                  사용 시작
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  모든 설정이 완료되면 텔레그램에서 봇에게 메시지를 보내 테스트합니다:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                  <div className="bg-background/50 rounded-lg p-3">
+                    <span className="text-muted-foreground">텍스트 명령:</span>
+                    <p className="text-foreground mt-1 font-mono text-xs">"방콕 밋업 참가자 목록 보여줘"</p>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-3">
+                    <span className="text-muted-foreground">이미지 전송:</span>
+                    <p className="text-foreground mt-1 font-mono text-xs">여권/항공권 사진 → 자동 OCR</p>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-3">
+                    <span className="text-muted-foreground">참가자 등록:</span>
+                    <p className="text-foreground mt-1 font-mono text-xs">"홍길동 010-1234-5678 방콕 밋업 등록"</p>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-3">
+                    <span className="text-muted-foreground">통계 조회:</span>
+                    <p className="text-foreground mt-1 font-mono text-xs">"현재 밋업 현황 알려줘"</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tips */}
+              <div className="bg-yellow-500/10 rounded-xl p-4 border border-yellow-500/20">
+                <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-400" /> 주의사항
+                </h4>
+                <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                  <li>봇 토큰은 절대 외부에 공유하지 마세요</li>
+                  <li>관리자 ID에 등록된 사용자만 봇 명령을 사용할 수 있습니다</li>
+                  <li>OCR 결과는 백오피스에서 최종 확인 후 적용됩니다</li>
+                  <li>봇이 응답하지 않으면 Webhook URL이 올바른지 확인하세요</li>
+                </ul>
               </div>
             </CardContent>
           </Card>

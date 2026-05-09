@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "AI 日程生成器",
       "checkinDashboard": "二维码签到",
       "checkinReport": "签到统计",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "日程PDF"
     },
     "survey": {
       "addQuestion": "Add Question",

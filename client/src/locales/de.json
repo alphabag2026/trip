@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "AI-Zeitplangenerator",
       "checkinDashboard": "QR-Check-in",
       "checkinReport": "Check-in-Statistiken",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "Zeitplan-PDF"
     },
     "survey": {
       "addQuestion": "Add Question",

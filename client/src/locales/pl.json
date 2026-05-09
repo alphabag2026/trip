@@ -1822,7 +1822,8 @@
       "aiScheduleGenerator": "Generator harmonogramu AI",
       "checkinDashboard": "Odprawa QR",
       "checkinReport": "Statystyki odpraw",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "PDF Harmonogramu"
     },
     "survey": {
       "addQuestion": "Add Question",

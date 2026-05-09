@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO telegram_config (botToken, chatId, enabled, allowedTelegramIds, webhookUrl) VALUES ('8111456656:AAGpeiLmG2GW2aXBqg3Q_HTTWw4GMcFir4U', '', true, '[]', 'https://alphatrip.org/api/telegram/webhook') ON DUPLICATE KEY UPDATE botToken = '8111456656:AAGpeiLmG2GW2aXBqg3Q_HTTWw4GMcFir4U', webhookUrl = 'https://alphatrip.org/api/telegram/webhook', enabled = true;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute INSERT INTO telegram_config (botToken, chatId, enabled, allowedTelegramIds, webhookUrl) VALUES ('8111456656:AAGpeiLmG2GW2aXBqg3Q_HTTWw4GMcFir4U', '', true, '[]', 'https://alphatrip.org/api/telegram/webhook') ON DUPLICATE KEY UPDATE botToken = '8111456656:AAGpeiLmG2GW2aXBqg3Q_HTTWw4GMcFir4U', webhookUrl = 'https://alphatrip.org/api/telegram/webhook', enabled = true;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2022
+}

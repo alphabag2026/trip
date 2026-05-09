@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "Генератор расписания ИИ",
       "checkinDashboard": "QR-регистрация",
       "checkinReport": "Статистика регистрации",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "PDF Расписания"
     },
     "survey": {
       "addQuestion": "Add Question",

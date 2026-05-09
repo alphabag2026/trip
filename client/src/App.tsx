@@ -127,6 +127,7 @@ const AdminAiScheduleGenerator = lazy(() => import("./pages/admin/AiScheduleGene
 const AdminCheckinDashboard = lazy(() => import("./pages/admin/CheckinDashboard"));
 const AdminCheckinReport = lazy(() => import("./pages/admin/CheckinReport"));
 const AdminImmigrationCards = lazy(() => import("./pages/admin/ImmigrationCards"));
+const AdminSchedulePdf = lazy(() => import("./pages/admin/SchedulePdf"));
 const CheckinScanner = lazy(() => import("./pages/CheckinScanner"));
 const MyQrCode = lazy(() => import("./pages/MyQrCode"));
 const KioskCheckin = lazy(() => import("./pages/KioskCheckin"));
@@ -196,6 +197,7 @@ function AdminRouter() {
           <Route path="/itineraries" component={AdminItineraries} />
           <Route path="/travel-info" component={AdminTravelInfo} />
           <Route path="/immigration-cards" component={AdminImmigrationCards} />
+          <Route path="/schedule-pdf" component={AdminSchedulePdf} />
           <Route path="/telegram" component={AdminTelegram} />
           <Route path="/search" component={AdminSearch} />
           <Route path="/flights" component={AdminFlights} />

@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "एआई शेड्यूल जेन",
       "checkinDashboard": "क्यूआर चेक-इन",
       "checkinReport": "चेक-इन आँकड़े",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "शेड्यूल PDF"
     },
     "survey": {
       "addQuestion": "Add Question",

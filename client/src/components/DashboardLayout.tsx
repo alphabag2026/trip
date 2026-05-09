@@ -153,6 +153,7 @@ const menuGroups: MenuGroup[] = [
       { icon: Upload, labelKey: "admin.sidebar.passportFlightUpload", path: "/passport-flight-upload", roles: ["all"] },
       { icon: BookOpen, labelKey: "admin.sidebar.promptRegister", path: "/prompt-register", roles: ["all"] },
       { icon: CalendarPlus, labelKey: "admin.sidebar.aiScheduleGenerator", path: "/ai-schedule-generator", roles: ["all"] },
+      { icon: FileText, labelKey: "admin.sidebar.schedulePdf", path: "/schedule-pdf", roles: ["all"] },
       { icon: QrCode, labelKey: "admin.sidebar.checkinDashboard", path: "/checkin-dashboard", roles: ["all"] },
       { icon: BarChart3, labelKey: "admin.sidebar.checkinReport", path: "/checkin-report", roles: ["all"] },
     ],

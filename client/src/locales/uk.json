@@ -1567,7 +1567,8 @@
       "passportOcr": "Сканування паспортів",
       "userManagement": "Управління користувачами",
       "settings": "Налаштування",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "PDF Розкладу"
     },
     "survey": {
       "addQuestion": "Add Question",

@@ -1489,7 +1489,8 @@
       "aiScheduleGenerator": "AI Schedule Gen",
       "checkinDashboard": "QR Check-in",
       "checkinReport": "Mga Istats ng Check-in",
-      "immigrationCards": "Immigration Cards"
+      "immigrationCards": "Immigration Cards",
+      "schedulePdf": "PDF ng Iskedyul"
     },
     "survey": {
       "addQuestion": "Add Question",
