@@ -1,9 +1,9 @@
 /**
- * Telegram Bot Webhook Endpoint
+ * Telegram Bot Webhook Endpoint - AI Natural Language Command System
  * 
  * Receives messages from Telegram Bot API via webhook
- * Automatically parses travel information using LLM
- * Stores uploads in telegram_uploads table for admin review
+ * Uses LLM to understand natural language commands and execute backoffice functions
+ * Supports: participant registration, meetup management, flight/hotel assignment, stats, etc.
  * 
  * Endpoint: POST /api/telegram/webhook
  * Setup:    POST /api/telegram/webhook/setup (via tRPC admin procedure)
@@ -17,6 +17,14 @@ import {
   getTelegramConfig,
   createTelegramUpload,
   updateTelegramUpload,
+  getMeetups,
+  getRegistrations,
+  createRegistration,
+  getFlightSchedules,
+  createFlightSchedule,
+  getAccommodations,
+  createAccommodation,
+  getTelegramUploadStats,
 } from "./db";
 
 const webhookRouter = Router();
@@ -25,7 +33,6 @@ const webhookRouter = Router();
 
 async function downloadTelegramFile(botToken: string, fileId: string): Promise<{ buffer: Buffer; filePath: string } | null> {
   try {
-    // Get file path from Telegram
     const fileRes = await fetch(`https://api.telegram.org/bot${botToken}/getFile`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -34,7 +41,6 @@ async function downloadTelegramFile(botToken: string, fileId: string): Promise<{
     const fileData = await fileRes.json() as any;
     if (!fileData.ok || !fileData.result?.file_path) return null;
 
-    // Download the file
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
     const downloadRes = await fetch(downloadUrl);
     if (!downloadRes.ok) return null;
@@ -60,35 +66,79 @@ function getMimeType(filePath: string): string {
   return mimeMap[ext] || "application/octet-stream";
 }
 
-// ── LLM Travel Info Parser ──────────────────────────────
+// ── AI Command Router ─────────────────────────────────────
 
-async function parseTravelInfoWithLLM(text: string, fileType: string) {
-  try {
-    const response = await invokeLLM({
-      messages: [
-        {
-          role: "system",
-          content: `You are a travel information parser. Analyze the given text and extract structured travel data.
-Return JSON with the following structure:
-{
-  "type": "flight" | "hotel" | "schedule" | "transfer" | "general" | "unknown",
-  "confidence": 0-100,
-  "summary": "brief Korean summary of the content",
-  "data": {
-    // For flight: flightNo, airline, departureAirport, arrivalAirport, departureTime (ISO), arrivalTime (ISO), terminal, gate, notes
-    // For hotel: hotelName, address, roomNumber, roomType, checkIn (ISO), checkOut (ISO), notes
-    // For schedule: title, location, eventTime (ISO), endTime (ISO), description
-    // For transfer: vehicleType, pickupLocation, pickupTime (ISO), driverName, driverPhone, notes
-    // For general/unknown: content, notes
-  }
+interface CommandResult {
+  intent: string;
+  action: string;
+  response: string;
+  data?: any;
+  shouldSave?: boolean;
 }
-Always respond in valid JSON only.`,
-        },
-        {
-          role: "user",
-          content: `Parse this travel information (source: ${fileType}):\n\n${text}`,
-        },
-      ],
+
+async function processNaturalLanguageCommand(text: string, imageUrl?: string): Promise<CommandResult> {
+  try {
+    const messages: any[] = [
+      {
+        role: "system",
+        content: `당신은 Meetup Travel 백오피스 AI 어시스턴트입니다. 사용자의 자연어 명령을 분석하여 적절한 작업을 실행합니다.
+
+사용 가능한 명령 카테고리:
+1. REGISTER_PARTICIPANTS - 참가자 등록 (이름, 여권번호, 항공편 정보 등)
+2. CREATE_MEETUP - 밋업 생성 (제목, 장소, 날짜, 국가 등)
+3. LIST_MEETUPS - 밋업 목록 조회
+4. LIST_PARTICIPANTS - 참가자 목록 조회 (밋업별, 상태별)
+5. ASSIGN_FLIGHT - 항공편 배정/등록
+6. ASSIGN_HOTEL - 숙소 배정/등록
+7. GET_STATS - 통계/현황 조회
+8. SEARCH - 검색 (참가자, 밋업, 항공편 등)
+9. UPDATE_STATUS - 상태 변경 (참가자 승인/거절 등)
+10. SEND_NOTICE - 공지 발송
+11. TRAVEL_INFO - 여행 정보 파싱 (항공편, 호텔, 일정 등)
+12. OCR_PASSPORT - 여권/항공권 이미지 OCR 분석
+13. HELP - 도움말
+14. UNKNOWN - 알 수 없는 명령
+
+응답 JSON 형식:
+{
+  "intent": "카테고리명",
+  "action": "구체적 실행 내용 설명",
+  "params": {
+    // 추출된 파라미터들
+  },
+  "response": "사용자에게 보여줄 한국어 응답 메시지",
+  "shouldSave": true/false (텔레그램 업로드로 저장할지)
+}
+
+규칙:
+- 항상 한국어로 응답
+- 참가자 등록 시: 이름, 여권번호, 생년월일, 성별, 국적, 여권만료일, 항공편, 예약번호 등을 추출
+- 밋업 관련: 제목, 장소, 시작일, 종료일, 초청국가 등을 추출
+- 프롬프트 형식 입력도 이해: "하롱베이 2140 Xplay 행사 박석봉팀 5월 10일부터 5월 13일까지"
+- 여러 참가자 정보가 한번에 올 수 있음 (줄바꿈으로 구분)
+- 이미지가 함께 온 경우 OCR_PASSPORT로 분류
+- 불확실한 경우 확인 질문을 response에 포함`,
+      },
+    ];
+
+    // Build user message content
+    if (imageUrl) {
+      messages.push({
+        role: "user",
+        content: [
+          { type: "text", text: text || "이 이미지를 분석해주세요" },
+          { type: "image_url", image_url: { url: imageUrl } },
+        ],
+      });
+    } else {
+      messages.push({
+        role: "user",
+        content: text,
+      });
+    }
+
+    const response = await invokeLLM({
+      messages,
       response_format: { type: "json_object" },
     });
 
@@ -96,16 +146,181 @@ Always respond in valid JSON only.`,
     if (typeof content === "string") {
       const parsed = JSON.parse(content);
       return {
-        type: parsed.type || "unknown",
-        confidence: parsed.confidence || 50,
-        summary: parsed.summary || "파싱 완료",
-        data: parsed.data || {},
+        intent: parsed.intent || "UNKNOWN",
+        action: parsed.action || "",
+        response: parsed.response || "명령을 처리했습니다.",
+        data: parsed.params || {},
+        shouldSave: parsed.shouldSave !== false,
       };
     }
-    return { type: "unknown", confidence: 0, summary: "파싱 실패", data: {} };
+    return { intent: "UNKNOWN", action: "", response: "명령을 이해하지 못했습니다.", shouldSave: false };
   } catch (e) {
-    console.error("[TelegramWebhook LLM Parse] Error:", e);
-    return { type: "unknown", confidence: 0, summary: "LLM 파싱 오류", data: {} };
+    console.error("[TelegramWebhook] AI Command Error:", e);
+    return { intent: "UNKNOWN", action: "error", response: "AI 처리 중 오류가 발생했습니다.", shouldSave: false };
+  }
+}
+
+// ── Execute Commands ─────────────────────────────────────
+
+async function executeCommand(cmd: CommandResult): Promise<string> {
+  try {
+    switch (cmd.intent) {
+      case "LIST_MEETUPS": {
+        const meetups = await getMeetups();
+        if (!meetups || meetups.length === 0) return "📋 등록된 밋업이 없습니다.";
+        const list = meetups.slice(0, 10).map((m: any) => 
+          `• ${m.title} (${m.status || "모집중"}) - ${m.location || "미정"}`
+        ).join("\n");
+        return `📋 밋업 목록 (${meetups.length}개):\n\n${list}${meetups.length > 10 ? `\n\n...외 ${meetups.length - 10}개` : ""}`;
+      }
+
+      case "LIST_PARTICIPANTS": {
+        const filters: any = {};
+        if (cmd.data?.meetupId) filters.meetupId = cmd.data.meetupId;
+        if (cmd.data?.status) filters.status = cmd.data.status;
+        const regs = await getRegistrations(filters);
+        if (!regs || regs.length === 0) return "👥 참가자가 없습니다.";
+        const list = regs.slice(0, 15).map((r: any) => 
+          `• ${r.name} (${r.status || "대기"}) ${r.phone || ""}`
+        ).join("\n");
+        return `👥 참가자 목록 (${regs.length}명):\n\n${list}${regs.length > 15 ? `\n\n...외 ${regs.length - 15}명` : ""}`;
+      }
+
+      case "GET_STATS": {
+        const meetups = await getMeetups();
+        const regs = await getRegistrations({});
+        const flights = await getFlightSchedules();
+        const uploadStats = await getTelegramUploadStats();
+        return `📊 현황 통계:\n\n` +
+          `📋 밋업: ${meetups?.length || 0}개\n` +
+          `👥 참가자: ${regs?.length || 0}명\n` +
+          `✈️ 항공편: ${flights?.length || 0}건\n` +
+          `📥 텔레그램 업로드: ${uploadStats.total}건 (대기: ${uploadStats.pending}, 파싱: ${uploadStats.parsed}, 적용: ${uploadStats.applied})`;
+      }
+
+      case "REGISTER_PARTICIPANTS": {
+        if (!cmd.data?.participants || !Array.isArray(cmd.data.participants)) {
+          return cmd.response;
+        }
+        const results: string[] = [];
+        for (const p of cmd.data.participants) {
+          try {
+            await createRegistration({
+              name: p.name || "미입력",
+              phone: p.phone || "",
+              messengerId: p.messengerId || "",
+              locationType: p.locationType || "overseas",
+              category: "meetup",
+              status: "approved",
+              meetupId: p.meetupId || cmd.data.meetupId,
+              notes: [p.passportNumber, p.birthDate, p.gender, p.nationality].filter(Boolean).join(" | ") || undefined,
+            });
+            results.push(`✅ ${p.name}`);
+          } catch (e: any) {
+            results.push(`❌ ${p.name}: ${e.message || "등록 실패"}`);
+          }
+        }
+        return `👥 참가자 등록 결과:\n\n${results.join("\n")}`;
+      }
+
+      case "ASSIGN_FLIGHT": {
+        if (!cmd.data?.flights || !Array.isArray(cmd.data.flights)) {
+          return cmd.response;
+        }
+        const results: string[] = [];
+        for (const f of cmd.data.flights) {
+          try {
+            await createFlightSchedule({
+              meetupId: f.meetupId || cmd.data.meetupId,
+              flightNo: f.flightNo || "TBD",
+              airline: f.airline,
+              departureAirport: f.departureAirport,
+              arrivalAirport: f.arrivalAirport,
+              scheduledDeparture: f.departureTime ? new Date(f.departureTime) : new Date(),
+              scheduledArrival: f.arrivalTime ? new Date(f.arrivalTime) : undefined,
+            });
+            results.push(`✅ ${f.flightNo} (${f.departureAirport}→${f.arrivalAirport})`);
+          } catch (e: any) {
+            results.push(`❌ ${f.flightNo}: ${e.message || "등록 실패"}`);
+          }
+        }
+        return `✈️ 항공편 등록 결과:\n\n${results.join("\n")}`;
+      }
+
+      case "ASSIGN_HOTEL": {
+        if (!cmd.data?.hotels || !Array.isArray(cmd.data.hotels)) {
+          return cmd.response;
+        }
+        const results: string[] = [];
+        for (const h of cmd.data.hotels) {
+          try {
+            await createAccommodation({
+              meetupId: h.meetupId || cmd.data.meetupId,
+              hotelName: h.hotelName || "미정",
+              roomType: h.roomType || "twin",
+              checkIn: h.checkIn ? new Date(h.checkIn) : undefined,
+              checkOut: h.checkOut ? new Date(h.checkOut) : undefined,
+              notes: h.notes,
+            });
+            results.push(`✅ ${h.hotelName}`);
+          } catch (e: any) {
+            results.push(`❌ ${h.hotelName}: ${e.message || "등록 실패"}`);
+          }
+        }
+        return `🏨 숙소 등록 결과:\n\n${results.join("\n")}`;
+      }
+
+      case "SEARCH": {
+        const keyword = cmd.data?.keyword || "";
+        if (!keyword) return "🔍 검색어를 입력해주세요.";
+        const regs = await getRegistrations({});
+        const matched = (regs || []).filter((r: any) => 
+          (r.name || "").toLowerCase().includes(keyword.toLowerCase()) ||
+          (r.phone || "").includes(keyword) ||
+          (r.passportNumber || "").includes(keyword.toUpperCase())
+        );
+        if (matched.length === 0) return `🔍 "${keyword}" 검색 결과가 없습니다.`;
+        const list = matched.slice(0, 10).map((r: any) => 
+          `• ${r.name} | ${r.phone || "-"} | ${r.status || "대기"}`
+        ).join("\n");
+        return `🔍 "${keyword}" 검색 결과 (${matched.length}건):\n\n${list}`;
+      }
+
+      case "OCR_PASSPORT": {
+        return cmd.response + "\n\n📸 이미지가 백오피스에 저장되었습니다. 관리자가 확인 후 처리합니다.";
+      }
+
+      case "TRAVEL_INFO": {
+        return cmd.response;
+      }
+
+      case "HELP": {
+        return "🤖 AI 명령 도우미\n\n" +
+          "📝 사용 가능한 명령:\n\n" +
+          "👥 참가자 관리:\n" +
+          "• \"김철수 M12345678 KOR 1990-01-01 남 만료 2030-12-31 등록해줘\"\n" +
+          "• \"참가자 목록 보여줘\"\n" +
+          "• \"김철수 검색\"\n\n" +
+          "📋 밋업 관리:\n" +
+          "• \"밋업 목록\"\n" +
+          "• \"하롱베이 Xplay 행사 5/10~5/13 생성\"\n\n" +
+          "✈️ 항공편/숙소:\n" +
+          "• \"OZ733 ICN→HAN 08:00-10:50 등록\"\n" +
+          "• \"호텔 Grand Plaza 5/10~5/13 배정\"\n\n" +
+          "📊 현황:\n" +
+          "• \"통계 보여줘\"\n" +
+          "• \"현황 알려줘\"\n\n" +
+          "📸 이미지:\n" +
+          "• 여권/항공권 사진 전송 → 자동 OCR 분석\n\n" +
+          "💡 자유롭게 한국어로 말씀하시면 AI가 이해합니다!";
+      }
+
+      default:
+        return cmd.response;
+    }
+  } catch (e) {
+    console.error("[TelegramWebhook] Execute command error:", e);
+    return "⚠️ 명령 실행 중 오류가 발생했습니다. 다시 시도해주세요.";
   }
 }
 
@@ -115,7 +330,6 @@ webhookRouter.post("/", async (req: Request, res: Response) => {
   try {
     const update = req.body;
     
-    // Telegram sends updates with message or edited_message
     const message = update?.message || update?.edited_message;
     if (!message) {
       return res.json({ ok: true, skipped: true });
@@ -139,7 +353,6 @@ webhookRouter.post("/", async (req: Request, res: Response) => {
     // Handle photo messages
     if (message.photo && message.photo.length > 0) {
       rawFileType = "photo";
-      // Get the largest photo (last in array)
       const largestPhoto = message.photo[message.photo.length - 1];
       const fileResult = await downloadTelegramFile(config.botToken, largestPhoto.file_id);
       if (fileResult) {
@@ -166,92 +379,93 @@ webhookRouter.post("/", async (req: Request, res: Response) => {
       return res.json({ ok: true, skipped: true, reason: "no_content" });
     }
 
-    // Handle bot commands
+    // Handle basic bot commands
     if (rawText.startsWith("/")) {
       const command = rawText.split(" ")[0].toLowerCase();
       switch (command) {
         case "/start":
           await sendBotReply(config.botToken, chatId, 
-            "🛫 Meetup Travel 봇에 오신 것을 환영합니다!\n\n" +
-            "여행 정보를 텍스트나 이미지로 보내주시면 자동으로 분석하여 백오피스에 등록합니다.\n\n" +
-            "📋 지원 형식:\n" +
-            "• 항공편 정보 (편명, 출발/도착 시간)\n" +
-            "• 호텔 정보 (호텔명, 체크인/체크아웃)\n" +
-            "• 일정 정보 (장소, 시간, 설명)\n" +
-            "• 이동 정보 (차량, 픽업 장소/시간)\n\n" +
-            "📸 이미지/문서도 자동 인식합니다.\n\n" +
-            "/help - 도움말\n" +
-            "/status - 최근 업로드 상태"
+            "🛫 Meetup Travel AI 어시스턴트\n\n" +
+            "자연어로 모든 백오피스 기능을 실행할 수 있습니다.\n\n" +
+            "💡 예시:\n" +
+            "• \"참가자 목록 보여줘\"\n" +
+            "• \"김철수 M12345 KOR 1990-01-01 등록\"\n" +
+            "• \"밋업 현황 알려줘\"\n" +
+            "• 여권/항공권 사진 전송\n\n" +
+            "/help - 상세 도움말\n" +
+            "/stats - 현황 통계"
           );
           return res.json({ ok: true, command: "start" });
         
         case "/help":
-          await sendBotReply(config.botToken, chatId,
-            "📖 사용 방법:\n\n" +
-            "1️⃣ 텍스트로 여행 정보 전송\n" +
-            "예: \"KE123 인천→방콕 3/25 10:00 출발\"\n\n" +
-            "2️⃣ 항공권/호텔 바우처 사진 전송\n" +
-            "→ OCR로 자동 인식\n\n" +
-            "3️⃣ 문서 파일 전송 (PDF, Excel 등)\n" +
-            "→ 백오피스에 자동 저장\n\n" +
-            "모든 정보는 백오피스에서 관리자가 확인 후 승인합니다."
-          );
+          const helpCmd = await executeCommand({ intent: "HELP", action: "", response: "" });
+          await sendBotReply(config.botToken, chatId, helpCmd);
           return res.json({ ok: true, command: "help" });
         
-        case "/status":
-          await sendBotReply(config.botToken, chatId, "✅ 봇이 정상 작동 중입니다.\n관리자가 백오피스에서 업로드 내역을 확인할 수 있습니다.");
-          return res.json({ ok: true, command: "status" });
-        
+        case "/stats": {
+          const statsCmd = await executeCommand({ intent: "GET_STATS", action: "", response: "" });
+          await sendBotReply(config.botToken, chatId, statsCmd);
+          return res.json({ ok: true, command: "stats" });
+        }
+
+        case "/meetups": {
+          const meetupsCmd = await executeCommand({ intent: "LIST_MEETUPS", action: "", response: "" });
+          await sendBotReply(config.botToken, chatId, meetupsCmd);
+          return res.json({ ok: true, command: "meetups" });
+        }
+
+        case "/participants": {
+          const partCmd = await executeCommand({ intent: "LIST_PARTICIPANTS", action: "", response: "", data: {} });
+          await sendBotReply(config.botToken, chatId, partCmd);
+          return res.json({ ok: true, command: "participants" });
+        }
+
         default:
-          // Unknown command, treat as regular text
+          // Fall through to AI processing for unknown commands
+          rawText = rawText.substring(1); // Remove the / prefix
           break;
       }
     }
 
-    // 1. Save to telegram_uploads
-    const uploadId = await createTelegramUpload({
-      uploadedBy: `@${fromUser} (${fromUserId})`,
-      telegramMessageId: messageId,
-      telegramChatId: chatId,
-      rawText: rawText || undefined,
-      rawFileUrl: rawFileUrl || undefined,
-      rawFileType,
-      status: "pending",
-    });
-
-    // 2. Auto-parse with LLM
-    const textToParse = rawText || (rawFileUrl ? `[${rawFileType} file uploaded: ${rawFileUrl}]` : "");
-    try {
-      const parseResult = await parseTravelInfoWithLLM(textToParse, rawFileType);
-      await updateTelegramUpload(uploadId, {
-        parsedType: parseResult.type as any,
-        parsedData: parseResult.data,
-        parsedConfidence: parseResult.confidence,
-        parsedSummary: parseResult.summary,
+    // ── AI Natural Language Processing ──────────────────────
+    const commandResult = await processNaturalLanguageCommand(rawText, rawFileUrl);
+    
+    // Save to telegram_uploads for audit trail
+    if (commandResult.shouldSave) {
+      const uploadId = await createTelegramUpload({
+        uploadedBy: `@${fromUser} (${fromUserId})`,
+        telegramMessageId: messageId,
+        telegramChatId: chatId,
+        rawText: rawText || undefined,
+        rawFileUrl: rawFileUrl || undefined,
+        rawFileType,
         status: "parsed",
+        parsedType: commandResult.intent.toLowerCase() as any,
+        parsedData: commandResult.data,
+        parsedConfidence: 90,
+        parsedSummary: commandResult.action,
       });
 
-      // 3. Send confirmation to Telegram
-      const typeLabels: Record<string, string> = {
-        flight: "✈️ 항공편", hotel: "🏨 호텔", schedule: "📅 일정",
-        transfer: "🚗 이동", general: "📝 일반", unknown: "❓ 미분류",
-      };
-      const typeLabel = typeLabels[parseResult.type] || "📝 정보";
-      await sendBotReply(config.botToken, chatId,
-        `${typeLabel} 정보가 접수되었습니다.\n` +
-        `📊 분석 신뢰도: ${parseResult.confidence}%\n` +
-        `📝 요약: ${parseResult.summary}\n\n` +
-        `관리자가 백오피스에서 확인 후 승인합니다. (#${uploadId})`
-      );
-    } catch (e) {
-      console.error("[TelegramWebhook] LLM parsing failed:", e);
-      // Still saved, just not parsed
-      await sendBotReply(config.botToken, chatId,
-        `📥 정보가 접수되었습니다. (#${uploadId})\n자동 분석에 실패했지만, 관리자가 수동으로 확인합니다.`
-      );
+      // Execute the command
+      const executionResult = await executeCommand(commandResult);
+      
+      // Update status based on execution
+      if (commandResult.intent === "REGISTER_PARTICIPANTS" || 
+          commandResult.intent === "ASSIGN_FLIGHT" || 
+          commandResult.intent === "ASSIGN_HOTEL") {
+        await updateTelegramUpload(uploadId, { status: "applied" });
+      }
+
+      // Send response
+      await sendBotReply(config.botToken, chatId, executionResult);
+      return res.json({ ok: true, uploadId, intent: commandResult.intent });
+    } else {
+      // Non-saving commands (queries, help, etc.)
+      const executionResult = await executeCommand(commandResult);
+      await sendBotReply(config.botToken, chatId, executionResult);
+      return res.json({ ok: true, intent: commandResult.intent });
     }
 
-    return res.json({ ok: true, uploadId });
   } catch (error) {
     console.error("[TelegramWebhook] Error:", error);
     return res.status(200).json({ ok: false, error: "Internal error" });
@@ -272,7 +486,6 @@ webhookRouter.post("/setup", async (req: Request, res: Response) => {
       return res.status(400).json({ ok: false, error: "Bot token not configured" });
     }
 
-    // Register webhook with Telegram
     const response = await fetch(`https://api.telegram.org/bot${config.botToken}/setWebhook`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -333,11 +546,26 @@ webhookRouter.delete("/", async (_req: Request, res: Response) => {
 
 async function sendBotReply(botToken: string, chatId: string, text: string) {
   try {
-    await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
-    });
+    // Telegram has a 4096 char limit per message
+    if (text.length > 4000) {
+      const chunks: string[] = [];
+      for (let i = 0; i < text.length; i += 4000) {
+        chunks.push(text.substring(i, i + 4000));
+      }
+      for (const chunk of chunks) {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, text: chunk, parse_mode: "HTML" }),
+        });
+      }
+    } else {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
+      });
+    }
   } catch (e) {
     console.error("[TelegramWebhook] Reply failed:", e);
   }
