@@ -1194,6 +1194,49 @@ export const appRouter = router({
       }),
     delete: adminProcedure.input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => { await db.deleteAccommodation(input.id); return { success: true }; }),
+    // 드래그앤드롭: 참가자를 방에 배정
+    assignToRoom: adminProcedure
+      .input(z.object({ accommodationId: z.number(), registrationId: z.number() }))
+      .mutation(async ({ input }) => {
+        const accom = await db.getAccommodationById(input.accommodationId);
+        if (!accom) throw new TRPCError({ code: "NOT_FOUND", message: "숙소를 찾을 수 없습니다" });
+        const existing: number[] = Array.isArray(accom.assignedRegistrationIds) ? [...(accom.assignedRegistrationIds as number[])] : [];
+        if (existing.includes(input.registrationId)) return { success: true, message: "이미 배정됨" };
+        existing.push(input.registrationId);
+        await db.updateAccommodation(input.accommodationId, { assignedRegistrationIds: existing });
+        return { success: true };
+      }),
+    // 드래그앤드롭: 참가자를 방에서 제거
+    removeFromRoom: adminProcedure
+      .input(z.object({ accommodationId: z.number(), registrationId: z.number() }))
+      .mutation(async ({ input }) => {
+        const accom = await db.getAccommodationById(input.accommodationId);
+        if (!accom) throw new TRPCError({ code: "NOT_FOUND", message: "숙소를 찾을 수 없습니다" });
+        const existing: number[] = Array.isArray(accom.assignedRegistrationIds) ? [...(accom.assignedRegistrationIds as number[])] : [];
+        const updated = existing.filter(id => id !== input.registrationId);
+        await db.updateAccommodation(input.accommodationId, { assignedRegistrationIds: updated });
+        return { success: true };
+      }),
+    // 참가자를 한 방에서 다른 방으로 이동
+    moveToRoom: adminProcedure
+      .input(z.object({ fromAccommodationId: z.number().optional(), toAccommodationId: z.number(), registrationId: z.number() }))
+      .mutation(async ({ input }) => {
+        // Remove from old room if specified
+        if (input.fromAccommodationId) {
+          const oldAccom = await db.getAccommodationById(input.fromAccommodationId);
+          if (oldAccom) {
+            const oldIds: number[] = Array.isArray(oldAccom.assignedRegistrationIds) ? [...(oldAccom.assignedRegistrationIds as number[])] : [];
+            await db.updateAccommodation(input.fromAccommodationId, { assignedRegistrationIds: oldIds.filter(id => id !== input.registrationId) });
+          }
+        }
+        // Add to new room
+        const newAccom = await db.getAccommodationById(input.toAccommodationId);
+        if (!newAccom) throw new TRPCError({ code: "NOT_FOUND", message: "대상 숙소를 찾을 수 없습니다" });
+        const newIds: number[] = Array.isArray(newAccom.assignedRegistrationIds) ? [...(newAccom.assignedRegistrationIds as number[])] : [];
+        if (!newIds.includes(input.registrationId)) newIds.push(input.registrationId);
+        await db.updateAccommodation(input.toAccommodationId, { assignedRegistrationIds: newIds });
+        return { success: true };
+      }),
     bulkCreate: adminProcedure
       .input(z.object({
         rooms: z.array(z.object({
