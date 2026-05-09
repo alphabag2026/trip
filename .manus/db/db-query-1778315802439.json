@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, name FROM registrations WHERE meetupId = 510001 ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name FROM registrations WHERE meetupId = 510001 ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "570023",
+      "name": "YI KUNCHI"
+    },
+    {
+      "id": "570022",
+      "name": "CHA BOKSOON"
+    },
+    {
+      "id": "570021",
+      "name": "YUN DANIM"
+    },
+    {
+      "id": "570020",
+      "name": "JEONG TAESU"
+    },
+    {
+      "id": "570019",
+      "name": "IM HYEONSUK"
+    },
+    {
+      "id": "570018",
+      "name": "RYU HYUNJIN"
+    },
+    {
+      "id": "570017",
+      "name": "SO HUN YOUNG"
+    },
+    {
+      "id": "570016",
+      "name": "JO KWANG RYE"
+    },
+    {
+      "id": "570015",
+      "name": "YOO YUNSUNG"
+    },
+    {
+      "id": "570014",
+      "name": "KIM SUNAE"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n570023\tYI KUNCHI\n570022\tCHA BOKSOON\n570021\tYUN DANIM\n570020\tJEONG TAESU\n570019\tIM HYEONSUK\n570018\tRYU HYUNJIN\n570017\tSO HUN YOUNG\n570016\tJO KWANG RYE\n570015\tYOO YUNSUNG\n570014\tKIM SUNAE\n",
+  "stderr": "",
+  "execution_time_ms": 1779
+}

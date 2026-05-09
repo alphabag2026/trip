@@ -1,0 +1,130 @@
+{
+  "query": "SELECT COLUMN_NAME, DATA_TYPE, COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'itineraries' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT COLUMN_NAME, DATA_TYPE, COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'itineraries' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id",
+      "DATA_TYPE": "int",
+      "COLUMN_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "registrationId",
+      "DATA_TYPE": "int",
+      "COLUMN_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "title",
+      "DATA_TYPE": "varchar",
+      "COLUMN_TYPE": "varchar(255)"
+    },
+    {
+      "COLUMN_NAME": "departureFlightNo",
+      "DATA_TYPE": "varchar",
+      "COLUMN_TYPE": "varchar(50)"
+    },
+    {
+      "COLUMN_NAME": "departureAirport",
+      "DATA_TYPE": "varchar",
+      "COLUMN_TYPE": "varchar(255)"
+    },
+    {
+      "COLUMN_NAME": "departureTime",
+      "DATA_TYPE": "timestamp",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "arrivalFlightNo",
+      "DATA_TYPE": "varchar",
+      "COLUMN_TYPE": "varchar(50)"
+    },
+    {
+      "COLUMN_NAME": "arrivalAirport",
+      "DATA_TYPE": "varchar",
+      "COLUMN_TYPE": "varchar(255)"
+    },
+    {
+      "COLUMN_NAME": "arrivalTime",
+      "DATA_TYPE": "timestamp",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "returnFlightNo",
+      "DATA_TYPE": "varchar",
+      "COLUMN_TYPE": "varchar(50)"
+    },
+    {
+      "COLUMN_NAME": "returnDepartureAirport",
+      "DATA_TYPE": "varchar",
+      "COLUMN_TYPE": "varchar(255)"
+    },
+    {
+      "COLUMN_NAME": "returnDepartureTime",
+      "DATA_TYPE": "timestamp",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "returnArrivalAirport",
+      "DATA_TYPE": "varchar",
+      "COLUMN_TYPE": "varchar(255)"
+    },
+    {
+      "COLUMN_NAME": "returnArrivalTime",
+      "DATA_TYPE": "timestamp",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "hotelName",
+      "DATA_TYPE": "varchar",
+      "COLUMN_TYPE": "varchar(255)"
+    },
+    {
+      "COLUMN_NAME": "hotelAddress",
+      "DATA_TYPE": "text",
+      "COLUMN_TYPE": "text"
+    },
+    {
+      "COLUMN_NAME": "hotelCheckIn",
+      "DATA_TYPE": "timestamp",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "hotelCheckOut",
+      "DATA_TYPE": "timestamp",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "scheduleDetails",
+      "DATA_TYPE": "json",
+      "COLUMN_TYPE": "json"
+    },
+    {
+      "COLUMN_NAME": "sentViaWeb",
+      "DATA_TYPE": "tinyint",
+      "COLUMN_TYPE": "tinyint(1)"
+    },
+    {
+      "COLUMN_NAME": "sentViaMessenger",
+      "DATA_TYPE": "tinyint",
+      "COLUMN_TYPE": "tinyint(1)"
+    },
+    {
+      "COLUMN_NAME": "sentAt",
+      "DATA_TYPE": "timestamp",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "createdAt",
+      "DATA_TYPE": "timestamp",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "updatedAt",
+      "DATA_TYPE": "timestamp",
+      "COLUMN_TYPE": "timestamp"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tDATA_TYPE\tCOLUMN_TYPE\nid\tint\tint\nregistrationId\tint\tint\ntitle\tvarchar\tvarchar(255)\ndepartureFlightNo\tvarchar\tvarchar(50)\ndepartureAirport\tvarchar\tvarchar(255)\ndepartureTime\ttimestamp\ttimestamp\narrivalFlightNo\tvarchar\tvarchar(50)\narrivalAirport\tvarchar\tvarchar(255)\narrivalTime\ttimestamp\ttimestamp\nreturnFlightNo\tvarchar\tvarchar(50)\nreturnDepartureAirport\tvarchar\tvarchar(255)\nreturnDepartureTime\ttimestamp\ttimestamp\nreturnArrivalAirport\tvarchar\tvarchar(255)\nreturnArrivalTime\ttimestamp\ttimestamp\nhotelName\tvarchar\tvarchar(255)\nhotelAddress\ttext\ttext\nhotelCheckIn\ttimestamp\ttimestamp\nhotelCheckOut\ttimestamp\ttimestamp\nscheduleDetails\tjson\tjson\nsentViaWeb\ttinyint\ttinyint(1)\nsentViaMessenger\ttinyint\ttinyint(1)\nsentAt\ttimestamp\ttimestamp\ncreatedAt\ttimestamp\ttimestamp\nupdatedAt\ttimestamp\ttimestamp\n",
+  "stderr": "",
+  "execution_time_ms": 1775
+}

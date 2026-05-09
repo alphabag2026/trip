@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, email, name, role FROM users WHERE email = 'bro202411@gmail.com' LIMIT 1;\nSELECT id, title, scheduleStart, scheduleEnd, status FROM meetups ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, email, name, role FROM users WHERE email = 'bro202411@gmail.com' LIMIT 1;\nSELECT id, title, scheduleStart, scheduleEnd, status FROM meetups ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "email": "bro202411@gmail.com",
+      "name": "bro bro",
+      "role": "admin"
+    }
+  ],
+  "messages": [
+    "id\ttitle\tscheduleStart\tscheduleEnd\tstatus",
+    "540001\tE2E 테스트 밋업 방콕\t2026-06-01 00:00:00\t2026-06-05 00:00:00\topen",
+    "510001\t하롱베이 2140 Xplay\t2026-05-10 00:00:00\t2026-05-13 23:59:59\topen",
+    "480012\t수정 테스트 밋업\tNULL\tNULL\topen",
+    "480011\t커스텀 수화물 밋업\tNULL\tNULL\topen",
+    "480010\tUX Test Meetup 1777745178395\tNULL\tNULL\topen",
+    "480009\t수화물 테스트 밋업\tNULL\tNULL\topen",
+    "480008\t수정 테스트 밋업\tNULL\tNULL\topen",
+    "480007\t커스텀 수화물 밋업\tNULL\tNULL\topen",
+    "480006\tUX Test Meetup 1777743834360\tNULL\tNULL\topen",
+    "480005\t수화물 테스트 밋업\tNULL\tNULL\topen"
+  ],
+  "stdout": "id\temail\tname\trole\n1\tbro202411@gmail.com\tbro bro\tadmin\nid\ttitle\tscheduleStart\tscheduleEnd\tstatus\n540001\tE2E 테스트 밋업 방콕\t2026-06-01 00:00:00\t2026-06-05 00:00:00\topen\n510001\t하롱베이 2140 Xplay\t2026-05-10 00:00:00\t2026-05-13 23:59:59\topen\n480012\t수정 테스트 밋업\tNULL\tNULL\topen\n480011\t커스텀 수화물 밋업\tNULL\tNULL\topen\n480010\tUX Test Meetup 1777745178395\tNULL\tNULL\topen\n480009\t수화물 테스트 밋업\tNULL\tNULL\topen\n480008\t수정 테스트 밋업\tNULL\tNULL\topen\n480007\t커스텀 수화물 밋업\tNULL\tNULL\topen\n480006\tUX Test Meetup 1777743834360\tNULL\tNULL\topen\n480005\t수화물 테스트 밋업\tNULL\tNULL\topen\n",
+  "stderr": "",
+  "execution_time_ms": 2092
+}

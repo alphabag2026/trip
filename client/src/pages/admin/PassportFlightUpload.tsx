@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Plane, Loader2, Users, CheckCircle2, XCircle, Trash2, Edit,
-  Upload, FileImage, AlertCircle, UserPlus, FileText,
+  Upload, FileImage, AlertCircle, UserPlus, FileText, RotateCcw,
+  ImagePlus, FolderOpen, X, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,6 +21,14 @@ interface OcrResult {
   ocrData: any;
   success: boolean;
   error?: string;
+}
+
+interface FileWithStatus {
+  file: File;
+  id: string;
+  status: "pending" | "uploading" | "success" | "error";
+  error?: string;
+  previewUrl?: string;
 }
 
 interface ParsedParticipant {
@@ -41,59 +51,162 @@ interface ParsedParticipant {
   selected?: boolean;
 }
 
+let fileIdCounter = 0;
+function generateFileId(): string {
+  return `file-${Date.now()}-${++fileIdCounter}`;
+}
+
 export default function PassportFlightUpload() {
   const [meetupId, setMeetupId] = useState<number | undefined>(undefined);
-  const [files, setFiles] = useState<File[]>([]);
+  const [filesWithStatus, setFilesWithStatus] = useState<FileWithStatus[]>([]);
   const [ocrResults, setOcrResults] = useState<OcrResult[]>([]);
   const [participants, setParticipants] = useState<ParsedParticipant[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [processedCount, setProcessedCount] = useState(0);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [showAllThumbnails, setShowAllThumbnails] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
 
   const { data: meetups } = trpc.meetup.list.useQuery();
   const ocrMutation = trpc.aiBulk.passportFlightOcr.useMutation();
   const registerMutation = trpc.aiBulk.passportFlightRegister.useMutation();
 
+  // Stats
+  const totalFiles = filesWithStatus.length;
+  const successFiles = filesWithStatus.filter(f => f.status === "success").length;
+  const errorFiles = filesWithStatus.filter(f => f.status === "error").length;
+  const pendingFiles = filesWithStatus.filter(f => f.status === "pending").length;
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const droppedFiles = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
-    setFiles(prev => [...prev, ...droppedFiles]);
+    const newFiles: FileWithStatus[] = droppedFiles.map(file => ({
+      file,
+      id: generateFileId(),
+      status: "pending" as const,
+      previewUrl: URL.createObjectURL(file),
+    }));
+    setFilesWithStatus(prev => [...prev, ...newFiles]);
   }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selected = Array.from(e.target.files).filter(f => f.type.startsWith("image/"));
-      setFiles(prev => [...prev, ...selected]);
+      const newFiles: FileWithStatus[] = selected.map(file => ({
+        file,
+        id: generateFileId(),
+        status: "pending" as const,
+        previewUrl: URL.createObjectURL(file),
+      }));
+      setFilesWithStatus(prev => [...prev, ...newFiles]);
+      // Reset input so same files can be selected again
+      e.target.value = "";
     }
   };
 
-  const removeFile = (idx: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== idx));
+  const handleFolderSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const selected = Array.from(e.target.files).filter(f => f.type.startsWith("image/"));
+      const newFiles: FileWithStatus[] = selected.map(file => ({
+        file,
+        id: generateFileId(),
+        status: "pending" as const,
+        previewUrl: URL.createObjectURL(file),
+      }));
+      setFilesWithStatus(prev => [...prev, ...newFiles]);
+      e.target.value = "";
+    }
+  };
+
+  const removeFile = (id: string) => {
+    setFilesWithStatus(prev => {
+      const file = prev.find(f => f.id === id);
+      if (file?.previewUrl) URL.revokeObjectURL(file.previewUrl);
+      return prev.filter(f => f.id !== id);
+    });
+  };
+
+  const clearAllFiles = () => {
+    filesWithStatus.forEach(f => { if (f.previewUrl) URL.revokeObjectURL(f.previewUrl); });
+    setFilesWithStatus([]);
+  };
+
+  const retryFailed = () => {
+    setFilesWithStatus(prev => prev.map(f => f.status === "error" ? { ...f, status: "pending" as const, error: undefined } : f));
   };
 
   async function handleOcr() {
-    if (files.length === 0) { toast.error("이미지를 업로드해주세요"); return; }
+    if (filesWithStatus.length === 0) { toast.error("이미지를 업로드해주세요"); return; }
     setIsProcessing(true);
     setProgress(0);
+    setProcessedCount(0);
+
+    const pendingFilesList = filesWithStatus.filter(f => f.status === "pending" || f.status === "error");
+    if (pendingFilesList.length === 0) {
+      toast.info("처리할 파일이 없습니다");
+      setIsProcessing(false);
+      return;
+    }
 
     try {
-      // Convert files to base64 in batches of 3
-      const allResults: OcrResult[] = [];
-      const batchSize = 3;
-      for (let i = 0; i < files.length; i += batchSize) {
-        const batch = files.slice(i, i + batchSize);
-        const images = await Promise.all(batch.map(async (file) => {
-          const buffer = await file.arrayBuffer();
-          const bytes = new Uint8Array(buffer);
-          let binary = "";
-          for (let j = 0; j < bytes.length; j++) binary += String.fromCharCode(bytes[j]);
-          const base64 = btoa(binary);
-          return { base64, mimeType: file.type, type: "auto" as const };
-        }));
-        const result = await ocrMutation.mutateAsync({ images, meetupId });
-        allResults.push(...result.results);
-        setProgress(Math.round(((i + batch.length) / files.length) * 100));
+      const allResults: OcrResult[] = [...ocrResults];
+      const batchSize = 5; // 5개씩 병렬 처리
+      let processed = 0;
+
+      for (let i = 0; i < pendingFilesList.length; i += batchSize) {
+        const batch = pendingFilesList.slice(i, i + batchSize);
+        
+        // Mark batch as uploading
+        const batchIds = batch.map(f => f.id);
+        setFilesWithStatus(prev => prev.map(f => 
+          batchIds.includes(f.id) ? { ...f, status: "uploading" as const } : f
+        ));
+
+        try {
+          const images = await Promise.all(batch.map(async (fileItem) => {
+            const buffer = await fileItem.file.arrayBuffer();
+            const bytes = new Uint8Array(buffer);
+            // Use chunked base64 conversion for large files
+            let binary = "";
+            const chunkSize = 8192;
+            for (let j = 0; j < bytes.length; j += chunkSize) {
+              const chunk = bytes.slice(j, j + chunkSize);
+              for (let k = 0; k < chunk.length; k++) {
+                binary += String.fromCharCode(chunk[k]);
+              }
+            }
+            const base64 = btoa(binary);
+            return { base64, mimeType: fileItem.file.type, type: "auto" as const };
+          }));
+
+          const result = await ocrMutation.mutateAsync({ images, meetupId });
+          
+          // Update individual file statuses
+          result.results.forEach((r: OcrResult, idx: number) => {
+            const fileId = batch[idx]?.id;
+            if (fileId) {
+              setFilesWithStatus(prev => prev.map(f => 
+                f.id === fileId 
+                  ? { ...f, status: r.success ? "success" as const : "error" as const, error: r.error }
+                  : f
+              ));
+            }
+          });
+
+          allResults.push(...result.results);
+        } catch (e: any) {
+          // Mark entire batch as error
+          setFilesWithStatus(prev => prev.map(f => 
+            batchIds.includes(f.id) ? { ...f, status: "error" as const, error: e?.message || "처리 실패" } : f
+          ));
+        }
+
+        processed += batch.length;
+        setProcessedCount(processed);
+        setProgress(Math.round((processed / pendingFilesList.length) * 100));
       }
 
       setOcrResults(allResults);
@@ -117,13 +230,11 @@ export default function PassportFlightUpload() {
           });
         } else if (data.docType === "flight" && data.passengers) {
           for (const p of data.passengers) {
-            // Check if this passenger already exists (from passport)
             const existing = parsed.find(ep => 
               ep.name && p.name && 
               ep.name.replace(/\s+/g, "").toUpperCase() === p.name.replace(/\s+/g, "").toUpperCase()
             );
             if (existing) {
-              // Merge flight info into existing passport entry
               existing.pnr = p.pnr;
               existing.ticketNumber = p.ticketNumber;
               existing.airline = p.airline;
@@ -151,8 +262,9 @@ export default function PassportFlightUpload() {
       }
 
       setParticipants(parsed);
-      setStep(2);
-      toast.success(`${allResults.filter(r => r.success).length}개 이미지 OCR 완료, ${parsed.length}명 인식`);
+      if (parsed.length > 0) setStep(2);
+      const successCount = allResults.filter(r => r.success).length;
+      toast.success(`${successCount}/${allResults.length}개 이미지 OCR 완료, ${parsed.length}명 인식`);
     } catch (e: any) {
       toast.error(e?.message || "OCR 처리 중 오류 발생");
     } finally {
@@ -210,6 +322,14 @@ export default function PassportFlightUpload() {
 
   const selectedCount = participants.filter(p => p.selected !== false).length;
 
+  // Thumbnail display - show first 20 by default, expand to show all
+  const displayFiles = useMemo(() => {
+    if (showAllThumbnails || filesWithStatus.length <= 24) return filesWithStatus;
+    return filesWithStatus.slice(0, 20);
+  }, [filesWithStatus, showAllThumbnails]);
+
+  const hiddenCount = filesWithStatus.length > 24 && !showAllThumbnails ? filesWithStatus.length - 20 : 0;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -220,7 +340,7 @@ export default function PassportFlightUpload() {
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           여권 사진과 항공권 예약 이미지를 업로드하면 AI가 자동으로 파싱하여 참석자를 일괄 등록합니다.
-          비회원 참석자가 나중에 회원가입하면 기존 정보가 자동으로 연결됩니다.
+          <strong className="text-foreground"> 50장 이상</strong> 동시 업로드 가능합니다.
         </p>
       </div>
 
@@ -266,13 +386,18 @@ export default function PassportFlightUpload() {
               onDrop={handleDrop}
               onDragOver={e => e.preventDefault()}
               className="border-2 border-dashed rounded-xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-colors cursor-pointer"
-              onClick={() => document.getElementById("file-input")?.click()}
+              onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
               <p className="text-sm font-medium">여권 사진 또는 항공권 예약 스크린샷을 드래그하거나 클릭하여 업로드</p>
-              <p className="text-xs text-muted-foreground mt-1">여러 장을 한번에 업로드할 수 있습니다 (JPG, PNG)</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                <strong>50장 이상</strong> 한번에 업로드 가능 (JPG, PNG, WEBP, HEIC)
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                5장씩 배치 처리하여 안정적으로 OCR 분석합니다
+              </p>
               <input
-                id="file-input"
+                ref={fileInputRef}
                 type="file"
                 multiple
                 accept="image/*"
@@ -281,52 +406,172 @@ export default function PassportFlightUpload() {
               />
             </div>
 
-            {/* File List */}
-            {files.length > 0 && (
+            {/* Additional upload buttons */}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1"
+              >
+                <ImagePlus className="h-4 w-4 mr-1.5" />
+                파일 추가 선택
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => folderInputRef.current?.click()}
+                className="flex-1"
+              >
+                <FolderOpen className="h-4 w-4 mr-1.5" />
+                폴더 전체 선택
+              </Button>
+              <input
+                ref={folderInputRef}
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleFolderSelect}
+                className="hidden"
+                {...{ webkitdirectory: "", directory: "" } as any}
+              />
+            </div>
+
+            {/* File Stats Bar */}
+            {totalFiles > 0 && (
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="font-medium">{totalFiles}개 파일</span>
+                  {successFiles > 0 && (
+                    <span className="flex items-center gap-1 text-green-600">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> {successFiles} 완료
+                    </span>
+                  )}
+                  {errorFiles > 0 && (
+                    <span className="flex items-center gap-1 text-red-500">
+                      <XCircle className="h-3.5 w-3.5" /> {errorFiles} 실패
+                    </span>
+                  )}
+                  {pendingFiles > 0 && (
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <FileImage className="h-3.5 w-3.5" /> {pendingFiles} 대기
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-1.5">
+                  {errorFiles > 0 && (
+                    <Button size="sm" variant="outline" onClick={retryFailed} className="h-7 text-xs">
+                      <RotateCcw className="h-3 w-3 mr-1" /> 실패 재시도
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={clearAllFiles} className="h-7 text-xs text-red-500 hover:text-red-600">
+                    <Trash2 className="h-3 w-3 mr-1" /> 전체 삭제
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* File Grid - Optimized for large numbers */}
+            {totalFiles > 0 && (
               <div className="space-y-2">
-                <Label className="text-sm">{files.length}개 파일 선택됨</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {files.map((f, idx) => (
-                    <div key={idx} className="relative group rounded-lg overflow-hidden border">
+                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-1.5">
+                  {displayFiles.map((fileItem) => (
+                    <div key={fileItem.id} className="relative group rounded-lg overflow-hidden border aspect-square">
                       <img
-                        src={URL.createObjectURL(f)}
-                        alt={f.name}
-                        className="w-full h-24 object-cover"
+                        src={fileItem.previewUrl}
+                        alt={fileItem.file.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
                       />
+                      {/* Status overlay */}
+                      {fileItem.status === "uploading" && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <Loader2 className="h-5 w-5 text-white animate-spin" />
+                        </div>
+                      )}
+                      {fileItem.status === "success" && (
+                        <div className="absolute top-0.5 right-0.5">
+                          <div className="bg-green-500 rounded-full p-0.5">
+                            <Check className="h-2.5 w-2.5 text-white" />
+                          </div>
+                        </div>
+                      )}
+                      {fileItem.status === "error" && (
+                        <div className="absolute inset-0 bg-red-500/30 flex items-center justify-center">
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        </div>
+                      )}
+                      {/* Hover delete button */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); removeFile(idx); }}>
-                          <Trash2 className="h-3 w-3" />
+                        <Button 
+                          size="sm" 
+                          variant="destructive" 
+                          className="h-6 w-6 p-0"
+                          onClick={(e) => { e.stopPropagation(); removeFile(fileItem.id); }}
+                        >
+                          <X className="h-3 w-3" />
                         </Button>
                       </div>
-                      <p className="text-[10px] p-1 truncate">{f.name}</p>
                     </div>
                   ))}
+                  {/* Show more button */}
+                  {hiddenCount > 0 && (
+                    <div 
+                      className="rounded-lg border border-dashed flex items-center justify-center aspect-square cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => setShowAllThumbnails(true)}
+                    >
+                      <div className="text-center">
+                        <span className="text-lg font-bold text-muted-foreground">+{hiddenCount}</span>
+                        <p className="text-[9px] text-muted-foreground">더 보기</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
+                {showAllThumbnails && filesWithStatus.length > 24 && (
+                  <Button variant="ghost" size="sm" onClick={() => setShowAllThumbnails(false)} className="w-full text-xs">
+                    접기
+                  </Button>
+                )}
               </div>
             )}
 
             {/* Progress */}
             {isProcessing && (
-              <div className="space-y-2">
+              <div className="space-y-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-blue-700 dark:text-blue-300">
+                    <Loader2 className="h-3.5 w-3.5 inline animate-spin mr-1.5" />
+                    AI OCR 처리 중...
+                  </span>
+                  <span className="text-blue-600 dark:text-blue-400">
+                    {processedCount}/{filesWithStatus.filter(f => f.status !== "success").length}장 ({progress}%)
+                  </span>
+                </div>
                 <Progress value={progress} className="h-2" />
-                <p className="text-xs text-center text-muted-foreground">
-                  <Loader2 className="h-3 w-3 inline animate-spin mr-1" />
-                  AI OCR 처리 중... {progress}%
+                <p className="text-xs text-blue-600/70 dark:text-blue-400/70">
+                  5장씩 배치 처리 중입니다. 이미지가 많을수록 시간이 소요됩니다.
                 </p>
               </div>
             )}
 
             <Button
               onClick={handleOcr}
-              disabled={files.length === 0 || isProcessing || !meetupId}
-              className="w-full bg-gradient-to-r from-blue-500 to-indigo-600"
+              disabled={totalFiles === 0 || isProcessing || !meetupId || pendingFiles === 0}
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 h-12 text-base"
             >
               {isProcessing ? (
-                <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> OCR 처리 중...</>
+                <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> OCR 처리 중... ({processedCount}/{pendingFiles})</>
               ) : (
-                <><FileImage className="h-4 w-4 mr-1" /> {files.length}개 이미지 AI 분석 시작</>
+                <><FileImage className="h-5 w-5 mr-2" /> {pendingFiles > 0 ? `${pendingFiles}개` : `${totalFiles}개`} 이미지 AI 분석 시작</>
               )}
             </Button>
+
+            {totalFiles > 30 && !isProcessing && (
+              <p className="text-xs text-center text-amber-600 dark:text-amber-400 flex items-center justify-center gap-1">
+                <AlertCircle className="h-3.5 w-3.5" />
+                {totalFiles}장 처리에 약 {Math.ceil(totalFiles / 5) * 10}~{Math.ceil(totalFiles / 5) * 20}초 소요될 수 있습니다
+              </p>
+            )}
           </CardContent>
         </Card>
       )}
@@ -352,47 +597,49 @@ export default function PassportFlightUpload() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {participants.map((p, idx) => (
-                <div key={idx} className={`flex items-center gap-3 p-3 rounded-lg border ${p.selected !== false ? "bg-background" : "bg-muted/30 opacity-60"}`}>
-                  <input type="checkbox" checked={p.selected !== false} onChange={() => toggleSelect(idx)} className="rounded" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-sm">{p.name}</span>
-                      {p.passportNumber && (
-                        <Badge variant="outline" className="text-[10px] gap-0.5">
-                          <FileText className="h-2.5 w-2.5" /> {p.passportNumber}
-                        </Badge>
-                      )}
-                      {p.nationality && <Badge variant="secondary" className="text-[10px]">{p.nationality}</Badge>}
-                      {p.pnr && (
-                        <Badge variant="outline" className="text-[10px] gap-0.5 text-blue-600">
-                          <Plane className="h-2.5 w-2.5" /> PNR: {p.pnr}
-                        </Badge>
-                      )}
-                      {p.ticketNumber && (
-                        <Badge variant="outline" className="text-[10px]">티켓: {p.ticketNumber}</Badge>
-                      )}
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-2">
+                {participants.map((p, idx) => (
+                  <div key={idx} className={`flex items-center gap-3 p-3 rounded-lg border ${p.selected !== false ? "bg-background" : "bg-muted/30 opacity-60"}`}>
+                    <input type="checkbox" checked={p.selected !== false} onChange={() => toggleSelect(idx)} className="rounded" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm">{p.name}</span>
+                        {p.passportNumber && (
+                          <Badge variant="outline" className="text-[10px] gap-0.5">
+                            <FileText className="h-2.5 w-2.5" /> {p.passportNumber}
+                          </Badge>
+                        )}
+                        {p.nationality && <Badge variant="secondary" className="text-[10px]">{p.nationality}</Badge>}
+                        {p.pnr && (
+                          <Badge variant="outline" className="text-[10px] gap-0.5 text-blue-600">
+                            <Plane className="h-2.5 w-2.5" /> PNR: {p.pnr}
+                          </Badge>
+                        )}
+                        {p.ticketNumber && (
+                          <Badge variant="outline" className="text-[10px]">티켓: {p.ticketNumber}</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        {p.dateOfBirth && <span className="text-[10px] text-muted-foreground">생년월일: {p.dateOfBirth}</span>}
+                        {p.expiryDate && <span className="text-[10px] text-muted-foreground">만료: {p.expiryDate}</span>}
+                        {p.flightNo && <span className="text-[10px] text-blue-500">편명: {p.flightNo}</span>}
+                        {p.departure && p.arrival && <span className="text-[10px] text-muted-foreground">{p.departure} → {p.arrival}</span>}
+                        {p.departureDate && <span className="text-[10px] text-muted-foreground">{p.departureDate} {p.departureTime || ""}</span>}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      {p.dateOfBirth && <span className="text-[10px] text-muted-foreground">생년월일: {p.dateOfBirth}</span>}
-                      {p.expiryDate && <span className="text-[10px] text-muted-foreground">만료: {p.expiryDate}</span>}
-                      {p.flightNo && <span className="text-[10px] text-blue-500">편명: {p.flightNo}</span>}
-                      {p.departure && p.arrival && <span className="text-[10px] text-muted-foreground">{p.departure} → {p.arrival}</span>}
-                      {p.departureDate && <span className="text-[10px] text-muted-foreground">{p.departureDate} {p.departureTime || ""}</span>}
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => setEditIdx(idx)}>
+                        <Edit className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-red-500" onClick={() => removeParticipant(idx)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => setEditIdx(idx)}>
-                      <Edit className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-red-500" onClick={() => removeParticipant(idx)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       )}
@@ -409,7 +656,7 @@ export default function PassportFlightUpload() {
               비회원 참석자가 나중에 회원가입하면 기존 정보가 자동으로 연결됩니다.
             </p>
             <div className="flex gap-2 justify-center">
-              <Button variant="outline" onClick={() => { setStep(1); setFiles([]); setParticipants([]); setOcrResults([]); }}>
+              <Button variant="outline" onClick={() => { setStep(1); setFilesWithStatus([]); setParticipants([]); setOcrResults([]); setProgress(0); setProcessedCount(0); }}>
                 추가 등록하기
               </Button>
             </div>

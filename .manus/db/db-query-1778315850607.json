@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE registrations SET teamName = 'A팀 아시아나' WHERE meetupId = 510001 AND name IN ('MYOUNG SUNG JIN', 'KIM WOONGKI', 'KIM BONGMYUNG', 'CHO SEORAN', 'KIM YOONSEO');\n\nINSERT INTO registrations (meetupId, name, phone, messengerId, locationType, teamName, status, transportType, category) VALUES\n(510001, 'PARK CHONG BOK', '-', '-', 'overseas', 'B팀 대한항공', 'approved', 'flight', 'meetup'),\n(510001, 'LEE JAEMIN', '-', '-', 'overseas', 'B팀 대한항공', 'approved', 'flight', 'meetup'),\n(510001, 'PARK MEE A', '-', '-', 'overseas', 'B팀 대한항공', 'approved', 'flight', 'meetup'),\n(510001, 'KIM IN HWAN', '-', '-', 'overseas', 'B팀 대한항공', 'approved', 'flight', 'meetup');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute UPDATE registrations SET teamName = 'A팀 아시아나' WHERE meetupId = 510001 AND name IN ('MYOUNG SUNG JIN', 'KIM WOONGKI', 'KIM BONGMYUNG', 'CHO SEORAN', 'KIM YOONSEO');\n\nINSERT INTO registrations (meetupId, name, phone, messengerId, locationType, teamName, status, transportType, category) VALUES\n(510001, 'PARK CHONG BOK', '-', '-', 'overseas', 'B팀 대한항공', 'approved', 'flight', 'meetup'),\n(510001, 'LEE JAEMIN', '-', '-', 'overseas', 'B팀 대한항공', 'approved', 'flight', 'meetup'),\n(510001, 'PARK MEE A', '-', '-', 'overseas', 'B팀 대한항공', 'approved', 'flight', 'meetup'),\n(510001, 'KIM IN HWAN', '-', '-', 'overseas', 'B팀 대한항공', 'approved', 'flight', 'meetup');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2077
+}

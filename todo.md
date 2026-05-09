@@ -2695,3 +2695,15 @@
 - [x] 회원가입 HTTP 500 에러 원인 진단 (배포 시 .env.production이 덮어씌워져 DATABASE_URL이 잘못된 로컬 MySQL로 복원됨)
 - [x] 서버 에러 세부 내용을 프론트엔드에 표시 (이미 구현됨 - HTTP 상태코드+경로 표시)
 - [x] 프로덕션 배포 - DATABASE_URL/OAuth 키 영구 수정 + .env.production에 포함하여 재배포 방지
+
+## v6.40: 50개 이상 이미지 동시 업로드
+- [x] PassportFlightUpload 페이지 전면 리팩토링
+- [x] 무제한 다중 파일 선택 (multiple file input)
+- [x] 폴더 전체 선택 기능 (webkitdirectory)
+- [x] 드래그 앤 드롭 대량 업로드
+- [x] 5개씩 배치 병렬 처리 (안정적 OCR)
+- [x] 개별 파일 상태 표시 (대기/업로드중/성공/실패)
+- [x] 실시간 진행률 표시 (Progress bar)
+- [x] 실패 파일 재시도 기능
+- [x] 가상화된 썸네일 그리드 (20개 초과 시 접기)
+- [x] 프로덕션 서버 배포 완료

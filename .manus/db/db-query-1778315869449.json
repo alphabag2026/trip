@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, name, teamName FROM registrations WHERE meetupId = 510001 AND teamName = 'A팀 아시아나' ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, teamName FROM registrations WHERE meetupId = 510001 AND teamName = 'A팀 아시아나' ORDER BY id;",
+  "rows": [
+    {
+      "id": "570001",
+      "name": "KIM BONGMYUNG",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "570002",
+      "name": "KIM WOONGKI",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "570003",
+      "name": "CHO SEORAN",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "570004",
+      "name": "MYOUNG SUNG JIN",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "570005",
+      "name": "KIM YOONSEO",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "630001",
+      "name": "KIM JUN HO",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "630002",
+      "name": "RYU DAE SUNG",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "630003",
+      "name": "CHOI YONG SUK",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "630004",
+      "name": "KIM TAEHEE",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "630005",
+      "name": "YU KUMSOOK",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "630006",
+      "name": "AN YEONGOK",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "630007",
+      "name": "HWANG MYEONGSUK",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "630008",
+      "name": "PAEK JEEHYUN",
+      "teamName": "A팀 아시아나"
+    },
+    {
+      "id": "630009",
+      "name": "KIM CHUNOCK",
+      "teamName": "A팀 아시아나"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tteamName\n570001\tKIM BONGMYUNG\tA팀 아시아나\n570002\tKIM WOONGKI\tA팀 아시아나\n570003\tCHO SEORAN\tA팀 아시아나\n570004\tMYOUNG SUNG JIN\tA팀 아시아나\n570005\tKIM YOONSEO\tA팀 아시아나\n630001\tKIM JUN HO\tA팀 아시아나\n630002\tRYU DAE SUNG\tA팀 아시아나\n630003\tCHOI YONG SUK\tA팀 아시아나\n630004\tKIM TAEHEE\tA팀 아시아나\n630005\tYU KUMSOOK\tA팀 아시아나\n630006\tAN YEONGOK\tA팀 아시아나\n630007\tHWANG MYEONGSUK\tA팀 아시아나\n630008\tPAEK JEEHYUN\tA팀 아시아나\n630009\tKIM CHUNOCK\tA팀 아시아나\n",
+  "stderr": "",
+  "execution_time_ms": 1870
+}

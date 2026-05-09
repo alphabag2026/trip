@@ -7,7 +7,7 @@ import { ExpirationPlugin } from 'workbox-expiration';
 
 declare let self: ServiceWorkerGlobalScope;
 
-const SW_VERSION = '6.35';
+const SW_VERSION = '6.36';
 
 // Auto-update: skip waiting and claim clients immediately
 self.skipWaiting();
@@ -20,12 +20,13 @@ cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
 // Runtime caching strategies
+// IMPORTANT: Exclude /api/auth/ from SW caching entirely - OAuth redirects must pass through directly
 registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/'),
+  ({ url }) => url.pathname.startsWith('/api/') && !url.pathname.startsWith('/api/auth/'),
   new NetworkFirst({
     cacheName: 'api-cache',
     plugins: [new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 60 * 5 })],
-    networkTimeoutSeconds: 3,
+    networkTimeoutSeconds: 10,
   })
 );
 

@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name FROM registrations WHERE meetupId = 510001 AND teamName = 'B팀 대한항공' AND id > 630011 ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name FROM registrations WHERE meetupId = 510001 AND teamName = 'B팀 대한항공' AND id > 630011 ORDER BY id;",
+  "rows": [
+    {
+      "id": "630012",
+      "name": "PARK MEE A"
+    },
+    {
+      "id": "630013",
+      "name": "KIM IN HWAN"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n630012\tPARK MEE A\n630013\tKIM IN HWAN\n",
+  "stderr": "",
+  "execution_time_ms": 1853
+}

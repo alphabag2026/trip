@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE registrations SET teamName = 'B팀 대한항공' WHERE meetupId = 510001 AND name IN ('YOO YUNSUNG', 'JO KWANG RYE', 'SO HUN YOUNG', 'RYU HYUNJIN', 'IM HYEONSUK', 'JEONG TAESU', 'YUN DANIM', 'CHA BOKSOON', 'YI KUNCHI', 'KIM YUN JA', 'DINH THI BANG', 'PARK BYUNGRYANG', 'SEO YAMUN', 'LEE DONGKUK', 'KIM SUNAE', 'PAK SEOKBONG', 'KIM DONGHEE', 'KIM YEAJA');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute UPDATE registrations SET teamName = 'B팀 대한항공' WHERE meetupId = 510001 AND name IN ('YOO YUNSUNG', 'JO KWANG RYE', 'SO HUN YOUNG', 'RYU HYUNJIN', 'IM HYEONSUK', 'JEONG TAESU', 'YUN DANIM', 'CHA BOKSOON', 'YI KUNCHI', 'KIM YUN JA', 'DINH THI BANG', 'PARK BYUNGRYANG', 'SEO YAMUN', 'LEE DONGKUK', 'KIM SUNAE', 'PAK SEOKBONG', 'KIM DONGHEE', 'KIM YEAJA');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1863
+}

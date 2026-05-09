@@ -1,0 +1,17 @@
+{
+  "query": "SELECT \n  (SELECT COUNT(*) FROM registrations WHERE meetupId = 510001) as total_registrations,\n  (SELECT COUNT(*) FROM registrations WHERE meetupId = 510001 AND teamName = 'A팀 아시아나항공') as a_team,\n  (SELECT COUNT(*) FROM registrations WHERE meetupId = 510001 AND teamName = 'B팀 대한항공') as b_team,\n  (SELECT COUNT(*) FROM flight_schedules WHERE meetupId = 510001) as total_flights,\n  (SELECT COUNT(*) FROM itineraries WHERE registrationId IN (SELECT id FROM registrations WHERE meetupId = 510001)) as total_itineraries;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT \n  (SELECT COUNT(*) FROM registrations WHERE meetupId = 510001) as total_registrations,\n  (SELECT COUNT(*) FROM registrations WHERE meetupId = 510001 AND teamName = 'A팀 아시아나항공') as a_team,\n  (SELECT COUNT(*) FROM registrations WHERE meetupId = 510001 AND teamName = 'B팀 대한항공') as b_team,\n  (SELECT COUNT(*) FROM flight_schedules WHERE meetupId = 510001) as total_flights,\n  (SELECT COUNT(*) FROM itineraries WHERE registrationId IN (SELECT id FROM registrations WHERE meetupId = 510001)) as total_itineraries;",
+  "rows": [
+    {
+      "total_registrations": "36",
+      "a_team": "0",
+      "b_team": "22",
+      "total_flights": "72",
+      "total_itineraries": "36"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_registrations\ta_team\tb_team\ttotal_flights\ttotal_itineraries\n36\t0\t22\t72\t36\n",
+  "stderr": "",
+  "execution_time_ms": 1872
+}

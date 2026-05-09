@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, meetupId, name, teamName, status FROM registrations WHERE meetupId = 510001 ORDER BY id LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, meetupId, name, teamName, status FROM registrations WHERE meetupId = 510001 ORDER BY id LIMIT 5;",
+  "rows": [
+    {
+      "id": "570001",
+      "meetupId": "510001",
+      "name": "KIM BONGMYUNG",
+      "teamName": "박석봉팀",
+      "status": "approved"
+    },
+    {
+      "id": "570002",
+      "meetupId": "510001",
+      "name": "KIM WOONGKI",
+      "teamName": "박석봉팀",
+      "status": "approved"
+    },
+    {
+      "id": "570003",
+      "meetupId": "510001",
+      "name": "CHO SEORAN",
+      "teamName": "박석봉팀",
+      "status": "approved"
+    },
+    {
+      "id": "570004",
+      "meetupId": "510001",
+      "name": "MYOUNG SUNG JIN",
+      "teamName": "박석봉팀",
+      "status": "approved"
+    },
+    {
+      "id": "570005",
+      "meetupId": "510001",
+      "name": "KIM YOONSEO",
+      "teamName": "박석봉팀",
+      "status": "approved"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tmeetupId\tname\tteamName\tstatus\n570001\t510001\tKIM BONGMYUNG\t박석봉팀\tapproved\n570002\t510001\tKIM WOONGKI\t박석봉팀\tapproved\n570003\t510001\tCHO SEORAN\t박석봉팀\tapproved\n570004\t510001\tMYOUNG SUNG JIN\t박석봉팀\tapproved\n570005\t510001\tKIM YOONSEO\t박석봉팀\tapproved\n",
+  "stderr": "",
+  "execution_time_ms": 1897
+}

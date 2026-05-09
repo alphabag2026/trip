@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, name FROM registrations WHERE meetupId = 510001 AND name IN ('MYOUNG SUNG JIN', 'KIM JUN HO', 'KIM WOONGKI', 'KIM BONGMYUNG', 'RYU DAE SUNG', 'CHOI YONG SUK', 'KIM TAEHEE', 'YU KUMSOOK', 'CHO SEORAN', 'AN YEONGOK', 'KIM YOONSEO', 'HWANG MYEONGSUK', 'PAEK JEEHYUN', 'KIM CHUNOCK') ORDER BY name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name FROM registrations WHERE meetupId = 510001 AND name IN ('MYOUNG SUNG JIN', 'KIM JUN HO', 'KIM WOONGKI', 'KIM BONGMYUNG', 'RYU DAE SUNG', 'CHOI YONG SUK', 'KIM TAEHEE', 'YU KUMSOOK', 'CHO SEORAN', 'AN YEONGOK', 'KIM YOONSEO', 'HWANG MYEONGSUK', 'PAEK JEEHYUN', 'KIM CHUNOCK') ORDER BY name;",
+  "rows": [
+    {
+      "id": "570003",
+      "name": "CHO SEORAN"
+    },
+    {
+      "id": "570001",
+      "name": "KIM BONGMYUNG"
+    },
+    {
+      "id": "570002",
+      "name": "KIM WOONGKI"
+    },
+    {
+      "id": "570005",
+      "name": "KIM YOONSEO"
+    },
+    {
+      "id": "570004",
+      "name": "MYOUNG SUNG JIN"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n570003\tCHO SEORAN\n570001\tKIM BONGMYUNG\n570002\tKIM WOONGKI\n570005\tKIM YOONSEO\n570004\tMYOUNG SUNG JIN\n",
+  "stderr": "",
+  "execution_time_ms": 1858
+}

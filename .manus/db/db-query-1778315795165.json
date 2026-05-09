@@ -1,0 +1,85 @@
+{
+  "query": "SELECT COUNT(*) as total FROM registrations WHERE meetupId = 510001;\nSELECT id, name, teamName FROM registrations WHERE meetupId = 510001 ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT COUNT(*) as total FROM registrations WHERE meetupId = 510001;\nSELECT id, name, teamName FROM registrations WHERE meetupId = 510001 ORDER BY id;",
+  "rows": [
+    {
+      "total": "23"
+    },
+    {
+      "total": "id\tname\tteamName"
+    },
+    {
+      "total": "570001\tKIM BONGMYUNG\t박석봉팀"
+    },
+    {
+      "total": "570002\tKIM WOONGKI\t박석봉팀"
+    },
+    {
+      "total": "570003\tCHO SEORAN\t박석봉팀"
+    },
+    {
+      "total": "570004\tMYOUNG SUNG JIN\t박석봉팀"
+    },
+    {
+      "total": "570005\tKIM YOONSEO\t박석봉팀"
+    },
+    {
+      "total": "570006\tKIM YUN JA\t박석봉팀"
+    },
+    {
+      "total": "570007\tPARK BYUNGRYANG\t박석봉팀"
+    },
+    {
+      "total": "570008\tSEO YAMUN\t박석봉팀"
+    },
+    {
+      "total": "570009\tPAK SEOKBONG\t박석봉팀"
+    },
+    {
+      "total": "570010\tKIM DONGHEE\t박석봉팀"
+    },
+    {
+      "total": "570011\tKIM YEAJA\t박석봉팀"
+    },
+    {
+      "total": "570012\tDINH THI BANG\t박석봉팀"
+    },
+    {
+      "total": "570013\tLEE DONGKUK\t박석봉팀"
+    },
+    {
+      "total": "570014\tKIM SUNAE\t박석봉팀"
+    },
+    {
+      "total": "570015\tYOO YUNSUNG\t박석봉팀"
+    },
+    {
+      "total": "570016\tJO KWANG RYE\t박석봉팀"
+    },
+    {
+      "total": "570017\tSO HUN YOUNG\t박석봉팀"
+    },
+    {
+      "total": "570018\tRYU HYUNJIN\t박석봉팀"
+    },
+    {
+      "total": "570019\tIM HYEONSUK\t박석봉팀"
+    },
+    {
+      "total": "570020\tJEONG TAESU\t박석봉팀"
+    },
+    {
+      "total": "570021\tYUN DANIM\t박석봉팀"
+    },
+    {
+      "total": "570022\tCHA BOKSOON\t박석봉팀"
+    },
+    {
+      "total": "570023\tYI KUNCHI\t박석봉팀"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n23\nid\tname\tteamName\n570001\tKIM BONGMYUNG\t박석봉팀\n570002\tKIM WOONGKI\t박석봉팀\n570003\tCHO SEORAN\t박석봉팀\n570004\tMYOUNG SUNG JIN\t박석봉팀\n570005\tKIM YOONSEO\t박석봉팀\n570006\tKIM YUN JA\t박석봉팀\n570007\tPARK BYUNGRYANG\t박석봉팀\n570008\tSEO YAMUN\t박석봉팀\n570009\tPAK SEOKBONG\t박석봉팀\n570010\tKIM DONGHEE\t박석봉팀\n570011\tKIM YEAJA\t박석봉팀\n570012\tDINH THI BANG\t박석봉팀\n570013\tLEE DONGKUK\t박석봉팀\n570014\tKIM SUNAE\t박석봉팀\n570015\tYOO YUNSUNG\t박석봉팀\n570016\tJO KWANG RYE\t박석봉팀\n570017\tSO HUN YOUNG\t박석봉팀\n570018\tRYU HYUNJIN\t박석봉팀\n570019\tIM HYEONSUK\t박석봉팀\n570020\tJEONG TAESU\t박석봉팀\n570021\tYUN DANIM\t박석봉팀\n570022\tCHA BOKSOON\t박석봉팀\n570023\tYI KUNCHI\t박석봉팀\n",
+  "stderr": "",
+  "execution_time_ms": 2094
+}
