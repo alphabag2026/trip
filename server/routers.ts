@@ -7955,6 +7955,30 @@ Return ONLY valid JSON.`,
         return assigned && assigned.some(id => regIds.includes(id));
       });
     }),
+    // 내 룸메이트 조회 (accommodation 배정된 같은 방 사람들)
+    myRoommates: protectedProcedure.query(async ({ ctx }) => {
+      const regs = await db.getRegistrations({ userId: ctx.user.id });
+      if (!regs.length) return {};
+      const regIds = regs.map(r => r.id);
+      const allAccom = await db.getAccommodations();
+      const myAccoms = allAccom.filter(a => {
+        const assigned = a.assignedRegistrationIds as number[] | null;
+        return assigned && assigned.some(id => regIds.includes(id));
+      });
+      // Get all roommate IDs
+      const roommateIds = new Set<number>();
+      for (const a of myAccoms) {
+        const assigned = a.assignedRegistrationIds as number[] | null;
+        if (assigned) assigned.forEach(id => roommateIds.add(id));
+      }
+      // Get names for all roommates
+      const allRegs = await db.getRegistrations({});
+      const nameMap: Record<number, string> = {};
+      for (const r of allRegs) {
+        if (roommateIds.has(r.id)) nameMap[r.id] = r.name || `#${r.id}`;
+      }
+      return nameMap;
+    }),
     // 내 여정표 조회
     myItineraries: protectedProcedure.query(async ({ ctx }) => {
       const regs = await db.getRegistrations({ userId: ctx.user.id });

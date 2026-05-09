@@ -80,6 +80,7 @@ const AdminSearch = lazy(() => import("./pages/admin/Search"));
 const AdminFlights = lazy(() => import("./pages/admin/Flights"));
 const AdminPickups = lazy(() => import("./pages/admin/Pickups"));
 const AdminAccommodations = lazy(() => import("./pages/admin/Accommodations"));
+const AdminAccommodationDashboard = lazy(() => import("./pages/admin/AccommodationDashboard"));
 const AdminScheduleEvents = lazy(() => import("./pages/admin/ScheduleEvents"));
 const AdminModRequests = lazy(() => import("./pages/admin/ModRequests"));
 const AdminChannels = lazy(() => import("./pages/admin/Channels"));
@@ -205,6 +206,7 @@ function AdminRouter() {
           <Route path="/flights" component={AdminFlights} />
           <Route path="/pickups" component={AdminPickups} />
           <Route path="/accommodations" component={AdminAccommodations} />
+          <Route path="/accommodation-dashboard" component={AdminAccommodationDashboard} />
           <Route path="/schedule-events" component={AdminScheduleEvents} />
           <Route path="/mod-requests" component={AdminModRequests} />
           <Route path="/channels" component={AdminChannels} />

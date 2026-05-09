@@ -78,6 +78,7 @@ const menuGroups: MenuGroup[] = [
       { icon: Plane, labelKey: "admin.sidebar.flights", path: "/flights", roles: ["all"] },
       { icon: Car, labelKey: "admin.sidebar.pickups", path: "/pickups", roles: ["all"] },
       { icon: Hotel, labelKey: "admin.sidebar.accommodations", path: "/accommodations", roles: ["all"] },
+      { icon: Hotel, labelKey: "admin.sidebar.accommodationDashboard", path: "/accommodation-dashboard", roles: ["all"] },
     ],
   },
   // ─── 4. 일정 & 여정 ───

@@ -2,16 +2,41 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  Car, BedDouble, Loader2, MapPin, Calendar,
+  Car, BedDouble, Loader2, MapPin, Calendar, Copy, ExternalLink, Users, Hotel, Home, Building2, TreePine,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+
+const ACCOM_TYPE_LABELS: Record<string, string> = {
+  hotel: "호텔", villa: "별장", apartment: "아파트", resort: "리조트", pension: "펜션", other: "기타",
+};
+const ROOM_TYPE_LABELS: Record<string, string> = {
+  single: "싱글", double: "더블", twin: "트윈", suite: "스위트", family: "패밀리", dormitory: "도미토리",
+};
+const ACCOM_TYPE_ICONS: Record<string, any> = {
+  hotel: Hotel, villa: Home, apartment: Building2, resort: TreePine, pension: Home, other: Hotel,
+};
 
 export default function TransportTab() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const myPickupsQuery = trpc.myTravel.myPickups.useQuery(undefined, { enabled: !!user });
   const myAccomQuery = trpc.myTravel.myAccommodations.useQuery(undefined, { enabled: !!user });
+  const roommatesQuery = trpc.myTravel.myRoommates.useQuery(undefined, { enabled: !!user });
+
+  // Map of registration ID -> name for roommates
+  const regMap: Record<number, string> = (roommatesQuery.data ?? {}) as Record<number, string>;
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(t("myPage.copied", "복사되었습니다"));
+  };
+
+  const openGoogleMaps = (address: string) => {
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, "_blank");
+  };
 
   return (
     <div className="space-y-4">
@@ -91,40 +116,106 @@ export default function TransportTab() {
             <p className="text-muted-foreground text-center py-6">{t("myPage.noAccom", "배정된 숙소가 없습니다")}</p>
           ) : (
             <div className="space-y-4">
-              {(myAccomQuery.data ?? []).map((a: any) => (
-                <Card key={a.id} className="border-primary/20">
-                  <CardContent className="pt-4 space-y-3">
-                    <div className="flex items-start gap-4">
-                      {a.accommodationPhotoUrl && (
-                        <img loading="lazy" decoding="async" src={a.accommodationPhotoUrl} alt="hotel" className="w-24 h-24 rounded-lg object-cover border" />
-                      )}
-                      <div className="flex-1 space-y-1">
-                        <h4 className="font-semibold text-lg">{a.hotelName}</h4>
-                        {a.roomNumber && <p className="text-sm">{t("myPage.roomNum", "방 번호")}: <span className="font-bold">{a.roomNumber}</span></p>}
-                        <p className="text-sm text-muted-foreground">{t("myPage.roomType", "객실 유형")}: {a.roomType === "single" ? t("myPage.single", "싱글") : a.roomType === "double" ? t("myPage.double", "더블") : a.roomType === "twin" ? t("myPage.twin", "트윈") : t("myPage.suite", "스위트")}</p>
-                        {a.floorNumber && <p className="text-sm text-muted-foreground">{a.floorNumber}{t("myPage.floor", "층")}</p>}
+              {(myAccomQuery.data ?? []).map((a: any) => {
+                const AccomIcon = ACCOM_TYPE_ICONS[a.accommodationType] || Hotel;
+                const roommates: number[] = Array.isArray(a.assignedRegistrationIds) ? a.assignedRegistrationIds : [];
+
+                return (
+                  <Card key={a.id} className="border-primary/20 overflow-hidden">
+                    {/* Header with accommodation type badge */}
+                    <div className="bg-primary/5 px-4 py-2 flex items-center justify-between border-b">
+                      <div className="flex items-center gap-2">
+                        <AccomIcon className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-medium text-primary">
+                          {ACCOM_TYPE_LABELS[a.accommodationType] || t("myPage.hotel", "호텔")}
+                        </span>
                       </div>
+                      <Badge variant="outline" className="text-xs">
+                        {ROOM_TYPE_LABELS[a.roomType] || a.roomType}
+                      </Badge>
                     </div>
-                    {(a.checkIn || a.checkOut) && (
-                      <div className="flex gap-6 p-3 bg-muted/50 rounded-lg">
-                        {a.checkIn && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">{t("myPage.checkIn", "체크인")}</p>
-                            <p className="text-sm font-medium">{new Date(a.checkIn).toLocaleString("ko-KR")}</p>
-                          </div>
+
+                    <CardContent className="pt-4 space-y-3">
+                      <div className="flex items-start gap-4">
+                        {a.accommodationPhotoUrl && (
+                          <img loading="lazy" decoding="async" src={a.accommodationPhotoUrl} alt="hotel" className="w-24 h-24 rounded-lg object-cover border" />
                         )}
-                        {a.checkOut && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">{t("myPage.checkOut", "체크아웃")}</p>
-                            <p className="text-sm font-medium">{new Date(a.checkOut).toLocaleString("ko-KR")}</p>
-                          </div>
-                        )}
+                        <div className="flex-1 space-y-1">
+                          <h4 className="font-semibold text-lg">{a.hotelName}</h4>
+                          {a.roomNumber && (
+                            <p className="text-sm">
+                              {t("myPage.roomNum", "방 번호")}: <span className="font-bold text-primary text-lg">{a.roomNumber}</span>
+                            </p>
+                          )}
+                          {a.floorNumber && <p className="text-sm text-muted-foreground">{a.floorNumber}{t("myPage.floor", "층")}</p>}
+                        </div>
                       </div>
-                    )}
-                    {a.notes && <p className="text-sm text-muted-foreground">{a.notes}</p>}
-                  </CardContent>
-                </Card>
-              ))}
+
+                      {/* Check-in / Check-out */}
+                      {(a.checkIn || a.checkOut) && (
+                        <div className="flex gap-6 p-3 bg-muted/50 rounded-lg">
+                          {a.checkIn && (
+                            <div>
+                              <p className="text-xs text-muted-foreground">{t("myPage.checkIn", "체크인")}</p>
+                              <p className="text-sm font-medium">{new Date(a.checkIn).toLocaleString("ko-KR")}</p>
+                            </div>
+                          )}
+                          {a.checkOut && (
+                            <div>
+                              <p className="text-xs text-muted-foreground">{t("myPage.checkOut", "체크아웃")}</p>
+                              <p className="text-sm font-medium">{new Date(a.checkOut).toLocaleString("ko-KR")}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Roommates */}
+                      {roommates.length > 1 && (
+                        <div className="p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Users className="w-4 h-4 text-blue-500" />
+                            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                              {t("myPage.roommates", "같은 방 동료")} ({roommates.length}{t("myPage.persons", "명")})
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {roommates.map((id: number) => (
+                              <Badge key={id} variant="secondary" className="text-xs">
+                                {regMap[id] || `#${id}`}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Notes */}
+                      {a.notes && <p className="text-sm text-muted-foreground italic">{a.notes}</p>}
+
+                      {/* Action buttons: Copy address, Open in Google Maps */}
+                      <div className="flex gap-2 pt-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs gap-1"
+                          onClick={() => copyToClipboard(a.hotelName + (a.roomNumber ? ` ${a.roomNumber}호` : ""))}
+                        >
+                          <Copy className="w-3 h-3" />
+                          {t("myPage.copyAddress", "주소 복사")}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs gap-1"
+                          onClick={() => openGoogleMaps(a.hotelName)}
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {t("myPage.openMap", "지도 열기")}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </CardContent>

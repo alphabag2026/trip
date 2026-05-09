@@ -1490,7 +1490,8 @@
       "checkinDashboard": "QR 체크인",
       "checkinReport": "체크인 통계",
       "immigrationCards": "출입국카드",
-      "schedulePdf": "스케줄표 PDF"
+      "schedulePdf": "스케줄표 PDF",
+      "accommodationDashboard": "숙소 배정 현황"
     },
     "survey": {
       "addQuestion": "질문 추가",

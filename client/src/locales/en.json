@@ -1490,7 +1490,8 @@
       "checkinDashboard": "QR Check-in",
       "checkinReport": "Check-in Stats",
       "immigrationCards": "Immigration Cards",
-      "schedulePdf": "Schedule PDF"
+      "schedulePdf": "Schedule PDF",
+      "accommodationDashboard": "Room Assignment Map"
     },
     "survey": {
       "addQuestion": "Add Question",
