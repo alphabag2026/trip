@@ -4,7 +4,24 @@ import fs from "fs";
 import https from "https";
 import http from "http";
 
-const FONT_DIR = path.join(__dirname, "fonts");
+// Try multiple font directories (handles both dev and production Docker paths)
+function findFontDir(): string {
+  const candidates = [
+    path.join(__dirname, "fonts"),
+    path.join(process.cwd(), "server", "fonts"),
+    path.join(process.cwd(), "dist", "fonts"),
+    path.join(__dirname, "..", "server", "fonts"),
+  ];
+  for (const dir of candidates) {
+    if (fs.existsSync(path.join(dir, "NotoSansKR-Regular.ttf"))) {
+      console.log(`[PassportPdf] Font found at: ${dir}`);
+      return dir;
+    }
+  }
+  console.warn(`[PassportPdf] No font directory found, tried: ${candidates.join(", ")}`);
+  return candidates[0]; // fallback
+}
+const FONT_DIR = findFontDir();
 const FONT_REGULAR = path.join(FONT_DIR, "NotoSansKR-Regular.ttf");
 
 // Check if font file exists at startup
