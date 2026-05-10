@@ -1389,6 +1389,47 @@ export const appRouter = router({
         }
         return { updated: matching.length };
       }),
+    // 숙소별 사진 업로드 (base64 → S3)
+    uploadPhoto: adminProcedure
+      .input(z.object({
+        hotelName: z.string().min(1),
+        fileData: z.string(), // base64
+        fileName: z.string(),
+        mimeType: z.string(),
+        meetupId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const buffer = Buffer.from(input.fileData, "base64");
+        const suffix = Math.random().toString(36).slice(2, 8);
+        const fileKey = `accommodations/${input.hotelName.replace(/\s/g, "_")}-${suffix}-${input.fileName}`;
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        // 같은 hotelName의 모든 방에 사진 URL 적용
+        const allAccoms = await db.getAccommodations(input.meetupId);
+        const matching = allAccoms.filter((a: any) => a.hotelName === input.hotelName);
+        for (const a of matching) {
+          await db.updateAccommodation(a.id, { accommodationPhotoUrl: url });
+        }
+        return { url, updated: matching.length };
+      }),
+    // 숙소별 체크인/체크아웃 시간 일괄 설정
+    updateCheckInOut: adminProcedure
+      .input(z.object({
+        hotelName: z.string().min(1),
+        checkIn: z.string().optional(),
+        checkOut: z.string().optional(),
+        meetupId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const allAccoms = await db.getAccommodations(input.meetupId);
+        const matching = allAccoms.filter((a: any) => a.hotelName === input.hotelName);
+        const updateData: any = {};
+        if (input.checkIn) updateData.checkIn = new Date(input.checkIn);
+        if (input.checkOut) updateData.checkOut = new Date(input.checkOut);
+        for (const a of matching) {
+          await db.updateAccommodation(a.id, updateData);
+        }
+        return { updated: matching.length };
+      }),
   }),
 
   // ── Schedule Events ──────────────────────────────

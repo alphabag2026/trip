@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plane, Car, Hotel, CheckCircle, ArrowLeft, FileText, MessageCircle, MapPin, Copy, ExternalLink } from "lucide-react";
+import { Plane, Car, Hotel, CheckCircle, ArrowLeft, FileText, MessageCircle, MapPin, Copy, ExternalLink, Clock, ImageIcon, Navigation } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -133,14 +133,43 @@ export default function MyAssignments() {
             ) : (
               assignments.accommodations.map((a: any) => (
                 <div key={a.id} className="p-3 rounded-lg bg-muted/50 space-y-2">
-                  <span className="font-semibold">{a.hotelName}</span>
-                  {a.roomNumber && <p className="text-sm">{t("assignments.room")}: {a.roomNumber} ({a.roomType})</p>}
+                  {/* 숙소 사진 */}
+                  {a.accommodationPhotoUrl && (
+                    <div className="relative rounded-lg overflow-hidden h-36 bg-muted -mx-1 -mt-1 mb-2">
+                      <img src={a.accommodationPhotoUrl} alt={a.hotelName} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      <div className="absolute bottom-2 left-3 text-white">
+                        <p className="font-bold text-sm drop-shadow">{a.hotelName}</p>
+                        {a.roomNumber && <p className="text-xs drop-shadow opacity-90">{a.roomNumber} ({a.roomType})</p>}
+                      </div>
+                    </div>
+                  )}
+                  {!a.accommodationPhotoUrl && (
+                    <>
+                      <span className="font-semibold">{a.hotelName}</span>
+                      {a.roomNumber && <p className="text-sm">{t("assignments.room")}: {a.roomNumber} ({a.roomType})</p>}
+                    </>
+                  )}
+
+                  {/* 체크인/아웃 시간 */}
+                  {(a.checkIn || a.checkOut) && (
+                    <div className="flex items-center gap-2 p-2 rounded-md bg-green-500/10 border border-green-500/20">
+                      <Clock className="h-4 w-4 text-green-500 shrink-0" />
+                      <div className="text-sm">
+                        {a.checkIn && <span className="text-foreground">{t("assignments.checkIn", "체크인")}: <strong>{new Date(a.checkIn).toLocaleString()}</strong></span>}
+                        {a.checkIn && a.checkOut && <span className="text-muted-foreground mx-1.5">|</span>}
+                        {a.checkOut && <span className="text-foreground">{t("assignments.checkOut", "체크아웃")}: <strong>{new Date(a.checkOut).toLocaleString()}</strong></span>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 주소 및 이동 경로 */}
                   {a.address && (
                     <div className="flex items-start gap-2 p-2 rounded-md bg-background/60 border border-border/50">
                       <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-foreground break-words">{a.address}</p>
-                        <div className="flex items-center gap-2 mt-1.5">
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                           <button
                             onClick={() => { navigator.clipboard.writeText(a.address); toast.success(t("assignments.addressCopied", "주소가 복사되었습니다")); }}
                             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
@@ -157,12 +186,19 @@ export default function MyAssignments() {
                             <ExternalLink className="h-3 w-3" />
                             {t("assignments.openMap", "지도 보기")}
                           </a>
+                          <a
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a.address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs text-green-500 hover:text-green-400 transition-colors"
+                          >
+                            <Navigation className="h-3 w-3" />
+                            {t("assignments.getDirections", "경로 안내")}
+                          </a>
                         </div>
                       </div>
                     </div>
                   )}
-                  {a.checkIn && <p className="text-xs text-muted-foreground">{t("assignments.checkIn")}: {new Date(a.checkIn).toLocaleString()}</p>}
-                  {a.checkOut && <p className="text-xs text-muted-foreground">{t("assignments.checkOut")}: {new Date(a.checkOut).toLocaleString()}</p>}
                 </div>
               ))
             )}
