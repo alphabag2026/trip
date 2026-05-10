@@ -12,7 +12,9 @@ import {
   Hotel, Users, Building2, Home, TreePine, BedDouble,
   UserCheck, UserX, ChevronDown, ChevronUp, Search,
   Download, GripVertical, X, ArrowRight, Filter, Eye, EyeOff,
-  MapPin, Pencil, Check, Copy, ExternalLink, Camera, Clock, ImageIcon, Navigation
+  MapPin, Pencil, Check, Copy, ExternalLink, Camera, Clock, ImageIcon, Navigation,
+  Wifi, ParkingCircle, UtensilsCrossed, Waves, Dumbbell, WashingMachine, CookingPot, Snowflake,
+  Plus, Trash2, ChevronLeft, ChevronRight, Settings2
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -54,6 +56,14 @@ export default function AccommodationDashboard() {
   const [checkOutInput, setCheckOutInput] = useState("");
   // Photo preview
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  // Amenities editing state
+  const [editingAmenities, setEditingAmenities] = useState<string | null>(null);
+  const [amenitiesInput, setAmenitiesInput] = useState<any>({});
+  // Multi-photo upload state
+  const [uploadingPhotos, setUploadingPhotos] = useState<string | null>(null);
+  // Photo gallery state
+  const [galleryPhotos, setGalleryPhotos] = useState<string[]>([]);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   const utils = trpc.useUtils();
   const assignMutation = trpc.accommodation.assignToRoom.useMutation({
@@ -81,6 +91,19 @@ export default function AccommodationDashboard() {
     onError: (e) => toast.error(e.message),
   });
 
+  const updateAmenitiesMutation = trpc.accommodation.updateAmenities.useMutation({
+    onSuccess: (data) => { utils.accommodation.list.invalidate(); setEditingAmenities(null); toast.success(`편의시설 설정 완료 (${data.updated}개 방)`); },
+    onError: (e) => toast.error(e.message),
+  });
+  const uploadPhotosMutation = trpc.accommodation.uploadPhotos.useMutation({
+    onSuccess: (data) => { utils.accommodation.list.invalidate(); setUploadingPhotos(null); toast.success(`${data.uploaded}장 사진 업로드 완료`); },
+    onError: (e) => { setUploadingPhotos(null); toast.error(e.message); },
+  });
+  const removePhotoMutation = trpc.accommodation.removePhoto.useMutation({
+    onSuccess: () => { utils.accommodation.list.invalidate(); toast.success("사진 삭제 완료"); },
+    onError: (e) => toast.error(e.message),
+  });
+
   const handlePhotoUpload = (hotelName: string) => {
     const input = document.createElement("input");
     input.type = "file";
@@ -100,6 +123,31 @@ export default function AccommodationDashboard() {
     input.click();
   };
 
+  const handleMultiPhotoUpload = (hotelName: string) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.multiple = true;
+    input.onchange = async (e: any) => {
+      const files = Array.from(e.target.files || []) as File[];
+      if (files.length === 0) return;
+      const oversized = files.find(f => f.size > 5 * 1024 * 1024);
+      if (oversized) { toast.error("각 파일은 5MB 이하여야 합니다"); return; }
+      setUploadingPhotos(hotelName);
+      const fileDataArr: { fileData: string; fileName: string; mimeType: string }[] = [];
+      for (const file of files) {
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve((reader.result as string).split(",")[1]);
+          reader.readAsDataURL(file);
+        });
+        fileDataArr.push({ fileData: base64, fileName: file.name, mimeType: file.type });
+      }
+      uploadPhotosMutation.mutate({ hotelName, files: fileDataArr, meetupId: selectedMeetup });
+    };
+    input.click();
+  };
+
   const regMap = useMemo(() => {
     const map: Record<number, { name: string; phone?: string; nationality?: string }> = {};
     for (const r of registrations as any[]) {
@@ -110,7 +158,7 @@ export default function AccommodationDashboard() {
 
   // Group accommodations by hotel name with filters applied
   const grouped = useMemo(() => {
-    const groups: Record<string, { type: string; rooms: any[]; totalAssigned: number; totalCapacity: number; address: string; photoUrl: string; checkIn: string; checkOut: string }> = {};
+    const groups: Record<string, { type: string; rooms: any[]; totalAssigned: number; totalCapacity: number; address: string; photoUrl: string; photos: string[]; checkIn: string; checkOut: string; amenities: any }> = {};
     for (const a of accommodations as any[]) {
       // Apply room type filter
       if (roomTypeFilter !== "all" && a.roomType !== roomTypeFilter) continue;
@@ -119,11 +167,13 @@ export default function AccommodationDashboard() {
       // Apply unassigned-only filter (show rooms with empty slots)
       if (showUnassignedOnly && assigned >= capacity) continue;
       const key = a.hotelName || "미정";
-      if (!groups[key]) groups[key] = { type: a.accommodationType || "hotel", rooms: [], totalAssigned: 0, totalCapacity: 0, address: a.address || "", photoUrl: a.accommodationPhotoUrl || "", checkIn: a.checkIn || "", checkOut: a.checkOut || "" };
+      if (!groups[key]) groups[key] = { type: a.accommodationType || "hotel", rooms: [], totalAssigned: 0, totalCapacity: 0, address: a.address || "", photoUrl: a.accommodationPhotoUrl || "", photos: Array.isArray(a.accommodationPhotos) ? a.accommodationPhotos : [], checkIn: a.checkIn || "", checkOut: a.checkOut || "", amenities: a.amenities || null };
       if (a.address && !groups[key].address) groups[key].address = a.address;
       if (a.accommodationPhotoUrl && !groups[key].photoUrl) groups[key].photoUrl = a.accommodationPhotoUrl;
+      if (Array.isArray(a.accommodationPhotos) && a.accommodationPhotos.length > groups[key].photos.length) groups[key].photos = a.accommodationPhotos;
       if (a.checkIn && !groups[key].checkIn) groups[key].checkIn = a.checkIn;
       if (a.checkOut && !groups[key].checkOut) groups[key].checkOut = a.checkOut;
+      if (a.amenities && !groups[key].amenities) groups[key].amenities = a.amenities;
       groups[key].rooms.push({ ...a, assignedCount: assigned, capacity });
       groups[key].totalAssigned += assigned;
       groups[key].totalCapacity += capacity;
@@ -477,18 +527,28 @@ export default function AccommodationDashboard() {
                             <span>주소 추가</span>
                           </button>
                         )}
-                        {/* 사진/체크인아웃/경로 버튼 영역 */}
+                        {/* 사진/체크인아웃/편의시설 버튼 영역 */}
                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap" onClick={e => e.stopPropagation()}>
-                          {/* 사진 업로드/보기 */}
-                          {data.photoUrl ? (
+                          {/* 다중 사진 갤러리 */}
+                          {data.photos.length > 0 ? (
+                            <button onClick={() => { setGalleryPhotos(data.photos); setGalleryIndex(0); }} className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 transition-colors bg-blue-500/10 px-2 py-0.5 rounded-full">
+                              <ImageIcon className="h-3 w-3" />
+                              <span>사진 {data.photos.length}장</span>
+                            </button>
+                          ) : data.photoUrl ? (
                             <button onClick={() => setPreviewPhoto(data.photoUrl)} className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 transition-colors bg-blue-500/10 px-2 py-0.5 rounded-full">
                               <ImageIcon className="h-3 w-3" />
                               <span>사진 보기</span>
                             </button>
                           ) : null}
-                          <button onClick={() => handlePhotoUpload(hotelName)} disabled={uploadingPhoto === hotelName} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors bg-muted/50 px-2 py-0.5 rounded-full">
+                          <button onClick={() => handleMultiPhotoUpload(hotelName)} disabled={uploadingPhotos === hotelName} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors bg-muted/50 px-2 py-0.5 rounded-full">
                             <Camera className="h-3 w-3" />
-                            <span>{uploadingPhoto === hotelName ? "업로드 중..." : data.photoUrl ? "사진 변경" : "사진 업로드"}</span>
+                            <span>{uploadingPhotos === hotelName ? "업로드 중..." : "사진 추가"}</span>
+                          </button>
+                          {/* 편의시설 */}
+                          <button onClick={() => { setEditingAmenities(hotelName); setAmenitiesInput(data.amenities || {}); }} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors bg-muted/50 px-2 py-0.5 rounded-full">
+                            <Settings2 className="h-3 w-3" />
+                            <span>{data.amenities ? "편의시설 수정" : "편의시설 설정"}</span>
                           </button>
                           {/* 체크인/아웃 */}
                           {editingCheckInOut === hotelName ? (
@@ -532,13 +592,52 @@ export default function AccommodationDashboard() {
                     </div>
                   </CardTitle>
                 </CardHeader>
-                {/* 사진 미리보기 - 카드 헤더 아래 */}
-                {data.photoUrl && isExpanded && (
-                  <div className="px-6 pb-2">
-                    <div className="relative rounded-lg overflow-hidden h-40 bg-muted cursor-pointer" onClick={() => setPreviewPhoto(data.photoUrl)}>
-                      <img src={data.photoUrl} alt={hotelName} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                    </div>
+                {/* 사진 갤러리 + 편의시설 - 카드 헤더 아래 */}
+                {isExpanded && (data.photos.length > 0 || data.photoUrl || data.amenities) && (
+                  <div className="px-6 pb-2 space-y-2">
+                    {/* 다중 사진 갤러리 */}
+                    {data.photos.length > 0 ? (
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {data.photos.map((url: string, idx: number) => (
+                          <div key={idx} className="relative shrink-0 rounded-lg overflow-hidden h-32 w-44 bg-muted cursor-pointer group" onClick={() => { setGalleryPhotos(data.photos); setGalleryIndex(idx); }}>
+                            <img src={url} alt={`${hotelName} ${idx + 1}`} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                            <Button variant="ghost" size="sm" className="absolute top-1 right-1 h-5 w-5 p-0 bg-black/50 text-white hover:bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); removePhotoMutation.mutate({ hotelName, photoUrl: url, meetupId: selectedMeetup }); }}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : data.photoUrl ? (
+                      <div className="relative rounded-lg overflow-hidden h-40 bg-muted cursor-pointer" onClick={() => setPreviewPhoto(data.photoUrl)}>
+                        <img src={data.photoUrl} alt={hotelName} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                      </div>
+                    ) : null}
+                    {/* 편의시설 아이콘 표시 */}
+                    {data.amenities && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {data.amenities.wifi && (
+                          <div className="flex items-center gap-1 text-xs bg-blue-500/10 text-blue-500 px-2 py-1 rounded-full" title={`Wi-Fi: ${data.amenities.wifi.ssid} / PW: ${data.amenities.wifi.password}`}>
+                            <Wifi className="h-3 w-3" />
+                            <span>Wi-Fi</span>
+                            <button onClick={() => { navigator.clipboard.writeText(`ID: ${data.amenities.wifi.ssid}\nPW: ${data.amenities.wifi.password}`); toast.success("Wi-Fi 정보 복사 완료"); }} className="ml-0.5 hover:text-blue-700">
+                              <Copy className="h-2.5 w-2.5" />
+                            </button>
+                          </div>
+                        )}
+                        {data.amenities.parking && <span className="flex items-center gap-1 text-xs bg-green-500/10 text-green-500 px-2 py-1 rounded-full"><ParkingCircle className="h-3 w-3" />주차</span>}
+                        {data.amenities.breakfast && <span className="flex items-center gap-1 text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded-full"><UtensilsCrossed className="h-3 w-3" />조식</span>}
+                        {data.amenities.pool && <span className="flex items-center gap-1 text-xs bg-cyan-500/10 text-cyan-500 px-2 py-1 rounded-full"><Waves className="h-3 w-3" />수영장</span>}
+                        {data.amenities.gym && <span className="flex items-center gap-1 text-xs bg-purple-500/10 text-purple-500 px-2 py-1 rounded-full"><Dumbbell className="h-3 w-3" />헬스장</span>}
+                        {data.amenities.laundry && <span className="flex items-center gap-1 text-xs bg-pink-500/10 text-pink-500 px-2 py-1 rounded-full"><WashingMachine className="h-3 w-3" />세탁</span>}
+                        {data.amenities.kitchen && <span className="flex items-center gap-1 text-xs bg-amber-500/10 text-amber-500 px-2 py-1 rounded-full"><CookingPot className="h-3 w-3" />주방</span>}
+                        {data.amenities.aircon && <span className="flex items-center gap-1 text-xs bg-sky-500/10 text-sky-500 px-2 py-1 rounded-full"><Snowflake className="h-3 w-3" />에어컨</span>}
+                        {data.amenities.custom?.map((c: any, i: number) => (
+                          <span key={i} className="flex items-center gap-1 text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">{c.name}: {c.value}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 {isExpanded && (
@@ -683,6 +782,76 @@ export default function AccommodationDashboard() {
             <Button variant="ghost" size="sm" className="absolute top-2 right-2 h-8 w-8 p-0 bg-black/50 text-white hover:bg-black/70 rounded-full" onClick={() => setPreviewPhoto(null)}>
               <X className="h-4 w-4" />
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* 사진 갤러리 슬라이드 모달 */}
+      {galleryPhotos.length > 0 && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setGalleryPhotos([])}>
+          <div className="relative max-w-4xl max-h-[85vh] w-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
+            <img src={galleryPhotos[galleryIndex]} alt={`사진 ${galleryIndex + 1}`} className="max-h-[70vh] w-auto object-contain rounded-lg" />
+            <div className="flex items-center gap-4 mt-4">
+              <Button variant="ghost" size="sm" className="h-10 w-10 p-0 bg-white/10 text-white hover:bg-white/20 rounded-full" onClick={() => setGalleryIndex(i => (i - 1 + galleryPhotos.length) % galleryPhotos.length)} disabled={galleryPhotos.length <= 1}>
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <span className="text-white text-sm">{galleryIndex + 1} / {galleryPhotos.length}</span>
+              <Button variant="ghost" size="sm" className="h-10 w-10 p-0 bg-white/10 text-white hover:bg-white/20 rounded-full" onClick={() => setGalleryIndex(i => (i + 1) % galleryPhotos.length)} disabled={galleryPhotos.length <= 1}>
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+            <Button variant="ghost" size="sm" className="absolute top-2 right-2 h-8 w-8 p-0 bg-black/50 text-white hover:bg-black/70 rounded-full" onClick={() => setGalleryPhotos([])}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* 편의시설 편집 모달 */}
+      {editingAmenities && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setEditingAmenities(null)}>
+          <div className="bg-background rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Settings2 className="h-5 w-5" />
+              {editingAmenities} - 편의시설 설정
+            </h3>
+            {/* Wi-Fi */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <Wifi className="h-4 w-4 text-blue-500" /> Wi-Fi 정보
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input placeholder="Wi-Fi ID (SSID)" value={amenitiesInput.wifi?.ssid || ""} onChange={e => setAmenitiesInput((prev: any) => ({ ...prev, wifi: { ...(prev.wifi || {}), ssid: e.target.value, password: prev.wifi?.password || "" } }))} className="text-sm" />
+                <Input placeholder="비밀번호" value={amenitiesInput.wifi?.password || ""} onChange={e => setAmenitiesInput((prev: any) => ({ ...prev, wifi: { ...(prev.wifi || {}), password: e.target.value, ssid: prev.wifi?.ssid || "" } }))} className="text-sm" />
+              </div>
+            </div>
+            {/* 토글 항목들 */}
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { key: "parking", label: "주차장", icon: ParkingCircle, color: "text-green-500" },
+                { key: "breakfast", label: "조식", icon: UtensilsCrossed, color: "text-orange-500" },
+                { key: "pool", label: "수영장", icon: Waves, color: "text-cyan-500" },
+                { key: "gym", label: "헬스장", icon: Dumbbell, color: "text-purple-500" },
+                { key: "laundry", label: "세탁실", icon: WashingMachine, color: "text-pink-500" },
+                { key: "kitchen", label: "주방", icon: CookingPot, color: "text-amber-500" },
+                { key: "aircon", label: "에어컨", icon: Snowflake, color: "text-sky-500" },
+              ].map(({ key, label, icon: Icon, color }) => (
+                <label key={key} className="flex items-center gap-2 p-2 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors">
+                  <input type="checkbox" checked={!!amenitiesInput[key]} onChange={e => setAmenitiesInput((prev: any) => ({ ...prev, [key]: e.target.checked }))} className="rounded" />
+                  <Icon className={`h-4 w-4 ${color}`} />
+                  <span className="text-sm">{label}</span>
+                </label>
+              ))}
+            </div>
+            {/* 저장 버튼 */}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setEditingAmenities(null)}>취소</Button>
+              <Button onClick={() => {
+                const cleaned = { ...amenitiesInput };
+                if (cleaned.wifi && !cleaned.wifi.ssid && !cleaned.wifi.password) delete cleaned.wifi;
+                updateAmenitiesMutation.mutate({ hotelName: editingAmenities, amenities: cleaned, meetupId: selectedMeetup });
+              }}>저장</Button>
+            </div>
           </div>
         </div>
       )}

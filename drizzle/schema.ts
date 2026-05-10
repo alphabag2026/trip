@@ -248,6 +248,8 @@ export const accommodationAssignments = mysqlTable("accommodation_assignments", 
   checkIn: timestamp("checkIn"),
   checkOut: timestamp("checkOut"),
   accommodationPhotoUrl: varchar("accommodationPhotoUrl", { length: 1000 }),
+  accommodationPhotos: json("accommodationPhotos"), // ["url1", "url2", ...]
+  amenities: json("amenities"), // { wifi: { ssid, password }, parking: bool, breakfast: bool, pool: bool, gym: bool, laundry: bool, kitchen: bool, aircon: bool, custom: [{name, value}] }
   floorNumber: varchar("floorNumber", { length: 20 }),
   address: text("address"),
   notes: text("notes"),

@@ -1430,9 +1430,89 @@ export const appRouter = router({
         }
         return { updated: matching.length };
       }),
+
+    // 숙소별 편의시설 일괄 설정 (Wi-Fi, 주차, 조식 등)
+    updateAmenities: adminProcedure
+      .input(z.object({
+        hotelName: z.string().min(1),
+        amenities: z.object({
+          wifi: z.object({ ssid: z.string(), password: z.string() }).optional(),
+          parking: z.boolean().optional(),
+          breakfast: z.boolean().optional(),
+          pool: z.boolean().optional(),
+          gym: z.boolean().optional(),
+          laundry: z.boolean().optional(),
+          kitchen: z.boolean().optional(),
+          aircon: z.boolean().optional(),
+          custom: z.array(z.object({ name: z.string(), value: z.string() })).optional(),
+        }),
+        meetupId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const allAccoms = await db.getAccommodations(input.meetupId);
+        const matching = allAccoms.filter((a: any) => a.hotelName === input.hotelName);
+        for (const a of matching) {
+          await db.updateAccommodation(a.id, { amenities: input.amenities });
+        }
+        return { updated: matching.length };
+      }),
+
+    // 숙소별 다중 사진 업로드 (base64 → S3, 기존 사진에 추가)
+    uploadPhotos: adminProcedure
+      .input(z.object({
+        hotelName: z.string().min(1),
+        files: z.array(z.object({
+          fileData: z.string(),
+          fileName: z.string(),
+          mimeType: z.string(),
+        })),
+        meetupId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const uploadedUrls: string[] = [];
+        for (const file of input.files) {
+          const buffer = Buffer.from(file.fileData, "base64");
+          const suffix = nanoid(8);
+          const fileKey = `accommodations/${input.hotelName.replace(/\s/g, "_")}-${suffix}-${file.fileName}`;
+          const { url } = await storagePut(fileKey, buffer, file.mimeType);
+          uploadedUrls.push(url);
+        }
+        const allAccoms = await db.getAccommodations(input.meetupId);
+        const matching = allAccoms.filter((a: any) => a.hotelName === input.hotelName);
+        for (const a of matching) {
+          const existing: string[] = Array.isArray((a as any).accommodationPhotos) ? (a as any).accommodationPhotos : [];
+          const merged = [...existing, ...uploadedUrls];
+          await db.updateAccommodation(a.id, {
+            accommodationPhotos: merged,
+            accommodationPhotoUrl: merged[0] || (a as any).accommodationPhotoUrl,
+          });
+        }
+        return { uploaded: uploadedUrls.length, updated: matching.length, urls: uploadedUrls };
+      }),
+
+    // 숙소별 사진 삭제 (특정 URL 제거)
+    removePhoto: adminProcedure
+      .input(z.object({
+        hotelName: z.string().min(1),
+        photoUrl: z.string(),
+        meetupId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const allAccoms = await db.getAccommodations(input.meetupId);
+        const matching = allAccoms.filter((a: any) => a.hotelName === input.hotelName);
+        for (const a of matching) {
+          const existing: string[] = Array.isArray((a as any).accommodationPhotos) ? (a as any).accommodationPhotos : [];
+          const filtered = existing.filter(url => url !== input.photoUrl);
+          await db.updateAccommodation(a.id, {
+            accommodationPhotos: filtered,
+            accommodationPhotoUrl: filtered[0] || null,
+          });
+        }
+        return { updated: matching.length };
+      }),
   }),
 
-  // ── Schedule Events ──────────────────────────────
+  // ── Schedule Events ──────────────────────────────────────────────────
   schedule: router({
     list: publicProcedure
       .input(z.object({ meetupId: z.number().optional() }).optional())
