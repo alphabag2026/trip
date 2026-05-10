@@ -134,6 +134,9 @@ async function processNaturalLanguageCommand(text: string, imageUrl?: string): P
 - PASSPORT_PDF params: { meetupTitle?: string, format: "vietnam_police" | "cruise" | "generic" }
 - "여권 PDF" "공안 제출" "크루즈 명단" "패신저 리스트" "여권 목록 출력" 등의 메시지가 오면 PASSPORT_PDF로 분류
 - 행사명이 언급되면 meetupTitle에 넣고, 베트남/공안 관련이면 vietnam_police, 크루즈/여행사면 cruise, 그 외 generic
+17. EXPORT_CSV - 데이터 엑셀/CSV 내보내기 (참가자 명단, 숙소 배정, 식사 통계 등)
+- EXPORT_CSV params: { dataType: "participants" | "accommodations" | "flights" | "meals" | "passports", meetupTitle?: string }
+- "참가자 명단 엑셀" "숙소 배정 현황 파일" "식사 통계 다운로드" "항공편 목록 CSV" "여권 목록 엑셀" 등의 메시지가 오면 EXPORT_CSV로 분류
 `,
       },
     ];
@@ -417,6 +420,73 @@ async function executeCommand(cmd: CommandResult): Promise<string> {
         }
       }
 
+      case "EXPORT_CSV": {
+        try {
+          const d = cmd.data || {};
+          const dataType = d.dataType || "participants";
+          const meetupTitle = d.meetupTitle;
+          const dbInstance = await getDbForWebhook();
+          if (!dbInstance) return "__SEND_TEXT__⚠️ DB 연결 오류";
+          const { registrations, accommodationAssignments, flightSchedules, passportInfo } = await import("../drizzle/schema");
+          const { eq, and } = await import("drizzle-orm");
+          let meetupId: number | undefined;
+          if (meetupTitle) {
+            const meetups = await getMeetups();
+            const found = meetups?.find((m: any) => m.title?.toLowerCase().includes(meetupTitle.toLowerCase()));
+            if (found) meetupId = found.id;
+          }
+          let csvContent = "";
+          let fileName = "";
+          const BOM = "\uFEFF";
+          if (dataType === "participants") {
+            let conditions: any[] = [];
+            if (meetupId) conditions.push(eq(registrations.meetupId, meetupId));
+            const regs = await dbInstance.select().from(registrations).where(conditions.length ? and(...conditions) : undefined);
+            csvContent = BOM + "번호,이름,영어이름,여권번호,생년월일,성별,국적,전화번호,상태\n";
+            regs.forEach((r: any, i: number) => {
+              csvContent += `${i+1},${r.name || ""},${r.englishName || ""},${r.passportNumber || ""},${r.birthDate || ""},${r.gender || ""},${r.nationality || ""},${r.phone || ""},${r.status || ""}\n`;
+            });
+            fileName = `participants-${Date.now()}.csv`;
+          } else if (dataType === "accommodations") {
+            let conditions: any[] = [];
+            if (meetupId) conditions.push(eq(accommodationAssignments.meetupId, meetupId));
+            const accs = await dbInstance.select().from(accommodationAssignments).where(conditions.length ? and(...conditions) : undefined);
+            csvContent = BOM + "번호,숙소명,방번호,방타입,숙소유형,배정자,체크인,체크아웃,메모\n";
+            accs.forEach((a: any, i: number) => {
+              csvContent += `${i+1},${a.hotelName || ""},${a.roomNumber || ""},${a.roomType || ""},${a.accommodationType || ""},${a.assignedTo || ""},${a.checkIn || ""},${a.checkOut || ""},${a.notes || ""}\n`;
+            });
+            fileName = `accommodations-${Date.now()}.csv`;
+          } else if (dataType === "flights") {
+            let conditions: any[] = [];
+            if (meetupId) conditions.push(eq(flightSchedules.meetupId, meetupId));
+            const flights = await dbInstance.select().from(flightSchedules).where(conditions.length ? and(...conditions) : undefined);
+            csvContent = BOM + "번호,항공사,편명,출발공항,도착공항,출발일,출발시간,방향,예약번호\n";
+            flights.forEach((f: any, i: number) => {
+              csvContent += `${i+1},${f.airline || ""},${f.flightNumber || ""},${f.departureAirport || ""},${f.arrivalAirport || ""},${f.departureDate || ""},${f.departureTime || ""},${f.direction || ""},${f.bookingReference || ""}\n`;
+            });
+            fileName = `flights-${Date.now()}.csv`;
+          } else if (dataType === "passports") {
+            const regs = await dbInstance.select().from(registrations);
+            csvContent = BOM + "번호,이름,여권번호,생년월일,성별,국적,여권만료일,전화번호\n";
+            for (let i = 0; i < regs.length; i++) {
+              const r = regs[i] as any;
+              let pData: any = r.passportOcrData ? (typeof r.passportOcrData === "string" ? JSON.parse(r.passportOcrData) : r.passportOcrData) : {};
+              csvContent += `${i+1},${r.name || ""},${pData.passportNumber || r.passportNumber || ""},${pData.dateOfBirth || r.birthDate || ""},${pData.gender || r.gender || ""},${pData.nationality || r.nationality || ""},${pData.expiryDate || ""},${r.phone || ""}\n`;
+            }
+            fileName = `passports-${Date.now()}.csv`;
+          } else {
+            return "__SEND_TEXT__❌ 지원하지 않는 데이터 유형입니다. (participants, accommodations, flights, passports)";
+          }
+          const { storagePut } = await import("./storage");
+          const key = `exports/${fileName}`;
+          const { url } = await storagePut(key, Buffer.from(csvContent, "utf-8"), "text/csv");
+          const typeLabels: Record<string, string> = { participants: "참가자 명단", accommodations: "숙소 배정 현황", flights: "항공편 목록", meals: "식사 통계", passports: "여권 정보" };
+          return `__SEND_DOC__${url}__SEP__✅ ${typeLabels[dataType] || dataType} CSV 내보내기 완료!\n\n📊 데이터: ${typeLabels[dataType] || dataType}${meetupTitle ? `\n🎯 행사: ${meetupTitle}` : ""}__SEP__${fileName}`;
+        } catch (e) {
+          console.error("[TelegramWebhook] EXPORT_CSV error:", e);
+          return "__SEND_TEXT__⚠️ CSV 내보내기 중 오류가 발생했습니다.";
+        }
+      }
       case "PASSPORT_PDF": {
         try {
           const d = cmd.data || {};
@@ -473,7 +543,7 @@ async function executeCommand(cmd: CommandResult): Promise<string> {
           const fileName = `passport-${format}-${Date.now()}.pdf`;
           const key = `exports/${fileName}`;
           const { url } = await storagePut(key, pdfBuffer, "application/pdf");
-          return `✅ 여권 PDF 생성 완료!\n\n📄 형식: ${format === "vietnam_police" ? "베트남 공안용" : format === "cruise" ? "크루즈 여행사용" : "일반"}\n👥 인원: ${entries.length}명\n${meetupTitle ? `🎯 행사: ${meetupTitle}\n` : ""}\n📥 다운로드: ${url}`;
+          return `__SEND_DOC__${url}__SEP__✅ 여권 PDF 생성 완료!\n\n📄 형식: ${format === "vietnam_police" ? "베트남 공안용" : format === "cruise" ? "크루즈 여행사용" : "일반"}\n👥 인원: ${entries.length}명${meetupTitle ? `\n🎯 행사: ${meetupTitle}` : ""}__SEP__${fileName}`;
         } catch (e) {
           console.error("[TelegramWebhook] PASSPORT_PDF error:", e);
           return "⚠️ PDF 생성 중 오류가 발생했습니다.";
@@ -726,6 +796,12 @@ webhookRouter.post("/", async (req: Request, res: Response) => {
         if (meetupButtons.length > 0) keyboard.push(meetupButtons);
         keyboard.push([{ text: "📋 상세보기", callback_data: `detail:${uploadId}` }]);
         await sendBotReplyWithKeyboard(config.botToken, chatId, executionResult, keyboard);
+      } else if (executionResult.startsWith("__SEND_DOC__")) {
+        const parts = executionResult.replace("__SEND_DOC__", "").split("__SEP__");
+        const [docUrl, caption, docFileName] = parts;
+        await sendBotDocument(config.botToken, chatId, docUrl, caption || "", docFileName || "file");
+      } else if (executionResult.startsWith("__SEND_TEXT__")) {
+        await sendBotReply(config.botToken, chatId, executionResult.replace("__SEND_TEXT__", ""));
       } else {
         await sendBotReply(config.botToken, chatId, executionResult);
       }
@@ -733,12 +809,30 @@ webhookRouter.post("/", async (req: Request, res: Response) => {
     } else {
       // Non-saving commands (queries, help, etc.)
       const executionResult = await executeCommand(commandResult);
-      await sendBotReply(config.botToken, chatId, executionResult);
+      if (executionResult.startsWith("__SEND_DOC__")) {
+        const parts = executionResult.replace("__SEND_DOC__", "").split("__SEP__");
+        const [docUrl, caption, docFileName] = parts;
+        await sendBotDocument(config.botToken, chatId, docUrl, caption || "", docFileName || "file");
+      } else if (executionResult.startsWith("__SEND_TEXT__")) {
+        await sendBotReply(config.botToken, chatId, executionResult.replace("__SEND_TEXT__", ""));
+      } else {
+        await sendBotReply(config.botToken, chatId, executionResult);
+      }
       return res.json({ ok: true, intent: commandResult.intent });
     }
 
   } catch (error) {
     console.error("[TelegramWebhook] Error:", error);
+    // Always try to reply to the user even on error
+    try {
+      const config = await getTelegramConfig();
+      const chatId = String(req.body?.message?.chat?.id || req.body?.edited_message?.chat?.id || "");
+      if (config?.botToken && chatId) {
+        await sendBotReply(config.botToken, chatId, "⚠️ 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      }
+    } catch (replyError) {
+      console.error("[TelegramWebhook] Error reply failed:", replyError);
+    }
     return res.status(200).json({ ok: false, error: "Internal error" });
   }
 });
@@ -863,6 +957,26 @@ async function answerCallbackQuery(botToken: string, callbackQueryId: string, te
   }
 }
 // ── Helper: Send reply to Telegram ───────────────────────
+async function sendBotDocument(botToken: string, chatId: string, fileUrl: string, caption: string, fileName: string) {
+  try {
+    await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        document: fileUrl,
+        caption: caption.substring(0, 1024),
+        parse_mode: "HTML",
+        // file_name is not supported via URL, but caption helps
+      }),
+    });
+  } catch (e) {
+    console.error("[TelegramWebhook] Document send failed:", e);
+    // Fallback to text with download link
+    await sendBotReply(botToken, chatId, `${caption}\n\n📥 다운로드: ${fileUrl}`);
+  }
+}
+
 async function sendBotReply(botToken: string, chatId: string, text: string) {
   try {
     // Telegram has a 4096 char limit per message
