@@ -3,7 +3,8 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plane, Car, Hotel, CheckCircle, ArrowLeft, FileText, MessageCircle, MapPin, Copy, ExternalLink, Clock, ImageIcon, Navigation, Wifi, ParkingCircle, UtensilsCrossed, Waves, Dumbbell, WashingMachine, CookingPot, Snowflake, ChevronLeft, ChevronRight, X, Share2 } from "lucide-react";
+import { Plane, Car, Hotel, CheckCircle, ArrowLeft, FileText, MessageCircle, MapPin, Copy, ExternalLink, Clock, ImageIcon, Navigation, Wifi, ParkingCircle, UtensilsCrossed, Waves, Dumbbell, WashingMachine, CookingPot, Snowflake, ChevronLeft, ChevronRight, X, Share2, Map as MapIcon } from "lucide-react";
+import { MapView } from "@/components/Map";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -14,6 +15,7 @@ export default function MyAssignments() {
   const regId = parseInt(params.regId || "0");
   const [galleryPhotos, setGalleryPhotos] = useState<string[]>([]);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [showMapFor, setShowMapFor] = useState<string | null>(null);
 
   const { data: assignments, refetch } = trpc.assignment.getMyAssignments.useQuery(
     { registrationId: regId }, { enabled: regId > 0 }
@@ -221,38 +223,93 @@ export default function MyAssignments() {
 
                   {/* 주소 및 이동 경로 */}
                   {a.address && (
-                    <div className="flex items-start gap-2 p-2 rounded-md bg-background/60 border border-border/50">
-                      <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-foreground break-words">{a.address}</p>
-                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2 p-2 rounded-md bg-background/60 border border-border/50">
+                        <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-foreground break-words">{a.address}</p>
+                          {/* 주소 복사 버튼 (크게 강조) */}
                           <button
-                            onClick={() => { navigator.clipboard.writeText(a.address); toast.success(t("assignments.addressCopied", "주소가 복사되었습니다")); }}
-                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                            onClick={() => { navigator.clipboard.writeText(a.address); toast.success("주소가 복사되었습니다. 네비게이션 앱에 붙여넣기 하세요!"); }}
+                            className="flex items-center gap-1.5 mt-2 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full font-medium hover:bg-primary/20 transition-colors"
                           >
-                            <Copy className="h-3 w-3" />
-                            {t("assignments.copyAddress", "복사")}
+                            <Copy className="h-3.5 w-3.5" />
+                            주소 복사 (네비 앱에 붙여넣기)
                           </button>
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.address)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-400 transition-colors"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            {t("assignments.openMap", "지도 보기")}
-                          </a>
-                          <a
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a.address)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs text-green-500 hover:text-green-400 transition-colors"
-                          >
-                            <Navigation className="h-3 w-3" />
-                            {t("assignments.getDirections", "경로 안내")}
-                          </a>
                         </div>
                       </div>
+
+                      {/* 네비게이션 앱 바로가기 버튼들 */}
+                      <div className="grid grid-cols-3 gap-1.5">
+                        <a
+                          href={`https://map.kakao.com/link/search/${encodeURIComponent(a.address)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex flex-col items-center gap-1 p-2 rounded-lg bg-[#FEE500]/10 hover:bg-[#FEE500]/20 transition-colors text-center"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-[#FEE500] flex items-center justify-center">
+                            <span className="text-[#3C1E1E] text-xs font-bold">카</span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">카카오맵</span>
+                        </a>
+                        <a
+                          href={`nmap://search?query=${encodeURIComponent(a.address)}&appname=alphatrip`}
+                          onClick={(e) => {
+                            // 네이버맵 앱이 없으면 웹으로 펴백
+                            setTimeout(() => { window.open(`https://map.naver.com/v5/search/${encodeURIComponent(a.address)}`, '_blank'); }, 500);
+                          }}
+                          className="flex flex-col items-center gap-1 p-2 rounded-lg bg-[#2DB400]/10 hover:bg-[#2DB400]/20 transition-colors text-center"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-[#2DB400] flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">N</span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">네이버맵</span>
+                        </a>
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a.address)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex flex-col items-center gap-1 p-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 transition-colors text-center"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                            <Navigation className="h-3.5 w-3.5 text-white" />
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">구글맵</span>
+                        </a>
+                      </div>
+
+                      {/* 지도 보기 토글 */}
+                      <button
+                        onClick={() => setShowMapFor(showMapFor === `${a.id}` ? null : `${a.id}`)}
+                        className="flex items-center gap-1.5 w-full justify-center text-xs text-muted-foreground hover:text-primary py-1.5 border border-border/50 rounded-lg transition-colors"
+                      >
+                        <MapIcon className="h-3.5 w-3.5" />
+                        {showMapFor === `${a.id}` ? "지도 접기" : "지도에서 위치 확인"}
+                      </button>
+
+                      {/* 구글맵 임베드 */}
+                      {showMapFor === `${a.id}` && (
+                        <div className="rounded-lg overflow-hidden border border-border/50">
+                          <MapView
+                            className="h-[200px] w-full"
+                            initialCenter={{ lat: 37.5665, lng: 126.978 }}
+                            initialZoom={15}
+                            onMapReady={(map) => {
+                              const geocoder = new google.maps.Geocoder();
+                              geocoder.geocode({ address: a.address }, (results, status) => {
+                                if (status === "OK" && results && results[0]) {
+                                  map.setCenter(results[0].geometry.location);
+                                  new google.maps.marker.AdvancedMarkerElement({
+                                    map,
+                                    position: results[0].geometry.location,
+                                    title: a.hotelName,
+                                  });
+                                }
+                              });
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
 

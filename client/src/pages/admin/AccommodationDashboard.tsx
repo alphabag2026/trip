@@ -14,8 +14,9 @@ import {
   Download, GripVertical, X, ArrowRight, Filter, Eye, EyeOff,
   MapPin, Pencil, Check, Copy, ExternalLink, Camera, Clock, ImageIcon, Navigation,
   Wifi, ParkingCircle, UtensilsCrossed, Waves, Dumbbell, WashingMachine, CookingPot, Snowflake,
-  Plus, Trash2, ChevronLeft, ChevronRight, Settings2
+  Plus, Trash2, ChevronLeft, ChevronRight, Settings2, Map as MapIcon
 } from "lucide-react";
+import { MapView } from "@/components/Map";
 import { toast } from "sonner";
 
 const ACCOMMODATION_TYPE_LABELS: Record<string, string> = {
@@ -48,6 +49,8 @@ export default function AccommodationDashboard() {
   // Address editing state
   const [editingAddress, setEditingAddress] = useState<string | null>(null);
   const [addressInput, setAddressInput] = useState("");
+  // Map preview state
+  const [showMapForHotel, setShowMapForHotel] = useState<string | null>(null);
   // Photo upload state
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null);
   // Check-in/out editing state
@@ -508,18 +511,46 @@ export default function AccommodationDashboard() {
                             </Button>
                           </div>
                         ) : data.address ? (
-                          <div className="flex items-center gap-1.5 mt-1 group/addr" onClick={e => e.stopPropagation()}>
-                            <MapPin className="h-3 w-3 text-primary shrink-0" />
-                            <span className="text-xs text-muted-foreground truncate">{data.address}</span>
-                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-0 group-hover/addr:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(data.address); toast.success("주소 복사 완료"); }} title="주소 복사">
-                              <Copy className="h-3 w-3" />
-                            </Button>
-                            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.address)}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="opacity-0 group-hover/addr:opacity-100 transition-opacity">
-                              <ExternalLink className="h-3 w-3 text-blue-500 hover:text-blue-600" />
-                            </a>
-                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-0 group-hover/addr:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); setEditingAddress(hotelName); setAddressInput(data.address); }} title="주소 수정">
-                              <Pencil className="h-3 w-3" />
-                            </Button>
+                          <div className="space-y-1" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center gap-1.5 group/addr">
+                              <MapPin className="h-3 w-3 text-primary shrink-0" />
+                              <span className="text-xs text-muted-foreground truncate">{data.address}</span>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-0 group-hover/addr:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(data.address); toast.success("주소 복사 완료"); }} title="주소 복사">
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                              <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.address)}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="opacity-0 group-hover/addr:opacity-100 transition-opacity">
+                                <ExternalLink className="h-3 w-3 text-blue-500 hover:text-blue-600" />
+                              </a>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-0 group-hover/addr:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); setShowMapForHotel(showMapForHotel === hotelName ? null : hotelName); }} title="지도 보기">
+                                <MapIcon className="h-3 w-3 text-blue-500" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-0 group-hover/addr:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); setEditingAddress(hotelName); setAddressInput(data.address); }} title="주소 수정">
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            {/* 관리자 지도 미리보기 */}
+                            {showMapForHotel === hotelName && (
+                              <div className="rounded-lg overflow-hidden border border-border/50 mt-1">
+                                <MapView
+                                  className="h-[180px] w-full"
+                                  initialCenter={{ lat: 37.5665, lng: 126.978 }}
+                                  initialZoom={15}
+                                  onMapReady={(map) => {
+                                    const geocoder = new google.maps.Geocoder();
+                                    geocoder.geocode({ address: data.address }, (results, status) => {
+                                      if (status === "OK" && results && results[0]) {
+                                        map.setCenter(results[0].geometry.location);
+                                        new google.maps.marker.AdvancedMarkerElement({
+                                          map,
+                                          position: results[0].geometry.location,
+                                          title: hotelName,
+                                        });
+                                      }
+                                    });
+                                  }}
+                                />
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <button className="flex items-center gap-1 mt-1 text-xs text-muted-foreground/60 hover:text-primary transition-colors" onClick={(e) => { e.stopPropagation(); setEditingAddress(hotelName); setAddressInput(""); }}>
