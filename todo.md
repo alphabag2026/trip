@@ -2875,3 +2875,24 @@
 - [x] __dirname ESM 호환 수정 (import.meta.url)
 - [x] /manus-storage/ 상대경로를 storageGet으로 실제 다운로드 URL 변환
 - [x] passport_info 이름 기반 매칭 추가 (userId=0/NULL 대응)
+
+## v6.30 - 밋업 공개 설정 (public / referral_only)
+
+### DB 스키마
+- [x] meetups 테이블에 visibility 필드 추가 (public / referral_only, 기본값 referral_only)
+
+### 백엔드 API
+- [x] 밋업 생성/수정 시 visibility 필드 처리
+- [x] 공개 밋업 검색 API 추가 (meetup.search - 제목/지역 검색 + 프로젝트 코드)
+- [x] 공개 밋업 목록 API 추가 (meetup.publicList - 공개 밋업만 반환)
+
+### 프론트엔드
+- [x] 밋업 생성 UI에 공개 설정 옵션 추가 (공개/추천코드 전용)
+- [x] 밋업 수정 UI에 공개 설정 변경 기능
+- [x] Home.tsx 검색 기능 확장 - 프로젝트 코드 + 밋업 제목/지역 검색
+- [x] 홈 화면에 공개 밋업 목록 섹션 추가 (카드 형태)
+- [x] 밋업 카드에 공개/비공개 뱃지 표시
+- [x] 비로그인 사용자도 공개 밋업 검색/조회 가능
+
+### 테스트
+- [x] v6.30 vitest 테스트 (9건 통과)

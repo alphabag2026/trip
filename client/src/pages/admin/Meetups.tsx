@@ -26,6 +26,7 @@ export default function AdminMeetups() {
     destinationCountry: "", location: "", description: "",
     scheduleStart: "", scheduleEnd: "", maxParticipants: 0,
     baggageNotice: "",
+    visibility: "referral_only" as "public" | "referral_only",
   });
   // 밋업 취소 상태
   const [cancelMeetup, setCancelMeetup] = useState<any>(null);
@@ -85,6 +86,7 @@ export default function AdminMeetups() {
           scheduleEnd: result.data.scheduleEnd || "",
           maxParticipants: result.data.maxParticipants || 0,
           baggageNotice: result.data.suggestedBaggageNotice || "초과화물은 직접부담할 수 있습니다.",
+          visibility: "referral_only" as const,
         });
         setShowAiMode(false);
         toast.success(t("admin.meetups.t39", "AI가 밋업 정보를 자동으로 채웠습니다!"));
@@ -102,6 +104,7 @@ export default function AdminMeetups() {
     destinationCountry: "", location: "", description: "",
     scheduleStart: "", scheduleEnd: "", maxParticipants: 0,
     baggageNotice: "초과화물은 직접부담할 수 있습니다.",
+    visibility: "referral_only" as "public" | "referral_only",
   });
 
   const typeLabels: Record<string, string> = {
@@ -144,6 +147,7 @@ export default function AdminMeetups() {
       scheduleEnd: m.scheduleEnd ? new Date(m.scheduleEnd).toISOString().split("T")[0] : "",
       maxParticipants: m.maxParticipants || 0,
       baggageNotice: m.baggageNotice || "",
+      visibility: m.visibility || "referral_only",
     });
     setEditMeetup(m);
   };
@@ -154,6 +158,7 @@ export default function AdminMeetups() {
       destinationCountry: "", location: "", description: "",
       scheduleStart: "", scheduleEnd: "", maxParticipants: 0,
       baggageNotice: "초과화물은 직접부담할 수 있습니다.",
+      visibility: "referral_only",
     });
     setAiParsedData(null);
     setAiPrompt("");
@@ -297,6 +302,11 @@ export default function AdminMeetups() {
                       {m.locationType === "overseas" && (
                         <span className="text-[10px] px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-500 shrink-0">해외</span>
                       )}
+                      {m.visibility === "public" ? (
+                        <span className="text-[10px] px-1 py-0.5 rounded bg-blue-500/20 text-blue-500 shrink-0">공개</span>
+                      ) : (
+                        <span className="text-[10px] px-1 py-0.5 rounded bg-gray-500/20 text-gray-400 shrink-0">추천</span>
+                      )}
                       {m.invitedCountries && Array.isArray(m.invitedCountries) && (m.invitedCountries as string[]).length > 0 && (
                         <span className="flex items-center gap-0.5 shrink-0">
                           {(m.invitedCountries as string[]).slice(0, 3).map((code: string) => (
@@ -383,6 +393,11 @@ export default function AdminMeetups() {
                     <h3 className={`font-semibold text-lg ${m.status === "cancelled" ? "line-through text-muted-foreground" : ""}`}>{m.title}</h3>
                     {m.status === "cancelled" && (
                       <Badge variant="destructive" className="text-[10px]">취소됨</Badge>
+                    )}
+                    {m.visibility === "public" ? (
+                      <Badge className="text-[10px] bg-blue-500/20 text-blue-500 border-blue-500/30">공개</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] text-muted-foreground">추천코드</Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
@@ -650,6 +665,18 @@ export default function AdminMeetups() {
               <Input type="number" value={form.maxParticipants || ""} onChange={e => setForm(p => ({...p, maxParticipants: parseInt(e.target.value) || 0}))} placeholder={t("admin.meetups.t47", "0 = 제한없음")} />
             </div>
             <div><Label>{t("admin.meetups.description")}</Label><Textarea value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))} rows={3} /></div>
+            {/* 공개 설정 */}
+            <div>
+              <Label className="flex items-center gap-2"><Globe className="h-4 w-4 text-blue-500" />{t("admin.meetups.visibility", "공개 설정")}</Label>
+              <Select value={form.visibility} onValueChange={v => setForm(p => ({...p, visibility: v as any}))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">{t("admin.meetups.visibility_public", "공개 - 누구나 검색/조회 가능")}</SelectItem>
+                  <SelectItem value="referral_only">{t("admin.meetups.visibility_referral", "추천코드 전용 - 링크/코드로만 접근")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">{t("admin.meetups.visibility_desc", "공개 밋업은 홈 화면 검색에 노출됩니다.")}</p>
+            </div>
             {/* 수화물 공지 */}
             <div>
               <Label className="flex items-center gap-2"><Luggage className="h-4 w-4 text-amber-500" />{t("admin.meetups.t29", "수화물 공지")}</Label>
@@ -759,6 +786,7 @@ export default function AdminMeetups() {
               scheduleEnd: editForm.scheduleEnd || undefined,
               maxParticipants: editForm.maxParticipants || undefined,
               baggageNotice: editForm.baggageNotice || undefined,
+              visibility: editForm.visibility,
             });
             setEditMeetup(null);
           }} className="space-y-4">
@@ -810,6 +838,17 @@ export default function AdminMeetups() {
             <div>
               <Label className="flex items-center gap-2"><Luggage className="h-4 w-4 text-amber-500" />{t("admin.meetups.t29", "수화물 공지")}</Label>
               <Textarea value={editForm.baggageNotice} onChange={e => setEditForm(p => ({...p, baggageNotice: e.target.value}))} rows={2} />
+            </div>
+            {/* 공개 설정 */}
+            <div>
+              <Label className="flex items-center gap-2"><Globe className="h-4 w-4 text-blue-500" />{t("admin.meetups.visibility", "공개 설정")}</Label>
+              <Select value={editForm.visibility} onValueChange={v => setEditForm(p => ({...p, visibility: v as any}))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">{t("admin.meetups.visibility_public", "공개 - 누구나 검색/조회 가능")}</SelectItem>
+                  <SelectItem value="referral_only">{t("admin.meetups.visibility_referral", "추천코드 전용 - 링크/코드로만 접근")}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex gap-2">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setEditMeetup(null)}>{t("admin.meetups.t36", "취소")}</Button>

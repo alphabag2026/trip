@@ -175,6 +175,58 @@ export async function getMeetupByProjectCode(code: string) {
   return result[0];
 }
 
+// ── Public Meetups (공개 밋업 검색/목록) ──────────────
+export async function getPublicMeetups(filters?: { search?: string; status?: string }) {
+  const db = await getDb(); if (!db) return [];
+  const conditions = [eq(meetups.visibility, "public")];
+  if (filters?.status) conditions.push(eq(meetups.status, filters.status as any));
+  if (filters?.search) {
+    conditions.push(
+      or(
+        like(meetups.title, `%${filters.search}%`),
+        like(meetups.destinationCountry, `%${filters.search}%`),
+        like(meetups.location, `%${filters.search}%`),
+        like(meetups.projectCode, `%${filters.search}%`)
+      )!
+    );
+  }
+  return db.select().from(meetups).where(and(...conditions)).orderBy(desc(meetups.createdAt)).limit(50);
+}
+
+export async function searchMeetups(query: string) {
+  const db = await getDb(); if (!db) return [];
+  
+  // Empty query: return all public meetups
+  if (!query.trim()) {
+    return db.select().from(meetups).where(
+      eq(meetups.visibility, "public")
+    ).orderBy(desc(meetups.createdAt)).limit(20);
+  }
+  
+  // Search public meetups + by project code (any visibility)
+  const publicResults = await db.select().from(meetups).where(
+    and(
+      eq(meetups.visibility, "public"),
+      or(
+        like(meetups.title, `%${query}%`),
+        like(meetups.destinationCountry, `%${query}%`),
+        like(meetups.location, `%${query}%`)
+      )
+    )
+  ).orderBy(desc(meetups.createdAt)).limit(20);
+  
+  // Also search by exact project code (any visibility)
+  const codeResult = await db.select().from(meetups).where(eq(meetups.projectCode, query)).limit(1);
+  
+  // Merge results, avoiding duplicates
+  const ids = new Set(publicResults.map(m => m.id));
+  const merged = [...publicResults];
+  for (const m of codeResult) {
+    if (!ids.has(m.id)) merged.push(m);
+  }
+  return merged;
+}
+
 // ── Registrations (강화된 검색 필터) ──────────────
 export async function createRegistration(data: InsertRegistration) {
   const db = await getDb(); if (!db) throw new Error("DB not available");

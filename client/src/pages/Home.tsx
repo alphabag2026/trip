@@ -647,6 +647,9 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ── Public Meetups List ── */}
+        <PublicMeetupsList navigate={navigate} t={t} />
+
         {/* ── Profile Completion (authenticated only) ── */}
         {isAuthenticated && (
           <section className="py-2">
@@ -908,38 +911,41 @@ export default function Home() {
 }
 
 // ═══════════════════════════════════════════════════════
-// 프로젝트 코드 검색 컴포넌트
+// 통합 검색 컴포넌트 (공개 밋업 + 프로젝트 코드)
 // ═══════════════════════════════════════════════════════
 function ProjectCodeSearch({ navigate, t }: { navigate: (path: string) => void; t: any }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const searchMutation = trpc.meetup.getByProjectCode.useQuery(
-    { code: searchQuery.trim() },
-    {
-      enabled: false, // 수동 트리거
-      retry: false,
-    }
-  );
 
   const handleSearch = async () => {
     const q = searchQuery.trim();
     if (!q) return;
     setSearchError("");
+    setSearchResults([]);
+    setIsSearching(true);
     try {
       const utils = trpc.useUtils();
-      const result = await utils.meetup.getByProjectCode.fetch({ code: q });
-      if (result?.shareToken) {
-        navigate(`/m/${result.shareToken}`);
-        setSearchOpen(false);
-        setSearchQuery("");
+      const results = await utils.meetup.search.fetch({ query: q });
+      if (results && results.length > 0) {
+        if (results.length === 1) {
+          // 결과가 1개면 바로 이동
+          navigate(`/m/${results[0].shareToken}`);
+          setSearchOpen(false);
+          setSearchQuery("");
+        } else {
+          setSearchResults(results);
+        }
       } else {
-        setSearchError(t("home.searchNotFound", "해당 프로젝트 코드의 밋업을 찾을 수 없습니다."));
+        setSearchError(t("home.searchNotFound", "검색 결과가 없습니다. 프로젝트 코드 또는 밋업명으로 검색해보세요."));
       }
     } catch {
-      setSearchError(t("home.searchNotFound", "해당 프로젝트 코드의 밋업을 찾을 수 없습니다."));
+      setSearchError(t("home.searchNotFound", "검색 결과가 없습니다."));
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -970,34 +976,143 @@ function ProjectCodeSearch({ navigate, t }: { navigate: (path: string) => void; 
           ref={inputRef}
           type="text"
           value={searchQuery}
-          onChange={e => { setSearchQuery(e.target.value); setSearchError(""); }}
+          onChange={e => { setSearchQuery(e.target.value); setSearchError(""); setSearchResults([]); }}
           onKeyDown={e => {
             if (e.key === "Enter") handleSearch();
-            if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); setSearchError(""); }
+            if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); setSearchError(""); setSearchResults([]); }
           }}
-          placeholder={t("home.searchCodePlaceholder", "예: 104.340.300")}
+          placeholder={t("home.searchCodePlaceholder", "밋업명, 지역, 프로젝트 코드")}
           className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground min-w-0"
           autoFocus
         />
         <button
           onClick={handleSearch}
-          disabled={!searchQuery.trim()}
+          disabled={!searchQuery.trim() || isSearching}
           className="text-xs font-semibold text-primary hover:text-primary/80 disabled:text-muted-foreground px-2 py-1 rounded-full hover:bg-primary/10 transition-colors"
         >
-          {t("home.searchBtn", "검색")}
+          {isSearching ? "..." : t("home.searchBtn", "검색")}
         </button>
         <button
-          onClick={() => { setSearchOpen(false); setSearchQuery(""); setSearchError(""); }}
+          onClick={() => { setSearchOpen(false); setSearchQuery(""); setSearchError(""); setSearchResults([]); }}
           className="text-xs text-muted-foreground hover:text-foreground px-1"
         >
           ✕
         </button>
       </div>
+      {/* 검색 결과 드롭다운 */}
+      {searchResults.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-xl z-50 max-h-72 overflow-y-auto">
+          <div className="p-2 border-b border-border/50">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {t("home.searchResults", "검색 결과")} ({searchResults.length})
+            </span>
+          </div>
+          {searchResults.map((m: any) => (
+            <button
+              key={m.id}
+              className="w-full text-left px-3 py-2.5 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0"
+              onClick={() => {
+                navigate(`/m/${m.shareToken}`);
+                setSearchOpen(false);
+                setSearchQuery("");
+                setSearchResults([]);
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-primary flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{m.title}</p>
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    {m.destinationCountry && (
+                      <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{m.destinationCountry}</span>
+                    )}
+                    {m.scheduleStart && (
+                      <span>{new Date(m.scheduleStart).toLocaleDateString()}</span>
+                    )}
+                    {m.visibility === "public" && (
+                      <span className="text-blue-500 flex items-center gap-0.5"><Globe className="h-3 w-3" />open</span>
+                    )}
+                  </div>
+                </div>
+                <Badge variant={m.status === "open" ? "default" : "secondary"} className="text-[10px] flex-shrink-0">
+                  {m.status === "open" ? "모집중" : m.status}
+                </Badge>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
       {searchError && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-2 text-xs text-destructive z-50">
           {searchError}
         </div>
       )}
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// 공개 밋업 목록 컴포넌트
+// ═══════════════════════════════════════════════════════
+function PublicMeetupsList({ navigate, t }: { navigate: (path: string) => void; t: any }) {
+  const { data: publicMeetups, isLoading } = trpc.meetup.search.useQuery(
+    { query: "" },
+    { retry: false }
+  );
+
+  if (isLoading || !publicMeetups || publicMeetups.length === 0) return null;
+
+  return (
+    <section className="py-4">
+      <div className="container max-w-lg mx-auto px-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400">
+              {t("home.publicMeetupsTitle", "밋업 목록")}
+            </span>
+          </div>
+          <button
+            onClick={() => navigate("/meetups")}
+            className="text-xs text-primary hover:text-primary/80 font-medium"
+          >
+            {t("home.viewAll", "전체 보기")} &gt;
+          </button>
+        </div>
+        <div className="space-y-2.5">
+          {publicMeetups.slice(0, 5).map((m: any) => (
+            <button
+              key={m.id}
+              className="w-full text-left bg-card border border-border/50 rounded-xl p-3.5 hover:border-primary/30 hover:shadow-md transition-all group"
+              onClick={() => navigate(`/m/${m.shareToken}`)}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                  <CalendarDays className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-semibold truncate group-hover:text-primary transition-colors">{m.title}</h4>
+                    <Badge variant={m.status === "open" ? "default" : "secondary"} className="text-[9px] flex-shrink-0">
+                      {m.status === "open" ? t("home.meetupOpen", "open") : m.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
+                    {m.destinationCountry && (
+                      <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{m.destinationCountry}</span>
+                    )}
+                    {m.scheduleStart && (
+                      <span className="flex items-center gap-0.5">
+                        <CalendarDays className="h-3 w-3" />
+                        {new Date(m.scheduleStart).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

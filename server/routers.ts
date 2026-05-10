@@ -559,6 +559,7 @@ export const appRouter = router({
         description: z.string().optional(), maxParticipants: z.number().optional(),
         baggageNotice: z.string().optional(),
         invitedCountries: z.array(z.string()).optional(),
+        visibility: z.enum(["public", "referral_only"]).default("referral_only"),
       }))
       .mutation(async ({ input, ctx }) => {
         // 프로젝트 코드 자동 생성 (예: 104.340.300)
@@ -613,6 +614,7 @@ export const appRouter = router({
         status: z.enum(["draft", "open", "closed", "completed", "cancelled"]).optional(),
         baggageNotice: z.string().optional(),
         invitedCountries: z.array(z.string()).optional(),
+        visibility: z.enum(["public", "referral_only"]).optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
@@ -692,6 +694,14 @@ export const appRouter = router({
         if (!meetup) throw new TRPCError({ code: "NOT_FOUND", message: "밋업을 찾을 수 없습니다" });
         return meetup;
       }),
+    // 공개 밋업 목록 (비로그인 가능)
+    publicList: publicProcedure
+      .input(z.object({ search: z.string().optional(), status: z.string().optional() }).optional())
+      .query(({ input }) => db.getPublicMeetups(input)),
+    // 밋업 통합 검색 (공개 밋업 + 프로젝트 코드)
+    search: publicProcedure
+      .input(z.object({ query: z.string() }))
+      .query(({ input }) => db.searchMeetups(input.query)),
     // 밋업 복제 (Clone)
     clone: adminProcedure
       .input(z.object({ id: z.number() }))
