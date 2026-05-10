@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, name, passportImageUrl FROM registrations WHERE id IN (630014, 630015, 630016, 630029, 630030, 630032, 630033, 630036) ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, passportImageUrl FROM registrations WHERE id IN (630014, 630015, 630016, 630029, 630030, 630032, 630033, 630036) ORDER BY id;",
+  "rows": [
+    {
+      "id": "630014",
+      "name": "MYOUNG SUNG JIN",
+      "passportImageUrl": "/manus-storage/1000048748_bd993d28.jpg"
+    },
+    {
+      "id": "630015",
+      "name": "KIM WOONGKI",
+      "passportImageUrl": "/manus-storage/1000048745_ad7a8f41.jpg"
+    },
+    {
+      "id": "630016",
+      "name": "KIM BONGMYUNG",
+      "passportImageUrl": "/manus-storage/1000048744_b0cc2d58.jpg"
+    },
+    {
+      "id": "630029",
+      "name": "CHO SEORAN",
+      "passportImageUrl": "/manus-storage/1000048718_b598e531.jpg"
+    },
+    {
+      "id": "630030",
+      "name": "KIM YOONSEO",
+      "passportImageUrl": "/manus-storage/1000048722_b61d4fca.jpg"
+    },
+    {
+      "id": "630032",
+      "name": "PARK BYUNGRYANG",
+      "passportImageUrl": "/manus-storage/1000048699_38a7ab42.jpg"
+    },
+    {
+      "id": "630033",
+      "name": "KIM YUN JA",
+      "passportImageUrl": "/manus-storage/1000048696_6e2674dd.jpg"
+    },
+    {
+      "id": "630036",
+      "name": "SEO YAMUN",
+      "passportImageUrl": "/manus-storage/1000048700_c93cbefd.jpg"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tpassportImageUrl\n630014\tMYOUNG SUNG JIN\t/manus-storage/1000048748_bd993d28.jpg\n630015\tKIM WOONGKI\t/manus-storage/1000048745_ad7a8f41.jpg\n630016\tKIM BONGMYUNG\t/manus-storage/1000048744_b0cc2d58.jpg\n630029\tCHO SEORAN\t/manus-storage/1000048718_b598e531.jpg\n630030\tKIM YOONSEO\t/manus-storage/1000048722_b61d4fca.jpg\n630032\tPARK BYUNGRYANG\t/manus-storage/1000048699_38a7ab42.jpg\n630033\tKIM YUN JA\t/manus-storage/1000048696_6e2674dd.jpg\n630036\tSEO YAMUN\t/manus-storage/1000048700_c93cbefd.jpg\n",
+  "stderr": "",
+  "execution_time_ms": 1819
+}

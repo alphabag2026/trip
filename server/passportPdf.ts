@@ -60,23 +60,20 @@ export interface PassportPdfOptions {
 /**
  * Download an image from URL and return as Buffer.
  * Returns null if download fails.
+ * 
+ * For /manus-storage/ paths, uses the published manus.space domain which
+ * serves as a CDN proxy and correctly resolves storage files.
  */
 async function downloadImage(inputUrl: string): Promise<Buffer | null> {
   let url = inputUrl;
-  // For /manus-storage/ relative paths, resolve via storageGet to get a signed download URL
+  // For /manus-storage/ relative paths, use the manus.space published domain
+  // which has a built-in CDN proxy that correctly serves storage files.
+  // storageGet returns CloudFront URLs that give 403 from server-side,
+  // but the manus.space domain proxy works correctly.
   if (url.startsWith("/manus-storage/")) {
-    try {
-      const { storageGet } = await import("./storage");
-      // Extract the key from /manus-storage/filename.jpg
-      const storageKey = url.replace("/manus-storage/", "");
-      const result = await storageGet(storageKey);
-      url = result.url;
-    } catch (e) {
-      console.error(`[PassportPdf] Failed to resolve storage URL for ${url}:`, e);
-      // Fallback: try with forge API URL
-      const baseUrl = process.env.BUILT_IN_FORGE_API_URL || "";
-      if (baseUrl) url = baseUrl.replace(/\/+$/, "") + url;
-    }
+    const manusSpaceDomain = "https://meetup-trav-9l2ufkgm.manus.space";
+    url = manusSpaceDomain + url;
+    console.log(`[PassportPdf] Resolved /manus-storage/ path via manus.space: ${url}`);
   } else if (url.startsWith("/")) {
     // Other relative URLs
     const baseUrl = process.env.BUILT_IN_FORGE_API_URL || process.env.OAUTH_SERVER_URL || "";

@@ -1,0 +1,130 @@
+{
+  "query": "SELECT id, name, passportImageUrl, LEFT(CAST(passportOcrData AS CHAR), 80) as ocr_preview FROM registrations WHERE meetupId IS NULL AND passportOcrData IS NOT NULL ORDER BY id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, passportImageUrl, LEFT(CAST(passportOcrData AS CHAR), 80) as ocr_preview FROM registrations WHERE meetupId IS NULL AND passportOcrData IS NOT NULL ORDER BY id LIMIT 20;",
+  "rows": [
+    {
+      "id": "630014",
+      "name": "MYOUNG SUNG JIN",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1974-06-23\", \"dateOfExpiry\": \"2029-08-27\", \"dateOfIssue\": \"2019"
+    },
+    {
+      "id": "630015",
+      "name": "KIM WOONGKI",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1946-03-10\", \"dateOfExpiry\": \"2028-08-28\", \"dateOfIssue\": \"2018"
+    },
+    {
+      "id": "630016",
+      "name": "KIM BONGMYUNG",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1959-02-10\", \"dateOfExpiry\": \"2027-06-28\", \"dateOfIssue\": \"2017"
+    },
+    {
+      "id": "630017",
+      "name": "LI ZHENJIN",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1962-09-13\", \"dateOfExpiry\": \"2028-08-05\", \"givenNames\": \"ZHENJ"
+    },
+    {
+      "id": "630018",
+      "name": "KIM SAMRYE",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1955-04-28\", \"dateOfExpiry\": \"2035-09-08\", \"givenNames\": \"SAMRY"
+    },
+    {
+      "id": "630019",
+      "name": "LEE DEAGUN",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1962-11-05\", \"dateOfExpiry\": \"2031-05-10\", \"givenNames\": \"DEAGU"
+    },
+    {
+      "id": "630020",
+      "name": "YOO YUNSUNG",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1952-01-31\", \"dateOfExpiry\": \"2033-07-07\", \"givenNames\": \"YUNSU"
+    },
+    {
+      "id": "630021",
+      "name": "JO KWANG RYE",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1963-03-06\", \"dateOfExpiry\": \"2035-10-29\", \"dateOfIssue\": \"2025"
+    },
+    {
+      "id": "630022",
+      "name": "SO HUN YOUNG",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1947-10-01\", \"dateOfExpiry\": \"2032-04-12\", \"dateOfIssue\": \"2022"
+    },
+    {
+      "id": "630023",
+      "name": "RYU HYUNJIN",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1960-09-15\", \"dateOfExpiry\": \"2034-02-03\", \"givenNames\": \"HYUNJ"
+    },
+    {
+      "id": "630024",
+      "name": "IM HYEONSUK",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1960-05-04\", \"dateOfExpiry\": \"2032-07-29\", \"givenNames\": \"HYEON"
+    },
+    {
+      "id": "630025",
+      "name": "JEONG TAESU",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1962-09-15\", \"dateOfExpiry\": \"2029-02-21\", \"givenNames\": \"TAESU"
+    },
+    {
+      "id": "630026",
+      "name": "YUN DANIM",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1961-02-04\", \"dateOfExpiry\": \"2033-11-10\", \"givenNames\": \"DANIM"
+    },
+    {
+      "id": "630027",
+      "name": "CHA BOKSOON",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1962-04-04\", \"dateOfExpiry\": \"2034-06-25\", \"givenNames\": \"BOKSO"
+    },
+    {
+      "id": "630028",
+      "name": "YI KUNCHI",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1961-07-24\", \"dateOfExpiry\": \"2029-04-24\", \"dateOfIssue\": \"2019"
+    },
+    {
+      "id": "630029",
+      "name": "CHO SEORAN",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1974-02-28\", \"dateOfExpiry\": \"2027-11-06\", \"dateOfIssue\": \"2017"
+    },
+    {
+      "id": "630030",
+      "name": "KIM YOONSEO",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1950-12-04\", \"dateOfExpiry\": \"2032-07-01\", \"dateOfIssue\": \"2022"
+    },
+    {
+      "id": "630031",
+      "name": "KIM SUNAE",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1965-01-06\", \"dateOfExpiry\": \"2032-03-04\", \"givenNames\": \"SUNAE"
+    },
+    {
+      "id": "630032",
+      "name": "PARK BYUNGRYANG",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1958-12-20\", \"dateOfExpiry\": \"2033-07-11\", \"givenNames\": \"BYUNG"
+    },
+    {
+      "id": "630033",
+      "name": "KIM YUN JA",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1961-06-28\", \"dateOfExpiry\": \"2026-11-14\", \"givenNames\": \"YUN J"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tpassportImageUrl\tocr_preview\n630014\tMYOUNG SUNG JIN\tNULL\t{\"dateOfBirth\": \"1974-06-23\", \"dateOfExpiry\": \"2029-08-27\", \"dateOfIssue\": \"2019\n630015\tKIM WOONGKI\tNULL\t{\"dateOfBirth\": \"1946-03-10\", \"dateOfExpiry\": \"2028-08-28\", \"dateOfIssue\": \"2018\n630016\tKIM BONGMYUNG\tNULL\t{\"dateOfBirth\": \"1959-02-10\", \"dateOfExpiry\": \"2027-06-28\", \"dateOfIssue\": \"2017\n630017\tLI ZHENJIN\tNULL\t{\"dateOfBirth\": \"1962-09-13\", \"dateOfExpiry\": \"2028-08-05\", \"givenNames\": \"ZHENJ\n630018\tKIM SAMRYE\tNULL\t{\"dateOfBirth\": \"1955-04-28\", \"dateOfExpiry\": \"2035-09-08\", \"givenNames\": \"SAMRY\n630019\tLEE DEAGUN\tNULL\t{\"dateOfBirth\": \"1962-11-05\", \"dateOfExpiry\": \"2031-05-10\", \"givenNames\": \"DEAGU\n630020\tYOO YUNSUNG\tNULL\t{\"dateOfBirth\": \"1952-01-31\", \"dateOfExpiry\": \"2033-07-07\", \"givenNames\": \"YUNSU\n630021\tJO KWANG RYE\tNULL\t{\"dateOfBirth\": \"1963-03-06\", \"dateOfExpiry\": \"2035-10-29\", \"dateOfIssue\": \"2025\n630022\tSO HUN YOUNG\tNULL\t{\"dateOfBirth\": \"1947-10-01\", \"dateOfExpiry\": \"2032-04-12\", \"dateOfIssue\": \"2022\n630023\tRYU HYUNJIN\tNULL\t{\"dateOfBirth\": \"1960-09-15\", \"dateOfExpiry\": \"2034-02-03\", \"givenNames\": \"HYUNJ\n630024\tIM HYEONSUK\tNULL\t{\"dateOfBirth\": \"1960-05-04\", \"dateOfExpiry\": \"2032-07-29\", \"givenNames\": \"HYEON\n630025\tJEONG TAESU\tNULL\t{\"dateOfBirth\": \"1962-09-15\", \"dateOfExpiry\": \"2029-02-21\", \"givenNames\": \"TAESU\n630026\tYUN DANIM\tNULL\t{\"dateOfBirth\": \"1961-02-04\", \"dateOfExpiry\": \"2033-11-10\", \"givenNames\": \"DANIM\n630027\tCHA BOKSOON\tNULL\t{\"dateOfBirth\": \"1962-04-04\", \"dateOfExpiry\": \"2034-06-25\", \"givenNames\": \"BOKSO\n630028\tYI KUNCHI\tNULL\t{\"dateOfBirth\": \"1961-07-24\", \"dateOfExpiry\": \"2029-04-24\", \"dateOfIssue\": \"2019\n630029\tCHO SEORAN\tNULL\t{\"dateOfBirth\": \"1974-02-28\", \"dateOfExpiry\": \"2027-11-06\", \"dateOfIssue\": \"2017\n630030\tKIM YOONSEO\tNULL\t{\"dateOfBirth\": \"1950-12-04\", \"dateOfExpiry\": \"2032-07-01\", \"dateOfIssue\": \"2022\n630031\tKIM SUNAE\tNULL\t{\"dateOfBirth\": \"1965-01-06\", \"dateOfExpiry\": \"2032-03-04\", \"givenNames\": \"SUNAE\n630032\tPARK BYUNGRYANG\tNULL\t{\"dateOfBirth\": \"1958-12-20\", \"dateOfExpiry\": \"2033-07-11\", \"givenNames\": \"BYUNG\n630033\tKIM YUN JA\tNULL\t{\"dateOfBirth\": \"1961-06-28\", \"dateOfExpiry\": \"2026-11-14\", \"givenNames\": \"YUN J\n",
+  "stderr": "",
+  "execution_time_ms": 1873
+}

@@ -1,0 +1,19 @@
+{
+  "query": "SELECT name FROM registrations WHERE meetupId IS NULL AND passportOcrData IS NOT NULL ORDER BY id LIMIT 23 OFFSET 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT name FROM registrations WHERE meetupId IS NULL AND passportOcrData IS NOT NULL ORDER BY id LIMIT 23 OFFSET 20;",
+  "rows": [
+    {
+      "name": "PAK SEOKBONG"
+    },
+    {
+      "name": "KIM YEAJA"
+    },
+    {
+      "name": "SEO YAMUN"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\nPAK SEOKBONG\nKIM YEAJA\nSEO YAMUN\n",
+  "stderr": "",
+  "execution_time_ms": 1853
+}

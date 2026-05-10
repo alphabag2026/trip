@@ -1,0 +1,15 @@
+{
+  "query": "SELECT r.id, r.name, r.passportOcrData FROM registrations r WHERE r.name LIKE '%KIM DONGHEE%' OR r.name LIKE '%DONGHEE%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT r.id, r.name, r.passportOcrData FROM registrations r WHERE r.name LIKE '%KIM DONGHEE%' OR r.name LIKE '%DONGHEE%';",
+  "rows": [
+    {
+      "id": "630041",
+      "name": "KIM DONGHEE",
+      "passportOcrData": "{\"fullName\": \"KIM DONGHEE\", \"koreanName\": \"김동희\", \"nationality\": \"KOR\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tpassportOcrData\n630041\tKIM DONGHEE\t{\"fullName\": \"KIM DONGHEE\", \"koreanName\": \"김동희\", \"nationality\": \"KOR\"}\n",
+  "stderr": "",
+  "execution_time_ms": 1887
+}

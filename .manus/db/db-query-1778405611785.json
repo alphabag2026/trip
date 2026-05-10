@@ -1,0 +1,42 @@
+{
+  "query": "SELECT pi.fullName, pi.passportImageUrl FROM passport_info pi WHERE pi.passportImageUrl IS NOT NULL AND pi.passportImageUrl != '';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT pi.fullName, pi.passportImageUrl FROM passport_info pi WHERE pi.passportImageUrl IS NOT NULL AND pi.passportImageUrl != '';",
+  "rows": [
+    {
+      "fullName": "KIM BONGMYUNG",
+      "passportImageUrl": "/manus-storage/1000048744_b0cc2d58.jpg"
+    },
+    {
+      "fullName": "KIM WOONGKI",
+      "passportImageUrl": "/manus-storage/1000048745_ad7a8f41.jpg"
+    },
+    {
+      "fullName": "CHO SEORAN",
+      "passportImageUrl": "/manus-storage/1000048718_b598e531.jpg"
+    },
+    {
+      "fullName": "MYOUNG SUNG JIN",
+      "passportImageUrl": "/manus-storage/1000048748_bd993d28.jpg"
+    },
+    {
+      "fullName": "KIM YOONSEO",
+      "passportImageUrl": "/manus-storage/1000048722_b61d4fca.jpg"
+    },
+    {
+      "fullName": "KIM YUN JA",
+      "passportImageUrl": "/manus-storage/1000048696_6e2674dd.jpg"
+    },
+    {
+      "fullName": "PARK BYUNGRYANG",
+      "passportImageUrl": "/manus-storage/1000048699_38a7ab42.jpg"
+    },
+    {
+      "fullName": "SEO YAMUN",
+      "passportImageUrl": "/manus-storage/1000048700_c93cbefd.jpg"
+    }
+  ],
+  "messages": [],
+  "stdout": "fullName\tpassportImageUrl\nKIM BONGMYUNG\t/manus-storage/1000048744_b0cc2d58.jpg\nKIM WOONGKI\t/manus-storage/1000048745_ad7a8f41.jpg\nCHO SEORAN\t/manus-storage/1000048718_b598e531.jpg\nMYOUNG SUNG JIN\t/manus-storage/1000048748_bd993d28.jpg\nKIM YOONSEO\t/manus-storage/1000048722_b61d4fca.jpg\nKIM YUN JA\t/manus-storage/1000048696_6e2674dd.jpg\nPARK BYUNGRYANG\t/manus-storage/1000048699_38a7ab42.jpg\nSEO YAMUN\t/manus-storage/1000048700_c93cbefd.jpg\n",
+  "stderr": "",
+  "execution_time_ms": 1786
+}

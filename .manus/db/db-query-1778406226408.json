@@ -1,0 +1,88 @@
+{
+  "query": "SELECT id, name, passportImageUrl, LEFT(CAST(passportOcrData AS CHAR), 100) as ocr_preview FROM registrations WHERE meetupId = 510001 ORDER BY id LIMIT 15;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, passportImageUrl, LEFT(CAST(passportOcrData AS CHAR), 100) as ocr_preview FROM registrations WHERE meetupId = 510001 ORDER BY id LIMIT 15;",
+  "rows": [
+    {
+      "id": "630001",
+      "name": "KIM JUN HO",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1957-08-22\", \"dateOfExpiry\": \"2032-10-24\", \"givenNames\": \"JUN HO\", \"koreanName\": \"김"
+    },
+    {
+      "id": "630002",
+      "name": "RYU DAE SUNG",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1956-10-15\", \"dateOfExpiry\": \"2035-10-21\", \"dateOfIssue\": \"2025-10-21\", \"fullName\":"
+    },
+    {
+      "id": "630003",
+      "name": "CHOI YONG SUK",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1961-05-13\", \"dateOfExpiry\": \"2028-03-05\", \"dateOfIssue\": \"2018-03-05\", \"fullName\":"
+    },
+    {
+      "id": "630004",
+      "name": "KIM TAEHEE",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1948-01-09\", \"dateOfExpiry\": \"2033-11-01\", \"dateOfIssue\": \"2023-11-01\", \"fullName\":"
+    },
+    {
+      "id": "630005",
+      "name": "YU KUMSOOK",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1956-12-08\", \"dateOfExpiry\": \"2031-02-02\", \"givenNames\": \"KUMSOOK\", \"koreanName\": \""
+    },
+    {
+      "id": "630006",
+      "name": "AN YEONGOK",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1963-05-29\", \"dateOfExpiry\": \"2030-03-19\", \"dateOfIssue\": \"2020-03-19\", \"fullName\":"
+    },
+    {
+      "id": "630007",
+      "name": "HWANG MYEONGSUK",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1960-08-05\", \"dateOfExpiry\": \"2028-04-11\", \"givenNames\": \"MYEONGSUK\", \"koreanName\":"
+    },
+    {
+      "id": "630008",
+      "name": "PAEK JEEHYUN",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1953-06-08\", \"dateOfExpiry\": \"2035-07-10\", \"dateOfIssue\": \"2025-07-10\", \"fullName\":"
+    },
+    {
+      "id": "630009",
+      "name": "KIM CHUNOCK",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1963-06-02\", \"dateOfExpiry\": \"2035-07-31\", \"givenNames\": \"CHUNOCK\", \"koreanName\": \""
+    },
+    {
+      "id": "630010",
+      "name": "PARK CHONG BOK",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1967-12-25\", \"dateOfExpiry\": \"2035-11-12\", \"givenNames\": \"CHONG BOK\", \"koreanName\":"
+    },
+    {
+      "id": "630011",
+      "name": "LEE JAEMIN",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1966-03-10\", \"dateOfExpiry\": \"2027-11-29\", \"givenNames\": \"JAEMIN\", \"koreanName\": \"이"
+    },
+    {
+      "id": "630012",
+      "name": "PARK MEE A",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1969-09-19\", \"dateOfExpiry\": \"2031-08-24\", \"givenNames\": \"MEE A\", \"koreanName\": \"박미"
+    },
+    {
+      "id": "630013",
+      "name": "KIM IN HWAN",
+      "passportImageUrl": "NULL",
+      "ocr_preview": "{\"dateOfBirth\": \"1967-02-20\", \"dateOfExpiry\": \"2032-06-14\", \"givenNames\": \"IN HWAN\", \"koreanName\": \""
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tpassportImageUrl\tocr_preview\n630001\tKIM JUN HO\tNULL\t{\"dateOfBirth\": \"1957-08-22\", \"dateOfExpiry\": \"2032-10-24\", \"givenNames\": \"JUN HO\", \"koreanName\": \"김\n630002\tRYU DAE SUNG\tNULL\t{\"dateOfBirth\": \"1956-10-15\", \"dateOfExpiry\": \"2035-10-21\", \"dateOfIssue\": \"2025-10-21\", \"fullName\":\n630003\tCHOI YONG SUK\tNULL\t{\"dateOfBirth\": \"1961-05-13\", \"dateOfExpiry\": \"2028-03-05\", \"dateOfIssue\": \"2018-03-05\", \"fullName\":\n630004\tKIM TAEHEE\tNULL\t{\"dateOfBirth\": \"1948-01-09\", \"dateOfExpiry\": \"2033-11-01\", \"dateOfIssue\": \"2023-11-01\", \"fullName\":\n630005\tYU KUMSOOK\tNULL\t{\"dateOfBirth\": \"1956-12-08\", \"dateOfExpiry\": \"2031-02-02\", \"givenNames\": \"KUMSOOK\", \"koreanName\": \"\n630006\tAN YEONGOK\tNULL\t{\"dateOfBirth\": \"1963-05-29\", \"dateOfExpiry\": \"2030-03-19\", \"dateOfIssue\": \"2020-03-19\", \"fullName\":\n630007\tHWANG MYEONGSUK\tNULL\t{\"dateOfBirth\": \"1960-08-05\", \"dateOfExpiry\": \"2028-04-11\", \"givenNames\": \"MYEONGSUK\", \"koreanName\":\n630008\tPAEK JEEHYUN\tNULL\t{\"dateOfBirth\": \"1953-06-08\", \"dateOfExpiry\": \"2035-07-10\", \"dateOfIssue\": \"2025-07-10\", \"fullName\":\n630009\tKIM CHUNOCK\tNULL\t{\"dateOfBirth\": \"1963-06-02\", \"dateOfExpiry\": \"2035-07-31\", \"givenNames\": \"CHUNOCK\", \"koreanName\": \"\n630010\tPARK CHONG BOK\tNULL\t{\"dateOfBirth\": \"1967-12-25\", \"dateOfExpiry\": \"2035-11-12\", \"givenNames\": \"CHONG BOK\", \"koreanName\":\n630011\tLEE JAEMIN\tNULL\t{\"dateOfBirth\": \"1966-03-10\", \"dateOfExpiry\": \"2027-11-29\", \"givenNames\": \"JAEMIN\", \"koreanName\": \"이\n630012\tPARK MEE A\tNULL\t{\"dateOfBirth\": \"1969-09-19\", \"dateOfExpiry\": \"2031-08-24\", \"givenNames\": \"MEE A\", \"koreanName\": \"박미\n630013\tKIM IN HWAN\tNULL\t{\"dateOfBirth\": \"1967-02-20\", \"dateOfExpiry\": \"2032-06-14\", \"givenNames\": \"IN HWAN\", \"koreanName\": \"\n",
+  "stderr": "",
+  "execution_time_ms": 1829
+}

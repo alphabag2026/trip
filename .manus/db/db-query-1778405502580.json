@@ -1,0 +1,250 @@
+{
+  "query": "SELECT r.id, r.name, r.nationality, r.passportOcrData IS NOT NULL as hasOcr FROM registrations r WHERE r.meetupId IS NULL LIMIT 40;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT r.id, r.name, r.nationality, r.passportOcrData IS NOT NULL as hasOcr FROM registrations r WHERE r.meetupId IS NULL LIMIT 40;",
+  "rows": [
+    {
+      "id": "630014",
+      "name": "MYOUNG SUNG JIN",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630015",
+      "name": "KIM WOONGKI",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630016",
+      "name": "KIM BONGMYUNG",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630017",
+      "name": "LI ZHENJIN",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630018",
+      "name": "KIM SAMRYE",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630019",
+      "name": "LEE DEAGUN",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630020",
+      "name": "YOO YUNSUNG",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630021",
+      "name": "JO KWANG RYE",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630022",
+      "name": "SO HUN YOUNG",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630023",
+      "name": "RYU HYUNJIN",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630024",
+      "name": "IM HYEONSUK",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630025",
+      "name": "JEONG TAESU",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630026",
+      "name": "YUN DANIM",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630027",
+      "name": "CHA BOKSOON",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630028",
+      "name": "YI KUNCHI",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630029",
+      "name": "CHO SEORAN",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630030",
+      "name": "KIM YOONSEO",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630031",
+      "name": "KIM SUNAE",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630032",
+      "name": "PARK BYUNGRYANG",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630033",
+      "name": "KIM YUN JA",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630034",
+      "name": "PAK SEOKBONG",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630035",
+      "name": "KIM YEAJA",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630036",
+      "name": "SEO YAMUN",
+      "nationality": "NULL",
+      "hasOcr": "1"
+    },
+    {
+      "id": "630043",
+      "name": "수화물테스트",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630044",
+      "name": "수화물조회",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630045",
+      "name": "상태변경",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630046",
+      "name": "식사테스트",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630047",
+      "name": "삭제테스트",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630048",
+      "name": "수화물테스트",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630049",
+      "name": "종합테스트",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630050",
+      "name": "체크인테스트",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630051",
+      "name": "시간대_00:00~03:00",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630052",
+      "name": "시간대_03:00~06:00",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630053",
+      "name": "체크인조회",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630054",
+      "name": "시간대_06:00~09:00",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630055",
+      "name": "시간대_09:00~12:00",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630056",
+      "name": "상태업데이트",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630057",
+      "name": "시간대_12:00~15:00",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630058",
+      "name": "시간대_15:00~18:00",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    },
+    {
+      "id": "630059",
+      "name": "체크인삭제",
+      "nationality": "NULL",
+      "hasOcr": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tnationality\thasOcr\n630014\tMYOUNG SUNG JIN\tNULL\t1\n630015\tKIM WOONGKI\tNULL\t1\n630016\tKIM BONGMYUNG\tNULL\t1\n630017\tLI ZHENJIN\tNULL\t1\n630018\tKIM SAMRYE\tNULL\t1\n630019\tLEE DEAGUN\tNULL\t1\n630020\tYOO YUNSUNG\tNULL\t1\n630021\tJO KWANG RYE\tNULL\t1\n630022\tSO HUN YOUNG\tNULL\t1\n630023\tRYU HYUNJIN\tNULL\t1\n630024\tIM HYEONSUK\tNULL\t1\n630025\tJEONG TAESU\tNULL\t1\n630026\tYUN DANIM\tNULL\t1\n630027\tCHA BOKSOON\tNULL\t1\n630028\tYI KUNCHI\tNULL\t1\n630029\tCHO SEORAN\tNULL\t1\n630030\tKIM YOONSEO\tNULL\t1\n630031\tKIM SUNAE\tNULL\t1\n630032\tPARK BYUNGRYANG\tNULL\t1\n630033\tKIM YUN JA\tNULL\t1\n630034\tPAK SEOKBONG\tNULL\t1\n630035\tKIM YEAJA\tNULL\t1\n630036\tSEO YAMUN\tNULL\t1\n630043\t수화물테스트\tNULL\t0\n630044\t수화물조회\tNULL\t0\n630045\t상태변경\tNULL\t0\n630046\t식사테스트\tNULL\t0\n630047\t삭제테스트\tNULL\t0\n630048\t수화물테스트\tNULL\t0\n630049\t종합테스트\tNULL\t0\n630050\t체크인테스트\tNULL\t0\n630051\t시간대_00:00~03:00\tNULL\t0\n630052\t시간대_03:00~06:00\tNULL\t0\n630053\t체크인조회\tNULL\t0\n630054\t시간대_06:00~09:00\tNULL\t0\n630055\t시간대_09:00~12:00\tNULL\t0\n630056\t상태업데이트\tNULL\t0\n630057\t시간대_12:00~15:00\tNULL\t0\n630058\t시간대_15:00~18:00\tNULL\t0\n630059\t체크인삭제\tNULL\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1844
+}

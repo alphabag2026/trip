@@ -1,0 +1,22 @@
+{
+  "query": "SELECT meetupId, COUNT(*) as cnt FROM registrations GROUP BY meetupId ORDER BY cnt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT meetupId, COUNT(*) as cnt FROM registrations GROUP BY meetupId ORDER BY cnt DESC;",
+  "rows": [
+    {
+      "meetupId": "NULL",
+      "cnt": "83"
+    },
+    {
+      "meetupId": "510001",
+      "cnt": "13"
+    },
+    {
+      "meetupId": "1",
+      "cnt": "3"
+    }
+  ],
+  "messages": [],
+  "stdout": "meetupId\tcnt\nNULL\t83\n510001\t13\n1\t3\n",
+  "stderr": "",
+  "execution_time_ms": 1826
+}

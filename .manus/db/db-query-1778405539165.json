@@ -1,0 +1,9 @@
+{
+  "query": "SELECT r1.name FROM registrations r1 WHERE r1.meetupId = 510001 AND EXISTS (SELECT 1 FROM registrations r2 WHERE r2.meetupId IS NULL AND r2.passportOcrData IS NOT NULL AND r2.name = r1.name);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT r1.name FROM registrations r1 WHERE r1.meetupId = 510001 AND EXISTS (SELECT 1 FROM registrations r2 WHERE r2.meetupId IS NULL AND r2.passportOcrData IS NOT NULL AND r2.name = r1.name);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1848
+}

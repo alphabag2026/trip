@@ -1,0 +1,20 @@
+{
+  "query": "SELECT r.id, r.name, r.passportOcrData FROM registrations r WHERE r.id IN (630027, 630028);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT r.id, r.name, r.passportOcrData FROM registrations r WHERE r.id IN (630027, 630028);",
+  "rows": [
+    {
+      "id": "630027",
+      "name": "CHA BOKSOON",
+      "passportOcrData": "{\"dateOfBirth\": \"1962-04-04\", \"dateOfExpiry\": \"2034-06-25\", \"givenNames\": \"BOKSOON\", \"koreanName\": \"차복순\", \"nationality\": \"KOR\", \"passportNo\": \"M716X7042\", \"sex\": \"F\", \"surname\": \"CHA\"}"
+    },
+    {
+      "id": "630028",
+      "name": "YI KUNCHI",
+      "passportOcrData": "{\"dateOfBirth\": \"1961-07-24\", \"dateOfExpiry\": \"2029-04-24\", \"dateOfIssue\": \"2019-04-24\", \"fullName\": \"YI KUNCHI\", \"koreanName\": \"이근지\", \"nationality\": \"KOR\", \"passportNo\": \"M08952816\", \"sex\": \"F\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tpassportOcrData\n630027\tCHA BOKSOON\t{\"dateOfBirth\": \"1962-04-04\", \"dateOfExpiry\": \"2034-06-25\", \"givenNames\": \"BOKSOON\", \"koreanName\": \"차복순\", \"nationality\": \"KOR\", \"passportNo\": \"M716X7042\", \"sex\": \"F\", \"surname\": \"CHA\"}\n630028\tYI KUNCHI\t{\"dateOfBirth\": \"1961-07-24\", \"dateOfExpiry\": \"2029-04-24\", \"dateOfIssue\": \"2019-04-24\", \"fullName\": \"YI KUNCHI\", \"koreanName\": \"이근지\", \"nationality\": \"KOR\", \"passportNo\": \"M08952816\", \"sex\": \"F\"}\n",
+  "stderr": "",
+  "execution_time_ms": 1811
+}

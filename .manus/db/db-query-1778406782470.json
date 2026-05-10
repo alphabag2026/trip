@@ -1,0 +1,34 @@
+{
+  "query": "SELECT r.id, r.name, CAST(r.passportOcrData AS CHAR) as ocr_data, r.phone FROM registrations r WHERE r.id >= 630033 AND r.id <= 630037 ORDER BY r.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT r.id, r.name, CAST(r.passportOcrData AS CHAR) as ocr_data, r.phone FROM registrations r WHERE r.id >= 630033 AND r.id <= 630037 ORDER BY r.id;",
+  "rows": [
+    {
+      "id": "630033",
+      "name": "KIM YUN JA",
+      "ocr_data": "{\"dateOfBirth\": \"1961-06-28\", \"dateOfExpiry\": \"2026-11-14\", \"givenNames\": \"YUN JA\", \"koreanName\": \"김윤자\", \"nationality\": \"USA\", \"passportNo\": \"546356990\", \"sex\": \"F\", \"surname\": \"KIM\"}",
+      "phone": ""
+    },
+    {
+      "id": "630034",
+      "name": "PAK SEOKBONG",
+      "ocr_data": "{\"dateOfBirth\": \"1965-02-14\", \"dateOfExpiry\": \"2027-07-04\", \"givenNames\": \"SEOKBONG\", \"koreanName\": \"박석봉\", \"nationality\": \"KOR\", \"passportNo\": \"M43120353\", \"sex\": \"M\", \"surname\": \"PAK\"}",
+      "phone": ""
+    },
+    {
+      "id": "630035",
+      "name": "KIM YEAJA",
+      "ocr_data": "{\"dateOfBirth\": \"1967-07-28\", \"dateOfExpiry\": \"2028-02-21\", \"givenNames\": \"YEAJA\", \"koreanName\": \"김예자\", \"nationality\": \"KOR\", \"passportNo\": \"M00751602\", \"sex\": \"F\", \"surname\": \"KIM\"}",
+      "phone": ""
+    },
+    {
+      "id": "630036",
+      "name": "SEO YAMUN",
+      "ocr_data": "{\"dateOfBirth\": \"1954-11-14\", \"dateOfExpiry\": \"2035-01-20\", \"givenNames\": \"YAMUN\", \"koreanName\": \"서야문\", \"nationality\": \"KOR\", \"passportNo\": \"M323G8076\", \"sex\": \"F\", \"surname\": \"SEO\"}",
+      "phone": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tocr_data\tphone\n630033\tKIM YUN JA\t{\"dateOfBirth\": \"1961-06-28\", \"dateOfExpiry\": \"2026-11-14\", \"givenNames\": \"YUN JA\", \"koreanName\": \"김윤자\", \"nationality\": \"USA\", \"passportNo\": \"546356990\", \"sex\": \"F\", \"surname\": \"KIM\"}\t\n630034\tPAK SEOKBONG\t{\"dateOfBirth\": \"1965-02-14\", \"dateOfExpiry\": \"2027-07-04\", \"givenNames\": \"SEOKBONG\", \"koreanName\": \"박석봉\", \"nationality\": \"KOR\", \"passportNo\": \"M43120353\", \"sex\": \"M\", \"surname\": \"PAK\"}\t\n630035\tKIM YEAJA\t{\"dateOfBirth\": \"1967-07-28\", \"dateOfExpiry\": \"2028-02-21\", \"givenNames\": \"YEAJA\", \"koreanName\": \"김예자\", \"nationality\": \"KOR\", \"passportNo\": \"M00751602\", \"sex\": \"F\", \"surname\": \"KIM\"}\t\n630036\tSEO YAMUN\t{\"dateOfBirth\": \"1954-11-14\", \"dateOfExpiry\": \"2035-01-20\", \"givenNames\": \"YAMUN\", \"koreanName\": \"서야문\", \"nationality\": \"KOR\", \"passportNo\": \"M323G8076\", \"sex\": \"F\", \"surname\": \"SEO\"}\t\n",
+  "stderr": "",
+  "execution_time_ms": 1752
+}

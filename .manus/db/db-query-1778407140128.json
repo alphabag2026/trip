@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE registrations r\nJOIN passport_info pi ON UPPER(TRIM(r.name)) = UPPER(TRIM(pi.fullName))\nSET r.passportImageUrl = pi.passportImageUrl\nWHERE pi.passportImageUrl IS NOT NULL AND pi.passportImageUrl != ''\nAND (r.passportImageUrl IS NULL OR r.passportImageUrl = '');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute UPDATE registrations r\nJOIN passport_info pi ON UPPER(TRIM(r.name)) = UPPER(TRIM(pi.fullName))\nSET r.passportImageUrl = pi.passportImageUrl\nWHERE pi.passportImageUrl IS NOT NULL AND pi.passportImageUrl != ''\nAND (r.passportImageUrl IS NULL OR r.passportImageUrl = '');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1870
+}

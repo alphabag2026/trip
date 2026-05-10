@@ -1,0 +1,75 @@
+{
+  "query": "SELECT r.id, r.name, r.passportOcrData FROM registrations r WHERE r.meetupId = 510001 AND r.passportOcrData IS NOT NULL ORDER BY r.id LIMIT 13;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT r.id, r.name, r.passportOcrData FROM registrations r WHERE r.meetupId = 510001 AND r.passportOcrData IS NOT NULL ORDER BY r.id LIMIT 13;",
+  "rows": [
+    {
+      "id": "630001",
+      "name": "KIM JUN HO",
+      "passportOcrData": "{\"dateOfBirth\": \"1957-08-22\", \"dateOfExpiry\": \"2032-10-24\", \"givenNames\": \"JUN HO\", \"koreanName\": \"김준호\", \"nationality\": \"KOR\", \"passportNo\": \"M983Y7767\", \"sex\": \"M\", \"surname\": \"KIM\"}"
+    },
+    {
+      "id": "630002",
+      "name": "RYU DAE SUNG",
+      "passportOcrData": "{\"dateOfBirth\": \"1956-10-15\", \"dateOfExpiry\": \"2035-10-21\", \"dateOfIssue\": \"2025-10-21\", \"fullName\": \"RYU DAE SUNG\", \"koreanName\": \"류대성\", \"nationality\": \"KOR\", \"passportNo\": \"M897N5944\", \"sex\": \"M\"}"
+    },
+    {
+      "id": "630003",
+      "name": "CHOI YONG SUK",
+      "passportOcrData": "{\"dateOfBirth\": \"1961-05-13\", \"dateOfExpiry\": \"2028-03-05\", \"dateOfIssue\": \"2018-03-05\", \"fullName\": \"CHOI YONG SUK\", \"koreanName\": \"최용석\", \"nationality\": \"KOR\", \"passportNo\": \"M76099984\", \"sex\": \"M\"}"
+    },
+    {
+      "id": "630004",
+      "name": "KIM TAEHEE",
+      "passportOcrData": "{\"dateOfBirth\": \"1948-01-09\", \"dateOfExpiry\": \"2033-11-01\", \"dateOfIssue\": \"2023-11-01\", \"fullName\": \"KIM TAEHEE\", \"koreanName\": \"김태희\", \"nationality\": \"KOR\", \"passportNo\": \"M300W9372\", \"sex\": \"M\"}"
+    },
+    {
+      "id": "630005",
+      "name": "YU KUMSOOK",
+      "passportOcrData": "{\"dateOfBirth\": \"1956-12-08\", \"dateOfExpiry\": \"2031-02-02\", \"givenNames\": \"KUMSOOK\", \"koreanName\": \"유금숙\", \"nationality\": \"KOR\", \"passportNo\": \"M71152020\", \"sex\": \"F\", \"surname\": \"YU\"}"
+    },
+    {
+      "id": "630006",
+      "name": "AN YEONGOK",
+      "passportOcrData": "{\"dateOfBirth\": \"1963-05-29\", \"dateOfExpiry\": \"2030-03-19\", \"dateOfIssue\": \"2020-03-19\", \"fullName\": \"AN YEONGOK\", \"koreanName\": \"안영옥\", \"nationality\": \"KOR\", \"passportNo\": \"M29105227\", \"sex\": \"F\"}"
+    },
+    {
+      "id": "630007",
+      "name": "HWANG MYEONGSUK",
+      "passportOcrData": "{\"dateOfBirth\": \"1960-08-05\", \"dateOfExpiry\": \"2028-04-11\", \"givenNames\": \"MYEONGSUK\", \"koreanName\": \"황명숙\", \"nationality\": \"KOR\", \"passportNo\": \"M97988778\", \"sex\": \"F\", \"surname\": \"HWANG\"}"
+    },
+    {
+      "id": "630008",
+      "name": "PAEK JEEHYUN",
+      "passportOcrData": "{\"dateOfBirth\": \"1953-06-08\", \"dateOfExpiry\": \"2035-07-10\", \"dateOfIssue\": \"2025-07-10\", \"fullName\": \"PARK JEEHYUN\", \"koreanName\": \"박지현\", \"nationality\": \"KOR\", \"passportNo\": \"M087A2750\", \"sex\": \"F\"}"
+    },
+    {
+      "id": "630009",
+      "name": "KIM CHUNOCK",
+      "passportOcrData": "{\"dateOfBirth\": \"1963-06-02\", \"dateOfExpiry\": \"2035-07-31\", \"givenNames\": \"CHUNOCK\", \"koreanName\": \"김춘옥\", \"nationality\": \"KOR\", \"passportNo\": \"M543T7348\", \"sex\": \"F\", \"surname\": \"KIM\"}"
+    },
+    {
+      "id": "630010",
+      "name": "PARK CHONG BOK",
+      "passportOcrData": "{\"dateOfBirth\": \"1967-12-25\", \"dateOfExpiry\": \"2035-11-12\", \"givenNames\": \"CHONG BOK\", \"koreanName\": \"박종복\", \"nationality\": \"KOR\", \"passportNo\": \"M277P4108\", \"sex\": \"M\", \"surname\": \"PARK\"}"
+    },
+    {
+      "id": "630011",
+      "name": "LEE JAEMIN",
+      "passportOcrData": "{\"dateOfBirth\": \"1966-03-10\", \"dateOfExpiry\": \"2027-11-29\", \"givenNames\": \"JAEMIN\", \"koreanName\": \"이재민\", \"nationality\": \"KOR\", \"passportNo\": \"M16347329\", \"sex\": \"M\", \"surname\": \"LEE\"}"
+    },
+    {
+      "id": "630012",
+      "name": "PARK MEE A",
+      "passportOcrData": "{\"dateOfBirth\": \"1969-09-19\", \"dateOfExpiry\": \"2031-08-24\", \"givenNames\": \"MEE A\", \"koreanName\": \"박미아\", \"nationality\": \"KOR\", \"passportNo\": \"M67714226\", \"sex\": \"F\", \"surname\": \"PARK\"}"
+    },
+    {
+      "id": "630013",
+      "name": "KIM IN HWAN",
+      "passportOcrData": "{\"dateOfBirth\": \"1967-02-20\", \"dateOfExpiry\": \"2032-06-14\", \"givenNames\": \"IN HWAN\", \"koreanName\": \"김인환\", \"nationality\": \"KOR\", \"passportNo\": \"M476B0698\", \"sex\": \"M\", \"surname\": \"KIM\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tpassportOcrData\n630001\tKIM JUN HO\t{\"dateOfBirth\": \"1957-08-22\", \"dateOfExpiry\": \"2032-10-24\", \"givenNames\": \"JUN HO\", \"koreanName\": \"김준호\", \"nationality\": \"KOR\", \"passportNo\": \"M983Y7767\", \"sex\": \"M\", \"surname\": \"KIM\"}\n630002\tRYU DAE SUNG\t{\"dateOfBirth\": \"1956-10-15\", \"dateOfExpiry\": \"2035-10-21\", \"dateOfIssue\": \"2025-10-21\", \"fullName\": \"RYU DAE SUNG\", \"koreanName\": \"류대성\", \"nationality\": \"KOR\", \"passportNo\": \"M897N5944\", \"sex\": \"M\"}\n630003\tCHOI YONG SUK\t{\"dateOfBirth\": \"1961-05-13\", \"dateOfExpiry\": \"2028-03-05\", \"dateOfIssue\": \"2018-03-05\", \"fullName\": \"CHOI YONG SUK\", \"koreanName\": \"최용석\", \"nationality\": \"KOR\", \"passportNo\": \"M76099984\", \"sex\": \"M\"}\n630004\tKIM TAEHEE\t{\"dateOfBirth\": \"1948-01-09\", \"dateOfExpiry\": \"2033-11-01\", \"dateOfIssue\": \"2023-11-01\", \"fullName\": \"KIM TAEHEE\", \"koreanName\": \"김태희\", \"nationality\": \"KOR\", \"passportNo\": \"M300W9372\", \"sex\": \"M\"}\n630005\tYU KUMSOOK\t{\"dateOfBirth\": \"1956-12-08\", \"dateOfExpiry\": \"2031-02-02\", \"givenNames\": \"KUMSOOK\", \"koreanName\": \"유금숙\", \"nationality\": \"KOR\", \"passportNo\": \"M71152020\", \"sex\": \"F\", \"surname\": \"YU\"}\n630006\tAN YEONGOK\t{\"dateOfBirth\": \"1963-05-29\", \"dateOfExpiry\": \"2030-03-19\", \"dateOfIssue\": \"2020-03-19\", \"fullName\": \"AN YEONGOK\", \"koreanName\": \"안영옥\", \"nationality\": \"KOR\", \"passportNo\": \"M29105227\", \"sex\": \"F\"}\n630007\tHWANG MYEONGSUK\t{\"dateOfBirth\": \"1960-08-05\", \"dateOfExpiry\": \"2028-04-11\", \"givenNames\": \"MYEONGSUK\", \"koreanName\": \"황명숙\", \"nationality\": \"KOR\", \"passportNo\": \"M97988778\", \"sex\": \"F\", \"surname\": \"HWANG\"}\n630008\tPAEK JEEHYUN\t{\"dateOfBirth\": \"1953-06-08\", \"dateOfExpiry\": \"2035-07-10\", \"dateOfIssue\": \"2025-07-10\", \"fullName\": \"PARK JEEHYUN\", \"koreanName\": \"박지현\", \"nationality\": \"KOR\", \"passportNo\": \"M087A2750\", \"sex\": \"F\"}\n630009\tKIM CHUNOCK\t{\"dateOfBirth\": \"1963-06-02\", \"dateOfExpiry\": \"2035-07-31\", \"givenNames\": \"CHUNOCK\", \"koreanName\": \"김춘옥\", \"nationality\": \"KOR\", \"passportNo\": \"M543T7348\", \"sex\": \"F\", \"surname\": \"KIM\"}\n630010\tPARK CHONG BOK\t{\"dateOfBirth\": \"1967-12-25\", \"dateOfExpiry\": \"2035-11-12\", \"givenNames\": \"CHONG BOK\", \"koreanName\": \"박종복\", \"nationality\": \"KOR\", \"passportNo\": \"M277P4108\", \"sex\": \"M\", \"surname\": \"PARK\"}\n630011\tLEE JAEMIN\t{\"dateOfBirth\": \"1966-03-10\", \"dateOfExpiry\": \"2027-11-29\", \"givenNames\": \"JAEMIN\", \"koreanName\": \"이재민\", \"nationality\": \"KOR\", \"passportNo\": \"M16347329\", \"sex\": \"M\", \"surname\": \"LEE\"}\n630012\tPARK MEE A\t{\"dateOfBirth\": \"1969-09-19\", \"dateOfExpiry\": \"2031-08-24\", \"givenNames\": \"MEE A\", \"koreanName\": \"박미아\", \"nationality\": \"KOR\", \"passportNo\": \"M67714226\", \"sex\": \"F\", \"surname\": \"PARK\"}\n630013\tKIM IN HWAN\t{\"dateOfBirth\": \"1967-02-20\", \"dateOfExpiry\": \"2032-06-14\", \"givenNames\": \"IN HWAN\", \"koreanName\": \"김인환\", \"nationality\": \"KOR\", \"passportNo\": \"M476B0698\", \"sex\": \"M\", \"surname\": \"KIM\"}\n",
+  "stderr": "",
+  "execution_time_ms": 1841
+}

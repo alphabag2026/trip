@@ -1,0 +1,79 @@
+{
+  "query": "SELECT name FROM registrations WHERE meetupId IS NULL AND passportOcrData IS NOT NULL ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT name FROM registrations WHERE meetupId IS NULL AND passportOcrData IS NOT NULL ORDER BY id;",
+  "rows": [
+    {
+      "name": "MYOUNG SUNG JIN"
+    },
+    {
+      "name": "KIM WOONGKI"
+    },
+    {
+      "name": "KIM BONGMYUNG"
+    },
+    {
+      "name": "LI ZHENJIN"
+    },
+    {
+      "name": "KIM SAMRYE"
+    },
+    {
+      "name": "LEE DEAGUN"
+    },
+    {
+      "name": "YOO YUNSUNG"
+    },
+    {
+      "name": "JO KWANG RYE"
+    },
+    {
+      "name": "SO HUN YOUNG"
+    },
+    {
+      "name": "RYU HYUNJIN"
+    },
+    {
+      "name": "IM HYEONSUK"
+    },
+    {
+      "name": "JEONG TAESU"
+    },
+    {
+      "name": "YUN DANIM"
+    },
+    {
+      "name": "CHA BOKSOON"
+    },
+    {
+      "name": "YI KUNCHI"
+    },
+    {
+      "name": "CHO SEORAN"
+    },
+    {
+      "name": "KIM YOONSEO"
+    },
+    {
+      "name": "KIM SUNAE"
+    },
+    {
+      "name": "PARK BYUNGRYANG"
+    },
+    {
+      "name": "KIM YUN JA"
+    },
+    {
+      "name": "PAK SEOKBONG"
+    },
+    {
+      "name": "KIM YEAJA"
+    },
+    {
+      "name": "SEO YAMUN"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\nMYOUNG SUNG JIN\nKIM WOONGKI\nKIM BONGMYUNG\nLI ZHENJIN\nKIM SAMRYE\nLEE DEAGUN\nYOO YUNSUNG\nJO KWANG RYE\nSO HUN YOUNG\nRYU HYUNJIN\nIM HYEONSUK\nJEONG TAESU\nYUN DANIM\nCHA BOKSOON\nYI KUNCHI\nCHO SEORAN\nKIM YOONSEO\nKIM SUNAE\nPARK BYUNGRYANG\nKIM YUN JA\nPAK SEOKBONG\nKIM YEAJA\nSEO YAMUN\n",
+  "stderr": "",
+  "execution_time_ms": 1825
+}

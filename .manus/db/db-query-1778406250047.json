@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, name, passportImageUrl FROM registrations WHERE passportImageUrl IS NOT NULL AND passportImageUrl != '' AND passportImageUrl != 'NULL' AND id >= 630001 AND id <= 630040 ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, passportImageUrl FROM registrations WHERE passportImageUrl IS NOT NULL AND passportImageUrl != '' AND passportImageUrl != 'NULL' AND id >= 630001 AND id <= 630040 ORDER BY id;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1839
+}

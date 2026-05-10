@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, name, CAST(passportOcrData AS CHAR) as ocr_data, phone FROM registrations WHERE name LIKE '%DONGHEE%' OR name LIKE '%동희%' ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, CAST(passportOcrData AS CHAR) as ocr_data, phone FROM registrations WHERE name LIKE '%DONGHEE%' OR name LIKE '%동희%' ORDER BY id;",
+  "rows": [
+    {
+      "id": "630041",
+      "name": "KIM DONGHEE",
+      "ocr_data": "{\"fullName\": \"KIM DONGHEE\", \"koreanName\": \"김동희\", \"nationality\": \"KOR\"}",
+      "phone": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tocr_data\tphone\n630041\tKIM DONGHEE\t{\"fullName\": \"KIM DONGHEE\", \"koreanName\": \"김동희\", \"nationality\": \"KOR\"}\t\n",
+  "stderr": "",
+  "execution_time_ms": 1872
+}

@@ -1,0 +1,49 @@
+{
+  "query": "SELECT name FROM registrations WHERE meetupId = 510001 ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT name FROM registrations WHERE meetupId = 510001 ORDER BY id;",
+  "rows": [
+    {
+      "name": "KIM JUN HO"
+    },
+    {
+      "name": "RYU DAE SUNG"
+    },
+    {
+      "name": "CHOI YONG SUK"
+    },
+    {
+      "name": "KIM TAEHEE"
+    },
+    {
+      "name": "YU KUMSOOK"
+    },
+    {
+      "name": "AN YEONGOK"
+    },
+    {
+      "name": "HWANG MYEONGSUK"
+    },
+    {
+      "name": "PAEK JEEHYUN"
+    },
+    {
+      "name": "KIM CHUNOCK"
+    },
+    {
+      "name": "PARK CHONG BOK"
+    },
+    {
+      "name": "LEE JAEMIN"
+    },
+    {
+      "name": "PARK MEE A"
+    },
+    {
+      "name": "KIM IN HWAN"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\nKIM JUN HO\nRYU DAE SUNG\nCHOI YONG SUK\nKIM TAEHEE\nYU KUMSOOK\nAN YEONGOK\nHWANG MYEONGSUK\nPAEK JEEHYUN\nKIM CHUNOCK\nPARK CHONG BOK\nLEE JAEMIN\nPARK MEE A\nKIM IN HWAN\n",
+  "stderr": "",
+  "execution_time_ms": 1878
+}

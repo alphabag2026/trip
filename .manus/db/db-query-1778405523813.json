@@ -1,0 +1,25 @@
+{
+  "query": "SELECT id, name, SUBSTRING(passportOcrData, 1, 200) as ocrSample FROM registrations WHERE meetupId IS NULL AND passportOcrData IS NOT NULL LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, SUBSTRING(passportOcrData, 1, 200) as ocrSample FROM registrations WHERE meetupId IS NULL AND passportOcrData IS NOT NULL LIMIT 3;",
+  "rows": [
+    {
+      "id": "630014",
+      "name": "MYOUNG SUNG JIN",
+      "ocrSample": "{\"dateOfBirth\": \"1974-06-23\", \"dateOfExpiry\": \"2029-08-27\", \"dateOfIssue\": \"2019-08-27\", \"fullName\": \"MYOUNG SUNG JIN\", \"koreanName\": \"명성진\", \"nationality\": \"KOR\", \"passportNo\": \"M97447055\", \"sex\": \"M\""
+    },
+    {
+      "id": "630015",
+      "name": "KIM WOONGKI",
+      "ocrSample": "{\"dateOfBirth\": \"1946-03-10\", \"dateOfExpiry\": \"2028-08-28\", \"dateOfIssue\": \"2018-08-28\", \"fullName\": \"KIM WOONGKI\", \"koreanName\": \"김웅기\", \"nationality\": \"KOR\", \"passportNo\": \"M28411732\", \"sex\": \"M\"}"
+    },
+    {
+      "id": "630016",
+      "name": "KIM BONGMYUNG",
+      "ocrSample": "{\"dateOfBirth\": \"1959-02-10\", \"dateOfExpiry\": \"2027-06-28\", \"dateOfIssue\": \"2017-06-28\", \"fullName\": \"KIM BONGMYUNG\", \"koreanName\": \"김봉명\", \"nationality\": \"KOR\", \"passportNo\": \"M99731754\", \"sex\": \"M\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tocrSample\n630014\tMYOUNG SUNG JIN\t{\"dateOfBirth\": \"1974-06-23\", \"dateOfExpiry\": \"2029-08-27\", \"dateOfIssue\": \"2019-08-27\", \"fullName\": \"MYOUNG SUNG JIN\", \"koreanName\": \"명성진\", \"nationality\": \"KOR\", \"passportNo\": \"M97447055\", \"sex\": \"M\"\n630015\tKIM WOONGKI\t{\"dateOfBirth\": \"1946-03-10\", \"dateOfExpiry\": \"2028-08-28\", \"dateOfIssue\": \"2018-08-28\", \"fullName\": \"KIM WOONGKI\", \"koreanName\": \"김웅기\", \"nationality\": \"KOR\", \"passportNo\": \"M28411732\", \"sex\": \"M\"}\n630016\tKIM BONGMYUNG\t{\"dateOfBirth\": \"1959-02-10\", \"dateOfExpiry\": \"2027-06-28\", \"dateOfIssue\": \"2017-06-28\", \"fullName\": \"KIM BONGMYUNG\", \"koreanName\": \"김봉명\", \"nationality\": \"KOR\", \"passportNo\": \"M99731754\", \"sex\": \"M\"}\n",
+  "stderr": "",
+  "execution_time_ms": 1795
+}

@@ -1,0 +1,130 @@
+{
+  "query": "SELECT id, name, passportImageUrl, JSON_EXTRACT(passportOcrData, '$.passportImageUrl') as ocr_image_url FROM registrations WHERE id >= 630001 AND id <= 630040 ORDER BY id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, name, passportImageUrl, JSON_EXTRACT(passportOcrData, '$.passportImageUrl') as ocr_image_url FROM registrations WHERE id >= 630001 AND id <= 630040 ORDER BY id LIMIT 20;",
+  "rows": [
+    {
+      "id": "630001",
+      "name": "KIM JUN HO",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630002",
+      "name": "RYU DAE SUNG",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630003",
+      "name": "CHOI YONG SUK",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630004",
+      "name": "KIM TAEHEE",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630005",
+      "name": "YU KUMSOOK",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630006",
+      "name": "AN YEONGOK",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630007",
+      "name": "HWANG MYEONGSUK",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630008",
+      "name": "PAEK JEEHYUN",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630009",
+      "name": "KIM CHUNOCK",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630010",
+      "name": "PARK CHONG BOK",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630011",
+      "name": "LEE JAEMIN",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630012",
+      "name": "PARK MEE A",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630013",
+      "name": "KIM IN HWAN",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630014",
+      "name": "MYOUNG SUNG JIN",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630015",
+      "name": "KIM WOONGKI",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630016",
+      "name": "KIM BONGMYUNG",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630017",
+      "name": "LI ZHENJIN",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630018",
+      "name": "KIM SAMRYE",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630019",
+      "name": "LEE DEAGUN",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    },
+    {
+      "id": "630020",
+      "name": "YOO YUNSUNG",
+      "passportImageUrl": "NULL",
+      "ocr_image_url": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tpassportImageUrl\tocr_image_url\n630001\tKIM JUN HO\tNULL\tNULL\n630002\tRYU DAE SUNG\tNULL\tNULL\n630003\tCHOI YONG SUK\tNULL\tNULL\n630004\tKIM TAEHEE\tNULL\tNULL\n630005\tYU KUMSOOK\tNULL\tNULL\n630006\tAN YEONGOK\tNULL\tNULL\n630007\tHWANG MYEONGSUK\tNULL\tNULL\n630008\tPAEK JEEHYUN\tNULL\tNULL\n630009\tKIM CHUNOCK\tNULL\tNULL\n630010\tPARK CHONG BOK\tNULL\tNULL\n630011\tLEE JAEMIN\tNULL\tNULL\n630012\tPARK MEE A\tNULL\tNULL\n630013\tKIM IN HWAN\tNULL\tNULL\n630014\tMYOUNG SUNG JIN\tNULL\tNULL\n630015\tKIM WOONGKI\tNULL\tNULL\n630016\tKIM BONGMYUNG\tNULL\tNULL\n630017\tLI ZHENJIN\tNULL\tNULL\n630018\tKIM SAMRYE\tNULL\tNULL\n630019\tLEE DEAGUN\tNULL\tNULL\n630020\tYOO YUNSUNG\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1755
+}

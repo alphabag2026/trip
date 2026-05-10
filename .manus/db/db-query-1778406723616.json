@@ -1,0 +1,46 @@
+{
+  "query": "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%telegram%' OR TABLE_NAME LIKE '%message%' OR TABLE_NAME LIKE '%chat%' OR TABLE_NAME LIKE '%log%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%telegram%' OR TABLE_NAME LIKE '%message%' OR TABLE_NAME LIKE '%chat%' OR TABLE_NAME LIKE '%log%';",
+  "rows": [
+    {
+      "TABLE_NAME": "telegram_uploads"
+    },
+    {
+      "TABLE_NAME": "telegram_notifications"
+    },
+    {
+      "TABLE_NAME": "telegram_config"
+    },
+    {
+      "TABLE_NAME": "rsvp_reminder_logs"
+    },
+    {
+      "TABLE_NAME": "messages"
+    },
+    {
+      "TABLE_NAME": "chatbot_logs"
+    },
+    {
+      "TABLE_NAME": "chat_rooms"
+    },
+    {
+      "TABLE_NAME": "chat_room_members"
+    },
+    {
+      "TABLE_NAME": "chat_messages"
+    },
+    {
+      "TABLE_NAME": "broadcast_messages"
+    },
+    {
+      "TABLE_NAME": "audit_logs"
+    },
+    {
+      "TABLE_NAME": "api_request_logs"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\ntelegram_uploads\ntelegram_notifications\ntelegram_config\nrsvp_reminder_logs\nmessages\nchatbot_logs\nchat_rooms\nchat_room_members\nchat_messages\nbroadcast_messages\naudit_logs\napi_request_logs\n",
+  "stderr": "",
+  "execution_time_ms": 1779
+}

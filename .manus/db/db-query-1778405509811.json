@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(CASE WHEN passportOcrData IS NOT NULL THEN 1 ELSE 0 END) as withOcr FROM registrations WHERE meetupId IS NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT COUNT(*) as total, SUM(CASE WHEN passportOcrData IS NOT NULL THEN 1 ELSE 0 END) as withOcr FROM registrations WHERE meetupId IS NULL;",
+  "rows": [
+    {
+      "total": "83",
+      "withOcr": "23"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\twithOcr\n83\t23\n",
+  "stderr": "",
+  "execution_time_ms": 1857
+}

@@ -1,0 +1,8 @@
+{
+  "query": "SELECT r.id, r.fullName as reg_name, r.koreanName, pi.fullName as passport_name, pi.passportImageUrl, pi.passportNumber FROM registrations r LEFT JOIN passport_info pi ON (UPPER(TRIM(r.fullName)) = UPPER(TRIM(pi.fullName)) OR (r.userId IS NOT NULL AND r.userId != 0 AND r.userId = pi.userId)) WHERE r.meetupId = 510001 ORDER BY r.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT r.id, r.fullName as reg_name, r.koreanName, pi.fullName as passport_name, pi.passportImageUrl, pi.passportNumber FROM registrations r LEFT JOIN passport_info pi ON (UPPER(TRIM(r.fullName)) = UPPER(TRIM(pi.fullName)) OR (r.userId IS NOT NULL AND r.userId != 0 AND r.userId = pi.userId)) WHERE r.meetupId = 510001 ORDER BY r.id;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'r.fullname' in 'on clause'"
+  ]
+}

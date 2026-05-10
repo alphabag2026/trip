@@ -1,0 +1,58 @@
+{
+  "query": "SELECT id, fullName, passportImageUrl, passportImageKey FROM passport_info WHERE passportImageUrl IS NOT NULL AND passportImageUrl != '' ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, fullName, passportImageUrl, passportImageKey FROM passport_info WHERE passportImageUrl IS NOT NULL AND passportImageUrl != '' ORDER BY id;",
+  "rows": [
+    {
+      "id": "60001",
+      "fullName": "KIM BONGMYUNG",
+      "passportImageUrl": "/manus-storage/1000048744_b0cc2d58.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60002",
+      "fullName": "KIM WOONGKI",
+      "passportImageUrl": "/manus-storage/1000048745_ad7a8f41.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60003",
+      "fullName": "CHO SEORAN",
+      "passportImageUrl": "/manus-storage/1000048718_b598e531.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60004",
+      "fullName": "MYOUNG SUNG JIN",
+      "passportImageUrl": "/manus-storage/1000048748_bd993d28.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60005",
+      "fullName": "KIM YOONSEO",
+      "passportImageUrl": "/manus-storage/1000048722_b61d4fca.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60006",
+      "fullName": "KIM YUN JA",
+      "passportImageUrl": "/manus-storage/1000048696_6e2674dd.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60007",
+      "fullName": "PARK BYUNGRYANG",
+      "passportImageUrl": "/manus-storage/1000048699_38a7ab42.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60008",
+      "fullName": "SEO YAMUN",
+      "passportImageUrl": "/manus-storage/1000048700_c93cbefd.jpg",
+      "passportImageKey": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfullName\tpassportImageUrl\tpassportImageKey\n60001\tKIM BONGMYUNG\t/manus-storage/1000048744_b0cc2d58.jpg\tNULL\n60002\tKIM WOONGKI\t/manus-storage/1000048745_ad7a8f41.jpg\tNULL\n60003\tCHO SEORAN\t/manus-storage/1000048718_b598e531.jpg\tNULL\n60004\tMYOUNG SUNG JIN\t/manus-storage/1000048748_bd993d28.jpg\tNULL\n60005\tKIM YOONSEO\t/manus-storage/1000048722_b61d4fca.jpg\tNULL\n60006\tKIM YUN JA\t/manus-storage/1000048696_6e2674dd.jpg\tNULL\n60007\tPARK BYUNGRYANG\t/manus-storage/1000048699_38a7ab42.jpg\tNULL\n60008\tSEO YAMUN\t/manus-storage/1000048700_c93cbefd.jpg\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1862
+}

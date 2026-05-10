@@ -1,0 +1,106 @@
+{
+  "query": "SELECT id, userId, fullName, passportNumber, birthDate, gender, nationality, expiryDate, passportImageUrl, passportImageKey FROM passport_info WHERE passportImageUrl IS NOT NULL AND passportImageUrl != '' ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, userId, fullName, passportNumber, birthDate, gender, nationality, expiryDate, passportImageUrl, passportImageKey FROM passport_info WHERE passportImageUrl IS NOT NULL AND passportImageUrl != '' ORDER BY id;",
+  "rows": [
+    {
+      "id": "60001",
+      "userId": "0",
+      "fullName": "KIM BONGMYUNG",
+      "passportNumber": "M99731754",
+      "birthDate": "1959-02-10",
+      "gender": "M",
+      "nationality": "REPUBLIC OF KOREA",
+      "expiryDate": "2027-06-28",
+      "passportImageUrl": "/manus-storage/1000048744_b0cc2d58.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60002",
+      "userId": "0",
+      "fullName": "KIM WOONGKI",
+      "passportNumber": "M28411732",
+      "birthDate": "1946-03-10",
+      "gender": "M",
+      "nationality": "REPUBLIC OF KOREA",
+      "expiryDate": "2028-08-28",
+      "passportImageUrl": "/manus-storage/1000048745_ad7a8f41.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60003",
+      "userId": "0",
+      "fullName": "CHO SEORAN",
+      "passportNumber": "M91641689",
+      "birthDate": "1974-02-28",
+      "gender": "F",
+      "nationality": "REPUBLIC OF KOREA",
+      "expiryDate": "2027-11-06",
+      "passportImageUrl": "/manus-storage/1000048718_b598e531.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60004",
+      "userId": "0",
+      "fullName": "MYOUNG SUNG JIN",
+      "passportNumber": "M97447055",
+      "birthDate": "1974-06-23",
+      "gender": "M",
+      "nationality": "REPUBLIC OF KOREA",
+      "expiryDate": "2029-08-27",
+      "passportImageUrl": "/manus-storage/1000048748_bd993d28.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60005",
+      "userId": "0",
+      "fullName": "KIM YOONSEO",
+      "passportNumber": "M661B2637",
+      "birthDate": "1950-12-04",
+      "gender": "F",
+      "nationality": "REPUBLIC OF KOREA",
+      "expiryDate": "2032-07-01",
+      "passportImageUrl": "/manus-storage/1000048722_b61d4fca.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60006",
+      "userId": "0",
+      "fullName": "KIM YUN JA",
+      "passportNumber": "546356990",
+      "birthDate": "1961-06-28",
+      "gender": "F",
+      "nationality": "UNITED STATES OF AMERICA",
+      "expiryDate": "2026-11-14",
+      "passportImageUrl": "/manus-storage/1000048696_6e2674dd.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60007",
+      "userId": "0",
+      "fullName": "PARK BYUNGRYANG",
+      "passportNumber": "M885W2187",
+      "birthDate": "1958-12-20",
+      "gender": "M",
+      "nationality": "REPUBLIC OF KOREA",
+      "expiryDate": "2033-07-11",
+      "passportImageUrl": "/manus-storage/1000048699_38a7ab42.jpg",
+      "passportImageKey": "NULL"
+    },
+    {
+      "id": "60008",
+      "userId": "0",
+      "fullName": "SEO YAMUN",
+      "passportNumber": "M323G8076",
+      "birthDate": "1954-11-14",
+      "gender": "F",
+      "nationality": "REPUBLIC OF KOREA",
+      "expiryDate": "2035-01-20",
+      "passportImageUrl": "/manus-storage/1000048700_c93cbefd.jpg",
+      "passportImageKey": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tfullName\tpassportNumber\tbirthDate\tgender\tnationality\texpiryDate\tpassportImageUrl\tpassportImageKey\n60001\t0\tKIM BONGMYUNG\tM99731754\t1959-02-10\tM\tREPUBLIC OF KOREA\t2027-06-28\t/manus-storage/1000048744_b0cc2d58.jpg\tNULL\n60002\t0\tKIM WOONGKI\tM28411732\t1946-03-10\tM\tREPUBLIC OF KOREA\t2028-08-28\t/manus-storage/1000048745_ad7a8f41.jpg\tNULL\n60003\t0\tCHO SEORAN\tM91641689\t1974-02-28\tF\tREPUBLIC OF KOREA\t2027-11-06\t/manus-storage/1000048718_b598e531.jpg\tNULL\n60004\t0\tMYOUNG SUNG JIN\tM97447055\t1974-06-23\tM\tREPUBLIC OF KOREA\t2029-08-27\t/manus-storage/1000048748_bd993d28.jpg\tNULL\n60005\t0\tKIM YOONSEO\tM661B2637\t1950-12-04\tF\tREPUBLIC OF KOREA\t2032-07-01\t/manus-storage/1000048722_b61d4fca.jpg\tNULL\n60006\t0\tKIM YUN JA\t546356990\t1961-06-28\tF\tUNITED STATES OF AMERICA\t2026-11-14\t/manus-storage/1000048696_6e2674dd.jpg\tNULL\n60007\t0\tPARK BYUNGRYANG\tM885W2187\t1958-12-20\tM\tREPUBLIC OF KOREA\t2033-07-11\t/manus-storage/1000048699_38a7ab42.jpg\tNULL\n60008\t0\tSEO YAMUN\tM323G8076\t1954-11-14\tF\tREPUBLIC OF KOREA\t2035-01-20\t/manus-storage/1000048700_c93cbefd.jpg\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1842
+}

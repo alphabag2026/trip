@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(CASE WHEN passportImageUrl IS NOT NULL AND passportImageUrl != '' THEN 1 ELSE 0 END) as with_image, SUM(CASE WHEN passportImageUrl IS NULL OR passportImageUrl = '' THEN 1 ELSE 0 END) as without_image FROM passport_info;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT COUNT(*) as total, SUM(CASE WHEN passportImageUrl IS NOT NULL AND passportImageUrl != '' THEN 1 ELSE 0 END) as with_image, SUM(CASE WHEN passportImageUrl IS NULL OR passportImageUrl = '' THEN 1 ELSE 0 END) as without_image FROM passport_info;",
+  "rows": [
+    {
+      "total": "10512",
+      "with_image": "8",
+      "without_image": "10504"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\twith_image\twithout_image\n10512\t8\t10504\n",
+  "stderr": "",
+  "execution_time_ms": 1870
+}
