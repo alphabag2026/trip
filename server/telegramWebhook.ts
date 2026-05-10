@@ -513,9 +513,19 @@ async function executeCommand(cmd: CommandResult): Promise<string> {
           for (let i = 0; i < regs.length; i++) {
             const reg = regs[i];
             let passportData: any = reg.passportOcrData ? (typeof reg.passportOcrData === "string" ? JSON.parse(reg.passportOcrData as string) : reg.passportOcrData) : null;
+            // Try matching by userId first
             if (reg.userId) {
               const pRows = await dbInstance.select().from(passportInfo).where(eq(passportInfo.userId, reg.userId));
               if (pRows[0]?.passportNumber) passportData = { ...passportData, ...pRows[0] };
+            }
+            // Fallback: match by name if no passport data found via userId
+            if (!passportData?.passportImageUrl && reg.name) {
+              const { like } = await import("drizzle-orm");
+              const allPassports = await dbInstance.select().from(passportInfo);
+              const nameMatch = allPassports.find((p: any) => 
+                p.fullName && reg.name && p.fullName.toUpperCase().trim() === reg.name.toUpperCase().trim()
+              );
+              if (nameMatch) passportData = { ...passportData, ...nameMatch };
             }
             entries.push({
               stt: i + 1,

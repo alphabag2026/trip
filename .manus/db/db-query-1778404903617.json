@@ -1,0 +1,9 @@
+{
+  "query": "SELECT r.id, r.name, r.userId, p.fullName as pFullName, p.passportImageUrl FROM registrations r LEFT JOIN passport_info p ON r.userId = p.userId WHERE r.meetupId = (SELECT id FROM meetups ORDER BY id DESC LIMIT 1) LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT r.id, r.name, r.userId, p.fullName as pFullName, p.passportImageUrl FROM registrations r LEFT JOIN passport_info p ON r.userId = p.userId WHERE r.meetupId = (SELECT id FROM meetups ORDER BY id DESC LIMIT 1) LIMIT 10;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1815
+}

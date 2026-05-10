@@ -1,0 +1,50 @@
+{
+  "query": "SELECT p.id, p.userId, p.fullName, p.passportImageUrl, r.id as regId, r.name as regName FROM passport_info p LEFT JOIN registrations r ON p.userId = r.userId WHERE p.passportImageUrl IS NOT NULL AND p.passportImageUrl != '' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT p.id, p.userId, p.fullName, p.passportImageUrl, r.id as regId, r.name as regName FROM passport_info p LEFT JOIN registrations r ON p.userId = r.userId WHERE p.passportImageUrl IS NOT NULL AND p.passportImageUrl != '' LIMIT 5;",
+  "rows": [
+    {
+      "id": "60001",
+      "userId": "0",
+      "fullName": "KIM BONGMYUNG",
+      "passportImageUrl": "/manus-storage/1000048744_b0cc2d58.jpg",
+      "regId": "NULL",
+      "regName": "NULL"
+    },
+    {
+      "id": "60002",
+      "userId": "0",
+      "fullName": "KIM WOONGKI",
+      "passportImageUrl": "/manus-storage/1000048745_ad7a8f41.jpg",
+      "regId": "NULL",
+      "regName": "NULL"
+    },
+    {
+      "id": "60003",
+      "userId": "0",
+      "fullName": "CHO SEORAN",
+      "passportImageUrl": "/manus-storage/1000048718_b598e531.jpg",
+      "regId": "NULL",
+      "regName": "NULL"
+    },
+    {
+      "id": "60004",
+      "userId": "0",
+      "fullName": "MYOUNG SUNG JIN",
+      "passportImageUrl": "/manus-storage/1000048748_bd993d28.jpg",
+      "regId": "NULL",
+      "regName": "NULL"
+    },
+    {
+      "id": "60005",
+      "userId": "0",
+      "fullName": "KIM YOONSEO",
+      "passportImageUrl": "/manus-storage/1000048722_b61d4fca.jpg",
+      "regId": "NULL",
+      "regName": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tfullName\tpassportImageUrl\tregId\tregName\n60001\t0\tKIM BONGMYUNG\t/manus-storage/1000048744_b0cc2d58.jpg\tNULL\tNULL\n60002\t0\tKIM WOONGKI\t/manus-storage/1000048745_ad7a8f41.jpg\tNULL\tNULL\n60003\t0\tCHO SEORAN\t/manus-storage/1000048718_b598e531.jpg\tNULL\tNULL\n60004\t0\tMYOUNG SUNG JIN\t/manus-storage/1000048748_bd993d28.jpg\tNULL\tNULL\n60005\t0\tKIM YOONSEO\t/manus-storage/1000048722_b61d4fca.jpg\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1751
+}

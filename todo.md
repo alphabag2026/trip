@@ -2872,3 +2872,6 @@
 ## v6.63 - 여권 PDF 레이아웃 변경
 - [x] passportPdf.ts 수정 - A4 용지에 여권 이미지 4명씩 배치
 - [x] 프로덕션 서버 배포
+- [x] __dirname ESM 호환 수정 (import.meta.url)
+- [x] /manus-storage/ 상대경로를 storageGet으로 실제 다운로드 URL 변환
+- [x] passport_info 이름 기반 매칭 추가 (userId=0/NULL 대응)

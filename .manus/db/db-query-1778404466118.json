@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, userId, fullName, passportNumber, passportImageUrl FROM passport_info LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, userId, fullName, passportNumber, passportImageUrl FROM passport_info LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "userId": "100",
+      "fullName": "KIM CHULSOO",
+      "passportNumber": "M99999999",
+      "passportImageUrl": "NULL"
+    },
+    {
+      "id": "2",
+      "userId": "200",
+      "fullName": "SMITH JOHN",
+      "passportNumber": "J55555555",
+      "passportImageUrl": "NULL"
+    },
+    {
+      "id": "30001",
+      "userId": "1268459",
+      "fullName": "สมชาย",
+      "passportNumber": "CN66754239",
+      "passportImageUrl": "NULL"
+    },
+    {
+      "id": "30002",
+      "userId": "1267350",
+      "fullName": "박서준",
+      "passportNumber": "CN44874805",
+      "passportImageUrl": "NULL"
+    },
+    {
+      "id": "30003",
+      "userId": "1261866",
+      "fullName": "Emma",
+      "passportNumber": "SG37726211",
+      "passportImageUrl": "NULL"
+    },
+    {
+      "id": "30004",
+      "userId": "1262736",
+      "fullName": "Nguyễn Văn An",
+      "passportNumber": "PH57252727",
+      "passportImageUrl": "NULL"
+    },
+    {
+      "id": "30005",
+      "userId": "1263584",
+      "fullName": "Emma",
+      "passportNumber": "PH77557343",
+      "passportImageUrl": "NULL"
+    },
+    {
+      "id": "30006",
+      "userId": "1262375",
+      "fullName": "이지은",
+      "passportNumber": "VN58448340",
+      "passportImageUrl": "NULL"
+    },
+    {
+      "id": "30007",
+      "userId": "1260179",
+      "fullName": "李娜",
+      "passportNumber": "PH48681029",
+      "passportImageUrl": "NULL"
+    },
+    {
+      "id": "30008",
+      "userId": "1261761",
+      "fullName": "박서준",
+      "passportNumber": "VN83018396",
+      "passportImageUrl": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tfullName\tpassportNumber\tpassportImageUrl\n1\t100\tKIM CHULSOO\tM99999999\tNULL\n2\t200\tSMITH JOHN\tJ55555555\tNULL\n30001\t1268459\tสมชาย\tCN66754239\tNULL\n30002\t1267350\t박서준\tCN44874805\tNULL\n30003\t1261866\tEmma\tSG37726211\tNULL\n30004\t1262736\tNguyễn Văn An\tPH57252727\tNULL\n30005\t1263584\tEmma\tPH77557343\tNULL\n30006\t1262375\t이지은\tVN58448340\tNULL\n30007\t1260179\t李娜\tPH48681029\tNULL\n30008\t1261761\t박서준\tVN83018396\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1871
+}

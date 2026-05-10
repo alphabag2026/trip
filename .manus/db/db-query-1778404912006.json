@@ -1,0 +1,19 @@
+{
+  "query": "SELECT DISTINCT meetupId FROM registrations LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT DISTINCT meetupId FROM registrations LIMIT 5;",
+  "rows": [
+    {
+      "meetupId": "NULL"
+    },
+    {
+      "meetupId": "1"
+    },
+    {
+      "meetupId": "510001"
+    }
+  ],
+  "messages": [],
+  "stdout": "meetupId\nNULL\n1\n510001\n",
+  "stderr": "",
+  "execution_time_ms": 1751
+}

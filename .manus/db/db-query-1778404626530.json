@@ -1,0 +1,25 @@
+{
+  "query": "SELECT id, fullName, passportImageUrl FROM passport_info WHERE passportImageUrl IS NOT NULL AND passportImageUrl != '' LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZhmXq2fuwbq2e6E.b3f96895581d --database 9L2UFkGMTFNGvGrFPN8jYv --execute SELECT id, fullName, passportImageUrl FROM passport_info WHERE passportImageUrl IS NOT NULL AND passportImageUrl != '' LIMIT 3;",
+  "rows": [
+    {
+      "id": "60001",
+      "fullName": "KIM BONGMYUNG",
+      "passportImageUrl": "/manus-storage/1000048744_b0cc2d58.jpg"
+    },
+    {
+      "id": "60002",
+      "fullName": "KIM WOONGKI",
+      "passportImageUrl": "/manus-storage/1000048745_ad7a8f41.jpg"
+    },
+    {
+      "id": "60003",
+      "fullName": "CHO SEORAN",
+      "passportImageUrl": "/manus-storage/1000048718_b598e531.jpg"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfullName\tpassportImageUrl\n60001\tKIM BONGMYUNG\t/manus-storage/1000048744_b0cc2d58.jpg\n60002\tKIM WOONGKI\t/manus-storage/1000048745_ad7a8f41.jpg\n60003\tCHO SEORAN\t/manus-storage/1000048718_b598e531.jpg\n",
+  "stderr": "",
+  "execution_time_ms": 1711
+}

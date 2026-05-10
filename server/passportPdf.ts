@@ -3,14 +3,19 @@ import path from "path";
 import fs from "fs";
 import https from "https";
 import http from "http";
+import { fileURLToPath } from "url";
+
+const __filename_esm = fileURLToPath(import.meta.url);
+const __dirname_esm = path.dirname(__filename_esm);
 
 // Try multiple font directories (handles both dev and production Docker paths)
 function findFontDir(): string {
   const candidates = [
-    path.join(__dirname, "fonts"),
+    path.join(__dirname_esm, "fonts"),
     path.join(process.cwd(), "server", "fonts"),
     path.join(process.cwd(), "dist", "fonts"),
-    path.join(__dirname, "..", "server", "fonts"),
+    path.join(__dirname_esm, "..", "server", "fonts"),
+    path.join(process.cwd(), "fonts"),
   ];
   for (const dir of candidates) {
     if (fs.existsSync(path.join(dir, "NotoSansKR-Regular.ttf"))) {
@@ -56,9 +61,30 @@ export interface PassportPdfOptions {
  * Download an image from URL and return as Buffer.
  * Returns null if download fails.
  */
-async function downloadImage(url: string): Promise<Buffer | null> {
+async function downloadImage(inputUrl: string): Promise<Buffer | null> {
+  let url = inputUrl;
+  // For /manus-storage/ relative paths, resolve via storageGet to get a signed download URL
+  if (url.startsWith("/manus-storage/")) {
+    try {
+      const { storageGet } = await import("./storage");
+      // Extract the key from /manus-storage/filename.jpg
+      const storageKey = url.replace("/manus-storage/", "");
+      const result = await storageGet(storageKey);
+      url = result.url;
+    } catch (e) {
+      console.error(`[PassportPdf] Failed to resolve storage URL for ${url}:`, e);
+      // Fallback: try with forge API URL
+      const baseUrl = process.env.BUILT_IN_FORGE_API_URL || "";
+      if (baseUrl) url = baseUrl.replace(/\/+$/, "") + url;
+    }
+  } else if (url.startsWith("/")) {
+    // Other relative URLs
+    const baseUrl = process.env.BUILT_IN_FORGE_API_URL || process.env.OAUTH_SERVER_URL || "";
+    if (baseUrl) url = baseUrl.replace(/\/+$/, "") + url;
+  }
+  console.log(`[PassportPdf] Downloading image: ${url}`);
   return new Promise((resolve) => {
-    const timeout = setTimeout(() => resolve(null), 10000); // 10s timeout
+    const timeout = setTimeout(() => { console.log(`[PassportPdf] Image download timeout: ${url}`); resolve(null); }, 15000);
     try {
       const client = url.startsWith("https") ? https : http;
       client.get(url, (res) => {
