@@ -11,7 +11,8 @@ import {
 import {
   Hotel, Users, Building2, Home, TreePine, BedDouble,
   UserCheck, UserX, ChevronDown, ChevronUp, Search,
-  Download, GripVertical, X, ArrowRight, Filter, Eye, EyeOff
+  Download, GripVertical, X, ArrowRight, Filter, Eye, EyeOff,
+  MapPin, Pencil, Check, Copy, ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,6 +43,9 @@ export default function AccommodationDashboard() {
   const [showUnassignedOnly, setShowUnassignedOnly] = useState(false);
   // New: confirm dialog for removal
   const [removeConfirm, setRemoveConfirm] = useState<{ accomId: number; regId: number; name: string } | null>(null);
+  // Address editing state
+  const [editingAddress, setEditingAddress] = useState<string | null>(null); // hotelName being edited
+  const [addressInput, setAddressInput] = useState("");
 
   const utils = trpc.useUtils();
   const assignMutation = trpc.accommodation.assignToRoom.useMutation({
@@ -56,6 +60,10 @@ export default function AccommodationDashboard() {
     onSuccess: () => { utils.accommodation.list.invalidate(); toast.success("이동 완료"); },
     onError: (e) => toast.error(e.message),
   });
+  const updateAddressMutation = trpc.accommodation.updateAddress.useMutation({
+    onSuccess: (data) => { utils.accommodation.list.invalidate(); setEditingAddress(null); setAddressInput(""); toast.success(`${data.updated}개 방에 주소 적용 완료`); },
+    onError: (e) => toast.error(e.message),
+  });
 
   const regMap = useMemo(() => {
     const map: Record<number, { name: string; phone?: string; nationality?: string }> = {};
@@ -67,7 +75,7 @@ export default function AccommodationDashboard() {
 
   // Group accommodations by hotel name with filters applied
   const grouped = useMemo(() => {
-    const groups: Record<string, { type: string; rooms: any[]; totalAssigned: number; totalCapacity: number }> = {};
+    const groups: Record<string, { type: string; rooms: any[]; totalAssigned: number; totalCapacity: number; address: string }> = {};
     for (const a of accommodations as any[]) {
       // Apply room type filter
       if (roomTypeFilter !== "all" && a.roomType !== roomTypeFilter) continue;
@@ -76,7 +84,8 @@ export default function AccommodationDashboard() {
       // Apply unassigned-only filter (show rooms with empty slots)
       if (showUnassignedOnly && assigned >= capacity) continue;
       const key = a.hotelName || "미정";
-      if (!groups[key]) groups[key] = { type: a.accommodationType || "hotel", rooms: [], totalAssigned: 0, totalCapacity: 0 };
+      if (!groups[key]) groups[key] = { type: a.accommodationType || "hotel", rooms: [], totalAssigned: 0, totalCapacity: 0, address: a.address || "" };
+      if (a.address && !groups[key].address) groups[key].address = a.address;
       groups[key].rooms.push({ ...a, assignedCount: assigned, capacity });
       groups[key].totalAssigned += assigned;
       groups[key].totalCapacity += capacity;
@@ -382,15 +391,54 @@ export default function AccommodationDashboard() {
               <Card key={hotelName} className="overflow-hidden">
                 <CardHeader className="pb-3 cursor-pointer" onClick={() => setExpandedHotel(isExpanded ? null : hotelName)}>
                   <CardTitle className="text-lg flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                         <TypeIcon className="h-5 w-5 text-primary" />
                       </div>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="font-bold">{hotelName}</p>
                         <p className="text-xs text-muted-foreground font-normal">
                           {ACCOMMODATION_TYPE_LABELS[data.type]} · {data.rooms.length}개 방 · {data.totalAssigned}명 배정
                         </p>
+                        {/* 주소 표시/편집 */}
+                        {editingAddress === hotelName ? (
+                          <div className="flex items-center gap-1.5 mt-1" onClick={e => e.stopPropagation()}>
+                            <MapPin className="h-3 w-3 text-primary shrink-0" />
+                            <Input
+                              value={addressInput}
+                              onChange={e => setAddressInput(e.target.value)}
+                              placeholder="주소 입력 (예: 서울시 강남구...)"
+                              className="h-6 text-xs flex-1 border-primary/30"
+                              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); updateAddressMutation.mutate({ hotelName, address: addressInput, meetupId: selectedMeetup }); } }}
+                              autoFocus
+                            />
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-green-600 hover:text-green-700" onClick={(e) => { e.stopPropagation(); updateAddressMutation.mutate({ hotelName, address: addressInput, meetupId: selectedMeetup }); }}>
+                              <Check className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setEditingAddress(null); setAddressInput(""); }}>
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ) : data.address ? (
+                          <div className="flex items-center gap-1.5 mt-1 group/addr" onClick={e => e.stopPropagation()}>
+                            <MapPin className="h-3 w-3 text-primary shrink-0" />
+                            <span className="text-xs text-muted-foreground truncate">{data.address}</span>
+                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-0 group-hover/addr:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(data.address); toast.success("주소 복사 완료"); }} title="주소 복사">
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.address)}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="opacity-0 group-hover/addr:opacity-100 transition-opacity">
+                              <ExternalLink className="h-3 w-3 text-blue-500 hover:text-blue-600" />
+                            </a>
+                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-0 group-hover/addr:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); setEditingAddress(hotelName); setAddressInput(data.address); }} title="주소 수정">
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <button className="flex items-center gap-1 mt-1 text-xs text-muted-foreground/60 hover:text-primary transition-colors" onClick={(e) => { e.stopPropagation(); setEditingAddress(hotelName); setAddressInput(""); }}>
+                            <MapPin className="h-3 w-3" />
+                            <span>주소 추가</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">

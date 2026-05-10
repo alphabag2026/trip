@@ -1165,6 +1165,7 @@ export const appRouter = router({
         assignedRegistrationIds: z.array(z.number()).optional(),
         checkIn: z.string().optional(), checkOut: z.string().optional(), notes: z.string().optional(),
         accommodationPhotoUrl: z.string().optional(),
+        address: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const id = await db.createAccommodation({
@@ -1182,6 +1183,7 @@ export const appRouter = router({
         assignedRegistrationIds: z.array(z.number()).optional(),
         checkIn: z.string().optional(), checkOut: z.string().optional(), notes: z.string().optional(),
         accommodationPhotoUrl: z.string().optional(),
+        address: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
@@ -1250,6 +1252,7 @@ export const appRouter = router({
           checkIn: z.string().optional(),
           checkOut: z.string().optional(),
           notes: z.string().optional(),
+          address: z.string().optional(),
         })),
       }))
       .mutation(async ({ input }) => {
@@ -1374,6 +1377,17 @@ export const appRouter = router({
           });
         }
         return { roomCount: rooms.length, totalAssigned: regs.length };
+      }),
+    // 숙소별 주소 일괄 업데이트 (같은 hotelName의 모든 방에 주소 적용)
+    updateAddress: adminProcedure
+      .input(z.object({ hotelName: z.string().min(1), address: z.string(), meetupId: z.number().optional() }))
+      .mutation(async ({ input }) => {
+        const allAccoms = await db.getAccommodations(input.meetupId);
+        const matching = allAccoms.filter((a: any) => a.hotelName === input.hotelName);
+        for (const a of matching) {
+          await db.updateAccommodation(a.id, { address: input.address });
+        }
+        return { updated: matching.length };
       }),
   }),
 

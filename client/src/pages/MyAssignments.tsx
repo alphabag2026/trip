@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plane, Car, Hotel, CheckCircle, ArrowLeft, FileText, MessageCircle } from "lucide-react";
+import { Plane, Car, Hotel, CheckCircle, ArrowLeft, FileText, MessageCircle, MapPin, Copy, ExternalLink } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -131,10 +131,36 @@ export default function MyAssignments() {
             {assignments.accommodations.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t("assignments.noAccommodations")}</p>
             ) : (
-              assignments.accommodations.map((a) => (
-                <div key={a.id} className="p-3 rounded-lg bg-muted/50 space-y-1">
+              assignments.accommodations.map((a: any) => (
+                <div key={a.id} className="p-3 rounded-lg bg-muted/50 space-y-2">
                   <span className="font-semibold">{a.hotelName}</span>
                   {a.roomNumber && <p className="text-sm">{t("assignments.room")}: {a.roomNumber} ({a.roomType})</p>}
+                  {a.address && (
+                    <div className="flex items-start gap-2 p-2 rounded-md bg-background/60 border border-border/50">
+                      <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-foreground break-words">{a.address}</p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(a.address); toast.success(t("assignments.addressCopied", "주소가 복사되었습니다")); }}
+                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            <Copy className="h-3 w-3" />
+                            {t("assignments.copyAddress", "복사")}
+                          </button>
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-400 transition-colors"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            {t("assignments.openMap", "지도 보기")}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {a.checkIn && <p className="text-xs text-muted-foreground">{t("assignments.checkIn")}: {new Date(a.checkIn).toLocaleString()}</p>}
                   {a.checkOut && <p className="text-xs text-muted-foreground">{t("assignments.checkOut")}: {new Date(a.checkOut).toLocaleString()}</p>}
                 </div>
