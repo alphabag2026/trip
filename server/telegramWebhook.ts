@@ -527,6 +527,7 @@ async function executeCommand(cmd: CommandResult): Promise<string> {
               nationality: passportData?.nationality || reg.nationality || "",
               phone: reg.phone || "",
               expiryDate: passportData?.expiryDate || "",
+              passportImageUrl: passportData?.passportImageUrl || "",
             });
           }
           // Generate PDF
@@ -539,6 +540,7 @@ async function executeCommand(cmd: CommandResult): Promise<string> {
             entries,
             meetupName: meetupTitle || "",
             date: new Date().toISOString().slice(0, 10),
+            includeImages: true,
           });
           const fileName = `passport-${format}-${Date.now()}.pdf`;
           const key = `exports/${fileName}`;

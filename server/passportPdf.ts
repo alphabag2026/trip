@@ -134,26 +134,26 @@ export async function generatePassportPdf(options: PassportPdfOptions): Promise<
   });
 }
 
-// ── Passport Images Pages ──────────────────────────────────
+// ── Passport Images Pages (A4 Portrait, 4 per page in 2x2 grid) ──────────
 async function renderPassportImages(doc: PDFKit.PDFDocument, entries: PassportEntry[], useCustomFont: boolean) {
   const entriesWithImages = entries.filter((e) => e.passportImageUrl);
   if (entriesWithImages.length === 0) return;
 
-  // Add a separator page
-  doc.addPage({ size: "A4", layout: "portrait", margins: { top: 40, bottom: 40, left: 40, right: 40 } });
-  const pageW = doc.page.width - 80;
+  // A4 portrait: 595.28 x 841.89 points
+  const margin = 30;
+  const pageW = 595.28 - margin * 2;
+  const pageH = 841.89 - margin * 2;
+  const cols = 2;
+  const rows = 2;
+  const cellGap = 12;
+  const cellW = (pageW - cellGap) / cols;
+  const cellH = (pageH - cellGap) / rows;
+  const labelH = 32; // space for name + passport number
+  const imgMaxW = cellW - 10;
+  const imgMaxH = cellH - labelH - 10;
 
-  if (useCustomFont) doc.font("Korean");
-  doc.fontSize(18).fillColor("#333333");
-  doc.text("여권 이미지 (Passport Images)", 40, 40, { align: "center", width: pageW });
-  doc.moveDown(1);
-  doc.fontSize(10).fillColor("#666666");
-  doc.text(`총 ${entriesWithImages.length}명의 여권 이미지`, { align: "center", width: pageW });
-
-  // Render 2 passport images per page (portrait A4)
   let imagesOnPage = 0;
-  const imgMaxWidth = 480;
-  const imgMaxHeight = 320;
+  let needNewPage = true;
 
   for (const entry of entriesWithImages) {
     if (!entry.passportImageUrl) continue;
@@ -161,29 +161,40 @@ async function renderPassportImages(doc: PDFKit.PDFDocument, entries: PassportEn
     const imgBuffer = await downloadImage(entry.passportImageUrl);
     if (!imgBuffer) continue;
 
-    if (imagesOnPage >= 2) {
-      doc.addPage({ size: "A4", layout: "portrait", margins: { top: 40, bottom: 40, left: 40, right: 40 } });
+    if (needNewPage || imagesOnPage >= 4) {
+      doc.addPage({ size: "A4", layout: "portrait", margins: { top: margin, bottom: margin, left: margin, right: margin } });
       imagesOnPage = 0;
+      needNewPage = false;
     }
 
-    const yOffset = imagesOnPage === 0 ? 80 : 440;
+    // Calculate grid position (0=top-left, 1=top-right, 2=bottom-left, 3=bottom-right)
+    const col = imagesOnPage % cols;
+    const row = Math.floor(imagesOnPage / cols);
+    const cellX = margin + col * (cellW + cellGap);
+    const cellY = margin + row * (cellH + cellGap);
 
-    // Name and passport number label
+    // Draw cell border with rounded corners
+    doc.save();
+    doc.roundedRect(cellX, cellY, cellW, cellH, 4).lineWidth(0.5).strokeColor("#cccccc").stroke();
+    doc.restore();
+
+    // Name and passport number label at top of cell
     if (useCustomFont) doc.font("Korean");
-    doc.fontSize(11).fillColor("#000000");
-    doc.text(`${entry.stt}. ${entry.fullName} | ${entry.passportNumber}`, 40, yOffset, { width: pageW });
+    doc.fontSize(9).fillColor("#000000");
+    doc.text(`${entry.stt}. ${entry.fullName}`, cellX + 5, cellY + 5, { width: cellW - 10, lineBreak: false });
+    doc.fontSize(8).fillColor("#555555");
+    doc.text(`${entry.passportNumber}${entry.birthDate ? " | " + entry.birthDate : ""}${entry.gender ? " | " + entry.gender : ""}`, cellX + 5, cellY + 18, { width: cellW - 10, lineBreak: false });
 
-    // Draw passport image
+    // Draw passport image centered in remaining cell area
     try {
-      doc.image(imgBuffer, 60, yOffset + 20, {
-        fit: [imgMaxWidth, imgMaxHeight],
+      doc.image(imgBuffer, cellX + 5, cellY + labelH, {
+        fit: [imgMaxW, imgMaxH],
         align: "center",
         valign: "center",
       });
     } catch (e) {
-      // If image fails to render, add placeholder text
-      doc.fontSize(9).fillColor("#999999");
-      doc.text("(이미지를 불러올 수 없습니다)", 60, yOffset + 20);
+      doc.fontSize(8).fillColor("#999999");
+      doc.text("(이미지를 불러올 수 없습니다)", cellX + 5, cellY + labelH + 20);
     }
 
     imagesOnPage++;
